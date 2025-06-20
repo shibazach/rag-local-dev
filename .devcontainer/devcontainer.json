@@ -1,0 +1,31 @@
+{
+  "name": "rag-dev",
+  "dockerComposeFile": [
+    "../docker-compose.yml"
+  ],
+  "service": "rag-app",
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    "source=${localWorkspaceFolder},target=/workspace,type=bind"
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "/opt/conda/envs/rag_env/bin/python",
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4
+  },
+  "extensions": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-toolsai.jupyter",
+    "esbenp.prettier-vscode",
+    "ms-azuretools.vscode-docker"
+  ],
+  "containerEnv": {
+    "PYTHONPATH": "/workspace"
+  },
+  "runArgs": [
+    "--add-host", "host.docker.internal:host-gateway"
+  ],
+  "postCreateCommand": "conda run -n rag_env pip install --upgrade pip && curl -s -X POST http://host.docker.internal:11434/api/pull -d '{\"name\": \"gemma:7b\"}' && curl -s -X POST http://host.docker.internal:11434/api/pull -d '{\"name\": \"nomic-embed-text\"}'"
+}

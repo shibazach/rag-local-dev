@@ -1,0 +1,17 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: create_rag_data.py",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "/workspace",
+      "env": {
+        "PYTHONPATH": "/workspace"
+      },
+      "justMyCode": false
+    }
+  ]
+}

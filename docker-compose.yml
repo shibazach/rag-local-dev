@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  pgvector-db:
+    image: ankane/pgvector
+    container_name: pgvector-db
+    environment:
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpass
+      POSTGRES_DB: ragdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./devcontainer/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - ragnet
+    restart: always
+
+  rag-app:
+    build:
+      context: .devcontainer
+    container_name: rag-app
+    volumes:
+      - .:/workspace
+    networks:
+      - ragnet
+    tty: true
+
+volumes:
+  pgdata:
+
+networks:
+  ragnet:

@@ -17,18 +17,37 @@ services:
       - ragnet
     restart: always
 
+  ollama:
+    image: ollama/ollama:latest      # ← Docker Hub の公式イメージを指定
+    container_name: ollama
+    command: ["serve"]
+    ports:
+      - "11434:11434"
+    networks:
+      - ragnet
+    restart: always
+
   rag-app:
     build:
-      context: .devcontainer
+      context: .
+      dockerfile: .devcontainer/Dockerfile
     container_name: rag-app
+    depends_on:
+      - pgvector-db
+      - ollama
     volumes:
       - .:/workspace
     networks:
       - ragnet
     tty: true
+    environment:
+      OLLAMA_BASE: http://ollama:11434
+      DB_URL: postgresql://raguser:ragpass@pgvector-db:5432/ragdb
+      PYTHONPATH: /workspace
 
 volumes:
   pgdata:
 
 networks:
   ragnet:
+    name: rag_ragnet

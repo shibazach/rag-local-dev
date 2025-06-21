@@ -1,8 +1,12 @@
-FROM continuumio/miniconda3:latest
+# .devcontainer/Dockerfile
+FROM python:3.9-slim
 
-COPY environment.yml .
+# 作業ディレクトリ
+WORKDIR /workspace
 
+# 必要なUbuntuパッケージをまとめてインストール
 RUN apt-get update && apt-get install -y \
+    git \
     libgl1-mesa-glx \
     tesseract-ocr \
     poppler-utils \
@@ -15,15 +19,16 @@ RUN apt-get update && apt-get install -y \
     mecab-ipadic-utf8 \
     ocrmypdf \
     tesseract-ocr-jpn \
-    curl && \
-    apt-get clean
+    libreoffice \
+    curl \
+    build-essential \
+    iputils-ping \
+  && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && \
-    apt-get install -y libreoffice && \
-    apt-get clean
+# requirements.txt をコピーしてpipインストール
+COPY requirements.txt .
+RUN pip install --upgrade pip \
+ && pip install -r requirements.txt
 
-RUN conda env create -f environment.yml
-
-SHELL ["conda", "run", "-n", "rag_env", "/bin/bash", "-c"]
-
-CMD ["sleep", "infinity"]
+# デフォルトコマンド
+CMD ["bash"]

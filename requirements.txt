@@ -1,0 +1,33 @@
+# Pythonバージョン指定（Dockerfile側で済ませているため、ここでは省略可）
+
+# conda非依存ライブラリ（pipで直接導入）
+python-docx
+langdetect
+sqlalchemy
+mecab-python3
+
+# メイン処理・埋め込み関連
+pymupdf==1.22.3
+opencv-python
+pdf2image
+Pillow
+langchain
+langchain-ollama
+langchain-community
+sentence-transformers
+transformers==4.40.1
+torch==2.2.2
+torchvision==0.17.2
+psycopg2-binary
+openai
+faiss-cpu
+streamlit
+
+# OCR・日本語処理
+pytesseract
+fugashi
+ipadic
+unidic-lite
+
+# その他補助
+timm

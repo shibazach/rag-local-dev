@@ -4,11 +4,14 @@ from collections import defaultdict
 
 from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
 from src.error_handler import install_global_exception_handler
+from src.config import DEFAULT_INPUT_DIR
+from src.config import DEFAULT_OUTPUT_DIR
 
 install_global_exception_handler()
 
-input_folder = "input_pdfs"
-output_folder = "output_pdfs"
+input_folder = DEFAULT_INPUT_DIR
+output_folder = DEFAULT_OUTPUT_DIR
+
 os.makedirs(output_folder, exist_ok=True)
 
 def has_embedded_text(pdf_path):

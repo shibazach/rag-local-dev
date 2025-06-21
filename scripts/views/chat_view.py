@@ -3,7 +3,7 @@
 import streamlit as st
 import time, datetime, threading
 import numpy as np
-import uuid
+import uuid, os
 from sqlalchemy import create_engine, text
 from io import BytesIO
 from langchain_community.embeddings import OllamaEmbeddings
@@ -19,10 +19,12 @@ install_global_exception_handler()
 
 engine = create_engine("postgresql://raguser:ragpass@pgvector-db:5432/ragdb")
 
-# 🔁 Ollama keep-alive
+# Ollama のベース URL を一元管理
+BASE_URL = os.getenv("OLLAMA_BASE", "http://ollama:11434")
 
 def keep_ollama_warm():
-    llm_ping = OllamaLLM(model="phi4-mini", base_url="http://172.18.0.1:11434")
+    base_url = BASE_URL
+    llm_ping = OllamaLLM(model="phi4-mini", base_url=base_url)
     while True:
         try:
             llm_ping.invoke("ping")
@@ -76,7 +78,7 @@ def render_chat_view():
             result = conn.execute(text(sql), {"top_k": top_k})
             return [dict(row) for row in result.mappings()]
 
-    llm = OllamaLLM(model="phi4-mini", base_url="http://172.18.0.1:11434")
+    llm = OllamaLLM(model="phi4-mini", base_url=BASE_URL)
 
     left_col, right_col = st.columns([1, 1])
 
@@ -90,7 +92,7 @@ def render_chat_view():
                 start_time = time.time()
 
                 if selected_model["embedder"] == "OllamaEmbeddings":
-                    embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url="http://172.18.0.1:11434")
+                    embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url=BASE_URL)
                     query_embedding = embedder.embed_query(query)
                 else:
                     embedder = SentenceTransformer(selected_model["model_name"])

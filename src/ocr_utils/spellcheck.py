@@ -1,11 +1,15 @@
 # spellcheck.py（OCR誤字補正の汎用モジュール）
-import os, re, csv
+import csv
+import os
+import re
+
 import MeCab
 
 from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
 from src.config import MECAB_DICT_PATH
 from src.error_handler import install_global_exception_handler
 
+# REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
 
 base_dir = os.path.dirname(__file__)  # ✅ このファイルと同じディレクトリ基準

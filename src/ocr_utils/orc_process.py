@@ -1,18 +1,18 @@
-import os, subprocess
-import fitz  # PyMuPDF
+import os
+import subprocess
 from collections import defaultdict
 
-from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
-from src.error_handler import install_global_exception_handler
-from src.config import DEFAULT_INPUT_DIR
-from src.config import DEFAULT_OUTPUT_DIR
+import fitz  # PyMuPDF
 
+from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
+from src.config import INPUT_DIR, OUTPUT_DIR
+from src.error_handler import install_global_exception_handler
+
+# REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
 
-input_folder = DEFAULT_INPUT_DIR
-output_folder = DEFAULT_OUTPUT_DIR
-
-os.makedirs(output_folder, exist_ok=True)
+# 出力フォルダの作成
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 def has_embedded_text(pdf_path):
     doc = fitz.open(pdf_path)
@@ -110,10 +110,10 @@ def embed_text_back_to_pdf(pdf_path, structured_text, output_path):
     doc.save(output_path)
 
 def process_pdfs():
-    for filename in os.listdir(input_folder):
+    for filename in os.listdir(INPUT_DIR):
         if filename.lower().endswith(".pdf"):
-            input_path = os.path.join(input_folder, filename)
-            output_path = os.path.join(output_folder, filename)
+            input_path = os.path.join(INPUT_DIR, filename)
+            output_path = os.path.join(OUTPUT_DIR, filename)
 
             if has_embedded_text(input_path):
                 doc = fitz.open(input_path)
@@ -129,12 +129,12 @@ def process_pdfs():
 
             doc = fitz.open(output_path)
             structured = extract_and_structure_text(doc)
-            txt_output = os.path.join(output_folder, filename.replace(".pdf", "_structured.txt"))
+            txt_output = os.path.join(OUTPUT_DIR, filename.replace(".pdf", "_structured.txt"))
             save_structured_text_to_txt(structured, txt_output)
             print("✅ 構造化テキストを保存しました:", txt_output)
 
             # PDFに構造化テキストを再埋め込み
-            embed_output_pdf = os.path.join(output_folder, filename.replace(".pdf", "_embedded.pdf"))
+            embed_output_pdf = os.path.join(OUTPUT_DIR, filename.replace(".pdf", "_embedded.pdf"))
             embed_text_back_to_pdf(output_path, structured, embed_output_pdf)
             print("✅ テキストをPDFに再埋め込み:", embed_output_pdf)
 

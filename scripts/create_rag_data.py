@@ -1,23 +1,22 @@
 # scripts/create_rag_data.py
 
-import os
-import glob
-import datetime
+import os, glob, datetime
 from email import policy
 from email.parser import BytesParser
 
-from src import bootstrap  # noqa: F401  # インポートパス解決用（定型）
 from src.extractor import extract_text_by_extension
 from scripts.llm_text_refiner import refine_text_with_llm
 from src.embedder import embed_and_insert, insert_file_and_get_id
-from src.error_handler import install_global_exception_handler
 from src.config import DEVELOPMENT_MODE
+
+from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
+from src.error_handler import install_global_exception_handler
 
 # REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
 
 # REM: 開発時にDBテーブル初期化するかどうかのフラグ
-truncate_done_tables: set[str] = set()
+TRUNCATE_DONE_TABLES: set[str] = set()
 
 # REM: 英語テンプレ誤反映などに該当する典型パターン（lower比較前提）
 TEMPLATE_PATTERNS = [
@@ -167,7 +166,7 @@ def process_file(filepath: str) -> None:
         ja_chunks, ja_embeddings = embed_and_insert(
             [refined_ja],
             filepath,
-            truncate_done_tables if DEVELOPMENT_MODE else set(),
+            TRUNCATE_DONE_TABLES if DEVELOPMENT_MODE else set(),
             return_data=True,
             quality_score=score,
         )

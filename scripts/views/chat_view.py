@@ -1,33 +1,34 @@
 # scripts/views/chat_view.py
 
-import streamlit as st
-import time, datetime, threading
-import numpy as np
-import uuid, os
-from sqlalchemy import create_engine, text
+import datetime
+import os
+import threading
+import time
+import uuid
 from io import BytesIO
+
+import numpy as np
+import streamlit as st
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_ollama import OllamaLLM
 from sentence_transformers import SentenceTransformer
+from sqlalchemy import text
 
-from src import bootstrap
-from src.embedding_config import embedding_options
+from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
+from src.config import DB_ENGINE, EMBEDDING_OPTIONS, OLLAMA_BASE, OLLAMA_MODEL
 from src.embedder import embed_and_insert
 from src.error_handler import install_global_exception_handler
 
+# REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
 
-engine = create_engine("postgresql://raguser:ragpass@pgvector-db:5432/ragdb")
+# REM: ollamaの設定
+LLM = OllamaLLM(model=OLLAMA_MODEL, base_url=OLLAMA_BASE)
 
-# Ollama のベース URL を一元管理
-BASE_URL = os.getenv("OLLAMA_BASE", "http://ollama:11434")
-
-def keep_ollama_warm():
-    base_url = BASE_URL
-    llm_ping = OllamaLLM(model="phi4-mini", base_url=base_url)
+def keep_ollama_warm():    
     while True:
         try:
-            llm_ping.invoke("ping")
+            LLM.invoke("ping")
             print("✅ Ollama keep-alive sent.")
         except Exception as e:
             print("⚠️ Ollama keep-alive failed:", e)
@@ -51,11 +52,11 @@ def render_chat_view():
 
     model_choices = {
         f"{v['model_name']} ({v['embedder']})": k
-        for k, v in embedding_options.items()
+        for k, v in EMBEDDING_OPTIONS.items()
     }
     selected_label = st.selectbox("使用する埋め込みモデルを選択してください：", list(model_choices.keys()))
     selected_key = model_choices[selected_label]
-    selected_model = embedding_options[selected_key]
+    selected_model = EMBEDDING_OPTIONS[selected_key]
 
     model_safe = selected_model["model_name"].replace("/", "_").replace("-", "_")
     tablename = f"{model_safe}_{selected_model['dimension']}"
@@ -74,11 +75,9 @@ def render_chat_view():
             ORDER BY e.embedding <-> '{embedding_str}'::vector
             LIMIT :top_k
         """
-        with engine.connect() as conn:
+        with DB_ENGINE.connect() as conn:
             result = conn.execute(text(sql), {"top_k": top_k})
             return [dict(row) for row in result.mappings()]
-
-    llm = OllamaLLM(model="phi4-mini", base_url=BASE_URL)
 
     left_col, right_col = st.columns([1, 1])
 
@@ -92,7 +91,7 @@ def render_chat_view():
                 start_time = time.time()
 
                 if selected_model["embedder"] == "OllamaEmbeddings":
-                    embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url=BASE_URL)
+                    embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url=OLLAMA_BASE)
                     query_embedding = embedder.embed_query(query)
                 else:
                     embedder = SentenceTransformer(selected_model["model_name"])
@@ -111,7 +110,7 @@ def render_chat_view():
 """.strip()
 
                 with st.spinner("考え中..."):
-                    response = llm.invoke(prompt)
+                    response = LLM.invoke(prompt)
 
                 elapsed_time = round(time.time() - start_time, 2)
                 st.markdown(f"### \U0001F9E0 回答（{elapsed_time} 秒）")
@@ -141,7 +140,7 @@ def render_chat_view():
                         edited_text = st.text_area("全文テキスト（編集可能）", value=d["full_text"], height=200, key=f"edit_{unique_key}")
                         if st.button("保存して再ベクトル化", key=f"save_{unique_key}"):
                             try:
-                                with engine.begin() as conn:
+                                with DB_ENGINE.begin() as conn:
                                     conn.execute(text("UPDATE files SET content = :content WHERE file_id = :file_id"),
                                                  {"content": edited_text, "file_id": d["file_id"]})
                                     conn.execute(text(f'DELETE FROM "{tablename}" WHERE file_id = :file_id'),

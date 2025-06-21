@@ -1,16 +1,24 @@
 # src/extractor.py
-import os, docx, csv, json, subprocess, tempfile
-import numpy as np
-import fitz  # PyMuPDF
-import pytesseract
-from typing import List
-from PIL import Image
+import csv
+import json
+import os
+import subprocess
+import tempfile
 from io import BytesIO
+from typing import List
 
-from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
-from src.ocr_utils.orientation_corrector import detect_rotation_angle, correct_orientation
-from src.error_handler import install_global_exception_handler
+import docx
+import fitz  # PyMuPDF
+import numpy as np
+import pytesseract
+from PIL import Image
 
+from error_handler import install_global_exception_handler
+from ocr_utils.orientation_corrector import (correct_orientation,
+                                             detect_rotation_angle)
+from src import bootstrap
+
+# REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
 
 # PDFを画像に変換（ページごと）

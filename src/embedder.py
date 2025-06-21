@@ -1,17 +1,19 @@
 # src/embedder.py
-import os
-import numpy as np
 import hashlib
+import os
+
+import numpy as np
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
-from sqlalchemy import create_engine
 from sqlalchemy.sql import text as sql_text
 
 from src import bootstrap
-from src.embedding_config import embedding_options
+from error_handler import install_global_exception_handler
+from config import DEVELOPMENT_MODE, DB_ENGINE, OLLAMA_BASE, EMBEDDING_OPTIONS
 
-engine = create_engine("postgresql://raguser:ragpass@pgvector-db:5432/ragdb")
+# REM: 例外発生時のログをグローバルに記録するハンドラを有効化
+install_global_exception_handler()
 
 # REM: numpy配列をpgvector文字列リテラルに変換
 def to_pgvector_literal(vec):
@@ -25,15 +27,12 @@ def compute_hash(data: bytes) -> str:
 
 # REM: filesテーブルにファイルを登録しfile_idを返す
 def insert_file_and_get_id(filepath, refined_ja, score):
-    from src.config import DEVELOPMENT_MODE
-    from sqlalchemy import text as sql_text
-
     with open(filepath, "rb") as f:
         file_blob = f.read()
 
     file_hash = hashlib.sha256(file_blob).hexdigest()
 
-    with engine.begin() as conn:
+    with DB_ENGINE.begin() as conn:
         # REM: files テーブルを初期化前に必ず作成
         conn.execute(sql_text("""
             CREATE TABLE IF NOT EXISTS files (
@@ -88,7 +87,7 @@ def embed_and_insert(texts, filename, model_keys=None, truncate_done_tables=None
     all_chunks = []
     all_embeddings = []
 
-    for key, config in embedding_options.items():
+    for key, config in EMBEDDING_OPTIONS.items():
         # REM: 指定モデル以外はスキップ
         if model_keys is not None and key not in model_keys:
             continue
@@ -99,7 +98,7 @@ def embed_and_insert(texts, filename, model_keys=None, truncate_done_tables=None
         if config["embedder"] == "OllamaEmbeddings":
             embedder = OllamaEmbeddings(
                 model=config["model_name"],
-                base_url="http://host.docker.internal:11434"
+                base_url=OLLAMA_BASE
             )
             embeddings = embedder.embed_documents(flat_chunks)
         elif config["embedder"] == "SentenceTransformer":
@@ -114,7 +113,7 @@ def embed_and_insert(texts, filename, model_keys=None, truncate_done_tables=None
         table_name = config["model_name"].replace("/", "_").replace("-", "_") + f"_{config['dimension']}"
 
         # REM: テーブル作成と初期化
-        with engine.begin() as conn:
+        with DB_ENGINE.begin() as conn:
             conn.execute(sql_text(f"""
                 CREATE TABLE IF NOT EXISTS "{table_name}" (
                     id SERIAL PRIMARY KEY,

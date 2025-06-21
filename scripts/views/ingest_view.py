@@ -2,33 +2,35 @@
 
 import os
 import time
+
 import streamlit as st
-from src import bootstrap
-from src.extractor import extract_text_by_extension
-from src.embedder import embed_and_insert
+
+from scripts.create_rag_data import extract_text_from_eml
 from scripts.llm_text_refiner import refine_text_with_llm
 from scripts.refine_prompter import get_prompt_by_lang
-from sqlalchemy import create_engine
-from scripts.create_rag_data import extract_text_from_eml
-from src.embedding_config import embedding_options
+from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
+from src.config import EMBEDDING_OPTIONS, INPUT_DIR, LOG_DIR
+from src.embedder import embed_and_insert
+from src.error_handler import install_global_exception_handler
+from src.extractor import extract_text_by_extension
 
-engine = create_engine("postgresql://raguser:ragpass@pgvector-db:5432/ragdb")
+# REM: 例外発生時のログをグローバルに記録するハンドラを有効化
+install_global_exception_handler()
 
-DEFAULT_INPUT_DIR = "src/input_pdfs"
-DEFAULT_LOG_DIR = "logs/full_logs"
-os.makedirs(DEFAULT_LOG_DIR, exist_ok=True)
+# REM: デフォルトのログディレクトリを作成
+os.makedirs(LOG_DIR, exist_ok=True)
 
 def render_ingest_view():
     st.title("\U0001F4E5 RAG データ投入・整形・ベクトル化")
 
     # --- サイドバー ---
     st.sidebar.markdown("### \U0001F4C2 処理対象フォルダとオプション")
-    input_folder = st.sidebar.text_input("\U0001F4C1 入力フォルダ", value=DEFAULT_INPUT_DIR)
+    input_folder = st.sidebar.text_input("\U0001F4C1 入力フォルダ", value=INPUT_DIR)
     include_subdirs = st.sidebar.checkbox("サブフォルダも含める", value=True)
 
     # --- モデル選択チェック群 ---
     st.sidebar.markdown("### 💠 使用する埋め込みモデル")
-    all_model_keys = list(embedding_options.keys())
+    all_model_keys = list(EMBEDDING_OPTIONS.keys())
 
     if "selected_models" not in st.session_state:
         st.session_state.selected_models = all_model_keys.copy()
@@ -38,7 +40,7 @@ def render_ingest_view():
 
     selected_models = []
     for key in all_model_keys:
-        label = f"{embedding_options[key]['model_name']} ({embedding_options[key]['embedder']})"
+        label = f"{EMBEDDING_OPTIONS[key]['model_name']} ({EMBEDDING_OPTIONS[key]['embedder']})"
         if st.sidebar.checkbox(label, value=(key in st.session_state.selected_models), key=f"chk_{key}"):
             selected_models.append(key)
     st.session_state.selected_models = selected_models
@@ -109,7 +111,7 @@ def render_ingest_view():
                     st.success(f"{len(chunks)} チャンクを登録しました")
 
                 # --- ログ保存 ---
-                log_path = os.path.join(DEFAULT_LOG_DIR, filename + ".log")
+                log_path = os.path.join(LOG_DIR, filename + ".log")
                 with open(log_path, "w", encoding="utf-8") as f:
                     f.write(f"📝 整形後:\n{refined}\n\n")
                     f.write("\n=== ✂️ チャンク ===\n" + "\n".join(chunks))

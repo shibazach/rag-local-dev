@@ -1,0 +1,4 @@
+services:
+  rag-app:
+    environment:
+      OLLAMA_MODEL: phi4-mini

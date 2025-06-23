@@ -8,6 +8,6 @@
         ] // ← 常にホスト側で動かす
     },
     // ★ 拡張をコンテナにコピーしない決定打
-    "remote.downloadExtensionsLocally": "off",
+    "remote.downloadExtensionsLocally": false,
     "remote.containers.copyExtensions": false
 }

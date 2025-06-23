@@ -31,6 +31,7 @@ services:
         condition: service_started
     volumes:
       - .:/workspace
+      # - hf-cache:/root/.cache/huggingface # Hugging Faceのキャッシュを共有する場合
     networks:
       - ragnet
     extra_hosts:
@@ -49,7 +50,8 @@ services:
 
 volumes:
   pgdata:
-
+  hf-cache:
+    # Hugging Faceのキャッシュを共有する場合
 
 networks:
   ragnet:

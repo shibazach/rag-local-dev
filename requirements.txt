@@ -15,7 +15,7 @@ Pillow
 langchain
 langchain-ollama
 langchain-community
-sentence-transformers
+sentence-transformers==2.7.0
 transformers==4.40.1
 torch==2.2.2
 torchvision==0.17.2

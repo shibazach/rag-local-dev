@@ -1,16 +1,28 @@
 // .devcontainer/devcontainer.json
 {
   "name": "rag-dev",
-  "dockerComposeFile": ["../docker-compose.yml"],
+  // compose + override をそのまま読む
+  "dockerComposeFile": [
+    "../docker-compose.yml",
+    "../docker-compose.override.yml"
+  ],
   "service": "rag-app",
-  "workspaceFolder": "/workspace",
-  "shutdownAction": "stopCompose",
-  "customizations": {
-    "vscode": {
-      "extensions": ["ms-python.python"]
+  // GPU を要求しておいて、GPU が無い端末では無視される
+  "runArgs": [
+    "--gpus",
+    "all"
+  ],
+  // build 時に BASE_IMAGE を切り替えられるようにする
+  "build": {
+    "args": {
+      // 高スペマシン → デフォルトで GPU 対応 CUDA ランタイム
+      //   (docker compose up --build 時と同じ挙動)
+      "BASE_IMAGE": "nvidia/cuda:12.4.0-cudnn-runtime-ubuntu22.04"
+      // 低スペマシン（CPUオンリー）で devcontainer を開きたい場合は
+      // VS Code の「Dev Containers: Reopen in Container (With Profile)」
+      // → “cpu” プロファイルを選び、override で python:3.9-slim に戻す
     }
   },
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash"
-  }
+  "workspaceFolder": "/workspace",
+  "overrideCommand": false
 }

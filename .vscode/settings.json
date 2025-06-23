@@ -1,12 +1,12 @@
 {
     // すでに項目がある場合はカンマ区切りで追記する
     "terminal.integrated.shellIntegration.enabled": false,
-    // .vscode/settings.json もしくは devcontainer.json の "settings"
+
+    // ★ GitHub Copilot の設定
     "remote.extensionKind": {
-        "github.copilot": [
-            "ui"
-        ] // ← 常にホスト側で動かす
-    },
+        "github.copilot": ["ui"], // ← 常にホスト側で動かす
+        "github.copilot-chat":  ["ui"]   // ← 追加
+    } ,
     // ★ 拡張をコンテナにコピーしない決定打
     "remote.downloadExtensionsLocally": false,
     "remote.containers.copyExtensions": false

@@ -5,7 +5,7 @@ from PIL import Image
 from io import BytesIO
 
 from src import bootstrap
-from error_handler import install_global_exception_handler
+from src.error_handler import install_global_exception_handler
 
 # REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()

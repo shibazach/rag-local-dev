@@ -13,8 +13,8 @@ import numpy as np
 import pytesseract
 from PIL import Image
 
-from error_handler import install_global_exception_handler
-from ocr_utils.orientation_corrector import (correct_orientation,
+from src.error_handler import install_global_exception_handler
+from src.ocr_utils.orientation_corrector import (correct_orientation,
                                              detect_rotation_angle)
 from src import bootstrap
 

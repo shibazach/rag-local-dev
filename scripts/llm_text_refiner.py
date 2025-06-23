@@ -9,7 +9,7 @@ from langchain_ollama import ChatOllama
 
 from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
 from src.error_handler import install_global_exception_handler
-from src.config import MODEL_NAME, BASE_URL
+from src.config import OLLAMA_BASE, OLLAMA_MODEL
 
 # REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
@@ -25,7 +25,7 @@ def detect_language(text: str, force_lang=None):
         return "ja"
 
 # REM: LLMで整形し、言語・品質スコアも返す
-def refine_text_with_llm(raw_text: str, model: str = MODEL_NAME, force_lang=None):
+def refine_text_with_llm(raw_text: str, model: str = OLLAMA_MODEL, force_lang=None):
     # REM: OCR誤字補正 + 言語判定
     corrected = correct_text(raw_text)
     lang = detect_language(corrected, force_lang)
@@ -55,7 +55,7 @@ def refine_text_with_llm(raw_text: str, model: str = MODEL_NAME, force_lang=None
     print(f"🧾 プロンプト合成後の文字数: {len(prompt)}", flush=True)
 
     # REM: base_url を明示してOllamaと安定接続
-    llm = ChatOllama(model=model, base_url=BASE_URL)
+    llm = ChatOllama(model=model, base_url=OLLAMA_BASE)
 
     # REM: LangChainのチェーンで整形実行
     chain = full_prompt | llm | StrOutputParser()

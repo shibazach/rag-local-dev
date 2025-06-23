@@ -2,7 +2,7 @@
 
 from langchain_ollama import OllamaLLM
 
-from config import OLLAMA_MODEL, OLLAMA_BASE
+from src.config import OLLAMA_MODEL, OLLAMA_BASE
 from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
 from src.error_handler import install_global_exception_handler
 

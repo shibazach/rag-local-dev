@@ -1,0 +1,6 @@
+Collecting PyMuPDF
+  Downloading pymupdf-1.26.1-cp39-abi3-manylinux_2_28_x86_64.whl.metadata (3.4 kB)
+Downloading pymupdf-1.26.1-cp39-abi3-manylinux_2_28_x86_64.whl (24.1 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 24.1/24.1 MB 35.7 MB/s eta 0:00:00
+Installing collected packages: PyMuPDF
+Successfully installed PyMuPDF-1.26.1

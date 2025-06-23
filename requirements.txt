@@ -7,7 +7,8 @@ sqlalchemy
 mecab-python3
 
 # メイン処理・埋め込み関連
-pymupdf==1.22.3
+numpy>=1.24
+PyMuPDF>=1.23.0
 opencv-python
 pdf2image
 Pillow

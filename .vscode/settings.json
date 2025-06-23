@@ -7,6 +7,7 @@
             "ui"
         ] // ← 常にホスト側で動かす
     },
-    // Copilot 自体をワークスペースでは無効化（警告は出るが動作可）
-    "github.copilot.enable": false
+    // ★ 拡張をコンテナにコピーしない決定打
+    "remote.downloadExtensionsLocally": "off",
+    "remote.containers.copyExtensions": false
 }

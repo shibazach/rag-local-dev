@@ -14,9 +14,9 @@ DEVELOPMENT_MODE = True
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma:7b")
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://172.19.0.1:11434")
 
-# REM: デフォルトの入力PDFディレクトリと出力PDFディレクトリ
-INPUT_DIR = "ignored/input_pdfs"
-OUTPUT_DIR = "ignored/output_pdfs"
+# REM: デフォルトの入力ディレクトリと出力ディレクトリ
+INPUT_DIR = "ignored/input_files"
+OUTPUT_DIR = "ignored/output_files"
 LOG_DIR = "logs/full_logs"
 
 # REM: postgreSQLの接続URL

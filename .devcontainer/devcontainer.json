@@ -25,4 +25,13 @@
   },
   "workspaceFolder": "/workspace",
   "overrideCommand": false
+
+  "appPort": [5432],
+  "containerEnv": {
+    "PGHOST": "host.docker.internal",
+    "PGUSER": "raguser",
+    "PGPASSWORD": "ragpass",
+    "PGDATABASE": "ragdb",
+    "PGPORT": "5432"
+  }
 }

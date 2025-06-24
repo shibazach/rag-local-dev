@@ -6,9 +6,6 @@ services:
       context: .
       dockerfile: .devcontainer/Dockerfile
     container_name: rag-app
-    depends_on:
-      pgvector-db:
-        condition: service_started
     volumes:
       - .:/workspace
       # - hf-cache:/root/.cache/huggingface # Hugging Faceのキャッシュを共有する場合

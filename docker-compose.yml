@@ -1,26 +1,6 @@
 version: "3.9"
 
 services:
-  pgvector-db:
-    # image: pgvector/pgvector:pg15
-    container_name: pgvector-db
-    build:
-      context: .
-      dockerfile: Dockerfile.pgvector
-    environment:
-      POSTGRES_USER: raguser
-      POSTGRES_PASSWORD: ragpass
-      POSTGRES_DB: ragdb
-    volumes:
-      #  - pgdata:/var/lib/postgresql/data
-      #  - ./.devcontainer/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql
-      - ./init_pgvector.sh:/docker-entrypoint-initdb.d/01_init_pgvector.sh
-    ports:
-      - "5432:5432"
-    networks:
-      - ragnet
-    restart: always
-
   rag-app:
     build:
       context: .

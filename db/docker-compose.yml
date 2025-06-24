@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  pgvector-db:
+    image: pgvector/pgvector:pg15
+    container_name: pgvector-db
+    environment:
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpass
+      POSTGRES_DB: ragdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - ragnet
+    restart: always
+
+volumes:
+  pgdata:
+
+networks:
+  ragnet:

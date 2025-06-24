@@ -19,14 +19,15 @@ RUN apt-get update && \
 #   CUDA ランタイムを含むイメージなら GPU Wheel、そうでなければ CPU Wheel
 COPY requirements.txt .
 RUN pip install --upgrade pip && \
-  if echo "${BASE_IMAGE}" | grep -q "cuda"; then \
-  pip install torch==2.3.0+cu124 torchvision==0.18.0+cu124 \
-  --index-url https://download.pytorch.org/whl/cu124 ; \
-  else \
-  pip install torch==2.3.0 torchvision==0.18.0 ; \
-  fi && \
-  pip install -r requirements.txt && \
-  pip install "sentence-transformers==2.7.0"
+    pip install --force-reinstall numpy torch 
+    if echo "${BASE_IMAGE}" | grep -q "cuda"; then \
+      pip install torch==2.3.0+cu124 torchvision==0.18.0+cu124 \
+      --index-url https://download.pytorch.org/whl/cu124 ; \
+    else \
+      pip install torch==2.3.0 torchvision==0.18.0 ; \
+    fi && \
+    pip install -r requirements.txt && \
+    pip install "sentence-transformers==2.7.0"
 
 # （任意）モデルを事前キャッシュ
 # RUN python - <<'PY'

@@ -20,8 +20,8 @@ OUTPUT_DIR = "ignored/output_pdfs"
 LOG_DIR = "logs/full_logs"
 
 # REM: postgreSQLの接続URL
-DB_URL = os.getenv("DB_URL", "postgresql://raguser:ragpass@pgvector-db:5432/ragdb")
-DB_ENGINE = create_engine(DB_URL)
+# DB_URL = os.getenv("DB_URL", "postgresql://raguser:ragpass@pgvector-db:5432/ragdb")
+DB_ENGINE = create_engine("postgresql://raguser:ragpass@localhost:5432/ragdb")
 
 # REM: 埋め込みモデルの設定
 EMBEDDING_OPTIONS = {

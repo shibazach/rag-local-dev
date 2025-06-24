@@ -24,9 +24,9 @@
     }
   },
   "workspaceFolder": "/workspace",
-  "overrideCommand": false
+  "overrideCommand": false,
 
-  "appPort": [5432],
+  "appPorts": [5432],
   "containerEnv": {
     "PGHOST": "host.docker.internal",
     "PGUSER": "raguser",

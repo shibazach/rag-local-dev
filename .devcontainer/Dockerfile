@@ -1,9 +1,13 @@
 ###############################################################################
 # rag-app  Dockerfile   CPU ↔ GPU 両対応 / Python 3.9 ベース / pip 方式
 ###############################################################################
-# build で上書きされない限り python:3.9-slim (=CPU) を使う
+
+# REM: build 引数 BASE_IMAGE。cuda系 or slim を .devcontainer.json から渡す
 ARG BASE_IMAGE=python:3.9-slim
 FROM ${BASE_IMAGE}
+
+# REM: 再度 ARG を宣言（RUN 内で使用するため）
+ARG BASE_IMAGE
 
 # ── OS 依存ライブラリ ────────────────────────────────
 RUN apt-get update && \
@@ -15,18 +19,23 @@ RUN apt-get update && \
   ocrmypdf libreoffice curl iputils-ping && \
   rm -rf /var/lib/apt/lists/*
 
-# ── Python 依存ライブラリ ─────────────────────────────
-#   CUDA ランタイムを含むイメージなら GPU Wheel、そうでなければ CPU Wheel
-COPY requirements.txt .
+# ── Python 依存ライブラリ（分割インストール構成） ──────────────
+
+# REM: pip自体とnumpyは先に明示インストール
 RUN pip install --upgrade pip && \
-    pip install --force-reinstall numpy torch 
-    if echo "${BASE_IMAGE}" | grep -q "cuda"; then \
+    pip install --force-reinstall numpy
+
+# REM: BASE_IMAGE に "cuda" を含むかで torch のバージョンを切替
+RUN if echo "${BASE_IMAGE}" | grep -q "cuda"; then \
       pip install torch==2.3.0+cu124 torchvision==0.18.0+cu124 \
       --index-url https://download.pytorch.org/whl/cu124 ; \
     else \
       pip install torch==2.3.0 torchvision==0.18.0 ; \
-    fi && \
-    pip install -r requirements.txt && \
+    fi
+
+# REM: requirements.txt + sentence-transformers を追加インストール
+COPY requirements.txt .
+RUN pip install -r requirements.txt && \
     pip install "sentence-transformers==2.7.0"
 
 # （任意）モデルを事前キャッシュ
@@ -35,8 +44,9 @@ RUN pip install --upgrade pip && \
 # SentenceTransformer('intfloat/e5-large-v2')
 # PY
 
-# ── アプリ本体 ────────────────────────────────────────
+# ── アプリ本体配置 ────────────────────────────────────
 WORKDIR /workspace
 COPY . /workspace
 
+# REM: 起動時のデフォルトシェル（必要に応じて変更）
 CMD ["bash"]

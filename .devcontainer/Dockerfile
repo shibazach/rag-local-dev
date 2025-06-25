@@ -1,52 +1,43 @@
-###############################################################################
-# rag-app  Dockerfile   CPU ↔ GPU 両対応 / Python 3.9 ベース / pip 方式
-###############################################################################
+############################################################
+# REM: rag-dev devcontainer  (pip 手動 PyTorch 版)
+############################################################
 
-# REM: build 引数 BASE_IMAGE。cuda系 or slim を .devcontainer.json から渡す
-ARG BASE_IMAGE=python:3.9-slim
+ARG BASE_IMAGE=nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
 FROM ${BASE_IMAGE}
 
-# REM: 再度 ARG を宣言（RUN 内で使用するため）
-ARG BASE_IMAGE
+# ---------- ① バージョン読み込み ----------
+ARG ENV_FILE=.devcontainer/versions.env
+COPY ${ENV_FILE} /tmp/versions.env
+RUN grep -v '^#' /tmp/versions.env >> /etc/profile.d/versions.sh
 
-# ── OS 依存ライブラリ ────────────────────────────────
-RUN apt-get update && \
-  apt-get install -y --no-install-recommends \
-  git build-essential cmake pkg-config \
-  libgl1-mesa-glx libglib2.0-0 libsm6 libxrender1 libxext6 \
-  poppler-utils tesseract-ocr tesseract-ocr-jpn \
-  mecab libmecab-dev mecab-ipadic-utf8 \
-  ocrmypdf libreoffice curl iputils-ping && \
-  rm -rf /var/lib/apt/lists/*
+# ---------- ② OS パッケージ ----------
+ENV DEBIAN_FRONTEND=noninteractive
+RUN . /etc/profile.d/versions.sh && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python${PythonVer} python${PythonVer}-dev python3-pip \
+        git curl wget build-essential \
+        libgl1-mesa-glx libglib2.0-0 \
+        tesseract-ocr tesseract-ocr-jpn tesseract-ocr-eng \
+        mecab libmecab-dev mecab-ipadic-utf8 && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# ── Python 依存ライブラリ（分割インストール構成） ──────────────
+# ---------- ③ Python 基盤 ----------
+RUN . /etc/profile.d/versions.sh && \
+    python${PythonVer} -m pip install --upgrade pip wheel setuptools --no-cache-dir
 
-# REM: pip自体とnumpyは先に明示インストール
-RUN pip install --upgrade pip && \
-    pip install --force-reinstall numpy
+# ---------- ④ Python ライブラリ ----------
+COPY requirements.txt /tmp/requirements.txt
+RUN . /etc/profile.d/versions.sh && \
+    python${PythonVer} -m pip install --no-cache-dir -r /tmp/requirements.txt && \
+    # REM: CUDA 専用 index から固定バージョンを取得
+    python${PythonVer} -m pip install --no-cache-dir \
+        torch==$TorchVer \
+        torchvision==$TorchVisionVer \
+        --index-url https://download.pytorch.org/whl/cu124 && \
+    rm /tmp/requirements.txt
+    # cu124 → cu125 など CUDA 世代を替える場合は
+    # --index-url のディレクトリも合わせて変える必要があることに注意
 
-# REM: BASE_IMAGE に "cuda" を含むかで torch のバージョンを切替
-RUN if echo "${BASE_IMAGE}" | grep -q "cuda"; then \
-      pip install torch==2.3.0+cu124 torchvision==0.18.0+cu124 \
-      --index-url https://download.pytorch.org/whl/cu124 ; \
-    else \
-      pip install torch==2.3.0 torchvision==0.18.0 ; \
-    fi
-
-# REM: requirements.txt + sentence-transformers を追加インストール
-COPY requirements.txt .
-RUN pip install -r requirements.txt && \
-    pip install "sentence-transformers==2.7.0"
-
-# （任意）モデルを事前キャッシュ
-# RUN python - <<'PY'
-# from sentence_transformers import SentenceTransformer
-# SentenceTransformer('intfloat/e5-large-v2')
-# PY
-
-# ── アプリ本体配置 ────────────────────────────────────
+# ---------- ⑤ 作業ディレクトリ ----------
 WORKDIR /workspace
-COPY . /workspace
-
-# REM: 起動時のデフォルトシェル（必要に応じて変更）
-CMD ["bash"]

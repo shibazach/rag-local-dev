@@ -1,12 +1,9 @@
-# Pythonバージョン指定（Dockerfile側で済ませているため、ここでは省略可）
+# requirements.txt（torch 系は削除、 torch 系を記述しない）
 
-# conda非依存ライブラリ（pipで直接導入）
 python-docx
 langdetect
 sqlalchemy
 mecab-python3
-
-# メイン処理・埋め込み関連
 numpy>=1.24
 PyMuPDF>=1.23.0
 opencv-python
@@ -17,18 +14,12 @@ langchain-ollama
 langchain-community
 sentence-transformers==2.7.0
 transformers==4.40.1
-torch==2.2.2
-torchvision==0.17.2
 psycopg2-binary
 openai
 faiss-cpu
 streamlit
-
-# OCR・日本語処理
 pytesseract
 fugashi
 ipadic
 unidic-lite
-
-# その他補助
 timm

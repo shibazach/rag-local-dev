@@ -1,37 +1,68 @@
 // .devcontainer/devcontainer.json
 {
   "name": "rag-dev",
-  // compose + override をそのまま読む
+
+  // ------------------------------------------------------------
+  // REM: compose ファイルはワークスペース直下に置く
   "dockerComposeFile": [
     "../docker-compose.yml",
-    "../docker-compose.override.yml"
+    "../docker-compose.override.yml"   // REM: GPU 無し環境用の上書きに使う
   ],
   "service": "rag-app",
-  // GPU を要求しておいて、GPU が無い端末では無視される
-  "runArgs": [
-    "--gpus",
-    "all"
-  ],
-  // build 時に BASE_IMAGE を切り替えられるようにする
+
+  // ------------------------------------------------------------
+  // REM: ビルド設定
   "build": {
+    "context": "..",                          // REM: ワークスペース直下を build コンテキストに
+    "dockerfile": "Dockerfile",               // REM: VS Code が .devcontainer/ を補完するので名前だけで OK
     "args": {
-      // 高スペマシン → デフォルトで GPU 対応 CUDA ランタイム
-      //   (docker compose up --build 時と同じ挙動)
-      "BASE_IMAGE": "nvidia/cuda:12.4.0-cudnn-runtime-ubuntu22.04"
-      // 低スペマシン（CPUオンリー）で devcontainer を開きたい場合は
-      // VS Code の「Dev Containers: Reopen in Container (With Profile)」
-      // → “cpu” プロファイルを選び、override で python:3.9-slim に戻す
+      // REM: CUDA 12.4 + cuDNN ランタイム
+      "BASE_IMAGE": "nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04",
+      // REM: バージョン一元管理ファイル
+      "ENV_FILE": ".devcontainer/versions.env"
     }
   },
+
+  // ------------------------------------------------------------
+  // REM: GPU / CPU プロファイル
+  //      Object 形式にすると Remote-Containers が QuickPick を自動表示
+  "profiles": {
+    "gpu": {
+      "runArgs": ["--gpus", "all"]            // REM: GPU 搭載マシンで選択
+    },
+    "cpu": {
+      "containerEnv": {
+        "NVIDIA_DISABLE_REQUIRE": "1"         // REM: GPU チェックを無効化
+      }                                       // REM: GPU 無し PC / CI 用
+    }
+  },
+
+  // REM: 既定プロファイルは指定せず QuickPick で毎回選択
+  // "profile": "gpu",
+
+  // ------------------------------------------------------------
   "workspaceFolder": "/workspace",
   "overrideCommand": false,
 
+  // ------------------------------------------------------------
+  // REM: VSCode → コンテナ転送ポート
   "appPorts": [5432],
+
+  // ------------------------------------------------------------
+  // REM: Postgres 接続情報（ホスト側 DB を直接叩く想定）
   "containerEnv": {
     "PGHOST": "host.docker.internal",
     "PGUSER": "raguser",
     "PGPASSWORD": "ragpass",
     "PGDATABASE": "ragdb",
     "PGPORT": "5432"
+    // REM: cpu プロファイルを選択すると
+    //      上書きで NVIDIA_DISABLE_REQUIRE が追加される
   }
+
+  // ------------------------------------------------------------
+  // REM: GHCR / PyTorch Feature は PAT 必要のため一旦撤去
+  // "features": {
+  //   "ghcr.io/devcontainers/features/pytorch:1": { ... }
+  // }
 }

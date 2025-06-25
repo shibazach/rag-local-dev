@@ -9,5 +9,8 @@
     } ,
     // ★ 拡張をコンテナにコピーしない決定打
     "remote.downloadExtensionsLocally": false,
-    "remote.containers.copyExtensions": false
+    "remote.containers.copyExtensions": false,
+
+    // CPU/GPUプロファイル選択
+    "dev.containers.experimental.showProfileCommands": true
 }

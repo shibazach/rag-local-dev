@@ -145,7 +145,7 @@ def render_chat_view():
                 start_time = time.time()
 
                 if selected_model["embedder"] == "OllamaEmbeddings":
-                    embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url=BASE_URL)
+                    embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url=OLLAMA_BASE)
                     query_embedding = embedder.embed_query(query)
                 else:
                     embedder = SentenceTransformer(selected_model["model_name"])

@@ -1,18 +1,22 @@
 version: "3.9"
-
 services:
   rag-app:
+    container_name: rag-app
     build:
       context: .
-      dockerfile: .devcontainer/Dockerfile
-    container_name: rag-app
+      dockerfile: .devcontainer/Dockerfile.gpu
+      args:
+        TorchVer_GPU: "2.2.2+cu124"
+        TorchVisionVer_GPU: "0.17.2+cu124"
+    image: rag-app:dev
     volumes:
       - .:/workspace
       # - hf-cache:/root/.cache/huggingface # Hugging Faceのキャッシュを共有する場合
     networks:
       - ragnet
     extra_hosts:
-      - host.docker.internal:172.19.0.1
+      - host.docker.internal:host-gateway
+    network_mode: host  
     tty: true
     ports:
       - "8501:8501"

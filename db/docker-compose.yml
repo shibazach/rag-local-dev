@@ -21,3 +21,5 @@ volumes:
 
 networks:
   ragnet:
+    external: true
+    name: rag_ragnet

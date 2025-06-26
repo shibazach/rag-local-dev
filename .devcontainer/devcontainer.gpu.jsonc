@@ -1,35 +1,27 @@
 {
   // ========== rag-dev : GPU ==========
   "name": "rag-dev (GPU)",
-
   "dockerComposeFile": [
     "../docker-compose.yml",
     "../docker-compose.override.yml"
   ],
   "service": "rag-app",
-
-  "build": {
-    "context": "..",
-    "dockerfile": "Dockerfile.gpu",
-    "args": {
-      "TorchVer_GPU": "2.2.2+cu124",
-      "TorchVisionVer_GPU": "0.17.2+cu124"
-    }
-  },
-
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-
   // GPU 版は containerRuntime に nvidia を要求するなら compose 側で設定
   "overrideCommand": true,
-
+  "runArgs": [
+    "--add-host",
+    "host.docker.internal:host-gateway"
+  ],
   "containerEnv": {
     "PGHOST": "host.docker.internal",
     "PGUSER": "raguser",
     "PGPASSWORD": "ragpass",
     "PGDATABASE": "ragdb",
-    "PGPORT": "5432"
+    "PGPORT": "5432",
+    "PYTHONPATH": "/workspace"
   },
-
-  "postCreateCommand": "bash"
+  // "postCreateCommand": "bash"
+  "postCreateCommand": "echo Ready"
 }

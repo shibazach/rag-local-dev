@@ -1,34 +1,26 @@
 {
   // ========== rag-dev : CPU ==========
   "name": "rag-dev (CPU)",
-
   "dockerComposeFile": [
     "../docker-compose.yml",
     "../docker-compose.override.yml"
   ],
   "service": "rag-app",
-
-  "build": {
-    "context": "..",
-    "dockerfile": "Dockerfile.cpu",
-    "args": {
-      "TorchVer_CPU": "2.6.0+cpu",
-      "TorchVisionVer_CPU": "0.21.0+cpu"
-    }
-  },
-
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-
   "overrideCommand": true,
-
+  "runArgs": [
+    "--add-host",
+    "host.docker.internal:host-gateway"
+  ],
   "containerEnv": {
     "PGHOST": "host.docker.internal",
     "PGUSER": "raguser",
     "PGPASSWORD": "ragpass",
     "PGDATABASE": "ragdb",
-    "PGPORT": "5432"
+    "PGPORT": "5432",
+    "PYTHONPATH": "/workspace"
   },
-
-  "postCreateCommand": "bash"
+  // "postCreateCommand": "bash"
+  "postCreateCommand": "echo Ready"
 }

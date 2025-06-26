@@ -1,6 +1,7 @@
 # scripts/app.py
 
 import streamlit as st
+from src import bootstrap 
 from scripts.views.ingest_view import render_ingest_view
 from scripts.views.chat_view import render_chat_view
 

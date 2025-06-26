@@ -1,6 +1,6 @@
 {
-  // ========== rag-dev : CPU ==========
-  "name": "rag-dev (CPU)",
+  // ========== rag-dev : GPU ==========
+  "name": "rag-dev (GPU)",
 
   "dockerComposeFile": [
     "../docker-compose.yml",
@@ -10,16 +10,17 @@
 
   "build": {
     "context": "..",
-    "dockerfile": "Dockerfile.cpu",
+    "dockerfile": "Dockerfile.gpu",
     "args": {
-      "TorchVer_CPU": "2.6.0+cpu",
-      "TorchVisionVer_CPU": "0.21.0+cpu"
+      "TorchVer_GPU": "2.2.2+cu124",
+      "TorchVisionVer_GPU": "0.17.2+cu124"
     }
   },
 
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
 
+  // GPU 版は containerRuntime に nvidia を要求するなら compose 側で設定
   "overrideCommand": true,
 
   "containerEnv": {

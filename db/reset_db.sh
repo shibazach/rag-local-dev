@@ -23,4 +23,4 @@ docker volume rm db_pgdata
 echo "🧼 ネットワークも削除（必要に応じて）"
 docker network rm db_ragnet 2>/dev/null || echo "⚠️ ネットワークは存在しないか、他のサービスで使用中"
 
-echo "♻️ 完全リセット完了！再構築には ./setup.sh を実行してください。"
+echo "♻️ 完全リセット完了！再構築には ./setup_db.sh を実行してください。"

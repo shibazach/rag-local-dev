@@ -1,0 +1,7 @@
+# 不要な大容量を除外
+.git
+.vscode
+**/__pycache__
+*.log
+*.pth
+*.checkpoint

@@ -7,7 +7,7 @@
         "github.copilot": ["ui"], // ← 常にホスト側で動かす
         "github.copilot-chat":  ["ui"]   // ← 追加
     } ,
-    // ★ 拡張をコンテナにコピーしない決定打
+    // 拡張機能はホスト側で保持
     "remote.downloadExtensionsLocally": false,
     "remote.containers.copyExtensions": false,
 

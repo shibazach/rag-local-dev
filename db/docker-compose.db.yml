@@ -1,0 +1,22 @@
+networks:
+  ragnet:
+    external: true
+    name: ragnet
+
+services:
+  ragdb:
+    image: pgvector/pgvector:pg15
+    container_name: ragdb
+    restart: always
+    environment:
+      POSTGRES_USER: raguser
+      POSTGRES_PASSWORD: ragpass
+      POSTGRES_DB: ragdb
+    volumes:
+      - ragdb:/var/lib/postgresql/data
+    networks: [ragnet]
+    ports:
+      - "5432:5432"
+
+volumes:
+  ragdb: {}

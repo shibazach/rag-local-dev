@@ -1,15 +1,13 @@
 {
   // ========== rag-dev : GPU ==========
-  "name": "rag-dev (GPU)",
+  "name": "ragdev",
   "dockerComposeFile": [
-    "../docker-compose.yml",
-    "../docker-compose.override.yml"
+    "../docker-compose.yml"
   ],
-  "service": "rag-app",
+  "service": "ragapp",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  // GPU 版は containerRuntime に nvidia を要求するなら compose 側で設定
-  "overrideCommand": true,
+  "overrideCommand": false,
   "runArgs": [
     "--add-host",
     "host.docker.internal:host-gateway"
@@ -22,6 +20,5 @@
     "PGPORT": "5432",
     "PYTHONPATH": "/workspace"
   },
-  // "postCreateCommand": "bash"
   "postCreateCommand": "echo Ready"
 }

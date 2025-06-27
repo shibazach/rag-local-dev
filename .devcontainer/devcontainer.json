@@ -1,26 +1,20 @@
 {
-  // ========== rag-dev : CPU ==========
-  "name": "rag-dev (CPU)",
+  // ========== ragdev : CPU ==========
+  "name": "ragdev",
   "dockerComposeFile": [
-    "../docker-compose.yml",
-    "../docker-compose.override.yml"
+    "../docker-compose.yml"
   ],
-  "service": "rag-app",
+  "service": "ragapp",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  "overrideCommand": true,
+  "overrideCommand": false,
   "runArgs": [
     "--add-host",
     "host.docker.internal:host-gateway"
   ],
-  "containerEnv": {
-    "PGHOST": "host.docker.internal",
-    "PGUSER": "raguser",
-    "PGPASSWORD": "ragpass",
-    "PGDATABASE": "ragdb",
-    "PGPORT": "5432",
-    "PYTHONPATH": "/workspace"
+  "remoteEnv": {
+    "OLLAMA_BASE": "http://host.docker.internal:11434",
+    "DB_URL": "postgresql://raguser:ragpass@ragdb:5432/ragdb"
   },
-  // "postCreateCommand": "bash"
   "postCreateCommand": "echo Ready"
 }

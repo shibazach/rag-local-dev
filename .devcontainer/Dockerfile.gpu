@@ -7,8 +7,8 @@ FROM ${BASE_IMAGE}
 CMD ["bash", "-l"]         # devcontainer がシェルを掴み続ける
 
 # ---------- 1. Torch バージョン (cu124) ----------
-ARG TorchVer_GPU="2.2.2+cu124"
-ARG TorchVisionVer_GPU="0.17.2+cu124"
+ARG TorchVer="2.2.2+cu124"
+ARG TorchVisionVer="0.17.2+cu124"
 
 # ---------- 2. OS パッケージ ----------
 RUN apt-get update -y && \
@@ -23,8 +23,8 @@ COPY requirements.txt /tmp/requirements.txt
 RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install -r /tmp/requirements.txt && \
     python3 -m pip install \
-        torch=="${TorchVer_GPU}" \
-        torchvision=="${TorchVisionVer_GPU}" \
+        torch=="${TorchVer}" \
+        torchvision=="${TorchVisionVer}" \
         --index-url https://download.pytorch.org/whl/cu124 && \
     rm /tmp/requirements.txt
 

@@ -1,0 +1,33 @@
+# docker-compose.gpu.yml
+services:
+  ragapp:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        TorchVer: "2.2.2+cu124"
+        TorchVisionVer: "0.17.2+cu124"
+    image: ragapp
+    volumes:
+      - .:/workspace
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    tty: true
+    environment:
+      DB_HOST: ragdb
+      OLLAMA_MODEL: gemma:7b
+      # OLLAMA_BASE: http://host.docker.internal:11434
+      OLLAMA_BASE: http://127.0.0.1:11434
+      DB_URL: postgresql://raguser:ragpass@pgvector-db:5432/ragdb
+      PYTHONPATH: /workspace
+      STREAMLIT_SERVER_ADDRESS: 0.0.0.0
+      STREAMLIT_SERVER_PORT: 8501
+      STREAMLIT_SERVER_ENABLE_CORS: "false" # ""必須
+
+volumes:
+  ragdb:
+
+networks:
+  ragnet:
+    external: true
+    name: ragnet

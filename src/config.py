@@ -15,8 +15,8 @@ DEVELOPMENT_MODE = True
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # REM: Ollamaのモデル名とベースURL
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma:7b")
-OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://host.docker.internal:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma:7b") #環境変数優先
+OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://host.docker.internal:11434") #環境変数優先
 
 # REM: デフォルトの入力ディレクトリと出力ディレクトリ
 INPUT_DIR = "ignored/input_files"
@@ -24,7 +24,7 @@ OUTPUT_DIR = "ignored/output_files"
 LOG_DIR = "logs/full_logs"
 
 # REM: postgreSQLの接続URL
-DB_URL = os.getenv("DB_URL", "postgresql://raguser:ragpass@localhost:5432/ragdb")
+DB_URL = os.getenv("DB_URL", "postgresql://raguser:ragpass@ragdb:5432/ragdb") #環境変数優先
 DB_ENGINE = create_engine(DB_URL)
 
 # REM: 埋め込みモデルの設定

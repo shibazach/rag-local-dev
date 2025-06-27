@@ -6,8 +6,8 @@
 set -euo pipefail
 
 ### ---- 0. 二重確認 ------------------------------------------------------
-read -rp $'\n!!! この操作は Ollama を完全に削除します。\n'\
-'    サービス・モデル・ログ・設定ファイル・FW ルールもすべて消えます。\n'\
+read -rp $'\n!!! この操作は Ollama を完全に削除します。 \n'\
+'    サービス・モデル・ログ・設定ファイル・FW ルールもすべて消えます。 \n'\
 '    本当に続行する場合は「ollama-nuke」と入力してください > ' CONFIRM
 [[ "$CONFIRM" == "ollama-nuke" ]] || { echo "Abort."; exit 1; }
 
@@ -26,34 +26,45 @@ echo "🔪  Killing residual Ollama processes…"
 pkill -9 -f 'ollama serve' 2>/dev/null || true
 
 ### ---- 4. バイナリ削除 ---------------------------------------------------
-echo "💣  Removing Ollama binary…"
-rm -f /usr/local/bin/ollama
+echo "💣  Removing Ollama binaries from PATH…"
+# hash クリア
+hash -r || true
+# which -a で見つかったものをすべて削除
+for bin in $(which -a ollama 2>/dev/null); do
+  echo "  rm -f $bin"
+  rm -f "$bin"
+done
+# キャッシュ再クリア
+hash -r || true
 
-### ---- 5. モデル & ログ ディレクトリ削除 --------------------------------
+### ---- 5. モデル & ログ & キャッシュ ディレクトリ削除 --------------------
 echo "📂  Purging model & log directories…"
+rm -rf /usr/share/ollama/.ollama
 rm -rf /opt/ollama_models
 rm -rf /var/log/ollama
-rm -rf /root/.ollama   # 他ユーザー環境なら該当パスを調整
+rm -rf /root/.ollama
+rm -rf /root/.local/share/ollama
+rm -rf /home/*/.ollama
+rm -rf /home/*/.local/share/ollama
+rm -rf /usr/local/lib/ollama
 
 ### ---- 6. Docker→Host FW ルール削除 -----------------------------------
 echo "🛡️  Cleaning up firewall rules…"
-DOCKER_NET=$(docker network inspect rag_ragnet \
+DOCKER_NET=$(docker network inspect ragnet \
   --format '{{range .IPAM.Config}}{{.Subnet}}{{end}}' 2>/dev/null || true)
 
 if [[ -n "$DOCKER_NET" ]]; then
-  echo "✔️  Detected rag_ragnet subnet: $DOCKER_NET"
-  # UFW ルール削除
+  echo "✔️  Detected ragnet subnet: $DOCKER_NET"
   if command -v ufw &>/dev/null; then
     echo "📄 Deleting UFW rule..."
     ufw delete allow from "$DOCKER_NET" to any port 11434 proto tcp || true
   fi
-  # iptables DOCKER-USER チェーンルール削除
   if command -v iptables &>/dev/null; then
     echo "📄 Deleting iptables rule..."
     iptables -D DOCKER-USER -s "$DOCKER_NET" -p tcp --dport 11434 -j ACCEPT 2>/dev/null || true
   fi
 else
-  echo "⚠️  rag_ragnet network not found; skipping FW cleanup."
+  echo "⚠️  ragnet network not found; skipping FW cleanup."
 fi
 
 ### ---- 7. ポート確認 ------------------------------------------------------

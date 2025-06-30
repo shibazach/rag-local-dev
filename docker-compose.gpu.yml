@@ -1,33 +1,71 @@
-# docker-compose.gpu.yml
+networks:
+  ragnet:
+    name: ragnet
+
+volumes:
+  pgdata:
+  ollama_data:
+
 services:
+  # Streamlit UI + RAGアプリ
   ragapp:
     build:
       context: .
       dockerfile: .devcontainer/Dockerfile
-      args:
-        TorchVer: "2.2.2+cu124"
-        TorchVisionVer: "0.17.2+cu124"
-    image: ragapp
-    volumes:
-      - .:/workspace
-    extra_hosts:
-      - host.docker.internal:host-gateway
-    tty: true
+    container_name: ragapp
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
     environment:
       DB_HOST: ragdb
-      OLLAMA_MODEL: gemma:7b
-      # OLLAMA_BASE: http://host.docker.internal:11434
-      OLLAMA_BASE: http://127.0.0.1:11434
-      DB_URL: postgresql://raguser:ragpass@pgvector-db:5432/ragdb
-      PYTHONPATH: /workspace
-      STREAMLIT_SERVER_ADDRESS: 0.0.0.0
-      STREAMLIT_SERVER_PORT: 8501
-      STREAMLIT_SERVER_ENABLE_CORS: "false" # ""必須
-
-volumes:
+      DB_PORT: "5432"
+      DB_NAME: rag
+      DB_USER: raguser
+      DB_PASSWORD: ragpass
+      OLLAMA_URL: http://ollama:11434
+    depends_on:
+      - ragdb
+      - ollama
+    networks:
+      - ragnet
+    command: bash
+    stdin_open: true
+    tty: true
+    # PostgreSQL + pgvector
   ragdb:
+    image: ankane/pgvector:latest
+    container_name: ragdb
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: rag
+      POSTGRES_USER: ragdb
+      POSTGRES_PASSWORD: ragpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./.devcontainer/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql:ro
+    networks:
+      - ragnet
 
-networks:
-  ragnet:
-    external: true
-    name: ragnet
+  # Ollama-puller: (GPU-enabled)
+  ollama-puller:
+    image: ollama/ollama:latest
+    command: >
+      sh -c "ollama pull nomic-embed-text && \
+             ollama pull gemma:7b"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks: [ ragnet ]
+
+  # Ollama (GPU-enabled) 
+  ollama:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama-puller
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - ragnet

@@ -1,20 +1,19 @@
 {
-  // ========== ragdev : CPU ==========
-  "name": "ragdev",
-  "dockerComposeFile": [
-    "../docker-compose.yml"
-  ],
-  "service": "ragapp",
-  "workspaceFolder": "/workspace",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  "overrideCommand": false,
-  "runArgs": [
-    "--add-host",
-    "host.docker.internal:host-gateway"
-  ],
-  "remoteEnv": {
-    "OLLAMA_BASE": "http://host.docker.internal:11434",
-    "DB_URL": "postgresql://raguser:ragpass@ragdb:5432/ragdb"
-  },
-  "postCreateCommand": "echo Ready"
+  // ========== rag-dev : GPU ==========
+	"name": "ragdev",
+	"dockerComposeFile": [
+		"../docker-compose.yml"
+	],
+	"service": "ragapp",
+	"workspaceFolder": "/workspace",
+	"forwardPorts": [
+		8501
+	],
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash"
+	},
+	"extensions": [
+		"ms-python.python"
+	]
+}
 }

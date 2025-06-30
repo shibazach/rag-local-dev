@@ -1,24 +1,19 @@
 {
   // ========== rag-dev : GPU ==========
-  "name": "ragdev",
-  "dockerComposeFile": [
-    "../docker-compose.yml"
-  ],
-  "service": "ragapp",
-  "workspaceFolder": "/workspace",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  "overrideCommand": false,
-  "runArgs": [
-    "--add-host",
-    "host.docker.internal:host-gateway"
-  ],
-  "containerEnv": {
-    "PGHOST": "host.docker.internal",
-    "PGUSER": "raguser",
-    "PGPASSWORD": "ragpass",
-    "PGDATABASE": "ragdb",
-    "PGPORT": "5432",
-    "PYTHONPATH": "/workspace"
-  },
-  "postCreateCommand": "echo Ready"
+	"name": "ragdev",
+	"dockerComposeFile": [
+		"../docker-compose.yml"
+	],
+	"service": "ragapp",
+	"workspaceFolder": "/workspace",
+	"forwardPorts": [
+		8501
+	],
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash"
+	},
+	"extensions": [
+		"ms-python.python"
+	]
+}
 }

@@ -7,7 +7,10 @@
 	"service": "ragapp",
 	"workspaceFolder": "/workspace",
 	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-	"forwardPorts": [
+	"remoteEnv": {
+    "PYTHONPATH": "/workspace"
+    },
+    "forwardPorts": [
 		8501
 	],
 	"settings": {

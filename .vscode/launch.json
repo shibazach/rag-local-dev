@@ -2,15 +2,20 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Python: create_rag_data.py",
+      "name": "Streamlit: app.py (module run)",
       "type": "python",
       "request": "launch",
-      "program": "${file}",
-      "console": "integratedTerminal",
-      "cwd": "/workspace",
+      "module": "streamlit",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "run",
+        "scripts/app.py",
+        "--server.fileWatcherType=none"
+      ],
       "env": {
-        "PYTHONPATH": "/workspace"
+        "PYTHONPATH": "${workspaceFolder}"
       },
+      "console": "integratedTerminal",
       "justMyCode": false
     }
   ]

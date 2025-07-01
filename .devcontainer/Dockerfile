@@ -14,7 +14,8 @@ RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
     build-essential git curl ca-certificates \
-    python3 python3-pip python3-dev && \
+    python3 python3-pip python3-dev \
+    tesseract-ocr tesseract-ocr-jpn libreoffice && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- 3. Python ライブラリ ----------

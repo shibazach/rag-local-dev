@@ -47,21 +47,9 @@ services:
     networks:
       - ragnet
 
-  # Ollama-puller: (GPU-enabled)
-  ollama-puller:
-    image: ollama/ollama:latest
-    command: >
-      sh -c "ollama pull nomic-embed-text && \
-             ollama pull gemma:7b"
-    volumes:
-      - ollama_data:/root/.ollama
-    networks: [ ragnet ]
-
   # Ollama (GPU-enabled) 
   ollama:
     image: ollama/ollama:latest
-    depends_on:
-      - ollama-puller
     container_name: ollama
     restart: unless-stopped
     ports:
@@ -70,3 +58,5 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - ragnet
+    entrypoint: >
+      sh -c "ollama serve & sleep 5 && ollama pull gemma:7b && ollama pull nomic-embed-text && wait"

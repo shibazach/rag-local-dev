@@ -15,3 +15,4 @@ src/input_pdfs/user_dict.csv: 無効ファイル（空または英語テンプ�
 2025-06-17T15:40:15.338820Z: Skipped src/input_pdfs/user_dict.csv - CSVに'text'カラムが必要です
 2025-06-17T15:54:01.750841Z: Skipped src/input_pdfs/user_dict.csv - CSVに'text'カラムが必要です
 2025-06-17T16:19:15.321845Z: Skipped src/input_pdfs/user_dict.csv - CSVに'text'カラムが必要です
+2025-07-01T07:33:30.845328Z: Skipped ignored/input_files/user_dict.csv - CSVに'text'カラムが必要です

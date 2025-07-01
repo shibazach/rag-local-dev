@@ -1,5 +1,4 @@
 # scripts/create_rag_data.py
-
 import os, glob, datetime
 from email import policy
 from email.parser import BytesParser

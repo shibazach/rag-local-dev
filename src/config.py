@@ -16,7 +16,9 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # REM: Ollamaのモデル名とベースURL
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma:7b") #環境変数優先
-OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://host.docker.internal:11434") #環境変数優先
+#OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://host.docker.internal:11434") #環境変数優先
+OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")
+
 
 # REM: デフォルトの入力ディレクトリと出力ディレクトリ
 INPUT_DIR = "ignored/input_files"

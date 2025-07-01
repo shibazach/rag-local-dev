@@ -21,5 +21,5 @@
   ],
 
   // コンテナ作成後にワークスペース配下を vscode:vscode に chown
-  "postCreateCommand": "chown -R vscode:vscode /workspace"
+  "postCreateCommand": ""
 }

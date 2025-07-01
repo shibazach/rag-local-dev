@@ -12,13 +12,13 @@ from sentence_transformers import SentenceTransformer
 
 from src import bootstrap
 from src.embedder import embed_and_insert
+from src.config import DB_ENGINE as engine
 from src.error_handler import install_global_exception_handler
 from src.config import OLLAMA_MODEL, OLLAMA_BASE, EMBEDDING_OPTIONS
 
 install_global_exception_handler()
 
 LLM = OllamaLLM(model=OLLAMA_MODEL, base_url=OLLAMA_BASE)
-engine = create_engine("postgresql://raguser:ragpass@pgvector-db:5432/ragdb")
 
 # REM: Ollamaを維持するためのping送信スレッド
 def keep_ollama_warm():
@@ -220,7 +220,8 @@ def render_chat_view():
                         LIMIT 10
                     """
                     with engine.connect() as conn:
-                        rows = [dict(r) for r in conn.execute(text(sql))]
+                        # REM: SQLAlchemy の Row → dict 変換には mappings() を使う
+                        rows = conn.execute(text(sql)).mappings().all()
 
                     summaries = []
                     for row in rows:

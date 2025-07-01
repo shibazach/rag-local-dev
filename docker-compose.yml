@@ -46,7 +46,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: rag
-      POSTGRES_USER: ragdb
+      POSTGRES_USER: raguser
       POSTGRES_PASSWORD: ragpass
     volumes:
       - pgdata:/var/lib/postgresql/data

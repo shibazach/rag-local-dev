@@ -7,7 +7,6 @@ import uuid, os
 import base64  # REM: PDFプレビュー用にbase64エンコード
 from sqlalchemy import text
 from io import BytesIO
-from collections import defaultdict  # REM: チャンク統合モードのグルーピング用
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_ollama import OllamaLLM
 from sentence_transformers import SentenceTransformer
@@ -180,6 +179,7 @@ def render_chat_view():
             key="cancel_search",
             disabled=not st.session_state.searching
         )
+
         if run_search:
             st.session_state.searching = True
         if cancel_search:
@@ -189,6 +189,7 @@ def render_chat_view():
             # REM: 検索中インジケータ
             with st.spinner("🔄 検索中..."):
                 query = st.session_state.query_input.strip()
+                # 実際の検索処理
                 if query:
                     start_time = time.time()
 
@@ -211,45 +212,74 @@ def render_chat_view():
                         )
                         # REM: 対象となったファイル一覧を表示
                         file_list = sorted({d["filename"] for d in docs})
-                        st.markdown("**対象ファイル**: " + ", ".join(file_list))
+                        st.markdown(
+                            "**対象ファイル**: " + ", ".join(file_list)
+                        )
 
-                        # REM: ファイル毎にチャンクをまとめて表示
-                        st.markdown("### 🔍 検索結果プレビュー")
-                        docs_by_file = defaultdict(list)
+                        context = "\n\n".join(
+                            f"\U0001F4C4 **{d['filename']}**: {d['snippet']}"
+                            for d in docs
+                        )
+                        prompt = f"""
+以下の情報を参考にして、質問に答えてください。
+
+情報:
+{context}
+
+質問:
+{query}
+""".strip()
+                        response = LLM.invoke(prompt)
+                        elapsed_time = round(time.time() - start_time, 2)
+
+                        st.markdown(
+                            f"### \U0001F9E0 回答（{elapsed_time} 秒）"
+                        )
+                        st.write(response)
+
+                        st.session_state.history.append(
+                            {
+                                "query": query,
+                                "response": response,
+                                "model": selected_label,
+                                "time": elapsed_time,
+                            }
+                        )
+
+                        st.markdown("### \U0001F4D1 検索結果プレビュー")
                         for d in docs:
-                            docs_by_file[(d["file_id"], d["filename"])].append(d)
-
-                        for (file_id, filename), group in docs_by_file.items():
-                            st.markdown(f"**{filename}**")
-                            # REM: 各チャンクスニペットをリスト表示
-                            for d in group:
-                                st.write(f"- {d['snippet']}")
+                            st.markdown(f"**{d['filename']}**")
+                            st.write(d["snippet"])
                             with st.expander("▶️ 全文をプレビュー"):
-                                unique_key = make_unique_key(file_id, filename)
+                                unique_key = make_unique_key(
+                                    d["file_id"], d["filename"]
+                                )
                                 # REM: PDFならブラウザ内プレビュー
-                                if filename.lower().endswith(".pdf"):
+                                if d["filename"].lower().endswith(".pdf"):
                                     b64 = base64.b64encode(
-                                        group[0]["file_blob"]
+                                        d["file_blob"]
                                     ).decode("utf-8")
                                     iframe = (
                                         f'<iframe src="data:application/pdf;base64,{b64}" '
                                         'width="100%" height="600"></iframe>'
                                     )
-                                    st.markdown(iframe, unsafe_allow_html=True)
+                                    st.markdown(
+                                        iframe, unsafe_allow_html=True
+                                    )
 
-                                # REM: 編集画面へ遷移するボタン
                                 if st.button(
                                     "✏️ このファイルを編集する",
                                     key=f"gotoedit_{unique_key}",
                                 ):
-                                    st.session_state.edit_target_file_id = file_id
+                                    st.session_state.edit_target_file_id = (
+                                        d["file_id"]
+                                    )
                                     st.session_state.mode = "ファイル編集"
                                     st.experimental_rerun()
 
-                                # REM: 全文テキスト（編集可能）
                                 edited_text = st.text_area(
                                     "全文テキスト（編集可能）",
-                                    value=group[0]["full_text"],
+                                    value=d["full_text"],
                                     height=200,
                                     key=f"edit_{unique_key}",
                                 )
@@ -265,39 +295,42 @@ def render_chat_view():
                                                 ),
                                                 {
                                                     "content": edited_text,
-                                                    "file_id": file_id,
+                                                    "file_id": d["file_id"],
                                                 },
                                             )
                                             conn.execute(
                                                 text(
                                                     f'DELETE FROM "{tablename}" WHERE file_id = :file_id'
                                                 ),
-                                                {"file_id": file_id},
+                                                {"file_id": d["file_id"]},
                                             )
                                         st.success(
                                             "✅ contentを更新し、旧ベクトルを削除しました"
                                         )
                                         embed_and_insert(
                                             texts=[edited_text],
-                                            filename=filename,
+                                            filename=d["filename"],
                                             truncate_done_tables=set(),
                                         )
-                                        st.success("✅ 再ベクトル化完了！")
+                                        st.success(
+                                            "✅ 再ベクトル化完了！"
+                                        )
                                     except Exception as e:
                                         st.error(f"❌ エラーが発生しました: {e}")
 
-                                # REM: 元ファイルダウンロード
                                 st.download_button(
                                     label="元ファイルをダウンロード",
-                                    data=bytes(group[0]["file_blob"]),
-                                    file_name=filename,
+                                    data=bytes(d["file_blob"]),
+                                    file_name=d["filename"],
                                     mime="application/octet-stream",
                                     key=f"download_{unique_key}",
                                 )
 
                     else:
                         # REM: ファイル別（要約＋一致度）モード
-                        embedding_str = to_pgvector_literal(query_embedding)
+                        embedding_str = to_pgvector_literal(
+                            query_embedding
+                        )
                         sql = f"""
                             SELECT DISTINCT
                                 f.file_id,
@@ -338,14 +371,18 @@ def render_chat_view():
                             key=lambda x: x["score"], reverse=True
                         )
 
-                        st.markdown("### \U0001F4D1 ファイル別の結果（スコア順）")
+                        st.markdown(
+                            "### \U0001F4D1 ファイル別の結果（スコア順）"
+                        )
                         for s in summaries:
                             # REM: ファイル名をクリックして新タブでPDFプレビュー
                             if s["filename"].lower().endswith(".pdf"):
                                 b64 = base64.b64encode(
                                     s["file_blob"]
                                 ).decode("utf-8")
-                                pdf_data = f"data:application/pdf;base64,{b64}"
+                                pdf_data = (
+                                    f"data:application/pdf;base64,{b64}"
+                                )
                                 st.markdown(
                                     f'**📄 <a href="{pdf_data}" target="_blank">{s["filename"]}</a> '
                                     f'（一致度: {s["score"]:.2f}）**',
@@ -361,7 +398,9 @@ def render_chat_view():
                             if st.button(
                                 "✏️ 編集する", key=f"edit_{s['file_id']}"
                             ):
-                                st.session_state.edit_target_file_id = s["file_id"]
+                                st.session_state.edit_target_file_id = (
+                                    s["file_id"]
+                                )
                                 st.session_state.mode = "ファイル編集"
                                 st.experimental_rerun()
 

@@ -1,4 +1,6 @@
 # src/embedder.py
+
+# REM: ベクトル化処理とDB登録を行うユーティリティモジュール
 import hashlib
 import os
 
@@ -27,15 +29,23 @@ def to_pgvector_literal(vec):
 def compute_hash(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
+# REM: files テーブルの TRUNCATE 状態管理（初回のみ実行）
+_truncate_files_done = False
+
+# REM: embedding_* テーブルの TRUNCATE 状態管理（モデルごとに1回のみ）
+_truncate_done_tables = set()
+
 # REM: filesテーブルにファイルを登録しfile_idを返す
-def insert_file_and_get_id(filepath, refined_ja, score):
+def insert_file_and_get_id(filepath, refined_ja, score, truncate_once=False):
+    global _truncate_files_done
+
     with open(filepath, "rb") as f:
         file_blob = f.read()
 
     file_hash = hashlib.sha256(file_blob).hexdigest()
 
     with DB_ENGINE.begin() as conn:
-        # REM: files テーブルを初期化前に必ず作成
+        # REM: files テーブル作成（存在しなければ）
         conn.execute(sql_text("""
             CREATE TABLE IF NOT EXISTS files (
                 file_id SERIAL PRIMARY KEY,
@@ -47,10 +57,13 @@ def insert_file_and_get_id(filepath, refined_ja, score):
             )
         """))
 
-        if DEVELOPMENT_MODE:
-            print("🧨 DEVELOPMENT_MODE: files テーブルを TRUNCATE")
+        # REM: 開発モードかつ初回のみ TRUNCATE 実行
+        if DEVELOPMENT_MODE and truncate_once and not _truncate_files_done:
+            print("🧨 DEVELOPMENT_MODE: files テーブルを TRUNCATE（初回のみ）")
             conn.execute(sql_text("TRUNCATE TABLE files CASCADE"))
+            _truncate_files_done = True
 
+        # REM: 同一ファイルがすでに登録されている場合はそのIDを返す
         existing = conn.execute(sql_text(
             "SELECT file_id FROM files WHERE file_hash = :hash"
         ), {"hash": file_hash}).fetchone()
@@ -59,6 +72,7 @@ def insert_file_and_get_id(filepath, refined_ja, score):
             print(f"📎 file_id {existing[0]} を files テーブルより取得")
             return existing[0]
 
+        # REM: 新規ファイルを登録
         result = conn.execute(sql_text("""
             INSERT INTO files (filename, content, file_blob, quality_score, file_hash)
             VALUES (:filename, :content, :file_blob, :score, :hash)
@@ -75,16 +89,17 @@ def insert_file_and_get_id(filepath, refined_ja, score):
         return file_id
 
 # REM: ベクトル化とDB登録（モデル指定対応）
-def embed_and_insert(texts, filename, model_keys=None, truncate_done_tables=None, return_data=False, quality_score=0.0):
+def embed_and_insert(texts, filename, model_keys=None, return_data=False, quality_score=0.0):
+    global _truncate_done_tables
+
+    # REM: チャンク分割（500文字 + 50重複）
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = [splitter.split_text(t) for t in texts]
     flat_chunks = [s for c in chunks for s in c]
     full_text = "\n".join(flat_chunks)
 
-    file_id = insert_file_and_get_id(filename, full_text, quality_score)
-
-    if truncate_done_tables is None:
-        truncate_done_tables = set()
+    # REM: files テーブルへの登録（初回のみ TRUNCATE）
+    file_id = insert_file_and_get_id(filename, full_text, quality_score, truncate_once=True)
 
     all_chunks = []
     all_embeddings = []
@@ -103,18 +118,20 @@ def embed_and_insert(texts, filename, model_keys=None, truncate_done_tables=None
                 base_url=OLLAMA_BASE
             )
             embeddings = embedder.embed_documents(flat_chunks)
+
         elif config["embedder"] == "SentenceTransformer":
             device = "cuda" if torch.cuda.is_available() else "cpu"
             embedder = SentenceTransformer(config["model_name"], device=device)
             embeddings = embedder.encode(flat_chunks, convert_to_numpy=True)
+
         else:
             print(f"⚠️ 未対応の埋め込み: {config['embedder']}")
             continue
 
-        # REM: テーブル名をモデル名から生成
+        # REM: テーブル名をモデル名と次元から生成
         table_name = config["model_name"].replace("/", "_").replace("-", "_") + f"_{config['dimension']}"
 
-        # REM: テーブル作成と初期化
+        # REM: テーブル作成と初期化（初回のみ）
         with DB_ENGINE.begin() as conn:
             conn.execute(sql_text(f"""
                 CREATE TABLE IF NOT EXISTS "{table_name}" (
@@ -125,12 +142,12 @@ def embed_and_insert(texts, filename, model_keys=None, truncate_done_tables=None
                 )
             """))
 
-            if table_name not in truncate_done_tables:
+            if table_name not in _truncate_done_tables:
                 conn.execute(sql_text(f'TRUNCATE TABLE "{table_name}" CASCADE'))
                 print(f"🧹 テーブル {table_name} を初期化しました")
-                truncate_done_tables.add(table_name)
+                _truncate_done_tables.add(table_name)
 
-            # REM: チャンク毎に挿入
+            # REM: チャンクごとにベクトルと一緒に登録
             insert_sql = sql_text(f"""
                 INSERT INTO "{table_name}" (content, embedding, file_id)
                 VALUES (:content, :embedding, :file_id)

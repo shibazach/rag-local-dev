@@ -1,127 +1,120 @@
 📝 整形後:
-## Summary of Development Report on Fatigue Cracks in Housing
+**破面分析報告**
 
-This report investigates fatigue cracks found in a housing unit. Key findings are:
+**概要**
 
-**1. Crack initiation:**
-- Cracks appeared in both investigated housing units.
-- The cracks originated from a specific area in each unit.
+この報告では、開発中のハウジングの破面分析結果を報告します。
 
-**2. Crack progression:**
-- Cracks progressed in a consistent direction in both units.
-- The cracks expanded into the housing interior.
+**分析方法**
 
-**3. Damage area:**
-- The cracks were primarily located in the housing interior.
-- The affected area experienced discoloration, indicating fatigue damage.
+* SEM（電子顕微鏡）による破面観察
+* EDS（エネルギー散乱法）元素分析
+* 金属組織観察（エッチング）
 
-**4. Elemental analysis:**
-- Oxygen concentration variations were detected on the crack surface, suggesting the presence of oxygen during crack initiation and growth.
-- Other elements like carbon, silicon, sulfur, iron, and zinc were also identified.
+**結果**
 
-**5. Microstructural analysis:**
-- The microstructure of the affected area revealed pearlite-based ductile iron with graphite nodules.
-- The nodules appear in a free ferrite matrix with a "bull's-eye" structure.
+* 2つの破面（A-1、B-1）が疲労破壊によって発生したことが確認された。
+* 2つの破面とも、破面近傍に変色領域（疲労破壊領域）が存在した。
+* 2つの破面における元素分析の結果、破面表面の酸素量に違いがあり、これは破面発生の異なる原因である可能性があります。
+* 金属組織観察の結果、破面A-1は、破面近傍の金属組織に球状黒鉛（グラファイト）の結晶が確認されました。
 
-**6. Fatigue characteristics:**
-- Ballistic impact testing confirmed the fatigue nature of the cracks.
-- The cracks displayed characteristics consistent with overload or impact loading.
+**結論**
 
+* 2つの破面は、疲労破壊によって発生した可能性があります。
+* 2つの破面における元素分析と金属組織観察の結果から、破面発生の異なる原因が推測されます。
 
-**Recommendations:**
+**今後**
 
-- Further investigations are needed to determine the exact cause of fatigue cracking.
-- Structural reinforcement or design modifications may be necessary to prevent future cracks.
-- Continuous monitoring of the housing units is recommended to detect any new cracks promptly.
+* 疲労発生の特定の根源の特定が必要です。
+* 疲労発生を防止するための対策が必要です。
 
+**図表**
 
-## Key Findings:
+* Fig.1-4：破面 A-1 の画像
+* Fig.5-8：破面 B-1 の画像
+* Fig.9-10：球状黒鉛化率とパーライト率の算出結果
 
-- Fatigue cracks are a serious issue in housing units.
-- Early detection and intervention are crucial for preventing structural collapse.
-- Understanding the underlying cause and implementing appropriate measures is essential for ensuring housing safety.
+**参考資料**
+
+* ASM Handbook Vol.9
 
 
 === ✂️ チャンク ===
-## Summary of Development Report on Fatigue Cracks in Housing
+**破面分析報告**
 
-This report investigates fatigue cracks found in a housing unit. Key findings are:
+**概要**
 
-**1. Crack initiation:**
-- Cracks appeared in both investigated housing units.
-- The cracks originated from a specific area in each unit.
+この報告では、開発中のハウジングの破面分析結果を報告します。
 
-**2. Crack progression:**
-- Cracks progressed in a consistent direction in both units.
-- The cracks expanded into the housing interior.
-**3. Damage area:**
-- The cracks were primarily located in the housing interior.
-- The affected area experienced discoloration, indicating fatigue damage.
+**分析方法**
 
-**4. Elemental analysis:**
-- Oxygen concentration variations were detected on the crack surface, suggesting the presence of oxygen during crack initiation and growth.
-- Other elements like carbon, silicon, sulfur, iron, and zinc were also identified.
-**5. Microstructural analysis:**
-- The microstructure of the affected area revealed pearlite-based ductile iron with graphite nodules.
-- The nodules appear in a free ferrite matrix with a "bull's-eye" structure.
+* SEM（電子顕微鏡）による破面観察
+* EDS（エネルギー散乱法）元素分析
+* 金属組織観察（エッチング）
 
-**6. Fatigue characteristics:**
-- Ballistic impact testing confirmed the fatigue nature of the cracks.
-- The cracks displayed characteristics consistent with overload or impact loading.
+**結果**
 
+* 2つの破面（A-1、B-1）が疲労破壊によって発生したことが確認された。
+* 2つの破面とも、破面近傍に変色領域（疲労破壊領域）が存在した。
+* 2つの破面における元素分析の結果、破面表面の酸素量に違いがあり、これは破面発生の異なる原因である可能性があります。
+* 金属組織観察の結果、破面A-1は、破面近傍の金属組織に球状黒鉛（グラファイト）の結晶が確認されました。
 
-**Recommendations:**
-**Recommendations:**
+**結論**
 
-- Further investigations are needed to determine the exact cause of fatigue cracking.
-- Structural reinforcement or design modifications may be necessary to prevent future cracks.
-- Continuous monitoring of the housing units is recommended to detect any new cracks promptly.
+* 2つの破面は、疲労破壊によって発生した可能性があります。
+* 2つの破面における元素分析と金属組織観察の結果から、破面発生の異なる原因が推測されます。
 
+**今後**
 
-## Key Findings:
-## Key Findings:
+* 疲労発生の特定の根源の特定が必要です。
+* 疲労発生を防止するための対策が必要です。
 
-- Fatigue cracks are a serious issue in housing units.
-- Early detection and intervention are crucial for preventing structural collapse.
-- Understanding the underlying cause and implementing appropriate measures is essential for ensuring housing safety.
-## Summary of Development Report on Fatigue Cracks in Housing
+**図表**
+**図表**
 
-This report investigates fatigue cracks found in a housing unit. Key findings are:
+* Fig.1-4：破面 A-1 の画像
+* Fig.5-8：破面 B-1 の画像
+* Fig.9-10：球状黒鉛化率とパーライト率の算出結果
 
-**1. Crack initiation:**
-- Cracks appeared in both investigated housing units.
-- The cracks originated from a specific area in each unit.
+**参考資料**
 
-**2. Crack progression:**
-- Cracks progressed in a consistent direction in both units.
-- The cracks expanded into the housing interior.
-**3. Damage area:**
-- The cracks were primarily located in the housing interior.
-- The affected area experienced discoloration, indicating fatigue damage.
+* ASM Handbook Vol.9
+**破面分析報告**
 
-**4. Elemental analysis:**
-- Oxygen concentration variations were detected on the crack surface, suggesting the presence of oxygen during crack initiation and growth.
-- Other elements like carbon, silicon, sulfur, iron, and zinc were also identified.
-**5. Microstructural analysis:**
-- The microstructure of the affected area revealed pearlite-based ductile iron with graphite nodules.
-- The nodules appear in a free ferrite matrix with a "bull's-eye" structure.
+**概要**
 
-**6. Fatigue characteristics:**
-- Ballistic impact testing confirmed the fatigue nature of the cracks.
-- The cracks displayed characteristics consistent with overload or impact loading.
+この報告では、開発中のハウジングの破面分析結果を報告します。
 
+**分析方法**
 
-**Recommendations:**
-**Recommendations:**
+* SEM（電子顕微鏡）による破面観察
+* EDS（エネルギー散乱法）元素分析
+* 金属組織観察（エッチング）
 
-- Further investigations are needed to determine the exact cause of fatigue cracking.
-- Structural reinforcement or design modifications may be necessary to prevent future cracks.
-- Continuous monitoring of the housing units is recommended to detect any new cracks promptly.
+**結果**
 
+* 2つの破面（A-1、B-1）が疲労破壊によって発生したことが確認された。
+* 2つの破面とも、破面近傍に変色領域（疲労破壊領域）が存在した。
+* 2つの破面における元素分析の結果、破面表面の酸素量に違いがあり、これは破面発生の異なる原因である可能性があります。
+* 金属組織観察の結果、破面A-1は、破面近傍の金属組織に球状黒鉛（グラファイト）の結晶が確認されました。
 
-## Key Findings:
-## Key Findings:
+**結論**
 
-- Fatigue cracks are a serious issue in housing units.
-- Early detection and intervention are crucial for preventing structural collapse.
-- Understanding the underlying cause and implementing appropriate measures is essential for ensuring housing safety.
+* 2つの破面は、疲労破壊によって発生した可能性があります。
+* 2つの破面における元素分析と金属組織観察の結果から、破面発生の異なる原因が推測されます。
+
+**今後**
+
+* 疲労発生の特定の根源の特定が必要です。
+* 疲労発生を防止するための対策が必要です。
+
+**図表**
+**図表**
+
+* Fig.1-4：破面 A-1 の画像
+* Fig.5-8：破面 B-1 の画像
+* Fig.9-10：球状黒鉛化率とパーライト率の算出結果
+
+**参考資料**
+
+* ASM Handbook Vol.9

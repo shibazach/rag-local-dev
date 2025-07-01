@@ -67,6 +67,12 @@ services:
               capabilities: [gpu]
     environment:
       NVIDIA_VISIBLE_DEVICES: all
+    # ── デバイスマッピング追加 ──
+    devices:
+      - "/dev/nvidia0:/dev/nvidia0"
+      - "/dev/nvidiactl:/dev/nvidiactl"
+      - "/dev/nvidia-uvm:/dev/nvidia-uvm"
+      - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
     gpus: all
     entrypoint: >
       sh -c "ollama serve & sleep 5 && ollama pull gemma:7b && ollama pull nomic-embed-text && wait"

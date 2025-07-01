@@ -1,2 +1,4 @@
 # 📦 無視する一時フォルダ群
 ignored/
+__pycache__/
+*.py[cod]

@@ -5,16 +5,16 @@ FROM ubuntu:22.04
 ENV NVIDIA_DISABLE_REQUIRE=true
 
 # ---------- 1. Torch バージョンを固定 ARG として宣言 ----------
-ARG TorchVer="2.6.0+cu124"
-ARG TorchVisionVer="0.21.0+cu124"
+ARG TorchVer="2.6.0+cpu"
+ARG TorchVisionVer="0.21.0+cpu"
 
 # ---------- 2. OS パッケージ ----------
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
-    build-essential git curl ca-certificates \
-    python3 python3-pip python3-dev \
-    tesseract-ocr tesseract-ocr-jpn libreoffice && \
+      build-essential git curl ca-certificates \
+      python3 python3-pip python3-dev \
+      tesseract-ocr tesseract-ocr-jpn libreoffice && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- 3. Python ライブラリ ----------
@@ -25,11 +25,17 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install \
     torch=="${TorchVer}" \
     torchvision=="${TorchVisionVer}" \
-    --index-url https://download.pytorch.org/whl/cu124 && \
+    --index-url https://download.pytorch.org/whl/cpu && \
     rm /tmp/requirements.txt
 
 # ---------- 4. 作業ディレクトリ ----------
 WORKDIR /workspace
+
+# パッケージとして認識させるための __init__.py
+RUN mkdir -p src scripts/views && \
+    touch src/__init__.py \
+          scripts/__init__.py \
+          scripts/views/__init__.py
 
 # REM: Streamlit ポート公開
 #EXPOSE 8501

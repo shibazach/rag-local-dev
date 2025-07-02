@@ -1,22 +1,24 @@
 {
   // ========== ragdev : CPU ==========
-	"name": "ragdev",
-	"dockerComposeFile": [
-		"../docker-compose.yml"
-	],
-	"service": "ragapp",
-	"workspaceFolder": "/workspace",
-	"workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-	"remoteEnv": {
+  "name": "ragdev",
+  "dockerComposeFile": [
+    "../docker-compose.yml"
+  ],
+  "service": "ragapp",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "remoteEnv": {
     "PYTHONPATH": "/workspace"
-    },
-    "forwardPorts": [
-		8501
-	],
-	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash"
-	},
-	"extensions": [
-		"ms-python.python"
-	]
+  },
+  "forwardPorts": [
+    8501
+  ],
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "extensions": [
+    "ms-python.python"
+  ],
+  // コンテナ作成後にワークスペース配下を vscode:vscode に chown
+  "postCreateCommand": "chown -R vscode:vscode /workspace"
 }

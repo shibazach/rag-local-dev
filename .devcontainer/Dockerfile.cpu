@@ -25,15 +25,17 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install \
     torch=="${TorchVer}" \
     torchvision=="${TorchVisionVer}" \
-+    --index-url https://download.pytorch.org/whl/cpu && \
+    --index-url https://download.pytorch.org/whl/cpu && \
     rm /tmp/requirements.txt
 
 # ---------- 4. 作業ディレクトリ ----------
 WORKDIR /workspace
 
 # パッケージとして認識させるための __init__.py
-RUN mkdir -p scripts/views && \
-    touch src/__init__.py scripts/__init__.py scripts/views/__init__.py
+RUN mkdir -p src scripts/views && \
+    touch src/__init__.py \
+          scripts/__init__.py \
+          scripts/views/__init__.py
 
 # REM: Streamlit ポート公開
 #EXPOSE 8501

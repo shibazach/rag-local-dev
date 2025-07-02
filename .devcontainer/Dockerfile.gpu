@@ -32,8 +32,10 @@ RUN python3 -m pip install --upgrade pip && \
 WORKDIR /workspace
 
 # パッケージとして認識させるための __init__.py
-RUN mkdir -p scripts/views && \
-    touch src/__init__.py scripts/__init__.py scripts/views/__init__.py
+RUN mkdir -p src scripts/views && \
+    touch src/__init__.py \
+          scripts/__init__.py \
+          scripts/views/__init__.py
 
 # REM: Streamlit ポート公開
 #EXPOSE 8501

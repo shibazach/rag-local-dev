@@ -24,6 +24,7 @@ services:
       DB_USER: raguser
       DB_PASSWORD: ragpass
       OLLAMA_URL: http://ollama:11434
+      PYTHONPATH: /workspace
     depends_on:
       - ragdb
       - ollama
@@ -33,15 +34,9 @@ services:
     stdin_open: true
     tty: true
     volumes:
-<<<<<<< HEAD
-    # ホストのプロジェクトルートを /workspace にマウントする
-      - ./:/workspace:cached
-      
-=======
       # ホストのプロジェクトルートを /workspace にマウント
       - ./:/workspace:cached
 
->>>>>>> bbab7da (更新)
     # PostgreSQL + pgvector
   ragdb:
     image: ankane/pgvector:latest

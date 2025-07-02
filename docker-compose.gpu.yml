@@ -34,10 +34,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-<<<<<<< HEAD
-=======
       # ホストのプロジェクトルートを /workspace にマウント
->>>>>>> bbab7da (更新)
       - ./:/workspace:cached
 
     # PostgreSQL + pgvector

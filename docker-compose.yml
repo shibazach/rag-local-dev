@@ -34,13 +34,9 @@ services:
     command: bash
     stdin_open: true
     tty: true
-<<<<<<< HEAD
-    volumes:
-=======
     # docker-compose.yml（抜粋）
     volumes:
       # ホストのプロジェクトルートを /workspace にマウント
->>>>>>> bbab7da (更新)
       - ./:/workspace:cached
 
     # PostgreSQL + pgvector

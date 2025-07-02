@@ -32,6 +32,10 @@ services:
     command: bash
     stdin_open: true
     tty: true
+    volumes:
+    # ホストのプロジェクトルートを /workspace にマウントする
+      - ./:/workspace:cached
+      
     # PostgreSQL + pgvector
   ragdb:
     image: ankane/pgvector:latest

@@ -23,14 +23,19 @@ services:
       DB_USER: raguser
       DB_PASSWORD: ragpass
       OLLAMA_URL: http://ollama:11434
+      PYTHONPATH: /workspace
     depends_on:
       - ragdb
       - ollama
     networks:
       - ragnet
+    working_dir: /workspace
     command: bash
     stdin_open: true
     tty: true
+    volumes:
+      - ./:/workspace:cached
+
     # PostgreSQL + pgvector
   ragdb:
     image: ankane/pgvector:latest

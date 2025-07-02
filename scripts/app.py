@@ -4,7 +4,7 @@ import sys; print(sys.path)
 import streamlit as st
 #from src import bootstrap 
 from scripts.views.ingest_view import render_ingest_view
-from scripts.views.chat_view import render_chat_view
+from scripts.views.chat_main import render_chat_view
 
 from src.error_handler import install_global_exception_handler
 

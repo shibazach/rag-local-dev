@@ -1,0 +1,84 @@
+<!-- test/templates/chat.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>RAGチャット</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <h1>🔍 ローカルRAGチャット</h1>
+  <form id="query-form">
+    <label>質問を入力してください:</label><br>
+    <textarea name="query" rows="4" cols="60" required></textarea><br>
+
+    <label>検索モード:</label>
+    <select name="mode">
+      <option value="チャンク統合">チャンク統合</option>
+      <option value="ファイル別（要約+一致度）">ファイル別（要約+一致度）</option>
+    </select><br>
+
+    <label>埋め込みモデル:</label>
+    <select name="model_key">
+      {% for key, config in embedding_options.items() %}
+        <option value="{{ key }}">{{ config["model_name"] }} ({{ config["embedder"] }})</option>
+      {% endfor %}
+    </select><br><br>
+
+    <button type="submit">検索実行</button>
+  </form>
+
+  <div id="results"></div>
+
+  <script>
+  document.getElementById("query-form").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const res = await fetch("/query", { method: "POST", body: formData });
+    const resultDiv = document.getElementById("results");
+    resultDiv.innerHTML = "";
+
+    let json;
+    try {
+      json = await res.json();
+    } catch {
+      return resultDiv.innerHTML = "<p style='color:red'>⚠️ 結果解析に失敗しました</p>";
+    }
+    if (json.error) return resultDiv.innerHTML = `<p style='color:red'>エラー: ${json.error}</p>`;
+
+    // UI整形表示
+    json.results.forEach(item => {
+      const card = document.createElement("div");
+      card.classList.add("card");
+
+      const title = document.createElement("h3");
+      if (item.file_id) {
+        title.innerHTML = `<a href="/api/pdf/${item.file_id}" target="_blank">${item.filename}</a>`;
+      } else {
+        title.textContent = item.filename;
+      }
+      card.appendChild(title);
+
+      const snippet = document.createElement("pre");
+      snippet.textContent = item.snippet || item.summary || "";
+      card.appendChild(snippet);
+
+      if (item.score !== undefined) {
+        const score = document.createElement("p");
+        score.textContent = `一致度: ${item.score.toFixed(2)}`;
+        card.appendChild(score);
+      }
+
+      if (item.file_id) {
+        const btn = document.createElement("button");
+        btn.textContent = "✏️ 編集";
+        btn.onclick = () => location.href = `/edit/${item.file_id}`;
+        card.appendChild(btn);
+      }
+      resultDiv.appendChild(card);
+    });
+  });
+  </script>
+
+</body>
+</html>

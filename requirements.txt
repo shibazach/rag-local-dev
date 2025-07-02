@@ -23,3 +23,7 @@ fugashi
 ipadic
 unidic-lite
 timm
+fastapi
+uvicorn
+jinja2
+python-multipart

@@ -1,5 +1,4 @@
 # src/config.py
-
 import os
 import torch
 
@@ -11,14 +10,17 @@ MECAB_DICT_PATH = "/var/lib/mecab/dic/ipadic-utf8"
 # REM: 開発モード時のDB初期化制御フラグ（TrueならTRUNCATEされる）
 DEVELOPMENT_MODE = True
 
-# GPU があれば "cuda"、無ければ "cpu"
+# REM: GPU があれば "cuda"、無ければ "cpu"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# REM: 要約・整形モデルを自動で選択
+LLM_MODEL_FOR_SUMMARY = "gemma:7b" if torch.cuda.is_available() else "phi3:mini"
+print(f"[config.py] LLM_MODEL_FOR_SUMMARY = {LLM_MODEL_FOR_SUMMARY}")
 
 # REM: Ollamaのモデル名とベースURL
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma:7b") #環境変数優先
 #OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://host.docker.internal:11434") #環境変数優先
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")
-
 
 # REM: デフォルトの入力ディレクトリと出力ディレクトリ
 INPUT_DIR = "ignored/input_files"

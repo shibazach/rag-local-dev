@@ -7,11 +7,10 @@ volumes:
   ollama_data:
 
 services:
-  # Streamlit UI + RAGアプリ
   ragapp:
     build:
       context: .
-      dockerfile: .devcontainer/Dockerfile
+      dockerfile: .devcontainer/Dockerfile  # Zachさんの実環境に合わせてここは維持
     container_name: ragapp
     restart: unless-stopped
     ports:
@@ -24,6 +23,9 @@ services:
       DB_PASSWORD: ragpass
       OLLAMA_URL: http://ollama:11434
       PYTHONPATH: /workspace
+      USE_GPU: "1"  # GPU利用フラグを明示（config.py対応）
+      NVIDIA_VISIBLE_DEVICES: all
+
     depends_on:
       - ragdb
       - ollama
@@ -34,8 +36,23 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      # ホストのプロジェクトルートを /workspace にマウント
       - ./:/workspace:cached
+
+    # 🔽🔽🔽 GPU 割当追加 🔽🔽🔽
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    devices:
+      - "/dev/nvidia0:/dev/nvidia0"
+      - "/dev/nvidiactl:/dev/nvidiactl"
+      - "/dev/nvidia-uvm:/dev/nvidia-uvm"
+      - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
+    gpus: all
+
 
     # PostgreSQL + pgvector
   ragdb:
@@ -51,7 +68,6 @@ services:
       - ./.devcontainer/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql:ro
     networks:
       - ragnet
-
 
   # Ollama (GPU-enabled) 
   ollama:
@@ -82,4 +98,3 @@ services:
     gpus: all
     entrypoint: >
       sh -c "ollama serve & sleep 5 && ollama pull gemma:7b && ollama pull nomic-embed-text && wait"
-

@@ -6,7 +6,6 @@ volumes:
   pgdata:
   ollama_data:
 
-
 services:
   # Streamlit UI + RAGアプリ
   ragapp:
@@ -34,7 +33,6 @@ services:
     command: bash
     stdin_open: true
     tty: true
-    # docker-compose.yml（抜粋）
     volumes:
       # ホストのプロジェクトルートを /workspace にマウント
       - ./:/workspace:cached
@@ -54,6 +52,7 @@ services:
     networks:
       - ragnet
 
+
   # Ollama (GPU-enabled) 
   ollama:
     image: ollama/ollama:latest
@@ -65,5 +64,22 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - ragnet
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      NVIDIA_VISIBLE_DEVICES: all
+    # ── デバイスマッピング追加 ──
+    devices:
+      - "/dev/nvidia0:/dev/nvidia0"
+      - "/dev/nvidiactl:/dev/nvidiactl"
+      - "/dev/nvidia-uvm:/dev/nvidia-uvm"
+      - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
+    gpus: all
     entrypoint: >
       sh -c "ollama serve & sleep 5 && ollama pull gemma:7b && ollama pull nomic-embed-text && wait"
+

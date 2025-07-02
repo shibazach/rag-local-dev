@@ -1,120 +1,169 @@
 📝 整形後:
-**破面分析報告**
+## Analysis of Crack Growth in Housing
 
-**概要**
+This document contains detailed information and analysis of cracks discovered in two housings.
 
-この報告では、開発中のハウジングの破面分析結果を報告します。
+**Summary:**
 
-**分析方法**
+- Cracks were identified in both housings, indicating fatigue damage caused by repeated stress.
+- The cracks progressed from the surface into the interior, indicating progressive damage.
+- The fractured area displayed discoloration, suggesting a fatigue-related fracture mechanism.
 
-* SEM（電子顕微鏡）による破面観察
-* EDS（エネルギー散乱法）元素分析
-* 金属組織観察（エッチング）
 
-**結果**
+**Detailed Findings:**
 
-* 2つの破面（A-1、B-1）が疲労破壊によって発生したことが確認された。
-* 2つの破面とも、破面近傍に変色領域（疲労破壊領域）が存在した。
-* 2つの破面における元素分析の結果、破面表面の酸素量に違いがあり、これは破面発生の異なる原因である可能性があります。
-* 金属組織観察の結果、破面A-1は、破面近傍の金属組織に球状黒鉛（グラファイト）の結晶が確認されました。
+**Housing A:**
 
-**結論**
+- Cracks originated at the junction of two walls.
+- Crack growth direction: horizontal.
+- EDS analysis revealed elevated oxygen concentration in the fractured area, suggesting exposure to air during fracture.
 
-* 2つの破面は、疲労破壊によって発生した可能性があります。
-* 2つの破面における元素分析と金属組織観察の結果から、破面発生の異なる原因が推測されます。
 
-**今後**
+**Housing B:**
 
-* 疲労発生の特定の根源の特定が必要です。
-* 疲労発生を防止するための対策が必要です。
+- Crack initiation point not identified.
+- Crack growth direction: vertical.
+- SEM analysis showed fractured surface features consistent with fatigue damage.
 
-**図表**
 
-* Fig.1-4：破面 A-1 の画像
-* Fig.5-8：破面 B-1 の画像
-* Fig.9-10：球状黒鉛化率とパーライト率の算出結果
+**Metallographic Analysis:**
 
-**参考資料**
+- Both housings exhibited a pearlitic ductile iron microstructure.
+- Spheroidal graphite nodules were dispersed throughout the matrix of pearlite.
+- Analysis confirmed the presence of free ferrite, suggesting susceptibility to intergranular fracture.
 
-* ASM Handbook Vol.9
+
+**Quantitative Analysis:**
+
+- Ballistic impact analysis confirmed the presence of fatigue cracks in both housings.
+- The percentage of pearlite in the microstructure was quantified for both housings.
+
+
+**Conclusion:**
+
+- Fatigue damage caused the cracks in both housings.
+- The difference in crack growth direction suggests varying stress concentrations in each housing.
+- Further analysis is recommended to determine the root cause of the fatigue damage.
+
+**Recommendations:**
+
+- Detailed stress analysis of the housings is recommended to identify potential weak points.
+- Repair or reinforcement measures should be implemented to prevent further crack growth.
+- Periodic inspections of the housings should be conducted to monitor crack progression and ensure timely repairs.
+
+**Keywords:** Fatigue damage, Housing, Pearlitic ductile iron, Crack growth, Ballistic impact analysis, Microstructural analysis.
 
 
 === ✂️ チャンク ===
-**破面分析報告**
+## Analysis of Crack Growth in Housing
 
-**概要**
+This document contains detailed information and analysis of cracks discovered in two housings.
 
-この報告では、開発中のハウジングの破面分析結果を報告します。
+**Summary:**
 
-**分析方法**
+- Cracks were identified in both housings, indicating fatigue damage caused by repeated stress.
+- The cracks progressed from the surface into the interior, indicating progressive damage.
+- The fractured area displayed discoloration, suggesting a fatigue-related fracture mechanism.
 
-* SEM（電子顕微鏡）による破面観察
-* EDS（エネルギー散乱法）元素分析
-* 金属組織観察（エッチング）
 
-**結果**
+**Detailed Findings:**
 
-* 2つの破面（A-1、B-1）が疲労破壊によって発生したことが確認された。
-* 2つの破面とも、破面近傍に変色領域（疲労破壊領域）が存在した。
-* 2つの破面における元素分析の結果、破面表面の酸素量に違いがあり、これは破面発生の異なる原因である可能性があります。
-* 金属組織観察の結果、破面A-1は、破面近傍の金属組織に球状黒鉛（グラファイト）の結晶が確認されました。
+**Housing A:**
+**Detailed Findings:**
 
-**結論**
+**Housing A:**
 
-* 2つの破面は、疲労破壊によって発生した可能性があります。
-* 2つの破面における元素分析と金属組織観察の結果から、破面発生の異なる原因が推測されます。
+- Cracks originated at the junction of two walls.
+- Crack growth direction: horizontal.
+- EDS analysis revealed elevated oxygen concentration in the fractured area, suggesting exposure to air during fracture.
 
-**今後**
 
-* 疲労発生の特定の根源の特定が必要です。
-* 疲労発生を防止するための対策が必要です。
+**Housing B:**
 
-**図表**
-**図表**
+- Crack initiation point not identified.
+- Crack growth direction: vertical.
+- SEM analysis showed fractured surface features consistent with fatigue damage.
 
-* Fig.1-4：破面 A-1 の画像
-* Fig.5-8：破面 B-1 の画像
-* Fig.9-10：球状黒鉛化率とパーライト率の算出結果
 
-**参考資料**
+**Metallographic Analysis:**
+**Metallographic Analysis:**
 
-* ASM Handbook Vol.9
-**破面分析報告**
+- Both housings exhibited a pearlitic ductile iron microstructure.
+- Spheroidal graphite nodules were dispersed throughout the matrix of pearlite.
+- Analysis confirmed the presence of free ferrite, suggesting susceptibility to intergranular fracture.
 
-**概要**
 
-この報告では、開発中のハウジングの破面分析結果を報告します。
+**Quantitative Analysis:**
 
-**分析方法**
+- Ballistic impact analysis confirmed the presence of fatigue cracks in both housings.
+- The percentage of pearlite in the microstructure was quantified for both housings.
+**Conclusion:**
 
-* SEM（電子顕微鏡）による破面観察
-* EDS（エネルギー散乱法）元素分析
-* 金属組織観察（エッチング）
+- Fatigue damage caused the cracks in both housings.
+- The difference in crack growth direction suggests varying stress concentrations in each housing.
+- Further analysis is recommended to determine the root cause of the fatigue damage.
 
-**結果**
+**Recommendations:**
+**Recommendations:**
 
-* 2つの破面（A-1、B-1）が疲労破壊によって発生したことが確認された。
-* 2つの破面とも、破面近傍に変色領域（疲労破壊領域）が存在した。
-* 2つの破面における元素分析の結果、破面表面の酸素量に違いがあり、これは破面発生の異なる原因である可能性があります。
-* 金属組織観察の結果、破面A-1は、破面近傍の金属組織に球状黒鉛（グラファイト）の結晶が確認されました。
+- Detailed stress analysis of the housings is recommended to identify potential weak points.
+- Repair or reinforcement measures should be implemented to prevent further crack growth.
+- Periodic inspections of the housings should be conducted to monitor crack progression and ensure timely repairs.
 
-**結論**
+**Keywords:** Fatigue damage, Housing, Pearlitic ductile iron, Crack growth, Ballistic impact analysis, Microstructural analysis.
+## Analysis of Crack Growth in Housing
 
-* 2つの破面は、疲労破壊によって発生した可能性があります。
-* 2つの破面における元素分析と金属組織観察の結果から、破面発生の異なる原因が推測されます。
+This document contains detailed information and analysis of cracks discovered in two housings.
 
-**今後**
+**Summary:**
 
-* 疲労発生の特定の根源の特定が必要です。
-* 疲労発生を防止するための対策が必要です。
+- Cracks were identified in both housings, indicating fatigue damage caused by repeated stress.
+- The cracks progressed from the surface into the interior, indicating progressive damage.
+- The fractured area displayed discoloration, suggesting a fatigue-related fracture mechanism.
 
-**図表**
-**図表**
 
-* Fig.1-4：破面 A-1 の画像
-* Fig.5-8：破面 B-1 の画像
-* Fig.9-10：球状黒鉛化率とパーライト率の算出結果
+**Detailed Findings:**
 
-**参考資料**
+**Housing A:**
+**Detailed Findings:**
 
-* ASM Handbook Vol.9
+**Housing A:**
+
+- Cracks originated at the junction of two walls.
+- Crack growth direction: horizontal.
+- EDS analysis revealed elevated oxygen concentration in the fractured area, suggesting exposure to air during fracture.
+
+
+**Housing B:**
+
+- Crack initiation point not identified.
+- Crack growth direction: vertical.
+- SEM analysis showed fractured surface features consistent with fatigue damage.
+
+
+**Metallographic Analysis:**
+**Metallographic Analysis:**
+
+- Both housings exhibited a pearlitic ductile iron microstructure.
+- Spheroidal graphite nodules were dispersed throughout the matrix of pearlite.
+- Analysis confirmed the presence of free ferrite, suggesting susceptibility to intergranular fracture.
+
+
+**Quantitative Analysis:**
+
+- Ballistic impact analysis confirmed the presence of fatigue cracks in both housings.
+- The percentage of pearlite in the microstructure was quantified for both housings.
+**Conclusion:**
+
+- Fatigue damage caused the cracks in both housings.
+- The difference in crack growth direction suggests varying stress concentrations in each housing.
+- Further analysis is recommended to determine the root cause of the fatigue damage.
+
+**Recommendations:**
+**Recommendations:**
+
+- Detailed stress analysis of the housings is recommended to identify potential weak points.
+- Repair or reinforcement measures should be implemented to prevent further crack growth.
+- Periodic inspections of the housings should be conducted to monitor crack progression and ensure timely repairs.
+
+**Keywords:** Fatigue damage, Housing, Pearlitic ductile iron, Crack growth, Ballistic impact analysis, Microstructural analysis.

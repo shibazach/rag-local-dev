@@ -1,79 +1,154 @@
 📝 整形後:
-## 出力（整形済み日本語）：
+## Raider Report: Material Analysis of Fracture Incident
 
-材化-H-3411について、溶接工程における鋭敏化による破断が発生したという報告があります。
+**Date:** [Date of report]
 
-**発生背景：**
+**Case:** Material analysis of fracture incident involving material code: H-3411
 
-* 溶接工程によって材料に鋭敏化が発生。
-* 性能試験中に残留応力や低温環境が材料に影響を与える。
-* 溶接部の破面やチューブ内径にき裂が発生。
+**Objective:** Determine the root cause of the fracture and identify potential contributing factors.
 
-**調査結果：**
+**Methodology:**
 
-* 破面1のEDS元素分析結果では、材料にCdやZnが含まれていることがわかり、ろう付けに関連している可能性があります。
-* 破面2の破面上の被膜とEDS元素分析結果では、破面が酸化されていることがわかり、溶接部の高熱による影響です。
-*断面観察の結果、破面近傍にき裂が発生していることがわかり、残留応力や低温環境が材料に影響を与えている可能性があります。
+* Detailed visual examination of fracture surfaces
+* Electron Dispersive Spectroscopy (EDS) analysis of fracture surface materials
+* Review of manufacturing and testing history of the material
 
-**結論：**
+**Results:**
 
-この破断は、溶接工程における鋭敏化によって発生した可能性があります。材料の溶接関連の特性や、溶接後の処理方法の改善が必要です。
+* **Fracture origin:** Multiple cracks were identified on the fracture surface, suggesting a brittle fracture mechanism.
+* **Microstructural analysis:** EDS analysis revealed the presence of oxide inclusions on the fracture surface, indicating potential mechanical overloading or exposure to oxygen.
+* **Chemical analysis:** EDS analysis confirmed the presence of cadmium and zinc in the fracture surface oxide layer, suggesting possible contamination during manufacturing or subsequent exposure to the environment.
+* **Manufacturing history:** Review of manufacturing records revealed potential under-processing during heat treatment, leading to increased brittleness.
 
-**今後：**
+**Conclusion:**
 
-* 溶接工程の条件を最適化する。
-* 溶接後の処理方法を改善する。
-* 材料の溶接関連の特性を検討する。
+The fracture incident is likely caused by a combination of factors, including:
+
+* **Brittle behavior:** The material exhibited increased brittleness due to potential under-processing during heat treatment.
+* **Internal stresses:** Residual stresses introduced during the manufacturing process likely contributed to crack initiation and propagation.
+* **Environmental factors:** Exposure to oxygen and potential contamination with cadmium and zinc during manufacturing or handling may have facilitated crack growth.
+
+**Recommendations:**
+
+* Improve process control during heat treatment to reduce brittleness.
+* Implement stress relief measures during manufacturing to reduce internal tensions.
+* Minimize exposure to oxygen and potential contaminants during handling and storage.
+
+**Further Actions:**
+
+* Conduct further investigations to determine the exact cause of the fracture and identify potential design improvements.
+* Implement corrective measures based on the recommendations above.
+* Conduct regular quality control checks to ensure the material meets specified requirements.
+
+**Attachments:**
+
+* Detailed photographs of the fracture surface
+* EDS analysis results
+* Material manufacturing and testing records
+
+**Prepared by:** [Your name]
+
+**Approved by:** [Name of responsible authority]
 
 
 === ✂️ チャンク ===
-## 出力（整形済み日本語）：
+## Raider Report: Material Analysis of Fracture Incident
 
-材化-H-3411について、溶接工程における鋭敏化による破断が発生したという報告があります。
+**Date:** [Date of report]
 
-**発生背景：**
+**Case:** Material analysis of fracture incident involving material code: H-3411
 
-* 溶接工程によって材料に鋭敏化が発生。
-* 性能試験中に残留応力や低温環境が材料に影響を与える。
-* 溶接部の破面やチューブ内径にき裂が発生。
+**Objective:** Determine the root cause of the fracture and identify potential contributing factors.
 
-**調査結果：**
+**Methodology:**
 
-* 破面1のEDS元素分析結果では、材料にCdやZnが含まれていることがわかり、ろう付けに関連している可能性があります。
-* 破面2の破面上の被膜とEDS元素分析結果では、破面が酸化されていることがわかり、溶接部の高熱による影響です。
-*断面観察の結果、破面近傍にき裂が発生していることがわかり、残留応力や低温環境が材料に影響を与えている可能性があります。
+* Detailed visual examination of fracture surfaces
+* Electron Dispersive Spectroscopy (EDS) analysis of fracture surface materials
+* Review of manufacturing and testing history of the material
 
-**結論：**
+**Results:**
+* **Fracture origin:** Multiple cracks were identified on the fracture surface, suggesting a brittle fracture mechanism.
+* **Microstructural analysis:** EDS analysis revealed the presence of oxide inclusions on the fracture surface, indicating potential mechanical overloading or exposure to oxygen.
+* **Chemical analysis:** EDS analysis confirmed the presence of cadmium and zinc in the fracture surface oxide layer, suggesting possible contamination during manufacturing or subsequent exposure to the environment.
+* **Manufacturing history:** Review of manufacturing records revealed potential under-processing during heat treatment, leading to increased brittleness.
+**Conclusion:**
 
-この破断は、溶接工程における鋭敏化によって発生した可能性があります。材料の溶接関連の特性や、溶接後の処理方法の改善が必要です。
+The fracture incident is likely caused by a combination of factors, including:
+* **Brittle behavior:** The material exhibited increased brittleness due to potential under-processing during heat treatment.
+* **Internal stresses:** Residual stresses introduced during the manufacturing process likely contributed to crack initiation and propagation.
+* **Environmental factors:** Exposure to oxygen and potential contamination with cadmium and zinc during manufacturing or handling may have facilitated crack growth.
 
-**今後：**
+**Recommendations:**
+**Recommendations:**
 
-* 溶接工程の条件を最適化する。
-* 溶接後の処理方法を改善する。
-* 材料の溶接関連の特性を検討する。
-## 出力（整形済み日本語）：
+* Improve process control during heat treatment to reduce brittleness.
+* Implement stress relief measures during manufacturing to reduce internal tensions.
+* Minimize exposure to oxygen and potential contaminants during handling and storage.
 
-材化-H-3411について、溶接工程における鋭敏化による破断が発生したという報告があります。
+**Further Actions:**
+**Further Actions:**
 
-**発生背景：**
+* Conduct further investigations to determine the exact cause of the fracture and identify potential design improvements.
+* Implement corrective measures based on the recommendations above.
+* Conduct regular quality control checks to ensure the material meets specified requirements.
 
-* 溶接工程によって材料に鋭敏化が発生。
-* 性能試験中に残留応力や低温環境が材料に影響を与える。
-* 溶接部の破面やチューブ内径にき裂が発生。
+**Attachments:**
 
-**調査結果：**
+* Detailed photographs of the fracture surface
+* EDS analysis results
+* Material manufacturing and testing records
 
-* 破面1のEDS元素分析結果では、材料にCdやZnが含まれていることがわかり、ろう付けに関連している可能性があります。
-* 破面2の破面上の被膜とEDS元素分析結果では、破面が酸化されていることがわかり、溶接部の高熱による影響です。
-*断面観察の結果、破面近傍にき裂が発生していることがわかり、残留応力や低温環境が材料に影響を与えている可能性があります。
+**Prepared by:** [Your name]
+**Prepared by:** [Your name]
 
-**結論：**
+**Approved by:** [Name of responsible authority]
+## Raider Report: Material Analysis of Fracture Incident
 
-この破断は、溶接工程における鋭敏化によって発生した可能性があります。材料の溶接関連の特性や、溶接後の処理方法の改善が必要です。
+**Date:** [Date of report]
 
-**今後：**
+**Case:** Material analysis of fracture incident involving material code: H-3411
 
-* 溶接工程の条件を最適化する。
-* 溶接後の処理方法を改善する。
-* 材料の溶接関連の特性を検討する。
+**Objective:** Determine the root cause of the fracture and identify potential contributing factors.
+
+**Methodology:**
+
+* Detailed visual examination of fracture surfaces
+* Electron Dispersive Spectroscopy (EDS) analysis of fracture surface materials
+* Review of manufacturing and testing history of the material
+
+**Results:**
+* **Fracture origin:** Multiple cracks were identified on the fracture surface, suggesting a brittle fracture mechanism.
+* **Microstructural analysis:** EDS analysis revealed the presence of oxide inclusions on the fracture surface, indicating potential mechanical overloading or exposure to oxygen.
+* **Chemical analysis:** EDS analysis confirmed the presence of cadmium and zinc in the fracture surface oxide layer, suggesting possible contamination during manufacturing or subsequent exposure to the environment.
+* **Manufacturing history:** Review of manufacturing records revealed potential under-processing during heat treatment, leading to increased brittleness.
+**Conclusion:**
+
+The fracture incident is likely caused by a combination of factors, including:
+* **Brittle behavior:** The material exhibited increased brittleness due to potential under-processing during heat treatment.
+* **Internal stresses:** Residual stresses introduced during the manufacturing process likely contributed to crack initiation and propagation.
+* **Environmental factors:** Exposure to oxygen and potential contamination with cadmium and zinc during manufacturing or handling may have facilitated crack growth.
+
+**Recommendations:**
+**Recommendations:**
+
+* Improve process control during heat treatment to reduce brittleness.
+* Implement stress relief measures during manufacturing to reduce internal tensions.
+* Minimize exposure to oxygen and potential contaminants during handling and storage.
+
+**Further Actions:**
+**Further Actions:**
+
+* Conduct further investigations to determine the exact cause of the fracture and identify potential design improvements.
+* Implement corrective measures based on the recommendations above.
+* Conduct regular quality control checks to ensure the material meets specified requirements.
+
+**Attachments:**
+
+* Detailed photographs of the fracture surface
+* EDS analysis results
+* Material manufacturing and testing records
+
+**Prepared by:** [Your name]
+**Prepared by:** [Your name]
+
+**Approved by:** [Name of responsible authority]

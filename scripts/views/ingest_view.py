@@ -8,7 +8,7 @@ from scripts.llm_text_refiner import refine_text_with_llm
 from scripts.refine_prompter import get_prompt_by_lang
 from src import bootstrap  # ← 実体は何もimportされないが、パスが通る
 from src.config import EMBEDDING_OPTIONS, INPUT_DIR, LOG_DIR
-from src.embedder import embed_and_insert
+from src.file_embedder import embed_and_insert
 from src.error_handler import install_global_exception_handler
 from src.extractor import extract_text_by_extension
 

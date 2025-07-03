@@ -1,5 +1,5 @@
 {
-  // ========== ragdev : CPU ==========
+  // ========== rag-dev : GPU ==========
   "name": "ragdev",
   "dockerComposeFile": [
     "../docker-compose.yml"
@@ -12,6 +12,13 @@
   },
   "forwardPorts": [
     8501
+  ],
+  "runArgs": [
+    "--gpus","all",                // 既存の GPU オプションはそのまま
+    "--device","/dev/nvidia0",
+    "--device","/dev/nvidiactl",
+    "--device","/dev/nvidia-uvm",
+    "--device","/dev/nvidia-uvm-tools"
   ],
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash"

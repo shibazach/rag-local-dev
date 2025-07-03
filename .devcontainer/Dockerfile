@@ -1,19 +1,19 @@
-# REM_CPU構成（GPUドライバ無しホストでも動く最小構成）
+# REM_GPU構成（NVIDIA GPU が搭載されている最強環境）
 
 FROM ubuntu:22.04
 ENV NVIDIA_DISABLE_REQUIRE=true
 
 # ---------- 1. Torch バージョンを固定 ARG として宣言 ----------
-ARG TorchVer="2.6.0+cpu"
-ARG TorchVisionVer="0.21.0+cpu"
+ARG TorchVer="2.6.0+cu124"
+ARG TorchVisionVer="0.21.0+cu124"
 
 # ---------- 2. OS パッケージ ----------
 RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
-      build-essential git curl ca-certificates \
-      python3 python3-pip python3-dev \
-      tesseract-ocr tesseract-ocr-jpn libreoffice && \
+    build-essential git curl ca-certificates \
+    python3 python3-pip python3-dev \
+    tesseract-ocr tesseract-ocr-jpn libreoffice && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- 3. Python ライブラリ ----------
@@ -24,7 +24,7 @@ RUN python3 -m pip install --upgrade pip && \
     python3 -m pip install \
     torch=="${TorchVer}" \
     torchvision=="${TorchVisionVer}" \
-    --index-url https://download.pytorch.org/whl/cpu && \
+    --index-url https://download.pytorch.org/whl/cu124 && \
     rm /tmp/requirements.txt
 
 # ---------- 4. 作業ディレクトリ ----------

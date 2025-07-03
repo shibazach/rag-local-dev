@@ -6,7 +6,7 @@ import uuid
 import numpy as np
 
 from collections import defaultdict
-from src.embedder import embed_and_insert
+from src.file_embedder import embed_and_insert
 from src.config import DB_ENGINE
 from sqlalchemy import text
 from langchain_community.embeddings import OllamaEmbeddings

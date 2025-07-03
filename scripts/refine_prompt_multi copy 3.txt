@@ -1,0 +1,98 @@
+# scripts/refine_prompt_multi.txt
+
+#lang=ja
+# REM: 日本語向けプロンプト
+ja:
+あなたはプロの技術ライターです。以下のPDF抽出テキストおよびOCR抽出テキストをマージし、必ず「章立て」「見出し」「表形式／箇条書き」を使って詳細かつ忠実に再構成してください。勝手な補完や想像はせず、読めない部分は `/*…*/` でマークしたまま残します。
+
+## 1. 文書情報（表形式）
+| 項目         | 値                             |
+|:------------|:------------------------------|
+| 文書番号     | <文書番号を記載>              |
+| 名称         | <名称を記載>                  |
+| 材質         | <材質を記載>                  |
+| KEY WORDS   | <キーワードをカンマ区切り>     |
+
+## 2. 目的
+<「1. 目的」節の内容を忠実に文章化>
+
+## 3. 調査品（箇条書き）
+- <アルミ熱交部品（バー材）など>
+- <材質：6063 など>
+
+## 4. 調査項目（箇条書き）
+- 表面EDS分析
+- 破面観察
+- 断面組織観察
+
+## 5. 調査結果
+### (1) 表面EDS分析
+<EDS分析結果を詳述>
+
+### (2) 破面観察
+- 1) SEM像の所見  
+  <図番号と a部/b部 の所見を整理>
+- 2) EDS Si 分布  
+  <Si 濃度の差をまとめ>
+
+### (3) 断面組織観察
+<図5 の断面写真からわかる所見をまとめ>
+
+## 6. 考察および結論（箇条書き）
+- <考察１>
+- <考察２>
+- <結論>
+
+## 7. 不明瞭箇所一覧
+- もし文字化けや読めない文字があれば、元の文字列をすべて `/*…*/` で囲んで箇条書き
+- なければ「なし」と記載
+
+---
+
+#lang=en
+# REM: English prompt section
+en:
+You are a professional technical writer. Merge and reconcile the following PDF-extracted text and OCR-extracted text into a single structured report in English. Do **not** invent or guess missing parts; wrap any unreadable fragments in `/*...*/`. Follow the exact outline below:
+
+## 1. Document Information (table)
+| Field           | Value                              |
+|:---------------|:-----------------------------------|
+| Document No.   | <insert document number>           |
+| Title          | <insert title>                     |
+| Material       | <insert material>                  |
+| KEY WORDS      | <comma-separated keywords>         |
+
+## 2. Purpose
+<Write out the “1. Purpose” section faithfully as prose.>
+
+## 3. Test Specimens (bullet list)
+- <e.g. Aluminum heat-exchange part (bar material)>
+- <e.g. Material: 6063>
+
+## 4. Test Items (bullet list)
+- Surface EDS analysis
+- Fracture surface observation
+- Cross-sectional microstructure observation
+
+## 5. Test Results
+### (1) Surface EDS Analysis
+<Describe EDS findings in detail.>
+
+### (2) Fracture Surface Observation
+- 1) SEM Image Observations  
+  <Summarize observations for area “a” and “b” with figure numbers.>
+- 2) EDS Si Distribution  
+  <Explain differences in Si concentration.>
+
+### (3) Cross-Sectional Microstructure
+<Detail the findings from Fig.5 cross-section images.>
+
+## 6. Discussion & Conclusions (bullet list)
+- <Point 1>
+- <Point 2>
+- <Conclusion>
+
+## 7. Unclear Sections
+- List any `/*...*/` fragments you used to flag unreadable text, or write “None.”
+
+---

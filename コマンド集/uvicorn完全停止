@@ -1,0 +1,17 @@
+pkill -f "uvicorn test.main:app"
+lsof -t -i tcp:8000 | xargs kill -9
+fuser -k 8000/tcp
+
+起動時に PID ファイルを作って管理
+# 起動スクリプト例: run_uvicorn.sh
+#!/usr/bin/env bash
+uvicorn test.main:app --reload &
+echo $! > .uvicorn.pid
+
+# 停止スクリプト例: stop_uvicorn.sh
+#!/usr/bin/env bash
+if [ -f .uvicorn.pid ]; then
+  kill $(cat .uvicorn.pid) && rm .uvicorn.pid
+else
+  echo "PID file not found."
+fi

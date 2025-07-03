@@ -1,0 +1,14 @@
+<!-- test/templates/viewer.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>No.{{ num }}: {{ filename }}</title>
+  <style>body,html {margin:0;height:100%}</style>
+</head>
+<body>
+  <embed src="/api/pdf/{{ file_id }}" 
+         type="application/pdf" 
+         width="100%" height="100%">
+</body>
+</html>

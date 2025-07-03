@@ -1,45 +1,35 @@
+# scripts/refine_prompt_multi.txt
+
 #lang=ja
-以下は、元文章がPDFの場合、同一の文書についてPDF文書からの文字情報と、OCRによって画像から抽出したテキスト情報を併せた原文です。
+ja:
+#-------------------【必読：システム命令】-------------------
+# ・この出力は必ず**日本語**で行ってください。  
+# ・以下の「指示」部分のみを参照し、「例示」部分は絶対に出力しないでください。
+# ・勝手な補完・想像・推測は禁止です。  
+# ・OCR抽出とPDF抽出の両方から読み取れたテキストを忠実に反映します。  
+# ・読めない部分は「/*…*/」で囲み、必ず「不明瞭箇所一覧」に箇条書きで挙げてください。
 
-文書の意味を正確に保ったまま、整った日本語として再構成してください。  
-抽出結果の区分（例：【PDF抽出】や【OCR抽出】など）はすべて削除してください。  
-重複する内容や文書構造の重なりがある場合は、自然に統合してください。
+#-------------------【指示セクション】-------------------
 
-以下の制約に従ってください：
-- 原文中のラベルや区切り記号（例：【OCR抽出】など）は出力に含めないこと
-- 表現を整える際に、曖昧な言い回しや注釈（例：「誤認の可能性があります」など）は使わないこと
-- 可能な限り自然な段落構成で、情報を網羅的に再構成すること
-- 数値、記号、固有名詞などは、原文通り正確に保つこと
-- 明らかに誤っている語句、読み取り困難な語、不自然な語はすべて前後を /* */ で囲んでください。これらの印は後の処理で重要な役割を果たします。
+あなたはプロの技術ライターです。以下の手順で、このページの内容を再構成してください。
 
----
+1. ページ識別  
+   - ページ内に「文書番号」があれば、`### 文書番号` セクションとして出力し、実際の番号を記載。  
 
-# 原文：
-{TEXT}
+2. 図表／写真観察  
+   - ページ内に「図N」「Fig. N」などのキャプションがあれば、`### 図表観察` セクションを作成し、  
+     - `図N キャプション本文` の形式で **原文通り** にリスト化。  
 
-# 出力（整形済み日本語）：
+3. 本文（段落）  
+   - OCRで**確実に**読み取れた行をすべて列挙し、  
+   - 最後にそれらを一つの**日本語段落**にまとめる。  
+   - **不要な改行／空白は削除**し、自然な文章に整形。  
+   - **文字化け・不明瞭**と判断した文字列は `/*…*/` で囲んだまま残す。  
 
----
+4. 不明瞭箇所一覧  
+   - 本文中に出現した `/*…*/` をすべて抽出し、`### 不明瞭箇所一覧` セクションで箇条書き。  
+   - もし存在しなければ「なし」と記載。  
 
-#lang=en
-The following text combines two sources for the same document:  
-- Characters extracted directly from the PDF layer, and  
-- Text extracted from page images via OCR.  
+5. 出力順序  
+   必ず以下の順番で出力してください。該当しないセクションは完全に省略します。
 
-Re-write the content in natural, well-structured English while preserving the original meaning.  
-Remove all source labels such as 【PDF Extract】 or 【OCR Extract】, and seamlessly integrate any duplicated or overlapping sections into a single coherent passage.
-
-Follow these constraints:  
-- Do **not** include any labels or delimiters (e.g., 【OCR Extract】) in the output  
-- Avoid vague wording or disclaimers (e.g., “there may be recognition errors”)  
-- Re-organise the information into intuitive paragraphs that cover the full content  
-- Keep numbers, symbols, and proper nouns exactly as they appear in the original text  
-- If a word or phrase seems inaccurate or unreadable, enclose it with `/* */` to mark the uncertainty.  Enclose all clearly incorrect words, unreadable phrases, or unnatural expressions with `/* */`. These markers play an important role in subsequent processing.
-
-
----
-
-# Original Text:
-{TEXT}
-
-# Output (Refined English):

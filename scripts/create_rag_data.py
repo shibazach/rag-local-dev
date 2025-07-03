@@ -5,7 +5,7 @@ from email.parser import BytesParser
 
 from src.extractor import extract_text_by_extension
 from scripts.llm_text_refiner import refine_text_with_llm
-from src.embedder import embed_and_insert, insert_file_and_get_id
+from src.file_embedder import embed_and_insert, insert_file_and_get_id
 from src.config import DEVELOPMENT_MODE
 
 from src import bootstrap  # ← 実体は何もimportされないが、パスが通る

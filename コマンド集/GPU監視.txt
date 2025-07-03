@@ -1,0 +1,2 @@
+docker exec -it ragapp nvidia-smi
+watch -n 3 -t docker exec -it ragapp nvidia-smi

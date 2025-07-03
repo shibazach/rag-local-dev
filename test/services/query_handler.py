@@ -1,6 +1,5 @@
 # test/services/query_handler.py
-from src.config import (EMBEDDING_OPTIONS, DB_ENGINE)
-from src.config import (LLM_ENGINE, OLLAMA_BASE)
+from src.config import EMBEDDING_OPTIONS, DB_ENGINE, LLM_ENGINE, OLLAMA_BASE
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import text
@@ -16,6 +15,7 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
     selected_model = EMBEDDING_OPTIONS[model_key]
     tablename = f"{selected_model['model_name'].replace('/', '_').replace('-', '_')}_{selected_model['dimension']}"
 
+    # 1) クエリの埋め込み取得
     if selected_model["embedder"] == "OllamaEmbeddings":
         embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url=OLLAMA_BASE)
         query_embedding = embedder.embed_query(query)
@@ -25,9 +25,12 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
 
     embedding_str = to_pgvector_literal(query_embedding)
 
+    # チャンク統合モード
     if mode == "チャンク統合":
+        # 2) 上位Kチャンクを取得
         sql = f"""
             SELECT e.content AS snippet,
+                   f.file_id,
                    f.filename
             FROM "{tablename}" AS e
             JOIN files AS f ON e.file_id = f.file_id
@@ -36,8 +39,31 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
         """
         with DB_ENGINE.connect() as conn:
             rows = conn.execute(text(sql)).mappings().all()
-        return {"mode": mode, "results": [dict(r) for r in rows]}
 
+        # 3) 統合回答用にスニペットを抽出＋LLM呼び出し
+        snippets = [r["snippet"] for r in rows]
+        prompt = (
+            f"質問：{query}\n"
+            "以下の文書スニペットを参照し、一つの回答を出力してください：\n\n"
+            + "\n---\n".join(snippets)
+        )
+        answer = LLM_ENGINE.invoke(prompt).strip()
+
+        # 4) 使用されたファイルをユニーク抽出
+        seen = {}
+        for r in rows:
+            seen[r["file_id"]] = r["filename"]
+        sources = [{"file_id": fid, "filename": fn} for fid, fn in seen.items()]
+
+        # 5) 結果を返却
+        return {
+            "mode": mode,
+            "answer": answer,
+            "sources": sources,
+            "results": [dict(r) for r in rows]
+        }
+
+    # ファイル別モード（要約＋一致度）
     else:
         sql = f"""
             SELECT DISTINCT f.file_id, f.filename, f.content, f.file_blob,
@@ -55,8 +81,8 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
         for row in rows:
             summary, score = llm_summarize_with_score(query, row["content"])
             summaries.append({
-                "filename": row["filename"],
                 "file_id": row["file_id"],
+                "filename": row["filename"],
                 "score": score,
                 "summary": summary
             })

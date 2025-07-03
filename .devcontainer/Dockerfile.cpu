@@ -1,7 +1,6 @@
 # REM_CPU構成（GPUドライバ無しホストでも動く最小構成）
 
 FROM ubuntu:22.04
-
 ENV NVIDIA_DISABLE_REQUIRE=true
 
 # ---------- 1. Torch バージョンを固定 ARG として宣言 ----------

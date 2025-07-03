@@ -1,7 +1,6 @@
 # REM_GPU構成（NVIDIA GPU が搭載されている最強環境）
 
 FROM ubuntu:22.04
-
 ENV NVIDIA_DISABLE_REQUIRE=true
 
 # ---------- 1. Torch バージョンを固定 ARG として宣言 ----------

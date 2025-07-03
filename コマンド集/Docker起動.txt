@@ -1,0 +1,45 @@
+
+cd /home/shibaz-t/Documents/VSProjects/rag
+
+docker compose down -v
+docker compose up -d
+
+# 高スペ環境
+docker compose build --no-cache
+docker compose up --build -d
+
+# 低スペ環境
+docker compose build --no-cache
+docker compose -f docker-compose.yml -f docker-compose.override.yml --verbose up --build -d
+docker compose -f docker-compose.yml -f docker-compose.override.yml --build -d
+docker compose -f docker-compose.yml --verbose up --build -d
+
+
+docker compose down
+docker compose --verbose \
+  -f docker-compose.yml \
+  -f docker-compose.override.yml \
+  up --build --remove-orphans -d
+
+docker exec -it rag-app bash -c "streamlit run scripts/app.py --server.fileWatcherType=none"
+streamlit run scripts/app.py --server.fileWatcherType=none
+
+
+
+docker compose --verbose up
+
+docker compose down -v
+docker compose --verbose up -d --build
+
+docker network inspect rag_ragnet \
+  --format 'Containers: {{json .Containers}}'
+
+
+
+低スペ機で CPU 専用 devcontainer を開きたいとき
+コマンドパレット → Dev Containers: Reopen in Container →
+“cpu” プロファイル（VS Code が自動生成）を選択
+（これは docker-compose.override.yml を優先するのと同じ動きです）
+
+VS Code が BASE_IMAGE を上書きせず CPU イメージでビルド →
+OLLAMA_MODEL=phi4-mini も環境変数として反映されます。

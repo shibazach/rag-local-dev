@@ -1,0 +1,83 @@
+source .venv/bin/activate
+
+// ollamaコンテナ起動
+docker run -d -p 11434:11434 --name ollama ollama/ollama
+
+// モデルpull(docker版)
+docker exec -it ollama ollama pull phi4-mini
+docker exec -it ollama ollama pull nomic-embed-text
+
+// 停止中のコンテナ一覧
+docker ps --filter "status=exited"
+
+// docker内のragdbに接続
+docker exec -it pgvector-db psql -U raguser -d ragdb
+docker exec -it rag-pgvector-db-1 bash
+
+apt-get update
+apt-get install -y postgresql-15-pgvector
+
+psql -h localhost -U raguser -d ragdb
+
+CREATE EXTENSION IF NOT EXISTS vector;
+
+// dockerの接続ipaddress確認
+docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' 353dee41766f
+
+// ollamaでllama2起動
+docker exec -it ollama ollama run llama2
+
+
+ALTER TABLE documents
+ALTER COLUMN embedding TYPE VECTOR(768);
+
+ポートkillと固定
+streamlit run /workspace/rag_chat.py
+streamlit run scripts/rag_chat7.py --server.port 8501
+
+pkill -f streamlit
+
+streamlit run scripts/rag_chat.py
+
+conda環境構築
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+bash miniconda.sh
+source ~/.bashrc
+conda --version
+
+# environment.yml
+name: rag_env
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.10
+  - pytorch=1.13
+  - torchvision=0.14
+  - pip
+  - pip:
+    - layoutparser
+    - langchain
+    - openai
+    - faiss-cpu
+
+conda env create -f environment.yml
+conda activate rag_env
+
+# conda create -n rag_env python=3.10 pytorch torchvision -c pytorch
+conda activate rag_env
+
+# Condaライブラリをインストール（OCRまわり）
+conda install -c conda-forge pytorch torchvision torchaudio pytesseract poppler
+
+# Pipライブラリをインストール（テーブル抽出やRAG系）
+pip install layoutparser pdfplumber pymupdf langchain faiss-cpu
+
+
+conda環境削除
+conda deactivate
+conda env remove -n rag_env
+
+
+

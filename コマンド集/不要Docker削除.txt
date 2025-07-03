@@ -1,0 +1,5 @@
+docker container prune -f          # 停止中 dev-containers を一掃
+docker image prune -af             # 使われてないイメージ
+docker volume prune -f             # 匿名ボリューム
+docker buildx prune -af            # BuildKit キャッシュ
+sudo rm -rf /tmp/devcontainers-*   # VS Code 一時フォルダ

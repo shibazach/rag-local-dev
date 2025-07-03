@@ -1,0 +1,31 @@
+# Debian/Ubuntu 系なら
+apt-get update && apt-get install -y procps
+
+# Alpine 系なら
+apk add --no-cache procps
+
+# その後
+watch -n 3 nvidia-smi
+
+
+docker exec -it ollama bash
+
+
+watch -n 3 nvidia-smi
+
+
+
+docker exec -it ollama bash -c 'while true; do clear; nvidia-smi; sleep 3; done'
+
+
+
+
+docker exec -it ollama watch -n 3 nvidia-smi
+docker exec -it ollama bash -c 'while true; do clear; nvidia-smi; sleep 3; done'
+
+
+
+# ragapp内でcuda認識してるのか
+docker exec -it ragapp bash
+python3 -c "import torch; print(torch.cuda.is_available())"
+# → True が出れば完璧です💯

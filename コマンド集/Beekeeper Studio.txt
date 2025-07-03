@@ -1,0 +1,15 @@
+Beekeeper Studio は、PostgreSQL・MySQL・SQLite など複数のDBに対応したGUIクライアント
+PostgreSQL + pgvector にも非常に相性が良く、テーブルの中身確認やクエリ実行がGUIで楽にできます。
+
+wget https://github.com/beekeeper-studio/beekeeper-studio/releases/latest/download/beekeeper-studio.deb
+sudo apt install ./beekeeper-studio.deb
+
+snap install beekeeper-studio
+
+🔐 PostgreSQLへの接続設定（Zach構成）
+ホスト: localhost または pgvector-db（Docker内接続なら）
+ポート: 5432
+ユーザー名: raguser
+パスワード: ragpass
+データベース: ragdb
+

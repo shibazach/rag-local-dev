@@ -1,0 +1,9 @@
+git status
+git add .
+git commit -m "更新"
+git pull --rebase origin main
+git push
+
+
+git config --global user.name  "shibazach"
+git config --global user.email "shibazach@gmail.com"

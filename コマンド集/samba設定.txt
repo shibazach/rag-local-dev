@@ -1,0 +1,26 @@
+【samba(Windows共有接続)】
+1. 必要なパッケージのインストール
+sudo apt update
+sudo apt install cifs-utils
+
+2. マウントポイントを作成
+sudo mkdir -p /mnt/fileshare
+
+3. ファイルサーバーをマウント
+sudo mount -t cifs //サーバーIP/共有名 /mnt/fileshare -o username=ユーザー名,password=パスワード,vers=3.0
+sudo mount -t cifs //192.168.1.100/shared /mnt/fileshare -o username=guest,password=,vers=3.0
+
+永続的にマウントするには（オプション）
+nano /etc/fstab
+//192.168.1.100/shared /mnt/fileshare cifs username=ユーザー名,password=パスワード,vers=3.0 0 0
+
+
+【Thunarでネットワークフォルダ（SMB/FTPなど）を扱うには】
+1. 必要なパッケージのインストール
+sudo apt install gvfs-backends gvfs-fuse
+
+2. Thunarからアクセスする
+smb://192.168.1.100/shared
+
+3. 自動マウントや統合（オプション）
+sudo apt install gigolo

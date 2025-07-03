@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, Form
 from fastapi.responses import (HTMLResponse, JSONResponse, RedirectResponse)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from src.config import EMBEDDING_OPTIONS
+from src.config import EMBEDDING_OPTIONS, DB_ENGINE
 from test.services.query_handler import handle_query
 import uvicorn
 
@@ -41,7 +41,7 @@ async def query_handler(
 # PDFバイナリを返すエンドポイント
 @app.get("/api/pdf/{file_id}")
 def serve_pdf(file_id: int):
-    with engine.connect() as conn:
+    with DB_ENGINE.connect() as conn:
         row = conn.execute(
             text("SELECT file_blob, filename FROM files WHERE file_id = :fid"),
             {"fid": file_id}

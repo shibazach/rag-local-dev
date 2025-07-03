@@ -1,0 +1,59 @@
+🔄 Docker ネットワークを “だけ” クリーンに削除する手順
+ポイント
+ネットワークに接続しているコンテナを止める or デタッチ
+docker network rm <name> で削除
+使われていないネットワークを一括で消すなら docker network prune
+
+1. まず現在のネットワークを確認
+docker network ls
+# 例）
+# NETWORK ID     NAME            DRIVER    SCOPE
+# 2ec4e40ed9f7   rag_ragnet      bridge    local
+# ...
+
+必要に応じて詳細を確認：
+docker network inspect rag_ragnet
+
+2. そのネットワークに接続中のコンテナを止める／切り離す
+# ① ネットワークに参加しているコンテナ一覧を取得
+docker network inspect -f '{{range .Containers}}{{.Name}} {{end}}' rag_ragnet
+# 例）pgvector-db rag-app
+
+# ② いったん停止 (停止せずに detach してもOK)
+docker stop pgvector-db rag-app
+
+detach する場合
+docker network disconnect rag_ragnet <コンテナ名>
+
+3. ネットワークを削除
+docker network rm rag_ragnet
+# → "rag_ragnet" を削除しました
+bridge / host / none など 組み込みネットワークは削除できません。
+
+もし ERROR: network <name> id ... has active endpoints と出たら、
+まだ接続中のコンテナが残っています。
+
+4. 使われていないネットワークを一括で削除したい場合
+# 確認付き
+docker network prune
+# 完全自動 (確認なし)
+docker network prune -f
+
+停止または存在しないコンテナしか接続していないネットワーク が対象。
+誤って削除しても、docker-compose up などで再作成されます。
+
+5. docker-compose ネットワークも含めて一掃したい場合
+プロジェクトディレクトリで：
+docker compose down -v           # -v を付けないと volumes は残る
+
+external: true で宣言しているネットワーク（今回の rag_ragnet など）は
+compose では自動削除されない ので、上記の手順 2→3 で個別に消す必要があります。
+
+まとめ
+操作	コマンド
+ネットワーク一覧	docker network ls
+詳細確認	docker network inspect <name>
+ネットワーク削除	docker network rm <name>
+未使用ネットワーク一括削除	docker network prune [-f]
+
+この手順で ネットワークだけを安全にクリーンアップ できます。

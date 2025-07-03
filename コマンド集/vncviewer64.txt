@@ -1,0 +1,75 @@
+1: x11vnc のインストール
+sudo apt update
+sudo apt install x11vnc
+
+2: VNCパスワードの設定（まだなら）
+x11vnc -storepasswd
+→ 結果として ~/.vnc/passwd が作成
+
+3: x11vnc の起動（本番コマンド）
+x11vnc -auth ~/.Xauthority -display :0 -rfbauth ~/.vnc/passwd -forever -noxdamage -repeat -shared -nocursorshape -nosel -nodragging -quiet
+
+4: Windowsから接続
+Windows 側の RealVNC Viewer (vncviewer64) を起動
+<UbuntuのIPアドレス>:0
+例: 192.168.0.105:0
+を入力して接続します。
+（:0 → ポート5900、UbuntuのGUIセッションに対応）
+→ パスワードを聞かれるので、ステップ2で設定したものを入力します。
+
+自動起動の設定
+1. ユニットファイル作成
+mkdir -p ~/.config/systemd/user
+nano ~/.config/systemd/user/x11vnc.service
+
+----------
+
+[Unit]
+Description=Start x11vnc at user login
+After=graphical.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/x11vnc -auth /home/rpc187/.Xauthority -display :0 -rfbauth /home/rpc187/.vnc/passwd -forever -noxdamage -repeat -shared -nocursorshape -nosel -nodragging -quiet
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+
+----------
+
+2. systemd ユーザーユニットの有効化と起動
+systemctl --user daemon-reexec
+systemctl --user daemon-reload
+systemctl --user enable x11vnc
+systemctl --user start x11vnc
+
+3. ログイン後に自動起動するようにする（必要に応じて）
+loginctl enable-linger your-username
+
+補足（ログ確認）
+systemctl --user status x11vnc
+journalctl --user-unit x11vnc
+
+----------
+
+OpenSSHサーバー
+sudo apt update
+sudo apt install openssh-server
+
+sudo systemctl enable ssh
+sudo systemctl start ssh
+sudo systemctl status ssh
+
+sudo ufw allow ssh
+sudo ufw enable
+
+だめならソケット設定
+sudo systemctl enable ssh.socket
+sudo systemctl start ssh.socket
+
+----------
+
+ssh設定するとVNC繋がらなくなるのでufw追加設定
+sudo ufw status verbose
+sudo ufw allow 5900/tcp

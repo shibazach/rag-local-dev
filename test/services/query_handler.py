@@ -63,6 +63,14 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
         summaries.sort(key=lambda x: x["score"], reverse=True)
         return {"mode": mode, "results": summaries}
 
+def get_file_content(file_id: int) -> str:
+    with DB_ENGINE.connect() as conn:
+        row = conn.execute(
+            text("SELECT content FROM files WHERE file_id = :fid"),
+            {"fid": file_id}
+        ).fetchone()
+    return row[0] if row else ""
+
 def llm_summarize_with_score(query, content):
     prompt = f"""
 以下はユーザーの質問と文書の内容です。

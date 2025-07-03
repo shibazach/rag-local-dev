@@ -1,0 +1,48 @@
+CPU/GPU、プログラム上での切り替え
+いま覚えておいていただきたい “たった 2 つ” のルール
+いつ使う？	書き方	ひと言でいうと
+① モデル（LLM や CNN など）を GPU/CPU に載せるとき	python\nmodel.to(config.DEVICE)\n	「このモデルを DEVICE 上で動かすよ」
+② テンソルやデータを GPU/CPU 側で確保したいとき	python\ntensor = torch.zeros(..., device=config.DEVICE)\n	「この配列も DEVICE 上で作るよ」
+
+DEVICE は config.py が返す “cuda” か “cpu” の文字列（正確には torch.device オブジェクト）なので、将来 GPU に切り替えた瞬間に全部まとめて GPU に乗る──コードは一行も変えずに済みます。
+
+超シンプルな全体像（後日コピペで動く形）
+python
+# src/config.py
+import torch
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# src/train.py など
+from src import config
+import torch
+import torchvision.models as models
+
+def main():
+    # モデルを取ってくる
+    model = models.resnet18()
+    model.to(config.DEVICE)                # ← ① ここだけ
+
+    # ダミー入力も DEVICE 上で作る
+    x = torch.randn(1, 3, 224, 224, device=config.DEVICE)  # ← ② ここだけ
+    y = model(x)
+    print(y.shape)
+
+if __name__ == "__main__":
+    main()
+CPU コンテナ で実行 → 自動で DEVICE = "cpu"
+GPU コンテナ で実行 → 自動で DEVICE = "cuda"
+
+どちらの環境でも まったく同じソースコード がそのまま動きます。
+
+メモとして覚えておくポイント
+config.DEVICE を付け忘れると
+
+GPU コンテナでも CPU 側にメモリ確保 → 性能が出ない / その行でエラーになる。
+
+学習 or 推論どちらでも同じ書き方
+
+データローダーで取り出したバッチにも .to(config.DEVICE) を付けるのが鉄則。
+
+将来 Apple Silicon (mps) や他のアクセラレータにも広げるとき
+
+config.py の判定を torch.backends.mps.is_available() などに広げれば、アプリ側は触らずに済む。

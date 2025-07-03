@@ -1,0 +1,59 @@
+# rag_ragnet が無ければ先に作成（あればスキップ）
+docker network inspect rag_ragnet &>/dev/null || \
+  docker network create \
+    --driver bridge \
+    --attachable \
+    --subnet 172.19.0.0/16 \
+    rag_ragnet
+
+# rag_ragnetの存在を確認
+docker network ls
+
+# systemd 化しているならこちら（推奨）
+sudo systemctl restart ollama       # Unit ファイルで環境変数を持たせる
+
+# ollama起動
+pkill -f "ollama serve"
+export OLLAMA_HOST=172.19.0.1
+ollama serve &                       # または ollama run ... の前に export
+
+# モデルの事前取得
+ollama pull phi4-mini
+ollama pull nomic-embed-text
+ollama pull gemma:7b
+docker compose exec rag-app \ python - <<'PY'\nfrom sentence_transformers import SentenceTransformer\nSentenceTransformer('intfloat/e5-large-v2')\nPY
+
+# dockerをイチから作り直し
+docker system prune -a
+# rm -rf ~/.config/Code/User/globalStorage/ms-vscode-remote.remote-containers/data/docker-compose
+docker builder prune --all --force
+
+# 残っていないか確認
+docker image ls | grep rag-
+docker compose down -v
+
+# コンテナ化
+docker compose -f docker-compose.yml \
+               -f docker-compose.override.yml \
+               up --build --remove-orphans -d --verbose
+
+docker exec -it pgvector-db psql -U raguser -d ragdb -c "CREATE EXTENSION IF NOT EXISTS vector;"
+docker exec -it pgvector-db psql -U raguser -d ragdb -c '\dx'
+
+# 動作確認チェックリスト
+# ホスト側
+curl http://172.19.0.1:11434/api/tags | jq .
+
+# コンテナ側（例: rag-app）
+docker exec -it rag-app curl http://host.docker.internal:11434/api/tags
+
+# もしくは
+docker exec -it rag-app curl http://172.19.0.1:11434/api/tags
+
+# ① 生成系 LLM が応答するか
+docker exec -it rag-app curl -s http://host.docker.internal:11434/api/generate \
+  -d '{"model":"phi4-mini:latest","prompt":"Hello"}'
+
+# ② 埋め込みエンドポイントが動くか
+docker exec -it rag-app curl -s http://host.docker.internal:11434/api/embeddings \
+  -d '{"model":"nomic-embed-text:latest","prompt":"test"}'

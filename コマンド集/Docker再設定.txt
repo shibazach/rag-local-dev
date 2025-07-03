@@ -1,0 +1,108 @@
+ステップ 0: 既存のDockerがある場合（※なければスキップ
+sudo apt remove -y docker docker-engine docker.io containerd runc
+
+ステップ 1: パッケージとGPGキーの準備
+sudo apt update
+sudo apt install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+ステップ 2: Docker本体のインストール
+sudo apt update
+sudo apt install -y \
+  docker-ce \
+  docker-ce-cli \
+  containerd.io \
+  docker-buildx-plugin \
+  docker-compose-plugin
+
+ステップ 3: 確認
+docker --version
+docker compose version
+
+ユーザー追加
+sudo usermod -aG docker $USER
+
+全部リセット
+docker system prune -a
+
+【①devcontainerの一時composeファイルを削除】
+rm -rf ~/.config/Code/User/globalStorage/ms-vscode-remote.remote-containers/data/docker-compose
+
+【②Docker Composeのキャッシュレイヤ完全削除】
+docker builder prune --all --force
+
+【③古いイメージ・中間イメージ削除（該当があれば）】
+docker image ls | grep rag-
+でるなら
+docker rmi <イメージID>
+
+【④すべてのコンテナとボリュームを一掃】
+docker compose down -v
+
+docker network create \
+  --driver bridge \
+  --attachable \
+  --subnet 172.19.0.0/16 \
+  rag_ragnet
+
+
+【⑤強制フルビルド】
+docker compose build --no-cache
+
+【Docker削除】
+sudo apt-get purge -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+sudo rm -rf /var/lib/docker /var/lib/containerd ~/.docker
+
+【Docker再インストール】
+sudo apt-get update
+sudo apt-get install -y ca-certificates curl gnupg
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt-get update
+
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+【再起動と確認】
+sudo systemctl start docker
+sudo docker run hello-world
+
+【VSC docker-compose】
+cd /home/shibaz-t/Documents/VSProjects/rag/
+docker-compose down -v
+docker-compose up -d
+docker exec -it pgvector-db psql -U raguser -d ragdb
+中で \dx と打って vector が表示されれば、完全成功です。
+
+ragdb=# \dx
+                 List of installed extensions
+  Name   | Version |   Schema   |         Description
+---------+---------+------------+------------------------------
+ plpgsql | 1.0     | pg_catalog | PL/pgSQL procedural language
+(1 row)
+
+動いてなければ
+CREATE EXTENSION IF NOT EXISTS vector;

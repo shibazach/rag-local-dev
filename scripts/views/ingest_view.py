@@ -66,7 +66,7 @@ def render_ingest_view():
         selected_files = list(clean_to_full.values())
     else:
         selected_raw = st.sidebar.multiselect("処理対象ファイルを選択してください：", raw_list)
-        selected_files = [clean_to_full[r] for r in selected_raw]
+        selected_files = [clean_to_full[r.lstrip()] for r in selected_raw]
 
     # --- 処理開始ボタン ---
     if st.sidebar.button("\U0001F680 処理開始", disabled=not selected_files):

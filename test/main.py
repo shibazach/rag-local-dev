@@ -1,4 +1,7 @@
 # test/main.py
+from fastapi import HTTPException
+from fastapi.responses import Response
+from sqlalchemy import text
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -34,6 +37,30 @@ async def query_handler(
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
+
+# PDFバイナリを返すエンドポイント
+@app.get("/api/pdf/{file_id}")
+def serve_pdf(file_id: int):
+    with engine.connect() as conn:
+        row = conn.execute(
+            text("SELECT file_blob, filename FROM files WHERE file_id = :fid"),
+            {"fid": file_id}
+        ).mappings().first()
+    if not row:
+        raise HTTPException(status_code=404, detail="File not found")
+    return Response(content=row["file_blob"], media_type="application/pdf")
+
+# Context編集画面を返すエンドポイント
+@app.get("/edit/{file_id}", response_class=HTMLResponse)
+def show_edit(request: Request, file_id: int):
+    # DBから全文取得するユーティリティ（既存の関数を流用）
+    from test.services.query_handler import get_file_content
+    content = get_file_content(file_id)
+    return templates.TemplateResponse("edit.html", {
+        "request": request,
+        "file_id": file_id,
+        "content": content
+    })
 
 # 開発用エントリ
 if __name__ == "__main__":

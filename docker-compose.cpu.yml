@@ -23,7 +23,7 @@ services:
       DB_NAME: rag
       DB_USER: raguser
       DB_PASSWORD: ragpass
-      OLLAMA_URL: http://ollama:11434
+      OLLAMA_BASE: http://ollama:11434
       PYTHONPATH: /workspace
     depends_on:
       - ragdb

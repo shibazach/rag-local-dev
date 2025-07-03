@@ -12,8 +12,8 @@ from sentence_transformers import SentenceTransformer
 from sqlalchemy.sql import text as sql_text
 
 from src import bootstrap
-from src.config import (DB_ENGINE, DEVELOPMENT_MODE, EMBEDDING_OPTIONS,
-                        OLLAMA_BASE)
+from src.config import (DB_ENGINE, DEVELOPMENT_MODE, 
+                        EMBEDDING_OPTIONS, OLLAMA_BASE)
 from src.error_handler import install_global_exception_handler
 
 # REM: 例外発生時のログをグローバルに記録するハンドラを有効化

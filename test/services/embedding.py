@@ -1,5 +1,5 @@
 # test/services/embedding.py
-from src.config import EMBEDDING_OPTIONS, OLLAMA_BASE
+from src.config import (EMBEDDING_OPTIONS, OLLAMA_BASE)
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
 import numpy as np

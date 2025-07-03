@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from fastapi.responses import Response
 from sqlalchemy import text
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import (HTMLResponse, JSONResponse, RedirectResponse)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from src.config import EMBEDDING_OPTIONS

@@ -2,12 +2,13 @@
 import streamlit as st
 import base64
 import streamlit.components.v1 as components
-from collections import defaultdict
-from src.embedder import embed_and_insert
-from src.config import DB_ENGINE as engine
-from sqlalchemy import text
 import uuid
 import numpy as np
+
+from collections import defaultdict
+from src.embedder import embed_and_insert
+from src.config import DB_ENGINE
+from sqlalchemy import text
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
 from src.config import OLLAMA_BASE, EMBEDDING_OPTIONS
@@ -34,7 +35,7 @@ def search_similar_documents(query_embedding, tablename, top_k=5):
         ORDER BY e.embedding <-> '{embedding_str}'::vector
         LIMIT :top_k
     """
-    with engine.connect() as conn:
+    with DB_ENGINE.connect() as conn:
         result = conn.execute(text(sql), {"top_k": top_k})
         return result.mappings().all()
 
@@ -86,7 +87,7 @@ def render_chunk_mode():
             )
             if st.button("保存して再ベクトル化", key=f"save_{unique_key}"):
                 try:
-                    with engine.begin() as conn:
+                    with DB_ENGINE.begin() as conn:
                         conn.execute(
                             text("UPDATE files SET content = :content WHERE file_id = :file_id"),
                             {"content": edited_text, "file_id": file_id}

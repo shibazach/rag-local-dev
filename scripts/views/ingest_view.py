@@ -2,9 +2,7 @@
 
 import os
 import time
-
 import streamlit as st
-
 from scripts.create_rag_data import extract_text_from_eml
 from scripts.llm_text_refiner import refine_text_with_llm
 from scripts.refine_prompter import get_prompt_by_lang

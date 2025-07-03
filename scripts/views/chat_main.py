@@ -6,7 +6,7 @@ from .history_panel import render_history_panel
 import streamlit as st
 
 def render_chat_view():
-    st.title("🔍 ローカルRAGチャット")
+    st.title("🔍 研究部ローカルRAG")
 
     if "searching" not in st.session_state:
         st.session_state.searching = False

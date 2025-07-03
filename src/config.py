@@ -3,6 +3,7 @@ import os
 import torch
 
 from sqlalchemy import create_engine
+from langchain_ollama import OllamaLLM
 
 # REM: 環境変数から設定を取得
 MECAB_DICT_PATH = "/var/lib/mecab/dic/ipadic-utf8"
@@ -11,25 +12,23 @@ MECAB_DICT_PATH = "/var/lib/mecab/dic/ipadic-utf8"
 DEVELOPMENT_MODE = True
 
 # REM: GPU があれば "cuda"、無ければ "cpu"
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+CUDA_AVAILABLE = True if torch.cuda.is_available() else False
 
-# REM: 要約・整形モデルを自動で選択
-LLM_MODEL_FOR_SUMMARY = "gemma:7b" if torch.cuda.is_available() else "phi3:mini"
-print(f"[config.py] LLM_MODEL_FOR_SUMMARY = {LLM_MODEL_FOR_SUMMARY}")
-
-# REM: Ollamaのモデル名とベースURL
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma:7b") #環境変数優先
-#OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://host.docker.internal:11434") #環境変数優先
+# REM: Ollamaのモデル名とベースURL, 接続エンジン
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")
+OLLAMA_MODEL = "gemma:7b" if CUDA_AVAILABLE else "phi3:mini"
+LLM_ENGINE = OllamaLLM(model=OLLAMA_MODEL, base_url=OLLAMA_BASE)
+print(f"[config.py] LLM_MODEL = {OLLAMA_MODEL}")
+
+#"http://host.docker.internal:11434")
 
 # REM: デフォルトの入力ディレクトリと出力ディレクトリ
 INPUT_DIR = "ignored/input_files"
 OUTPUT_DIR = "ignored/output_files"
 LOG_DIR = "logs/full_logs"
 
-# REM: postgreSQLの接続URL
-DB_URL = os.getenv("DB_URL", "postgresql://raguser:ragpass@ragdb:5432/rag") #環境変数優先
-DB_ENGINE = create_engine(DB_URL)
+# REM: postgreSQL 接続エンジン
+DB_ENGINE = create_engine("postgresql://raguser:ragpass@ragdb:5432/rag")
 
 # REM: 埋め込みモデルの設定
 EMBEDDING_OPTIONS = {

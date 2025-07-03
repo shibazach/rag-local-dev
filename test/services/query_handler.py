@@ -1,14 +1,11 @@
 # test/services/query_handler.py
-from src.config import EMBEDDING_OPTIONS, DB_ENGINE as engine
-from src.config import LLM_MODEL_FOR_SUMMARY, OLLAMA_BASE
+from src.config import (EMBEDDING_OPTIONS, DB_ENGINE)
+from src.config import (LLM_ENGINE, OLLAMA_BASE)
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
 from sqlalchemy import text
-from langchain_ollama import OllamaLLM
 import numpy as np
 import re
-
-LLM = OllamaLLM(model=LLM_MODEL_FOR_SUMMARY, base_url=OLLAMA_BASE)
 
 def to_pgvector_literal(vec):
     if isinstance(vec, np.ndarray):
@@ -37,7 +34,7 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
             ORDER BY e.embedding <-> '{embedding_str}'::vector
             LIMIT 5
         """
-        with engine.connect() as conn:
+        with DB_ENGINE.connect() as conn:
             rows = conn.execute(text(sql)).mappings().all()
         return {"mode": mode, "results": [dict(r) for r in rows]}
 
@@ -51,7 +48,7 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
             ORDER BY distance ASC
             LIMIT 10
         """
-        with engine.connect() as conn:
+        with DB_ENGINE.connect() as conn:
             rows = conn.execute(text(sql)).mappings().all()
 
         summaries = []
@@ -81,7 +78,7 @@ def llm_summarize_with_score(query, content):
 一致度: <score>
 要約: <summary>
 """
-    result = LLM.invoke(prompt)
+    result = LLM_ENGINE.invoke(prompt)
     m = re.search(r"一致度[:：]\s*([0-9.]+).*?要約[:：]\s*(.+)", result, re.DOTALL)
     if m:
         return m.group(2).strip(), float(m.group(1))

@@ -3,13 +3,11 @@ import streamlit as st
 import streamlit.components.v1 as components
 import base64
 from sqlalchemy import text
-from src.config import DB_ENGINE as engine, EMBEDDING_OPTIONS, OLLAMA_BASE
+from src.config import (DB_ENGINE, EMBEDDING_OPTIONS, 
+                        LLM_ENGINE, OLLAMA_BASE)
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
-from langchain_ollama import OllamaLLM
 import numpy as np
-
-LLM = OllamaLLM(model="phi3:mini", base_url=OLLAMA_BASE)
 
 def to_pgvector_literal(vec):
     if isinstance(vec, np.ndarray):
@@ -31,7 +29,7 @@ def llm_summarize_with_score(query, content):
 一致度: <score>
 要約: <summary>
 """
-    result = LLM.invoke(prompt)
+    result = LLM_ENGINE.invoke(prompt)
     import re
     m = re.search(r"一致度[:：]\s*([0-9.]+).*?要約[:：]\s*(.+)", result, re.DOTALL)
     if m:
@@ -68,7 +66,7 @@ def render_file_mode():
         ORDER BY distance ASC
         LIMIT 10
     """
-    with engine.connect() as conn:
+    with DB_ENGINE.connect() as conn:
         rows = conn.execute(text(sql)).mappings().all()
 
     summaries = []

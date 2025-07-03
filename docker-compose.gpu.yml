@@ -10,7 +10,7 @@ services:
   ragapp:
     build:
       context: .
-      dockerfile: .devcontainer/Dockerfile  # Zachさんの実環境に合わせてここは維持
+      dockerfile: .devcontainer/Dockerfile
     container_name: ragapp
     restart: unless-stopped
     ports:
@@ -21,7 +21,7 @@ services:
       DB_NAME: rag
       DB_USER: raguser
       DB_PASSWORD: ragpass
-      OLLAMA_URL: http://ollama:11434
+      OLLAMA_BASE: http://ollama:11434
       PYTHONPATH: /workspace
       USE_GPU: "1"  # GPU利用フラグを明示（config.py対応）
       NVIDIA_VISIBLE_DEVICES: all

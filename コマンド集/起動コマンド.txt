@@ -1,1 +1,2 @@
 uvicorn test.main:app --reload
+streamlit run scripts/app.py --server.fileWatcherType=none

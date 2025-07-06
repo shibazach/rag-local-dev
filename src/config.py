@@ -5,6 +5,12 @@ import torch
 from sqlalchemy import create_engine
 from langchain_ollama import OllamaLLM
 
+# 既存データを消さずに、起動時のTRUNCATE処理だけ行うか
+TRUNCATE_ON_STARTUP = False
+
+# テーブル定義がまるっと変わっても DROP→CREATE でリセットするか
+AUTO_INIT_SCHEMA    = True
+
 # REM: 環境変数から設定を取得
 MECAB_DICT_PATH = "/var/lib/mecab/dic/ipadic-utf8"
 

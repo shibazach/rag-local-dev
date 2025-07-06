@@ -51,6 +51,8 @@ services:
       - ./.devcontainer/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql:ro
     networks:
       - ragnet
+    ports:
+      - "5432:5432"
 
   # Ollama (GPU-enabled) 
   ollama:

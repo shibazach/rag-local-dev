@@ -1,5 +1,4 @@
 # requirements.txt（torch 系は削除、 torch 系を記述しない）
-
 python-docx
 langdetect
 sqlalchemy
@@ -27,3 +26,4 @@ fastapi
 uvicorn
 jinja2
 python-multipart
+jaconv

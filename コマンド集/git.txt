@@ -7,3 +7,18 @@ git push
 
 git config --global user.name  "shibazach"
 git config --global user.email "shibazach@gmail.com"
+
+
+
+
+
+
+ローカル優先でgithub強制更新
+git status         # 変更がすべて commit 済みか
+git log --oneline -5   # 直近コミットを把握
+git branch backup-$(date +%Y%m%d-%H%M)
+# 現在ブランチが main か確認
+git symbolic-ref --short -q HEAD   # => main なら OK
+
+# ローカル main を GitHub の main に強制プッシュ
+git push --force-with-lease origin main

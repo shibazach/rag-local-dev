@@ -3,22 +3,16 @@ import streamlit as st
 import streamlit.components.v1 as components
 import base64
 from sqlalchemy import text
-from src.config import (
-    DB_ENGINE, EMBEDDING_OPTIONS,
-    LLM_ENGINE, OLLAMA_BASE
-)
+from src.config import (DB_ENGINE, EMBEDDING_OPTIONS, 
+                        LLM_ENGINE, OLLAMA_BASE)
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
 import numpy as np
-
-# REM: pgvector用に NumPy 配列→[1.0,2.0,...] 文字列へ変換
 
 def to_pgvector_literal(vec):
     if isinstance(vec, np.ndarray):
         vec = vec.tolist()
     return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
-
-# REM: LLM で一致度スコア + 要約作成
 
 def llm_summarize_with_score(query, content):
     prompt = f"""
@@ -41,8 +35,6 @@ def llm_summarize_with_score(query, content):
     if m:
         return m.group(2).strip(), float(m.group(1))
     return result.strip(), 0.0
-
-# REM: ファイル単位の検索結果を表示
 
 def render_file_mode():
     query = st.session_state.query_input.strip()
@@ -93,10 +85,9 @@ def render_file_mode():
     for s in summaries:
         st.markdown(f"**📄 {s['filename']}（一致度: {s['score']:.2f}）**")
         if s['filename'].lower().endswith(".pdf"):
-            # 別タブで開くためのデータURIリンク
             b64 = base64.b64encode(s["file_blob"]).decode("utf-8")
-            href = f'<a href="data:application/pdf;base64,{b64}" target="_blank">📄 別タブで表示</a>'
-            st.markdown(href, unsafe_allow_html=True)
+            iframe = f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="600px" style="border:none;"></iframe>'
+            components.html(iframe, height=600)
             st.download_button(
                 label=f"Download {s['filename']}",
                 data=bytes(s["file_blob"]),

@@ -1,4 +1,4 @@
-# error_handler.py
+# src/error_handler.py
 import sys, traceback
 
 def install_global_exception_handler():

@@ -66,8 +66,4 @@ services:
     networks:
       - ragnet
     entrypoint: >
-<<<<<<< HEAD
-      sh -c "ollama serve & sleep 5 && ollama pull phi3:mini && ollama pull nomic-embed-text && wait"
-=======
       sh -c "ollama serve & sleep 5 && ollama pull phi4-mini && ollama pull nomic-embed-text && wait"
->>>>>>> b54278c (更新)

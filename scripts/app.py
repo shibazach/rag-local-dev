@@ -5,10 +5,13 @@ from src import bootstrap
 from scripts.views.ingest_view import render_ingest_view
 from scripts.views.chat_main import render_chat_view
 
-from src.error_handler import install_global_exception_handler
-
 # REM: 例外発生時のログをグローバルに記録するハンドラを有効化
+from src.error_handler import install_global_exception_handler
 install_global_exception_handler()
+
+# REM: データベーススキーマの初期化
+#from src.db_schema import safe_init_schema
+#safe_init_schema()
 
 st.set_page_config(page_title="RAGポータル", layout="wide")
 

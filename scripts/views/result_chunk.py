@@ -1,139 +1,121 @@
 # scripts/views/result_chunk.py
-# =======================================================
-# REM: チャンク統合モード（全文検索撤去＋ベクトル検索のみ）
-#       - LEFT JOIN 化で file_blobs 欠損レコードもヒット
-#       - テキスト全文編集 ＋ 再ベクトル化ボタンを維持
-# =======================================================
-
 import streamlit as st
-import base64, uuid, time
+import base64
+import streamlit.components.v1 as components
+import uuid
 import numpy as np
 from collections import defaultdict
+from src.file_embedder import embed_and_insert
+from src.config import DB_ENGINE, OLLAMA_BASE, EMBEDDING_OPTIONS
 from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
 
-from src.config import DB_ENGINE, EMBEDDING_OPTIONS, OLLAMA_BASE   # REM: 共通設定
+# REM: NumPy → pgvector 文字列
 
-# ──────────────────────────────────────────────
-# REM: ユーティリティ functions
-# ──────────────────────────────────────────────
-def to_pgvector_literal(vec: np.ndarray) -> str:
-    """numpy→pgvector 文字列に変換"""
-    return "[" + ",".join(f"{float(x):.6f}" for x in vec.tolist()) + "]"
+def to_pgvector_literal(vec):
+    if isinstance(vec, np.ndarray):
+        vec = vec.tolist()
+    return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
-def make_unique_key(fid: int, fname: str) -> str:
-    """Streamlit キー重複回避用ユニーク文字列"""
-    safe = fname.replace(".", "_")
-    return f"{fid}_{safe}_{uuid.uuid4().hex[:6]}"
+# REM: ファイルIDとファイル名から一意キー生成（Streamlitキー衝突防止）
 
-def vector_search(qvec: np.ndarray, table: str, top_k: int = 5) -> list[dict]:
-    """ベクトル類似度検索（LEFT JOIN 版）"""
+def make_unique_key(file_id, filename):
+    safe = filename.replace(".", "_").replace(" ", "_")
+    return f"{file_id}_{safe}_{uuid.uuid4().hex[:6]}"
+
+# REM: 類似チャンク検索
+
+def search_similar_documents(query_embedding, tablename, top_k=5):
+    embedding_str = to_pgvector_literal(query_embedding)
     sql = f"""
-      SELECT
-        e.content      AS snippet,
-        e.file_id,
-        f.filename,
-        c.refined_text AS full_text,
-        b.file_blob
-      FROM "{table}" AS e
-      JOIN file_contents AS c ON e.file_id = c.file_id
-      JOIN files          AS f ON e.file_id = f.file_id
-      LEFT JOIN file_blobs AS b ON e.file_id = b.file_id        -- ★ INNER→LEFT に変更
-      ORDER BY e.embedding <-> '{to_pgvector_literal(qvec)}'::vector
-      LIMIT :k
+        SELECT e.content AS snippet,
+               e.file_id,
+               f.filename,
+               f.content AS full_text,
+               f.file_blob
+        FROM "{tablename}" AS e
+        JOIN files AS f ON e.file_id = f.file_id
+        ORDER BY e.embedding <-> '{embedding_str}'::vector
+        LIMIT :top_k
     """
     with DB_ENGINE.connect() as conn:
-        return conn.execute(text(sql), {"k": top_k}).mappings().all()
+        result = conn.execute(text(sql), {"top_k": top_k})
+        return result.mappings().all()
 
-# ──────────────────────────────────────────────
-# REM: メイン描画関数
-# ──────────────────────────────────────────────
+# REM: チャンク統合モードの描画
+
 def render_chunk_mode():
-    # 初期化
-    if "history" not in st.session_state:
-        st.session_state.history = []
-
-    query = st.session_state.get("query_input", "").strip()
+    query = st.session_state.query_input.strip()
     if not query:
         return
 
-    key        = st.session_state["selected_model_key"]
-    model_cfg  = EMBEDDING_OPTIONS[key]
-    table_name = st.session_state["embedding_tablename"]
+    selected_key = st.session_state["selected_model_key"]
+    selected_model = EMBEDDING_OPTIONS[selected_key]
+    tablename = st.session_state["embedding_tablename"]
 
-    # デバッグ：テーブル件数・クエリ
-    try:
-        with DB_ENGINE.connect() as conn:
-            total = conn.execute(text(f'SELECT COUNT(*) FROM "{table_name}"')).scalar()
-        st.write(f"🔍 DEBUG — テーブル {table_name} 総チャンク: {total} 件")
-        st.write(f"🔍 DEBUG — クエリ: “{query}”")
-    except SQLAlchemyError as e:
-        st.error(f"❌ 件数取得失敗: {e}")
-
-    # クエリ埋め込み
-    if model_cfg["embedder"] == "OllamaEmbeddings":
-        emb = OllamaEmbeddings(
-            model    = model_cfg["model_name"],
-            base_url = OLLAMA_BASE                    # REM: 固定 URL
-        )
-        qvec = emb.embed_query(query)
+    # --- クエリ埋め込み ---
+    if selected_model["embedder"] == "OllamaEmbeddings":
+        embedder = OllamaEmbeddings(model=selected_model["model_name"], base_url=OLLAMA_BASE)
+        query_embedding = embedder.embed_query(query)
     else:
-        qvec = SentenceTransformer(model_cfg["model_name"]).encode(
-            [query], convert_to_numpy=True
-        )[0]
+        embedder = SentenceTransformer(selected_model["model_name"])
+        query_embedding = embedder.encode([query], convert_to_numpy=True)[0]
 
-    # ベクトル検索
-    docs = vector_search(qvec, table_name, top_k=5)
-    st.success(f"🔍 検索結果: {len(docs)} 件")
-    if not docs:
-        st.warning("⚠️ 0 件ヒット。データ登録またはプロンプトを確認してください。")
-        return
+    docs = search_similar_documents(query_embedding, tablename)
+    file_list = sorted({d["filename"] for d in docs})
+    st.markdown("**対象ファイル**: " + ", ".join(file_list))
 
-    # 結果プレビュー
-    grouped = defaultdict(list)
+    # --- ファイル単位でグループ化 ---
+    docs_by_file = defaultdict(list)
     for d in docs:
-        grouped[(d["file_id"], d["filename"])].append(d)
+        docs_by_file[(d["file_id"], d["filename"])].append(d)
 
     st.markdown("### 🔍 検索結果プレビュー")
-    for (fid, fname), items in grouped.items():
-        st.markdown(f"**📄 {fname}**")
-        for it in items:
-            st.write(f"- {it['snippet']}")
+    for (file_id, filename), group in docs_by_file.items():
+        st.markdown(f"**📄 {filename}**")
+        for d in group:
+            st.write(f"- {d['snippet']}")
+        with st.expander("▶️ 全文をプレビュー"):
+            unique_key = make_unique_key(file_id, filename)
+            # --- PDF プレビューは別タブリンクに変更 ---
+            if filename.lower().endswith(".pdf"):
+                b64 = base64.b64encode(group[0]["file_blob"]).decode("utf-8")
+                data_url = f"data:application/pdf;base64,{b64}"
+                st.markdown(f"[📄 別タブで表示]({data_url})", unsafe_allow_html=True)
 
-        with st.expander("全文プレビュー"):
-            # PDF プレビュー（file_blob が存在する場合のみ）
-            if fname.lower().endswith(".pdf") and items[0]["file_blob"]:
-                iframe_b64 = base64.b64encode(items[0]["file_blob"]).decode()
-                st.components.v1.html(
-                    f'<iframe src="data:application/pdf;base64,{iframe_b64}" '
-                    'width="100%" height="600" style="border:none;"></iframe>',
-                    height=600
-                )
+            # --- 編集用テキストエリア ---
+            edited_text = st.text_area(
+                "全文テキスト（編集可能）",
+                value=group[0]["full_text"],
+                height=200,
+                key=f"edit_{unique_key}"
+            )
+            if st.button("保存して再ベクトル化", key=f"save_{unique_key}"):
+                try:
+                    with DB_ENGINE.begin() as conn:
+                        conn.execute(
+                            text("UPDATE files SET content = :content WHERE file_id = :file_id"),
+                            {"content": edited_text, "file_id": file_id}
+                        )
+                        conn.execute(
+                            text(f'DELETE FROM "{tablename}" WHERE file_id = :file_id'),
+                            {"file_id": file_id}
+                        )
+                    st.success("✅ contentを更新し、旧ベクトルを削除しました")
+                    embed_and_insert(
+                        texts=[edited_text], filename=filename,
+                        truncate_done_tables=set()
+                    )
+                    st.success("✅ 再ベクトル化完了！")
+                except Exception as e:
+                    st.error(f"❌ エラーが発生しました: {e}")
 
-            # 全文編集＋再ベクトル化
-            uk = make_unique_key(fid, fname)
-            edited = st.text_area("全文テキスト（編集可）",
-                                  items[0]["full_text"],
-                                  height=200,
-                                  key=f"edit_{uk}")
-
-            if st.button("再ベクトル化", key=f"save_{uk}"):
-                from src.file_embedder import embed_and_insert
-                embed_and_insert(
-                    texts=[edited],
-                    filepath=fname,
-                    model_keys=[key],
-                    ocr_raw_text=edited
-                )
-                st.success("✅ 再ベクトル化完了！")
-
-    # 履歴追加
-    st.session_state.history.append({
-        "query": query,
-        "response": "\n".join(d["snippet"] for d in docs),
-        "model": key,
-        "time": round(time.time(), 2)
-    })
-    st.session_state.searching = False
+            # --- ダウンロード ---
+            st.download_button(
+                label="元ファイルをダウンロード",
+                data=bytes(group[0]["file_blob"]),
+                file_name=filename,
+                mime="application/pdf",
+                key=f"download_{unique_key}"
+            )

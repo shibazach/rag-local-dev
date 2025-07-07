@@ -1,4 +1,4 @@
-# spellcheck.py（OCR誤字補正の汎用モジュール）
+# src/ocr_utils/spellcheck.py（OCR誤字補正の汎用モジュール）
 import csv
 import os
 import re

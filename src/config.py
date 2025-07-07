@@ -22,11 +22,13 @@ CUDA_AVAILABLE = True if torch.cuda.is_available() else False
 
 # REM: Ollamaのモデル名とベースURL, 接続エンジン
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")
-OLLAMA_MODEL = "gemma:7b" if CUDA_AVAILABLE else "phi3:mini"
+OLLAMA_MODEL = "gemma:7b" if CUDA_AVAILABLE else "phi4-mini"
 LLM_ENGINE = OllamaLLM(model=OLLAMA_MODEL, base_url=OLLAMA_BASE)
 print(f"[config.py] LLM_MODEL = {OLLAMA_MODEL}")
-
 #"http://host.docker.internal:11434")
+
+# 生成トークン長さ倍率（本文長 × 倍率）
+LLM_LENGTH_RATE = 1.4
 
 # REM: デフォルトの入力ディレクトリと出力ディレクトリ
 INPUT_DIR = "ignored/input_files"

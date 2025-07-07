@@ -1,4 +1,5 @@
 # src/file_embedder.py
+<<<<<<< HEAD
 
 # REM: ベクトル化処理とDB登録を行うユーティリティモジュール
 import hashlib
@@ -9,6 +10,10 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import torch
+=======
+# REM: ベクトル化処理とDB登録を行うユーティリティモジュール
+import hashlib, os, numpy as np, torch
+>>>>>>> b54278c (更新)
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
@@ -25,10 +30,9 @@ from src.config import (
     OLLAMA_BASE,
 )
 from src.error_handler import install_global_exception_handler
-
-# REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
 
+<<<<<<< HEAD
 
 # ── ユーティリティ関数 ──────────────────────────────────────────
 
@@ -38,20 +42,28 @@ def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
     GPU が利用可能かつ空き VRAM が min_free_vram_mb 以上あれば "cuda"、
     それ以外は "cpu" を返す。
     """
+=======
+# ── GPU 空きVRAMをチェックしてデバイスを返すユーティリティ ──
+def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
+>>>>>>> b54278c (更新)
     if torch.cuda.is_available():
         try:
-            free, _ = torch.cuda.mem_get_info()
-            free_mb = free // (1024 * 1024)
+            free_mb = torch.cuda.mem_get_info()[0] // (1024 * 1024)
         except Exception:
+<<<<<<< HEAD
             from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
+=======
+            from pynvml import (nvmlInit, nvmlDeviceGetHandleByIndex,
+                                nvmlDeviceGetMemoryInfo)
+>>>>>>> b54278c (更新)
             nvmlInit()
             handle = nvmlDeviceGetHandleByIndex(0)
-            info = nvmlDeviceGetMemoryInfo(handle)
-            free_mb = info.free // (1024 * 1024)
+            free_mb = nvmlDeviceGetMemoryInfo(handle).free // (1024 * 1024)
         if free_mb >= min_free_vram_mb:
             return "cuda"
     return "cpu"
 
+<<<<<<< HEAD
 # REM: numpy配列→pgvector用文字列表現
 def to_pgvector_literal(vec: np.ndarray) -> str:
     """
@@ -62,6 +74,21 @@ def to_pgvector_literal(vec: np.ndarray) -> str:
 
 
 # ── スキーマ初期化処理 ──────────────────────────────────────────
+=======
+# REM: numpy配列をpgvector文字列リテラルに変換
+def to_pgvector_literal(vec):
+    if isinstance(vec, np.ndarray):
+        vec = vec.tolist()
+    return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
+
+# REM: filesテーブルにファイルを登録しfile_idを返す
+_truncate_files_done = False
+def insert_file_and_get_id(filepath, refined_ja, score, truncate_once=False):
+    global _truncate_files_done
+    with open(filepath, "rb") as f:
+        file_blob = f.read()
+    file_hash = hashlib.sha256(file_blob).hexdigest()
+>>>>>>> b54278c (更新)
 
 # REM: 必要テーブルを自動で生成 or 検証し、カラムコメントも付与
 def init_schema():
@@ -73,6 +100,7 @@ def init_schema():
     """
     inspector = inspect(DB_ENGINE)
     with DB_ENGINE.begin() as conn:
+<<<<<<< HEAD
         # ── files テーブル ───────────────────────────────────────
         if AUTO_INIT_SCHEMA or not inspector.has_table("files"):
             if inspector.has_table("files"):
@@ -169,6 +197,28 @@ def insert_file_and_get_id(filepath: str, file_hash: str) -> int:
     filename で衝突したら hash と updated_at を更新。
     """
     with DB_ENGINE.begin() as conn:
+=======
+        conn.execute(sql_text("""
+            CREATE TABLE IF NOT EXISTS files (
+                file_id SERIAL PRIMARY KEY,
+                filename TEXT,
+                content TEXT,
+                file_blob BYTEA,
+                quality_score FLOAT,
+                file_hash TEXT UNIQUE
+            )
+        """))
+        if DEVELOPMENT_MODE and truncate_once and not _truncate_files_done:
+            conn.execute(sql_text("TRUNCATE TABLE files CASCADE"))
+            _truncate_files_done = True
+
+        existing = conn.execute(sql_text(
+            "SELECT file_id FROM files WHERE file_hash = :hash"
+        ), {"hash": file_hash}).fetchone()
+        if existing:
+            return existing[0]
+
+>>>>>>> b54278c (更新)
         result = conn.execute(sql_text("""
             INSERT INTO files (filename, file_hash)
             VALUES (:fn, :hash)
@@ -183,8 +233,13 @@ def insert_file_and_get_id(filepath: str, file_hash: str) -> int:
         })
         return result.scalar()
 
+<<<<<<< HEAD
 
 # ── バイナリ INSERT ────────────────────────────────────────────
+=======
+# REM: embedding_* テーブルの TRUNCATE 状態管理
+_truncate_done_tables = set()
+>>>>>>> b54278c (更新)
 
 # REM: file_blobs にバイナリを INSERT、blob_id を返す
 def insert_blob(file_id: int, blob: bytes) -> int:
@@ -196,6 +251,7 @@ def insert_blob(file_id: int, blob: bytes) -> int:
         """), {"fid": file_id, "blob": blob})
         return result.scalar()
 
+<<<<<<< HEAD
 
 # ── テキスト UPSERT ────────────────────────────────────────────
 
@@ -298,10 +354,26 @@ def embed_and_insert(
     all_embeds: List[np.ndarray] = []
 
     # REM: 5) モデルごとにベクトル化＆専用テーブルへ
+=======
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+    chunks = [splitter.split_text(t) for t in texts]
+    flat_chunks = [s for c in chunks for s in c]
+
+    # ★ 空白のみチャンクを除外し、全部空ならスキップ
+    flat_chunks = [s for s in flat_chunks if s.strip()]
+    if not flat_chunks:
+        return [], []
+
+    full_text = "\n".join(flat_chunks)
+
+    file_id = insert_file_and_get_id(filename, full_text, quality_score, truncate_once=True)
+
+>>>>>>> b54278c (更新)
     for key, cfg in EMBEDDING_OPTIONS.items():
         if model_keys and key not in model_keys:
             continue
 
+<<<<<<< HEAD
         # REM: 埋め込み実行
         if cfg["embedder"] == "OllamaEmbeddings":
             emb = OllamaEmbeddings(model=cfg["model_name"], base_url=OLLAMA_BASE)
@@ -345,3 +417,62 @@ def embed_and_insert(
     if return_data:
         return all_chunks, all_embeds
     return None
+=======
+        if cfg["embedder"] == "OllamaEmbeddings":
+            embedder = OllamaEmbeddings(model=cfg["model_name"], base_url=OLLAMA_BASE)
+            embeddings = embedder.embed_documents(flat_chunks)
+
+        elif cfg["embedder"] == "SentenceTransformer":
+            from torch.cuda import OutOfMemoryError
+            device = pick_embed_device(1024)
+            try:
+                embedder = SentenceTransformer(cfg["model_name"], device=device)
+            except OutOfMemoryError:
+                torch.cuda.empty_cache()
+                device = "cpu"
+                embedder = SentenceTransformer(cfg["model_name"], device=device)
+
+            batch = 16 if device == "cuda" else 8
+            try:
+                embeddings = embedder.encode(flat_chunks, batch_size=batch,
+                                             convert_to_numpy=True,
+                                             show_progress_bar=(device == "cuda"))
+            except OutOfMemoryError:
+                if device == "cuda":
+                    torch.cuda.empty_cache()
+                    embedder = SentenceTransformer(cfg["model_name"], device="cpu")
+                    embeddings = embedder.encode(flat_chunks, batch_size=8,
+                                                 convert_to_numpy=True)
+                else:
+                    raise
+        else:
+            print(f"⚠️ 未対応の埋め込み: {cfg['embedder']}")
+            continue
+
+        table = cfg["model_name"].replace("/", "_").replace("-", "_") + f"_{cfg['dimension']}"
+        with DB_ENGINE.begin() as conn:
+            conn.execute(sql_text(f"""
+                CREATE TABLE IF NOT EXISTS "{table}" (
+                    id SERIAL PRIMARY KEY,
+                    content TEXT,
+                    embedding VECTOR({cfg['dimension']}),
+                    file_id INTEGER REFERENCES files(file_id)
+                )
+            """))
+            if table not in _truncate_done_tables:
+                conn.execute(sql_text(f'TRUNCATE TABLE "{table}" CASCADE'))
+                _truncate_done_tables.add(table)
+
+            insert_sql = sql_text(f"""
+                INSERT INTO "{table}" (content, embedding, file_id)
+                VALUES (:content, :embedding, :file_id)
+            """)
+            records = [{
+                "content": ch,
+                "embedding": to_pgvector_literal(vec),
+                "file_id": file_id
+            } for ch, vec in zip(flat_chunks, embeddings)]
+            conn.execute(insert_sql, records)
+
+    return (flat_chunks, embeddings) if return_data else None
+>>>>>>> b54278c (更新)

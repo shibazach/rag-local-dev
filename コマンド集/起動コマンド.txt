@@ -4,4 +4,5 @@ streamlit run scripts/app.py --server.fileWatcherType=none
 uvicorn app.fastapi.main:app --reload
 streamlit run app/streamlit/app.py --server.fileWatcherType=none
 
-
+python3 run_app.py streamlit
+python3 run_app.py fastapi

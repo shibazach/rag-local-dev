@@ -1,0 +1,313 @@
+<!-- app/fastapi/templates/ingest.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>🛠 データ整形・登録</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <style>
+    /* フォルダモーダル */
+    #folder-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 99;
+    }
+    #folder-dialog {
+      display: none;
+      position: fixed;
+      top: 10%; left: 50%;
+      transform: translateX(-50%);
+      width: 400px; max-height: 70vh;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      overflow: hidden;
+      z-index: 100;
+    }
+    #folder-dialog header {
+      background: #007acc;
+      color: #fff;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #folder-dialog header button {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+    #folder-dialog .body {
+      padding: 8px 12px;
+      overflow-y: auto;
+      max-height: 60vh;
+    }
+    #folder-dialog .breadcrumbs {
+      font-size: 0.9em;
+      margin-bottom: 4px;
+      color: #555;
+    }
+    #folder-dialog ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    #folder-dialog li {
+      padding: 6px 8px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    #folder-dialog li:hover {
+      background: #f0f8ff;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛠 データ整形・登録</h1>
+
+  <form id="ingest-form">
+    <div>
+      <label>処理対象フォルダ:</label>
+      <input type="text" id="input-folder" name="input_folder" value="ignored/input_files" style="width:280px;">
+      <button type="button" id="browse-folder">📂 参照</button><br>
+      <label><input type="checkbox" id="include-subdirs" name="include_subdirs" checked> サブフォルダも含める</label>
+    </div>
+    <div>
+      <label>整形プロンプト:</label>
+      <select id="refine-prompt" name="refine_prompt_key">
+        {% for key in prompt_keys %}
+          <option value="{{ key }}">{{ key }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label>埋め込みモデル:</label><br>
+      {% for key, config in embedding_options.items() %}
+        <label>
+          <input type="checkbox" name="embed_models" value="{{ key }}" checked>
+          {{ config.model_name }} ({{ config.embedder }})
+        </label><br>
+      {% endfor %}
+    </div>
+    <div style="margin-top:12px;">
+      <button type="button" id="start-btn">🚀 処理開始</button>
+      <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
+      <span id="loading" style="display:none; margin-left:8px;">処理中…お待ちください</span>
+    </div>
+  </form>
+
+  <div id="results" style="margin-top:16px; font-family:monospace;"></div>
+
+  <!-- フォルダ選択モーダル -->
+  <div id="folder-overlay"></div>
+  <div id="folder-dialog">
+    <header>
+      <span>フォルダを選択</span>
+      <button id="close-folder-dialog">&times;</button>
+    </header>
+    <div class="body">
+      <div class="breadcrumbs" id="folder-breadcrumbs">/</div>
+      <ul id="folder-list"></ul>
+    </div>
+    <div style="padding:8px 12px; text-align:right;">
+      <button id="confirm-folder" style="padding:4px 12px;">✅ 決定</button>
+    </div>
+  </div>
+
+  <script>
+    // フォルダモーダル制御
+    const overlay = document.getElementById("folder-overlay");
+    const dlg     = document.getElementById("folder-dialog");
+    const listEl  = document.getElementById("folder-list");
+    const bcEl    = document.getElementById("folder-breadcrumbs");
+    const inputEl = document.getElementById("input-folder");
+    let currentPath = "";
+
+    async function loadFolders(path) {
+      currentPath = path;
+      bcEl.textContent = '/' + path;
+      const res = await fetch(`/api/list-folders?path=${encodeURIComponent(path)}`);
+      const { folders } = await res.json();
+      listEl.innerHTML = '';
+      if (path) {
+        const li = document.createElement('li');
+        li.textContent = '🔙 上へ';
+        li.onclick = () => loadFolders(path.split('/').slice(0, -1).join('/'));
+        listEl.appendChild(li);
+      }
+      folders.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        li.onclick = () => loadFolders(path ? `${path}/${name}` : name);
+        li.ondblclick = () => {
+          inputEl.value = path ? `${path}/${name}` : name;
+          closeDialog();
+        };
+        listEl.appendChild(li);
+      });
+    }
+    function openDialog() {
+      overlay.style.display = dlg.style.display = 'block';
+      loadFolders('');
+    }
+    function closeDialog() {
+      overlay.style.display = dlg.style.display = 'none';
+    }
+    document.getElementById("browse-folder").onclick = openDialog;
+    document.getElementById("close-folder-dialog").onclick = closeDialog;
+    document.getElementById("confirm-folder").onclick = () => {
+      if (currentPath) {
+        inputEl.value = currentPath;
+        closeDialog();
+      }
+    };
+    overlay.onclick = closeDialog;
+  </script>
+
+  <script>
+    // embedding_options 全体を JSON 埋め込み、キー配列を生成
+    const embedOptions   = {{ embedding_options|tojson }};
+    const embedModelKeys = Object.keys(embedOptions);
+
+    const startBtn  = document.getElementById('start-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const loadingEl = document.getElementById('loading');
+    let controller;
+
+    startBtn.onclick = async () => {
+      startBtn.disabled  = true;
+      cancelBtn.disabled = false;
+      loadingEl.style.display = 'inline';
+      document.getElementById('results').innerHTML = '';
+      controller = new AbortController();
+
+      // ① Ingest開始リクエスト
+      const form = new FormData();
+      form.append('input_folder',    document.getElementById('input-folder').value);
+      form.append('include_subdirs', document.getElementById('include-subdirs').checked);
+      form.append('refine_prompt_key', document.getElementById('refine-prompt').value);
+      document.querySelectorAll('input[name="embed_models"]:checked')
+              .forEach(el => form.append('embed_models', el.value));
+      const res  = await fetch('/ingest', { method: 'POST', body: form, signal: controller.signal });
+      const info = await res.json();
+      document.getElementById('results').innerHTML = `<pre>${JSON.stringify(info, null, 2)}</pre>`;
+
+      // ② SSE ストリーム開始
+      const results        = document.getElementById('results');
+      const stream         = new EventSource('/ingest/stream');
+      const fileContainers = {};
+
+      stream.onmessage = evt => {
+        const d = JSON.parse(evt.data);
+
+        // 全処理完了
+        if (d.done) {
+          stream.close();
+          results.appendChild(Object.assign(document.createElement('div'), {
+            textContent: '✅ 全処理完了'
+          }));
+          startBtn.disabled  = false;
+          cancelBtn.disabled = true;
+          loadingEl.style.display = 'none';
+          return;
+        }
+
+        // 新規ファイルヘッダ
+        if (!fileContainers[d.file]) {
+          const header = document.createElement('div');
+          const link   = document.createElement('a');
+          link.href        = `/viewer/${d.file_id}`;
+          link.target      = '_blank';
+          link.textContent = d.file;
+          link.style.fontSize   = '1.1em';
+          link.style.fontWeight = 'bold';
+          header.appendChild(link);
+          results.appendChild(header);
+
+          const container = document.createElement('div');
+          container.style.marginLeft = '1.5em';
+          fileContainers[d.file] = container;
+          results.appendChild(container);
+        }
+
+        const container = fileContainers[d.file];
+
+        // ③ 折り分け表示
+        // 3-1: 展開不要ステップ
+        if (d.step === '開始' || d.step === '保存完了' || d.step.startsWith('ベクトル化ページ')) {
+          const div = document.createElement('div');
+          let label = d.step.replace('ベクトル化ページ', 'Vectorized page');
+          div.textContent = `— ${label}` + (d.detail ? `: ${d.detail}` : '');
+          container.appendChild(div);
+          return;
+        }
+
+        // 3-2: Prompt page は折りたたみ
+        if (d.step.startsWith('プロンプトページ')) {
+          const stepText = d.step.replace('プロンプトページ', 'Prompt page');
+          const det = document.createElement('details');
+          det.style.margin = '4px 0';
+          det.style.padding = '4px 8px';
+          det.style.border = '1px solid #eee';
+          det.style.borderRadius = '4px';
+
+          const summary = document.createElement('summary');
+          summary.style.cursor = 'pointer';
+          summary.textContent = `— ${stepText}: ${d.preview}`;
+          det.appendChild(summary);
+
+          const pre = document.createElement('pre');
+          pre.style.whiteSpace = 'pre-wrap';
+          pre.style.margin     = '6px 0 0 0';
+          pre.textContent      = d.full_text;
+          det.appendChild(pre);
+
+          container.appendChild(det);
+          return;
+        }
+
+        // 3-3: OCR / Refined などは従来どおり折りたたみ
+        {
+          let stepText = d.step
+            .replace('OCRページ', 'OCR page')
+            .replace('整形ページ', 'Refined page');
+          if (d.embed_model_key) {
+            const idx = embedModelKeys.indexOf(d.embed_model_key);
+            if (idx !== -1) stepText += `, Embedder No.${idx+1}`;
+          }
+
+          const det = document.createElement('details');
+          det.style.margin = '4px 0';
+          det.style.padding = '4px 8px';
+          det.style.border = '1px solid #eee';
+          det.style.borderRadius = '4px';
+
+          const summary = document.createElement('summary');
+          summary.style.cursor = 'pointer';
+          summary.textContent  = `— ${stepText}: ${d.preview || d.detail || ''}`;
+          det.appendChild(summary);
+
+          const pre = document.createElement('pre');
+          pre.style.whiteSpace = 'pre-wrap';
+          pre.style.margin     = '6px 0 0 0';
+          pre.textContent      = d.full_text || '';
+          det.appendChild(pre);
+
+          container.appendChild(det);
+        }
+      };
+    };
+
+    cancelBtn.onclick = () => controller && controller.abort();
+  </script>
+</body>
+</html>
+{% endblock %}

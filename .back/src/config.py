@@ -1,5 +1,6 @@
 # src/config.py
-import os, torch
+import os
+import torch
 
 from sqlalchemy import create_engine
 from langchain_ollama import OllamaLLM
@@ -12,11 +13,6 @@ DEVELOPMENT_MODE = True
 
 # REM: GPU があれば "cuda"、無ければ "cpu"
 CUDA_AVAILABLE = True if torch.cuda.is_available() else False
-
-# REM: プロジェクトのルートディレクトリと関連ディレクトリの設定
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-BIN_DIR = os.path.join(PROJECT_ROOT, "bin")
-PROMPT_FILE_PATH = os.path.join(BIN_DIR, "refine_prompt_multi.txt")
 
 # REM: Ollamaのモデル名とベースURL, 接続エンジン
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")

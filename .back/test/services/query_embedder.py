@@ -1,4 +1,4 @@
-# test/services/embedding.py
+# test/services/query_embedder.py
 from src.config import (EMBEDDING_OPTIONS, OLLAMA_BASE)
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer

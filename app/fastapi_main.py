@@ -1,9 +1,8 @@
-# app/fastapi/main.py
+# app/fastapi_main.py
 
 import os, json, glob, uvicorn
 from typing import List
-from fastapi import (
-    FastAPI, Request, Query, UploadFile, File, Form, HTTPException)
+from fastapi import (FastAPI, Request, Query, UploadFile, File, Form, HTTPException)
 from fastapi.responses import (
     HTMLResponse, RedirectResponse, JSONResponse, Response, 
     StreamingResponse)
@@ -21,8 +20,8 @@ from app.fastapi.services.query_handler import handle_query
 app = FastAPI()
 BASE_INGEST_ROOT = os.path.abspath("ignored/input_files")
 
-app.mount("/static", StaticFiles(directory="test/static"), name="static")
-templates = Jinja2Templates(directory="test/templates")
+app.mount("/static", StaticFiles(directory="app/fastapi/static"), name="static")
+templates = Jinja2Templates(directory="app/fastapi/templates")
 
 # ──────────────────────────────────────────────────────────
 # REM: 最後に実行したingestジョブの情報を保持

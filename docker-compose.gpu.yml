@@ -25,17 +25,16 @@ services:
       PYTHONPATH: /workspace
       USE_GPU: "1"  # GPU利用フラグを明示（config.py対応）
       NVIDIA_VISIBLE_DEVICES: all
-
     depends_on:
       - ragdb
       - ollama
     networks:
       - ragnet
-    working_dir: /workspace
     command: bash
     stdin_open: true
     tty: true
     volumes:
+      # ホストのプロジェクトルートを /workspace にマウント
       - ./:/workspace:cached
 
     # 🔽🔽🔽 GPU 割当追加 🔽🔽🔽
@@ -53,8 +52,7 @@ services:
       - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
     gpus: all
 
-
-    # PostgreSQL + pgvector
+  # PostgreSQL + pgvector
   ragdb:
     image: ankane/pgvector:latest
     container_name: ragdb

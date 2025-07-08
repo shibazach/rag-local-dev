@@ -6,9 +6,7 @@ volumes:
   pgdata:
   ollama_data:
 
-
 services:
-  # Streamlit UI + RAGアプリ
   ragapp:
     build:
       context: .
@@ -37,7 +35,7 @@ services:
       # ホストのプロジェクトルートを /workspace にマウント
       - ./:/workspace:cached
 
-    # PostgreSQL + pgvector
+  # PostgreSQL + pgvector
   ragdb:
     image: ankane/pgvector:latest
     container_name: ragdb
@@ -54,7 +52,7 @@ services:
     ports:
       - "5432:5432"
 
-  # Ollama (GPU-enabled) 
+  # Ollama (CPU only) 
   ollama:
     image: ollama/ollama:latest
     container_name: ollama

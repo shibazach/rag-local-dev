@@ -2,3 +2,6 @@
 ignored/
 __pycache__/
 *.py[cod]
+docker-compose.yml
+Dockerfile
+devcontainer.json

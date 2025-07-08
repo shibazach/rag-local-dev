@@ -13,7 +13,8 @@ from sqlalchemy import text
 from src.config import EMBEDDING_OPTIONS, DB_ENGINE, OLLAMA_MODEL
 from fileio.file_embedder import embed_and_insert, insert_file_and_get_id
 from fileio.extractor import extract_text_by_extension
-from llm import refine_text_with_llm, list_prompt_keys, get_prompt_by_lang
+from llm.refiner import refine_text_with_llm
+from llm.prompt_loader import get_prompt_by_lang, list_prompt_keys
 from app.fastapi.services.query_handler import handle_query
 
 # REM: FastAPIインスタンスと設定

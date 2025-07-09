@@ -1,3 +1,4 @@
+# /workspace/app/fastapi/routes/ingest.py
 """
 フォルダ内ファイルを一括インジェスト → OCR → LLM 整形 → ベクトル化
 SSE で進捗を返却する FastAPI ルーター
@@ -16,9 +17,9 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 
 # REM: プロジェクト共通
-from sqlalchemy import text                     # ← NEW: DB 更新に使用
+from sqlalchemy import text
 from src.config import (
-    DB_ENGINE,                                  # ← NEW: files.content 更新用
+    DB_ENGINE,          # files.content 更新に使用
     EMBEDDING_OPTIONS,
     OLLAMA_MODEL
 )
@@ -87,9 +88,9 @@ def ingest_stream(request: Request):
 
     files      = last_ingest["files"]
     total      = len(files)
-    abort_flag = {"flag": False}          # REM: クライアント切断検知用共有フラグ
+    abort_flag = {"flag": False}          # REM: クライアント切断監視用フラグ
 
-    # REM: 切断を監視する非同期タスク
+    # REM: クライアント切断を監視するタスク
     async def monitor_disconnect():
         while not abort_flag["flag"]:
             if await request.is_disconnected():
@@ -97,16 +98,17 @@ def ingest_stream(request: Request):
                 break
             await asyncio.sleep(0.1)
 
-    # REM: 実際の SSE イベント生成コルーチン
+    # REM: SSE イベントを逐次生成
     async def event_generator():
         dc_task = asyncio.create_task(monitor_disconnect())
         try:
             for idx, info in enumerate(files, start=1):
                 if abort_flag["flag"]:
                     break
+
                 fp, name = info["path"], info["filename"]
 
-                # ── ① files へ登録（初回のみ TRUNCATE）
+                # ── ① files テーブル登録（初回 TRUNCATE）
                 fid = upsert_file(fp, "", 0.0, truncate_once=True)
                 yield f"data: {json.dumps({'file':name,'file_id':fid,'step':'ファイル登録中','index':idx,'total':total})}\n\n"
                 yield f"data: {json.dumps({'file':name,'step':'登録完了'})}\n\n"
@@ -119,10 +121,10 @@ def ingest_stream(request: Request):
                 yield f"data: {json.dumps({'file':name,'step':'テキスト抽出完了','duration':dur})}\n\n"
                 if abort_flag["flag"] or not texts:
                     continue
-                texts = list(dict.fromkeys(texts))        # REM: 重複除去
+                texts = list(dict.fromkeys(texts))  # REM: 重複除去
 
                 # ── ③ ページ単位処理
-                refined_pages: list[str] = []             # REM: ページ整形結果を蓄積
+                refined_pages: list[str] = []        # REM: 各ページの整形結果を蓄積
                 for pg, block in enumerate(texts, start=1):
                     if abort_flag["flag"]:
                         break
@@ -140,8 +142,6 @@ def ingest_stream(request: Request):
                     yield f"data: {json.dumps({'file':name,'step':f'使用プロンプト page{pg}','preview':prev_p,'full_text':prompt})}\n\n"
 
                     # --- LLM 整形
-                    if abort_flag["flag"]:
-                        break
                     yield f"data: {json.dumps({'file':name,'step':'LLM整形中'})}\n\n"
                     t1 = time.time()
                     refined, lang, score, _ = refine_text_with_llm(
@@ -154,7 +154,7 @@ def ingest_stream(request: Request):
                     prev2 = refined.strip().replace("\n"," ")[:40]
                     yield f"data: {json.dumps({'file':name,'step':f'LLM整形 page{pg}','preview':prev2,'full_text':refined,'duration':dur2})}\n\n"
 
-                    refined_pages.append(refined)          # REM: 後で全文へまとめる
+                    refined_pages.append(refined)
 
                     # --- ベクトル化
                     for mi, mkey in enumerate(last_ingest["embed_models"], start=1):
@@ -172,7 +172,7 @@ def ingest_stream(request: Request):
                         yield f"data: {json.dumps({'file':name,'step':f'ベクトル化（No.{mi}: {mname}）','duration':dur_vec,'last':mi==len(last_ingest['embed_models'])})}\n\n"
 
                 # ── ④ ファイル単位で全文を結合して files.content を更新
-                if refined_pages and not abort_flag["flag"]:
+                if refined_pages:  # abort_flag に関わらず更新
                     full_text = "\n\n".join(refined_pages)
                     with DB_ENGINE.begin() as tx:
                         tx.execute(
@@ -181,7 +181,7 @@ def ingest_stream(request: Request):
                         )
                     yield f"data: {json.dumps({'file':name,'step':'全文保存完了'})}\n\n"
 
-                yield "\n\n"        # REM: ファイル区切り
+                yield "\n\n"  # REM: ファイル区切り
         finally:
             dc_task.cancel()
 

@@ -1,19 +1,21 @@
-# app/fastapi_main.py
+import os
+import json
+import glob
+import uvicorn
 
-import os, json, glob, uvicorn
 from typing import List
-from fastapi import (FastAPI, Request, Query, UploadFile, File, Form, HTTPException)
-from fastapi.responses import (
-    HTMLResponse, RedirectResponse, JSONResponse, Response, 
-    StreamingResponse)
+from fastapi import FastAPI, Request, Query, UploadFile, File, Form, HTTPException
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import text
 
+import unicodedata
+
 from src.config import EMBEDDING_OPTIONS, DB_ENGINE, OLLAMA_MODEL
 from fileio.file_embedder import embed_and_insert, insert_file_and_get_id
 from fileio.extractor import extract_text_by_extension
-from llm.refiner import refine_text_with_llm
+from llm.refiner import refine_text_with_llm, normalize_empty_lines, build_prompt
 from llm.prompt_loader import get_prompt_by_lang, list_prompt_keys
 from app.fastapi.services.query_handler import handle_query
 
@@ -21,15 +23,18 @@ from app.fastapi.services.query_handler import handle_query
 app = FastAPI()
 BASE_INGEST_ROOT = os.path.abspath("ignored/input_files")
 
-app.mount("/static", StaticFiles(directory="app/fastapi/static"), name="static")
-templates = Jinja2Templates(directory="app/fastapi/templates")
+# REM: static/templates はこのファイルのあるディレクトリ直下を使う
+here = os.path.dirname(__file__)
+static_dir = os.path.join(here, "static")
+templates_dir = os.path.join(here, "templates")
 
-# ──────────────────────────────────────────────────────────
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+templates = Jinja2Templates(directory=templates_dir)
+
 # REM: 最後に実行したingestジョブの情報を保持
 last_ingest = None
 
 # ──────────────────────────────────────────────────────────
-# REM: ① ルートでポータル用 index.html を返す
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
     return templates.TemplateResponse("index.html", {
@@ -39,7 +44,6 @@ def index(request: Request):
     })
 
 # ──────────────────────────────────────────────────────────
-# REM: ② チャットUI
 @app.get("/chat", response_class=HTMLResponse)
 def show_chat_ui(request: Request):
     return templates.TemplateResponse("chat.html", {
@@ -48,7 +52,6 @@ def show_chat_ui(request: Request):
     })
 
 # ──────────────────────────────────────────────────────────
-# REM: ③ Ingest UI
 @app.get("/ingest", response_class=HTMLResponse)
 def show_ingest(request: Request):
     return templates.TemplateResponse("ingest.html", {
@@ -58,7 +61,6 @@ def show_ingest(request: Request):
     })
 
 # ──────────────────────────────────────────────────────────
-# REM: フォルダ指定 ingest 実行（ファイルアップロード不要）
 @app.post("/ingest", response_class=JSONResponse)
 async def run_ingest_folder(
     input_folder: str = Form(...),
@@ -97,26 +99,18 @@ async def run_ingest_folder(
     })
 
 # ──────────────────────────────────────────────────────────
-# REM: ⑤ Ingest ストリーム：SSE で逐次進捗を返却
 @app.get("/ingest/stream")
 def ingest_stream():
     if not last_ingest:
         raise HTTPException(status_code=400, detail="No ingest job found")
 
-    # REM: ingestストリーム（逐次処理）をクライアントへ送る
     def event_generator():
-        if not last_ingest:
-            print("[DEBUG] last_ingest が存在しない")
-            raise HTTPException(status_code=400, detail="No ingest job found")
-
         for info in last_ingest["files"]:
-            print("[DEBUG] ファイル処理開始:", info)
             path = info["path"]
             name = info["filename"]
 
             # REM: files テーブル登録＆file_id取得（初回だけtruncate実施）
             file_id = insert_file_and_get_id(path, "", 0.0, truncate_once=True)
-            # REM: ファイル行ヘッダとして最初に送信
             yield f"data: {json.dumps({'file': name, 'file_id': file_id, 'step': '開始'})}\n\n"
 
             # REM: 保存完了メッセージ
@@ -125,41 +119,38 @@ def ingest_stream():
             # REM: テキスト抽出
             texts = extract_text_by_extension(path)
             if not texts:
-                print("[DEBUG] 抽出テキストが空:", path)
                 continue
-            # 🔧 重複ブロック除去（順序保持）
-            texts = list(dict.fromkeys(texts))
-            print(f"[DEBUG] テキスト抽出完了 ({len(texts)} ページ):", name)
+            texts = list(dict.fromkeys(texts))  # 重複除去
 
-            # REM: 各ページごとの処理
             for idx, block in enumerate(texts, start=1):
                 preview = block.strip().replace("\n", " ")[:40]
 
-                # REM: OCR済みメッセージ（全文も送信）
-                step_label = "OCRページ" + str(idx)
-                detail_text = preview + "..." if preview else preview
-                yield f"data: {json.dumps({'file': name, 'step': step_label, 'preview': detail_text, 'full_text': block})}\n\n"
+                # REM: OCR済みページ送信
+                step_label = f"OCRページ{idx}"
+                yield f"data: {json.dumps({'file': name, 'step': step_label, 'preview': preview, 'full_text': block})}\n\n"
 
-                # REM: プロンプト生成
-                _, prompt_template = get_prompt_by_lang(last_ingest["refine_prompt_key"])
-                prompt = prompt_template.replace("{TEXT}", block).replace("{input_text}", block)
+                # --- 使用プロンプトプレビュー --------------------------------
+                # 1) 空行正規化
+                norm = normalize_empty_lines(block)
+                # 2) 数字半角＆全角カタカナ化
+                norm = unicodedata.normalize("NFKC", norm)
+                # 3) プロンプト全文を組み立て
+                prompt_text = build_prompt(norm, last_ingest["refine_prompt_key"])
+                # 4) 改行をスペースにして 1 行表示
+                prompt_flat = prompt_text.replace("\n", " ")
+                step_label = f"使用プロンプトページ{idx}"
+                yield f"data: {json.dumps({'file': name, 'step': step_label, 'prompt': prompt_flat})}\n\n"
 
-                # REM: プロンプト表示用メッセージ
-                step_label = "プロンプトページ" + str(idx)
-                detail_text = prompt[:80].replace("\n", " ") + "..."
-                yield f"data: {json.dumps({'file': name, 'step': step_label, 'detail': detail_text})}\n\n"
-
-                # REM: LLM整形
-                refined, lang, score = refine_text_with_llm(
+                # --- LLM整形 ------------------------------------------
+                refined, lang, score, used_prompt = refine_text_with_llm(
                     block,
                     model=OLLAMA_MODEL,
                     force_lang=last_ingest["refine_prompt_key"]
                 )
-                step_label = "整形ページ" + str(idx)
-                detail_text = refined[:80].replace("\n", " ") + "..."
-                score_val = round(score, 3)
-                yield f"data: {json.dumps({'file': name, 'step': step_label, 'preview': detail_text, 'full_text': refined, 'score': score_val})}\n\n"
-                
+                step_label = f"整形ページ{idx}"
+                preview_ref = refined[:40].replace("\n", " ") + "..."
+                yield f"data: {json.dumps({'file': name, 'step': step_label, 'preview': preview_ref, 'full_text': refined, 'score': round(score,3)})}\n\n"
+
                 # REM: ベクトル化（モデル別）
                 for model_key in last_ingest["embed_models"]:
                     embed_and_insert(
@@ -168,8 +159,8 @@ def ingest_stream():
                         model_keys={model_key},
                         quality_score=score
                     )
-                    step_label = "ベクトル化ページ" + str(idx)
-                    detail_text = model_key + " → 完了"
+                    step_label = f"ベクトル化ページ{idx}"
+                    detail_text = f"{model_key} → 完了"
                     yield f"data: {json.dumps({'file': name, 'step': step_label, 'detail': detail_text})}\n\n"
 
         # REM: 全バッチ処理完了を一度だけ通知
@@ -178,7 +169,6 @@ def ingest_stream():
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 # ──────────────────────────────────────────────────────────
-# REM: ⑥ クエリ処理
 @app.post("/query")
 async def query_handler(
     query: str    = Form(...),
@@ -192,7 +182,6 @@ async def query_handler(
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
 # ──────────────────────────────────────────────────────────
-# REM: ⑦ PDFバイナリ返却
 @app.get("/api/pdf/{file_id}")
 def serve_pdf(file_id: int):
     with DB_ENGINE.connect() as conn:
@@ -205,7 +194,6 @@ def serve_pdf(file_id: int):
     return Response(content=row[0], media_type="application/pdf")
 
 # ──────────────────────────────────────────────────────────
-# REM: ⑧ コンテンツ取得
 @app.get("/api/content/{file_id}")
 def api_content(file_id: int):
     with DB_ENGINE.connect() as conn:
@@ -218,7 +206,6 @@ def api_content(file_id: int):
     return JSONResponse({"content": row[0]})
 
 # ──────────────────────────────────────────────────────────
-# REM: ⑨ PDFビューア
 @app.get("/viewer/{file_id}", response_class=HTMLResponse)
 def pdf_viewer(request: Request, file_id: int, num: int = 0):
     with DB_ENGINE.connect() as conn:
@@ -236,10 +223,9 @@ def pdf_viewer(request: Request, file_id: int, num: int = 0):
     })
 
 # ──────────────────────────────────────────────────────────
-# REM: ⑩ 編集画面
 @app.get("/edit/{file_id}", response_class=HTMLResponse)
 def show_edit(request: Request, file_id: int):
-    from test.services.query_handler import get_file_content
+    from app.fastapi.services.query_handler import get_file_content
     content = get_file_content(file_id)
     return templates.TemplateResponse("edit.html", {
         "request": request,
@@ -248,7 +234,6 @@ def show_edit(request: Request, file_id: int):
     })
 
 # ──────────────────────────────────────────────────────────
-# REM: ⑪ 保存 & 再ベクトル化
 @app.post("/api/save/{file_id}")
 def api_save(
     file_id: int,
@@ -277,6 +262,5 @@ def api_save(
     return JSONResponse({"status": "started"})
 
 # ──────────────────────────────────────────────────────────
-# REM: 開発用エントリポイント
 if __name__ == "__main__":
-    uvicorn.run("test.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.fastapi_main:app", host="0.0.0.0", port=8000, reload=True)

@@ -1,0 +1,11 @@
+<!-- app/fastapi/templates/partials/ingest/ingest_header.html -->
+<div id="ingest-header">
+  <!-- REM: フォルダ選択フォーム -->
+  <label for="input-folder">処理対象フォルダ：</label>
+  <input type="text" id="input-folder" name="input_folder" value="ignored/input_files" readonly style="width:280px;">
+  <button type="button" id="browse-folder">📂 参照</button>
+  <label style="margin-left:12px;">
+    <input type="checkbox" id="include-subdirs" name="include_subdirs" checked>
+    サブフォルダも含める
+  </label>
+</div>

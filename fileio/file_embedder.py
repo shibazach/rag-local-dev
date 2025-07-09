@@ -1,7 +1,9 @@
 # fileio/file_embedder.py
-# REM: ベクトル化処理とDB登録を行うユーティリティモジュール
+# REM: ベクトル化処理と DB 登録ユーティリティ（overwrite フラグ対応版）
+
 import os, hashlib, torch
 import numpy as np
+from typing import List, Sequence
 
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_ollama import OllamaEmbeddings
@@ -10,13 +12,17 @@ from sqlalchemy.sql import text as sql_text
 
 from src import bootstrap
 from src.config import (
-    DB_ENGINE, DEVELOPMENT_MODE, EMBEDDING_OPTIONS, OLLAMA_BASE)
-from db.schema import TABLE_FILES
+    DB_ENGINE, DEVELOPMENT_MODE, EMBEDDING_OPTIONS, OLLAMA_BASE
+)
 
-# ── GPU 空きVRAMをチェックしてデバイスを返すユーティリティ ──
+# REM: DB ヘルパー
+from db.handler import upsert_file, prepare_embedding_table
+
+# ──────────────────────────────────────────────────────────
+# REM: GPU 空き VRAM をチェックしてエンベッド用デバイスを返す
 def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
     """
-    GPU が利用可能かつ空き VRAM が min_free_vram_mb 以上あれば "cuda" を返す。
+    GPU が利用可能かつ空き VRAM が min_free_vram_mb 以上なら "cuda" を返す。
     それ以外は "cpu"。
     """
     if torch.cuda.is_available():
@@ -24,7 +30,7 @@ def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
             free, _ = torch.cuda.mem_get_info()
             free_mb = free // (1024 * 1024)
         except Exception:
-            # 古い PyTorch 環境では NVML 経由
+            # PyTorch が古く NVML へフォールバックする場合
             from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
             nvmlInit()
             handle = nvmlDeviceGetHandleByIndex(0)
@@ -35,170 +41,91 @@ def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
     return "cpu"
 
 
-# REM: numpy配列をpgvector文字列リテラルに変換
-def to_pgvector_literal(vec):
+# REM: numpy 配列を pgvector 文字列リテラルに変換
+def to_pgvector_literal(vec: Sequence[float] | np.ndarray) -> str:
     if isinstance(vec, np.ndarray):
         vec = vec.tolist()
     return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
 
-# REM: filesテーブルにファイルを登録しfile_idを返す
-_truncate_files_done = False
-def insert_file_and_get_id(filepath, refined_ja, score, truncate_once=False):
-    global _truncate_files_done
-
-    with open(filepath, "rb") as f:
-        file_blob = f.read()
-
-    file_hash = hashlib.sha256(file_blob).hexdigest()
-
-    with DB_ENGINE.begin() as conn:
-        # テーブル作成
-        conn.execute(sql_text("""
-            CREATE TABLE IF NOT EXISTS files (
-                file_id SERIAL PRIMARY KEY,
-                filename TEXT,
-                content TEXT,
-                file_blob BYTEA,
-                quality_score FLOAT,
-                file_hash TEXT UNIQUE
-            )
-        """))
-
-        # 開発モードかつ初回のみ TRUNCATE
-        if DEVELOPMENT_MODE and truncate_once and not _truncate_files_done:
-            conn.execute(sql_text("TRUNCATE TABLE files CASCADE"))
-            _truncate_files_done = True
-
-        # 既存登録チェック
-        existing = conn.execute(sql_text(
-            "SELECT file_id FROM files WHERE file_hash = :hash"
-        ), {"hash": file_hash}).fetchone()
-        if existing:
-            return existing[0]
-
-        # 新規登録
-        result = conn.execute(sql_text("""
-            INSERT INTO files (filename, content, file_blob, quality_score, file_hash)
-            VALUES (:filename, :content, :file_blob, :score, :hash)
-            RETURNING file_id
-        """), {
-            "filename": os.path.basename(filepath),
-            "content": refined_ja,
-            "file_blob": file_blob,
-            "score": score,
-            "hash": file_hash
-        })
-        return result.scalar()
-
-
-# REM: embedding_* テーブルの TRUNCATE 状態管理（モデルごとに1回のみ）
-_truncate_done_tables = set()
-
-# REM: ベクトル化とDB登録
-def embed_and_insert(texts, filename, model_keys=None, return_data=False, quality_score=0.0):
-    global _truncate_done_tables
-
-    # チャンク分割
+# ──────────────────────────────────────────────────────────
+# REM: メイン関数 ─ チャンク分割 → 埋め込み → DB 登録
+def embed_and_insert(
+    texts: List[str],
+    filename: str,
+    model_keys: List[str] | None = None,
+    *,
+    return_data: bool = False,
+    quality_score: float = 0.0,
+    overwrite: bool = False,
+):
+    """
+    ・texts         : 抽出／整形済みページテキストのリスト  
+    ・filename      : 実ファイルへのパス  
+    ・model_keys    : EMBEDDING_OPTIONS のキーリスト（None=全モデル）  
+    ・return_data   : True の時は (chunks, embeddings) を返す  
+    ・quality_score : files.quality_score へ保存する値  
+    ・overwrite     : True で既存 embeddings テーブルを TRUNCATE して上書き
+    """
+    # 1) チャンク分割 ------------------------------------------------------------
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    chunks = [splitter.split_text(t) for t in texts]
-    flat_chunks = [s for c in chunks for s in c]
-    full_text = "\n".join(flat_chunks)
+    chunks_lists = [splitter.split_text(t) for t in texts]
+    flat_chunks  = [s for lst in chunks_lists for s in lst]
+    full_text    = "\n".join(flat_chunks)
 
-    # files テーブル登録
-    file_id = insert_file_and_get_id(filename, full_text, quality_score, truncate_once=True)
+    # 2) files テーブル登録（既存があれば再利用） -------------------------------
+    file_id = upsert_file(filename, full_text, quality_score, truncate_once=True)
 
-    # 各モデルごとに埋め込み
-    for key, config in EMBEDDING_OPTIONS.items():
+    # 3) 各モデルごとに埋め込み --------------------------------------------------
+    for key, cfg in EMBEDDING_OPTIONS.items():
         if model_keys is not None and key not in model_keys:
             continue
 
-        # OllamaEmbeddings の場合
-        if config["embedder"] == "OllamaEmbeddings":
-            embedder = OllamaEmbeddings(
-                model=config["model_name"],
-                base_url=OLLAMA_BASE
-            )
+        # 3-A) 埋め込み器を初期化
+        if cfg["embedder"] == "OllamaEmbeddings":
+            embedder = OllamaEmbeddings(model=cfg["model_name"], base_url=OLLAMA_BASE)
             embeddings = embedder.embed_documents(flat_chunks)
 
-        # SentenceTransformer の場合
-        elif config["embedder"] == "SentenceTransformer":
+        elif cfg["embedder"] == "SentenceTransformer":
             from torch.cuda import OutOfMemoryError
-
-            # 1) デバイス選択
-            device = pick_embed_device(min_free_vram_mb=1024)
+            device = pick_embed_device()
             try:
-                embedder = SentenceTransformer(config["model_name"], device=device)
+                st_model = SentenceTransformer(cfg["model_name"], device=device)
             except OutOfMemoryError:
                 torch.cuda.empty_cache()
                 device = "cpu"
-                embedder = SentenceTransformer(config["model_name"], device=device)
-
-            # 2) バッチサイズ設定
-            batch_size = 16 if device == "cuda" else 8
-
-            # 3) エンコード実行
-            try:
-                embeddings = embedder.encode(
-                    flat_chunks,
-                    batch_size=batch_size,
-                    convert_to_numpy=True,
-                    show_progress_bar=(device == "cuda"),
-                )
-            except OutOfMemoryError:
-                # GPU 時の OOM フォールバック
-                if device == "cuda":
-                    torch.cuda.empty_cache()
-                    device = "cpu"
-                    embedder = SentenceTransformer(config["model_name"], device=device)
-                    embeddings = embedder.encode(
-                        flat_chunks,
-                        batch_size=8,
-                        convert_to_numpy=True
-                    )
-                else:
-                    raise
-
+                st_model = SentenceTransformer(cfg["model_name"], device=device)
+            batch = 16 if device == "cuda" else 8
+            embeddings = st_model.encode(
+                flat_chunks,
+                batch_size=batch,
+                convert_to_numpy=True,
+                show_progress_bar=(device == "cuda"),
+            )
         else:
-            print(f"⚠️ 未対応の埋め込み: {config['embedder']}")
+            print(f"⚠️ 未対応 embedder: {cfg['embedder']}")
             continue
 
-        # テーブル名生成
-        table_name = (
-            config["model_name"].replace("/", "_")
-            .replace("-", "_")
-            + f"_{config['dimension']}"
-        )
+        # 3-B) テーブル名 & 準備
+        table_name = cfg["model_name"].replace("/", "_").replace("-", "_") + f"_{cfg['dimension']}"
+        prepare_embedding_table(table_name, cfg["dimension"], overwrite=overwrite)
 
-        # テーブル作成＆初期化（初回のみ）
+        # 3-C) INSERT
+        insert_sql = sql_text(f"""
+            INSERT INTO "{table_name}" (content, embedding, file_id)
+            VALUES (:content, :embedding, :file_id)
+        """)
+        records = [
+            {
+                "content": chunk,
+                "embedding": to_pgvector_literal(vec),
+                "file_id": file_id
+            }
+            for chunk, vec in zip(flat_chunks, embeddings)
+        ]
         with DB_ENGINE.begin() as conn:
-            conn.execute(sql_text(f"""
-                CREATE TABLE IF NOT EXISTS "{table_name}" (
-                    id SERIAL PRIMARY KEY,
-                    content TEXT,
-                    embedding VECTOR({config['dimension']}),
-                    file_id INTEGER REFERENCES files(file_id)
-                )
-            """))
-            if table_name not in _truncate_done_tables:
-                conn.execute(sql_text(f'TRUNCATE TABLE "{table_name}" CASCADE'))
-                _truncate_done_tables.add(table_name)
-
-            # レコード登録
-            insert_sql = sql_text(f"""
-                INSERT INTO "{table_name}" (content, embedding, file_id)
-                VALUES (:content, :embedding, :file_id)
-            """)
-            records = [
-                {
-                    "content": chunk,
-                    "embedding": to_pgvector_literal(vec),
-                    "file_id": file_id
-                }
-                for chunk, vec in zip(flat_chunks, embeddings)
-            ]
             conn.execute(insert_sql, records)
 
-    # 必要ならチャンク＋埋め込みを返す
+    # 4) 必要ならデータを返却 ----------------------------------------------------
     if return_data:
         return flat_chunks, embeddings

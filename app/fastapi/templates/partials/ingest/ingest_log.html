@@ -1,0 +1,16 @@
+<!-- app/fastapi/templates/partials/ingest/ingest_log.html -->
+<div id="results-log">
+  <!-- REM: 処理ログ表示 -->
+  <details class="log-block">
+    <summary>処理ログ</summary>
+    <pre id="log-output" style="white-space:pre-wrap;"></pre>
+  </details>
+</div>
+
+<script>
+  // REM: ログ追記ユーティリティ
+  function appendLog(message) {
+    const pre = document.getElementById('log-output');
+    pre.textContent += message + '\n';
+  }
+</script>

@@ -1,169 +1,59 @@
 📝 整形後:
-## Analysis of Crack Growth in Housing
+## Report Summary
 
-This document contains detailed information and analysis of cracks discovered in two housings.
+**Objective:**
+- The report investigates a gear housing (QS5G-80) that exhibited cracks during durability testing.
+- The study aims to determine the crack initiation point, growth mechanism, and the influence of fatigue on the crack progression.
 
-**Summary:**
+**Methodology:**
+- Detailed examination of the fracture surface using macroscopy and SEM.
+- Elemental analysis of the fracture surface using EDS.
+- Metallographic analysis of the fracture area vicinity.
 
-- Cracks were identified in both housings, indicating fatigue damage caused by repeated stress.
-- The cracks progressed from the surface into the interior, indicating progressive damage.
-- The fractured area displayed discoloration, suggesting a fatigue-related fracture mechanism.
-
-
-**Detailed Findings:**
-
-**Housing A:**
-
-- Cracks originated at the junction of two walls.
-- Crack growth direction: horizontal.
-- EDS analysis revealed elevated oxygen concentration in the fractured area, suggesting exposure to air during fracture.
-
-
-**Housing B:**
-
-- Crack initiation point not identified.
-- Crack growth direction: vertical.
-- SEM analysis showed fractured surface features consistent with fatigue damage.
-
-
-**Metallographic Analysis:**
-
-- Both housings exhibited a pearlitic ductile iron microstructure.
-- Spheroidal graphite nodules were dispersed throughout the matrix of pearlite.
-- Analysis confirmed the presence of free ferrite, suggesting susceptibility to intergranular fracture.
-
-
-**Quantitative Analysis:**
-
-- Ballistic impact analysis confirmed the presence of fatigue cracks in both housings.
-- The percentage of pearlite in the microstructure was quantified for both housings.
-
+**Results:**
+- Fatigue cracks were identified on both tested samples.
+- Crack initiation sites were identified at different locations on both samples.
+- Fatigue striations were observed on fractured surfaces, suggesting fatigue-induced crack growth.
+- EDS analysis confirmed the presence of oxygen on the fracture surface, indicating oxidation during crack growth.
+- Metallographic analysis revealed microstructure variations in the vicinity of the fracture, with increased ferrite content and pearlite morphology in the fractured area.
 
 **Conclusion:**
+- Fatigue damage caused the cracking of the gear housing.
+- The crack growth rate was estimated to be approximately 18,000 cycles.
 
-- Fatigue damage caused the cracks in both housings.
-- The difference in crack growth direction suggests varying stress concentrations in each housing.
-- Further analysis is recommended to determine the root cause of the fatigue damage.
+**Additional Findings:**
+- The fracture surface of Sample A-1 showed evidence of partial delamination.
+- The fracture surface of Sample B-1 exhibited a larger area of oxidation compared to Sample A-1.
 
 **Recommendations:**
-
-- Detailed stress analysis of the housings is recommended to identify potential weak points.
-- Repair or reinforcement measures should be implemented to prevent further crack growth.
-- Periodic inspections of the housings should be conducted to monitor crack progression and ensure timely repairs.
-
-**Keywords:** Fatigue damage, Housing, Pearlitic ductile iron, Crack growth, Ballistic impact analysis, Microstructural analysis.
+- Further investigations are needed to determine the exact cause of crack initiation.
+- Fatigue mitigation measures should be considered for future designs.
 
 
 === ✂️ チャンク ===
-## Analysis of Crack Growth in Housing
+## Report Summary
 
-This document contains detailed information and analysis of cracks discovered in two housings.
+**Objective:**
+- The report investigates a gear housing (QS5G-80) that exhibited cracks during durability testing.
+- The study aims to determine the crack initiation point, growth mechanism, and the influence of fatigue on the crack progression.
 
-**Summary:**
-
-- Cracks were identified in both housings, indicating fatigue damage caused by repeated stress.
-- The cracks progressed from the surface into the interior, indicating progressive damage.
-- The fractured area displayed discoloration, suggesting a fatigue-related fracture mechanism.
-
-
-**Detailed Findings:**
-
-**Housing A:**
-**Detailed Findings:**
-
-**Housing A:**
-
-- Cracks originated at the junction of two walls.
-- Crack growth direction: horizontal.
-- EDS analysis revealed elevated oxygen concentration in the fractured area, suggesting exposure to air during fracture.
-
-
-**Housing B:**
-
-- Crack initiation point not identified.
-- Crack growth direction: vertical.
-- SEM analysis showed fractured surface features consistent with fatigue damage.
-
-
-**Metallographic Analysis:**
-**Metallographic Analysis:**
-
-- Both housings exhibited a pearlitic ductile iron microstructure.
-- Spheroidal graphite nodules were dispersed throughout the matrix of pearlite.
-- Analysis confirmed the presence of free ferrite, suggesting susceptibility to intergranular fracture.
-
-
-**Quantitative Analysis:**
-
-- Ballistic impact analysis confirmed the presence of fatigue cracks in both housings.
-- The percentage of pearlite in the microstructure was quantified for both housings.
+**Methodology:**
+- Detailed examination of the fracture surface using macroscopy and SEM.
+- Elemental analysis of the fracture surface using EDS.
+- Metallographic analysis of the fracture area vicinity.
+**Results:**
+- Fatigue cracks were identified on both tested samples.
+- Crack initiation sites were identified at different locations on both samples.
+- Fatigue striations were observed on fractured surfaces, suggesting fatigue-induced crack growth.
+- EDS analysis confirmed the presence of oxygen on the fracture surface, indicating oxidation during crack growth.
+- Metallographic analysis revealed microstructure variations in the vicinity of the fracture, with increased ferrite content and pearlite morphology in the fractured area.
 **Conclusion:**
+- Fatigue damage caused the cracking of the gear housing.
+- The crack growth rate was estimated to be approximately 18,000 cycles.
 
-- Fatigue damage caused the cracks in both housings.
-- The difference in crack growth direction suggests varying stress concentrations in each housing.
-- Further analysis is recommended to determine the root cause of the fatigue damage.
-
+**Additional Findings:**
+- The fracture surface of Sample A-1 showed evidence of partial delamination.
+- The fracture surface of Sample B-1 exhibited a larger area of oxidation compared to Sample A-1.
 **Recommendations:**
-**Recommendations:**
-
-- Detailed stress analysis of the housings is recommended to identify potential weak points.
-- Repair or reinforcement measures should be implemented to prevent further crack growth.
-- Periodic inspections of the housings should be conducted to monitor crack progression and ensure timely repairs.
-
-**Keywords:** Fatigue damage, Housing, Pearlitic ductile iron, Crack growth, Ballistic impact analysis, Microstructural analysis.
-## Analysis of Crack Growth in Housing
-
-This document contains detailed information and analysis of cracks discovered in two housings.
-
-**Summary:**
-
-- Cracks were identified in both housings, indicating fatigue damage caused by repeated stress.
-- The cracks progressed from the surface into the interior, indicating progressive damage.
-- The fractured area displayed discoloration, suggesting a fatigue-related fracture mechanism.
-
-
-**Detailed Findings:**
-
-**Housing A:**
-**Detailed Findings:**
-
-**Housing A:**
-
-- Cracks originated at the junction of two walls.
-- Crack growth direction: horizontal.
-- EDS analysis revealed elevated oxygen concentration in the fractured area, suggesting exposure to air during fracture.
-
-
-**Housing B:**
-
-- Crack initiation point not identified.
-- Crack growth direction: vertical.
-- SEM analysis showed fractured surface features consistent with fatigue damage.
-
-
-**Metallographic Analysis:**
-**Metallographic Analysis:**
-
-- Both housings exhibited a pearlitic ductile iron microstructure.
-- Spheroidal graphite nodules were dispersed throughout the matrix of pearlite.
-- Analysis confirmed the presence of free ferrite, suggesting susceptibility to intergranular fracture.
-
-
-**Quantitative Analysis:**
-
-- Ballistic impact analysis confirmed the presence of fatigue cracks in both housings.
-- The percentage of pearlite in the microstructure was quantified for both housings.
-**Conclusion:**
-
-- Fatigue damage caused the cracks in both housings.
-- The difference in crack growth direction suggests varying stress concentrations in each housing.
-- Further analysis is recommended to determine the root cause of the fatigue damage.
-
-**Recommendations:**
-**Recommendations:**
-
-- Detailed stress analysis of the housings is recommended to identify potential weak points.
-- Repair or reinforcement measures should be implemented to prevent further crack growth.
-- Periodic inspections of the housings should be conducted to monitor crack progression and ensure timely repairs.
-
-**Keywords:** Fatigue damage, Housing, Pearlitic ductile iron, Crack growth, Ballistic impact analysis, Microstructural analysis.
+- Further investigations are needed to determine the exact cause of crack initiation.
+- Fatigue mitigation measures should be considered for future designs.

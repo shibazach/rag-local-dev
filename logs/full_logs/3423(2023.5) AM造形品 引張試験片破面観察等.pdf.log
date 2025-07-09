@@ -1,110 +1,56 @@
 📝 整形後:
-##Metallic Organization and Precipitation Analysis Report
+## 報告書要約
 
-**Summary:**
+**目的**
 
-This report presents the results of metallographic analysis of samples of AS-1, AS-3, T6-4, T6-6, HIP-4, HIP-7, and HIP-T6-5 alloys. The analysis involved both etching prior to and after HF treatment to visualize the microstructure. Additionally, EDS analysis was performed on precipitate formations observed after etching.
+* 積層造形アルミの強度特性の改善検討。
+* T6 処理および HIP 処理の効果を評価。
 
-**Observations:**
+**調査結果**
 
-* Metallographic analysis revealed significant differences in microstructure between the different alloys.
-* Prior to etching, all samples displayed a typical dendritic morphology with variations in grain size.
-* After etching, the microstructure of all samples exhibited a cellular morphology with smaller grains, indicating the effectiveness of the etching process.
-* EDS analysis confirmed the presence of precipitate phases in the samples.
+* HIP 処理のみ、多数の析出物が確認された。
+* T6 処理および HIP 処理では、多数の微小な空隙が確認された。
+* 破面観察では、HIP 処理したサンプルのみ、多数のボイドが確認された。
 
-**Results:**
+**結論**
 
-* EDS analysis identified various elements, including aluminum, silicon, copper, and titanium, in the precipitate phases.
-* The composition of the precipitate phases differed between the different alloys, suggesting variations in their microstructure and precipitation mechanisms.
+* HIP 処理は、強度特性の向上に効果がある可能性がある。
+* T6 処理は、空隙の減少に効果がある可能性がある。
 
-**Conclusion:**
+**今後**
 
-The metallographic analysis and EDS results provide valuable insights into the microstructure and precipitation behavior of these alloys. The observed differences in microstructure and precipitate composition suggest that the alloys exhibit different microstructural evolutions and precipitation characteristics.
+* さらに多くの試料で、異なる処理条件での効果を評価する。
+* 積層造形アルミの強度特性の向上に関する研究を続ける。
 
-**Recommendations:**
+**付録**
 
-* Further investigation is needed to fully understand the mechanisms responsible for the observed microstructure and precipitation behavior.
-* The influence of different processing parameters on microstructure and precipitation should be explored.
-
-**Additional Data:**
-
-* Detailed information on the tested samples is provided in the attached document.
-* Figures 1-11 present microstructural and EDS data.
-
-
-**Keywords:** Metallographic analysis, Precipitation, EDS, Microstructure, Alloys
+* 供試体詳細
 
 
 === ✂️ チャンク ===
-##Metallic Organization and Precipitation Analysis Report
+## 報告書要約
 
-**Summary:**
+**目的**
 
-This report presents the results of metallographic analysis of samples of AS-1, AS-3, T6-4, T6-6, HIP-4, HIP-7, and HIP-T6-5 alloys. The analysis involved both etching prior to and after HF treatment to visualize the microstructure. Additionally, EDS analysis was performed on precipitate formations observed after etching.
+* 積層造形アルミの強度特性の改善検討。
+* T6 処理および HIP 処理の効果を評価。
 
-**Observations:**
-**Observations:**
+**調査結果**
 
-* Metallographic analysis revealed significant differences in microstructure between the different alloys.
-* Prior to etching, all samples displayed a typical dendritic morphology with variations in grain size.
-* After etching, the microstructure of all samples exhibited a cellular morphology with smaller grains, indicating the effectiveness of the etching process.
-* EDS analysis confirmed the presence of precipitate phases in the samples.
+* HIP 処理のみ、多数の析出物が確認された。
+* T6 処理および HIP 処理では、多数の微小な空隙が確認された。
+* 破面観察では、HIP 処理したサンプルのみ、多数のボイドが確認された。
 
-**Results:**
-**Results:**
+**結論**
 
-* EDS analysis identified various elements, including aluminum, silicon, copper, and titanium, in the precipitate phases.
-* The composition of the precipitate phases differed between the different alloys, suggesting variations in their microstructure and precipitation mechanisms.
+* HIP 処理は、強度特性の向上に効果がある可能性がある。
+* T6 処理は、空隙の減少に効果がある可能性がある。
 
-**Conclusion:**
-**Conclusion:**
+**今後**
 
-The metallographic analysis and EDS results provide valuable insights into the microstructure and precipitation behavior of these alloys. The observed differences in microstructure and precipitate composition suggest that the alloys exhibit different microstructural evolutions and precipitation characteristics.
+* さらに多くの試料で、異なる処理条件での効果を評価する。
+* 積層造形アルミの強度特性の向上に関する研究を続ける。
 
-**Recommendations:**
-**Recommendations:**
+**付録**
 
-* Further investigation is needed to fully understand the mechanisms responsible for the observed microstructure and precipitation behavior.
-* The influence of different processing parameters on microstructure and precipitation should be explored.
-
-**Additional Data:**
-
-* Detailed information on the tested samples is provided in the attached document.
-* Figures 1-11 present microstructural and EDS data.
-**Keywords:** Metallographic analysis, Precipitation, EDS, Microstructure, Alloys
-##Metallic Organization and Precipitation Analysis Report
-
-**Summary:**
-
-This report presents the results of metallographic analysis of samples of AS-1, AS-3, T6-4, T6-6, HIP-4, HIP-7, and HIP-T6-5 alloys. The analysis involved both etching prior to and after HF treatment to visualize the microstructure. Additionally, EDS analysis was performed on precipitate formations observed after etching.
-
-**Observations:**
-**Observations:**
-
-* Metallographic analysis revealed significant differences in microstructure between the different alloys.
-* Prior to etching, all samples displayed a typical dendritic morphology with variations in grain size.
-* After etching, the microstructure of all samples exhibited a cellular morphology with smaller grains, indicating the effectiveness of the etching process.
-* EDS analysis confirmed the presence of precipitate phases in the samples.
-
-**Results:**
-**Results:**
-
-* EDS analysis identified various elements, including aluminum, silicon, copper, and titanium, in the precipitate phases.
-* The composition of the precipitate phases differed between the different alloys, suggesting variations in their microstructure and precipitation mechanisms.
-
-**Conclusion:**
-**Conclusion:**
-
-The metallographic analysis and EDS results provide valuable insights into the microstructure and precipitation behavior of these alloys. The observed differences in microstructure and precipitate composition suggest that the alloys exhibit different microstructural evolutions and precipitation characteristics.
-
-**Recommendations:**
-**Recommendations:**
-
-* Further investigation is needed to fully understand the mechanisms responsible for the observed microstructure and precipitation behavior.
-* The influence of different processing parameters on microstructure and precipitation should be explored.
-
-**Additional Data:**
-
-* Detailed information on the tested samples is provided in the attached document.
-* Figures 1-11 present microstructural and EDS data.
-**Keywords:** Metallographic analysis, Precipitation, EDS, Microstructure, Alloys
+* 供試体詳細

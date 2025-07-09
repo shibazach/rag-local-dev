@@ -77,10 +77,9 @@ def refine_text_with_llm(raw_text: str,
         **generation_kwargs
     )
 
-    # 7) LangChain チェーン構築
-    # REM: build_prompt で {TEXT} を既に置換済みなので
-    #      プレースホルダ無しテンプレートとして扱う
-    prompt_template = PromptTemplate.from_template(prompt)
+    # 7) LangChain チェーン構築（中括弧エスケープで format エラー回避）
+    safe_prompt = prompt.replace("{", "{{").replace("}", "}}")
+    prompt_template = PromptTemplate.from_template(safe_prompt)
     chain = prompt_template | llm | StrOutputParser()
 
     # 8) 推論実行

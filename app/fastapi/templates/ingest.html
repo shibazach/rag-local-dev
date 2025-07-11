@@ -1,9 +1,9 @@
-<!-- app/fastapi/templates/ingest.html -->
+<!-- app/fastapi/templates/ingest.html @2025-07-10 19:00 JST -->
 {% extends "base.html" %}
 {% block content %}
 
 <style>
-  /* ペイン上下分割 */
+  /* REM: ペイン上下分割 */
   #ingest-container {
     display: flex;
     flex-direction: column;
@@ -17,11 +17,10 @@
   #pane-bottom {
     flex: 1 1 auto;
     overflow-y: auto;
-    /* 左余白をゼロにしてフォーム部と揃える */
     padding: 1em 1em 1em 0;
   }
 
-  /* 帯付きファイル名 */
+  /* REM: 帯付きファイル名 */
   .file-header {
     background: #eef;
     padding: 4px 8px;
@@ -29,7 +28,7 @@
     margin-bottom: 0.5em;
   }
 
-  /* ファイル進捗表示 */
+  /* REM: ファイル進捗表示 */
   .file-progress {
     font-size: 0.9em;
     color: #555;
@@ -37,20 +36,20 @@
     margin-bottom: 0.5em;
   }
 
-  /* ページ開始：全角１文字ぶん下げ */
+  /* REM: ページ開始 */
   .page-header {
     margin-left: 1ch;
     font-style: italic;
     margin-bottom: 0.5em;
   }
 
-  /* ページ開始以降のアイテム：全角２文字ぶん下げ */
+  /* REM: アイテムインデント */
   .file-section > div:not(.page-header),
   .file-section > details {
     margin-left: 2ch;
   }
 
-  /* カード風、折返し */
+  /* REM: カード風 */
   #pane-bottom details {
     width: 100%;
     box-sizing: border-box;
@@ -69,16 +68,17 @@
 
 <div id="ingest-container">
   <div id="pane-top">
-    <h1>データ整形・登録</h1>
+    <!-- REM: 入力フォーム -->
+    <h1 class="page-title">✏️ データ整形/登録</h1>
     <form id="ingest-form">
-      <!-- フォルダ選択 -->
+      <!-- REM: フォルダ選択 -->
       <div class="form-section">
         {% include "partials/ingest/ingest_header.html" %}
-      </div>
+      </div><br>
 
-      <!-- 整形プロンプト -->
+      <!-- REM: 整形プロンプト選択 -->
       <div class="form-section">
-        <label for="refine-prompt">整形プロンプト：</label>
+        <label for="refine-prompt">📝 整形プロンプト：</label>
         <select id="refine-prompt" name="refine_prompt_key">
           {% for key in prompt_keys %}
             <option value="{{ key }}">{{ key }}</option>
@@ -86,18 +86,24 @@
         </select>
       </div>
 
-      <!-- 埋め込みモデル -->
+      <!-- REM: 埋め込みモデルチェック -->
       <div class="form-section">
-        <label>埋め込みモデル：</label><br>
+        <label>📝 埋め込みモデル：</label>
         {% for key, config in embedding_options.items() %}
           <label>
             <input type="checkbox" name="embed_models" value="{{ key }}" checked>
             {{ loop.index }}. {{ config.model_name }}
-          </label><br>
+          </label>　　  
         {% endfor %}
-      </div>
+      </div><br>
 
-      <!-- アクション -->
+      <!-- REM: 上書き設定 -->
+      <div class="form-section">
+        <label>既存上書き（overwrite）：<input type="checkbox" name="overwrite_existing" value="true"></label><br>
+        <label>質スコア閾値：<input type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0"></label>
+      </div><br>
+
+      <!-- REM: アクションボタン -->
       <div class="form-actions">
         <button type="button" id="start-btn">🚀 処理開始</button>
         <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
@@ -105,34 +111,35 @@
     </form>
   </div>
 
+  <!-- REM: ログ出力領域 -->
   <div id="pane-bottom"></div>
 </div>
 
 <script>
+  /* REM: クライアントサイドスクリプト */
   const startBtn   = document.getElementById('start-btn');
   const cancelBtn  = document.getElementById('cancel-btn');
   const paneBottom = document.getElementById('pane-bottom');
   let controller, es, fileContainers = {}, fileStartTime = {};
 
+  // REM: 処理開始時のハンドラ
   startBtn.onclick = async () => {
+    // REM: ボタン状態切替
     startBtn.disabled = true;
     cancelBtn.disabled = false;
     paneBottom.innerHTML = '';
 
+    // REM: リクエスト中止用コントローラ
     controller = new AbortController();
     const form = new FormData(document.getElementById('ingest-form'));
-    // 元のパスに戻す
-    await fetch('/ingest', {
-      method: 'POST',
-      body: form,
-      signal: controller.signal
-    });
+    await fetch('/ingest', { method: 'POST', body: form, signal: controller.signal });
 
+    // REM: SSE 接続開始
     es = new EventSource('/ingest/stream');
     es.onmessage = evt => {
       const d = JSON.parse(evt.data);
 
-      // 全完了
+      // REM: 全完了処理
       if (d.done) {
         es.close();
         const doneDiv = document.createElement('div');
@@ -143,70 +150,51 @@
         return;
       }
 
-      // 新ファイル開始
+      // REM: 新ファイル開始処理
       if (!fileContainers[d.file]) {
-        if (paneBottom.firstChild) {
-          paneBottom.insertBefore(document.createElement('br'), paneBottom.firstChild);
-        }
+        if (paneBottom.firstChild) paneBottom.insertBefore(document.createElement('br'), paneBottom.firstChild);
         fileStartTime[d.file] = Date.now();
-
-        const cont = document.createElement('div');
-        cont.className = 'file-container';
-
-        const hdr = document.createElement('div');
-        hdr.className = 'file-header';
-        const a = document.createElement('a');
-        a.textContent = d.file;
-        a.href = `/viewer/${d.file_id}`;
-        a.target = '_blank';
-        hdr.appendChild(a);
-        cont.appendChild(hdr);
-
+        const cont = document.createElement('div'); cont.className = 'file-container';
+        const hdr = document.createElement('div'); hdr.className = 'file-header';
+        const a = document.createElement('a'); a.textContent = d.file; a.href = `/viewer/${d.file_id}`; a.target = '_blank';
+        hdr.appendChild(a); cont.appendChild(hdr);
         if (d.index && d.total) {
-          const prog = document.createElement('div');
-          prog.className = 'file-progress';
+          const prog = document.createElement('div'); prog.className = 'file-progress';
           prog.textContent = `${d.index}/${d.total}番目ファイル処理中…`;
           cont.appendChild(prog);
         }
-
-        const sec = document.createElement('div');
-        sec.className = 'file-section';
-        cont.appendChild(sec);
-
+        const sec = document.createElement('div'); sec.className = 'file-section'; cont.appendChild(sec);
         paneBottom.insertBefore(cont, paneBottom.firstChild);
         fileContainers[d.file] = sec;
       }
-
       const section = fileContainers[d.file];
 
-      // Page開始
+      // REM: ページ開始表示
       if (d.step.startsWith('Page ')) {
-        const ph = document.createElement('div');
-        ph.className = 'page-header';
-        ph.textContent = d.step;
-        section.insertBefore(ph, section.firstChild);
-        return;
+        const ph = document.createElement('div'); ph.className = 'page-header';
+        ph.textContent = d.step; section.insertBefore(ph, section.firstChild); return;
       }
 
-      // ログ生成
+      // REM: ログ生成（details or div）
       const label = d.step + (d.duration ? ` (${d.duration}s)` : '');
       let el;
       if (d.full_text) {
+        // REM: 折りたたみ詳細要素を生成
         el = document.createElement('details');
-        const sum = document.createElement('summary');
-        sum.textContent = label;
-        el.appendChild(sum);
+        const sum = document.createElement('summary'); sum.textContent = label; el.appendChild(sum);
         const pre = document.createElement('pre');
-        pre.textContent = d.full_text;
+        // REM: 空行3連以上を2行に圧縮
+        pre.textContent = d.full_text.replace(/\n{3,}/g, '\n\n');
         el.appendChild(pre);
       } else {
-        el = document.createElement('div');
-        el.textContent = label;
+        // REM: 単純テキスト表示
+        el = document.createElement('div'); el.textContent = label;
       }
       section.insertBefore(el, section.firstChild);
     };
   };
 
+  // REM: キャンセル時のハンドラ
   cancelBtn.onclick = () => {
     controller?.abort();
     es?.close();

@@ -1,4 +1,5 @@
-# /workspace/app/fastapi/routes/ingest.py
+# app/fastapi/routes/ingest.py
+# REM: 最終更新 2025-07-10 17:47 JST
 """
 フォルダ内ファイルを一括インジェスト → OCR → LLM 整形 → ベクトル化
 SSE で進捗を返却する FastAPI ルーター
@@ -6,6 +7,7 @@ SSE で進捗を返却する FastAPI ルーター
 
 # REM: 標準ライブラリ
 import os
+import re
 import json
 import glob
 import time
@@ -16,25 +18,30 @@ from typing import List
 from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 
-# REM: プロジェクト共通
+# REM: プロジェクト共通設定
 from sqlalchemy import text
-from src.config import (
-    DB_ENGINE,          # files.content 更新に使用
-    EMBEDDING_OPTIONS,
-    OLLAMA_MODEL
-)
+from src.config import DB_ENGINE, EMBEDDING_OPTIONS, OLLAMA_MODEL
+
+# REM: ファイル入出力／OCR抽出
 from fileio.file_embedder import embed_and_insert
 from fileio.extractor import extract_text_by_extension
-from db.handler import upsert_file
-from llm.refiner import refine_text_with_llm
-from llm.prompt_loader import list_prompt_keys, get_prompt_by_lang
 
+# REM: DB操作（ファイル仮登録）
+from db.handler import upsert_file
+
+# REM: LLM整形ユーティリティ
+from llm.refiner import refine_text_with_llm, build_prompt
+from llm.prompt_loader import list_prompt_keys
+
+# REM: FastAPIルーター初期化
 router = APIRouter()
-last_ingest: dict | None = None           # REM: 直近ジョブのメタ情報
+
+# REM: 直近実行ジョブ情報
+last_ingest: dict | None = None
 
 
 # ──────────────────────────────────────────────────────────
-# REM: JS 起動時に送る設定情報
+# REM: JS側設定取得API（プロンプト一覧・埋め込みモデル名を返却）
 @router.get("/ingest/config", response_class=JSONResponse)
 def ingest_config():
     return JSONResponse({
@@ -44,23 +51,20 @@ def ingest_config():
 
 
 # ──────────────────────────────────────────────────────────
-# REM: ingest ジョブ登録（POST /ingest）
+# REM: ingest登録API（処理対象フォルダなどフォームデータを保存）
 @router.post("/ingest", response_class=JSONResponse)
 async def run_ingest_folder(
-    input_folder:      str         = Form(...),
-    include_subdirs:   bool        = Form(...),
-    refine_prompt_key: str         = Form(...),
-    embed_models:      List[str]   = Form(...)
+    input_folder:      str        = Form(...),
+    include_subdirs:   bool       = Form(...),
+    refine_prompt_key: str       = Form(...),
+    embed_models:      List[str] = Form(...),
+    overwrite_existing: bool     = Form(False),
+    quality_threshold:  float    = Form(0.0),
 ):
-    """
-    - input_folder: 解析対象フォルダ（サーバ側パス）
-    - include_subdirs: サブディレクトリ再帰フラグ
-    - refine_prompt_key: 使用するプロンプトキー
-    - embed_models: ベクトル化で使うモデルキー群
-    """
     global last_ingest
 
-    ok_ext = [".txt", ".pdf", ".docx", ".csv", ".json", ".eml"]
+    # REM: 対象拡張子フィルタ
+    ok_ext  = [".txt", ".pdf", ".docx", ".csv", ".json", ".eml"]
     pattern = "**/*" if include_subdirs else "*"
     base    = os.path.abspath(input_folder)
     files   = [
@@ -71,26 +75,31 @@ async def run_ingest_folder(
     if not files:
         raise HTTPException(400, "対象ファイルが見つかりません")
 
+    # REM: 実行パラメータをメモリに保持
     last_ingest = {
-        "files":  [{"path": f, "filename": os.path.basename(f)} for f in files],
+        "files":             [{"path": f, "filename": os.path.basename(f)} for f in files],
         "refine_prompt_key": refine_prompt_key,
-        "embed_models": embed_models
+        "embed_models":      embed_models,
+        "overwrite":         overwrite_existing,
+        "q_thresh":          quality_threshold,
     }
     return {"status": "started", "count": len(files), "folder": input_folder}
 
 
 # ──────────────────────────────────────────────────────────
-# REM: ingest 実行 & SSE ストリーム（GET /ingest/stream）
+# REM: SSE ストリームAPI（/ingest/stream で進捗を逐次送信）
 @router.get("/ingest/stream")
 def ingest_stream(request: Request):
     if not last_ingest:
         raise HTTPException(400, "No ingest job found")
 
-    files      = last_ingest["files"]
-    total      = len(files)
-    abort_flag = {"flag": False}          # REM: クライアント切断監視用フラグ
+    files       = last_ingest["files"]
+    overwrite_f = last_ingest["overwrite"]
+    q_thresh    = last_ingest["q_thresh"]
+    total       = len(files)
+    abort_flag  = {"flag": False}
 
-    # REM: クライアント切断を監視するタスク
+    # REM: クライアント切断検知タスク
     async def monitor_disconnect():
         while not abort_flag["flag"]:
             if await request.is_disconnected():
@@ -98,22 +107,22 @@ def ingest_stream(request: Request):
                 break
             await asyncio.sleep(0.1)
 
-    # REM: SSE イベントを逐次生成
+    # REM: SSEイベント発行コルーチン
     async def event_generator():
         dc_task = asyncio.create_task(monitor_disconnect())
         try:
+            # REM: 各ファイルを順次処理
             for idx, info in enumerate(files, start=1):
                 if abort_flag["flag"]:
                     break
-
                 fp, name = info["path"], info["filename"]
 
-                # ── ① files テーブル登録（初回 TRUNCATE）
+                # REM: ① ファイル仮登録（空コンテンツでレコード作成）
                 fid = upsert_file(fp, "", 0.0, truncate_once=True)
                 yield f"data: {json.dumps({'file':name,'file_id':fid,'step':'ファイル登録中','index':idx,'total':total})}\n\n"
                 yield f"data: {json.dumps({'file':name,'step':'登録完了'})}\n\n"
 
-                # ── ② テキスト抽出
+                # REM: ② テキスト抽出（OCR＋PDF）
                 yield f"data: {json.dumps({'file':name,'step':'テキスト抽出中…'})}\n\n"
                 t0    = time.time()
                 texts = extract_text_by_extension(fp)
@@ -121,70 +130,112 @@ def ingest_stream(request: Request):
                 yield f"data: {json.dumps({'file':name,'step':'テキスト抽出完了','duration':dur})}\n\n"
                 if abort_flag["flag"] or not texts:
                     continue
-                texts = list(dict.fromkeys(texts))  # REM: 重複除去
+                texts = list(dict.fromkeys(texts))  # REM: 重複ブロック除去
 
-                # ── ③ ページ単位処理
-                refined_pages: list[str] = []        # REM: 各ページの整形結果を蓄積
+                # REM: ③ ページ単位整理
+                refined_pages = []
+                file_min_score = 1.0
+
                 for pg, block in enumerate(texts, start=1):
                     if abort_flag["flag"]:
                         break
+
+                    # REM: ページ開始通知
                     yield f"data: {json.dumps({'file':name,'step':f'Page {pg} 処理開始'})}\n\n"
 
-                    preview = block.strip().replace("\n", " ")[:40]
-                    yield f"data: {json.dumps({'file':name,'step':f'OCR page{pg}','preview':preview,'full_text':block})}\n\n"
+                    # REM: OCR結果表示（誤記訂正＋空行圧縮）
+                    import unicodedata
+                    from ocr.spellcheck import correct_text
+                    from llm.refiner import normalize_empty_lines
+                    # ① 半角⇔全角・辞書ベース誤字訂正
+                    normed = unicodedata.normalize("NFKC", block)
+                    # ② 辞書ベースの誤字訂正
+                    corrected_text = correct_text(normed)
+                    # ③ 空白行削除＋連続空行圧縮
+                    block_clean = normalize_empty_lines(corrected_text)
 
-                    # --- プロンプト生成
-                    yield f"data: {json.dumps({'file':name,'step':'プロンプト生成中'})}\n\n"
-                    _, tmpl = get_prompt_by_lang(last_ingest["refine_prompt_key"])
-                    clean   = '\n'.join(l for l in block.splitlines() if l.strip())
-                    prompt  = tmpl.replace("{TEXT}", clean).replace("{input_text}", clean)
-                    prev_p  = (prompt.replace('\n',' ')[:80] + '...') if len(prompt)>80 else prompt
-                    yield f"data: {json.dumps({'file':name,'step':f'使用プロンプト page{pg}','preview':prev_p,'full_text':prompt})}\n\n"
+                    preview = block_clean.strip().replace("\n", " ")[:40]
+                    yield f"data: {json.dumps({'file':name,'step':f'OCR page{pg}','preview':preview,'full_text':block_clean})}\n\n"
 
-                    # --- LLM 整形
+                    # REM: ④ プロンプト組み立て／表示
+                    prompt_text = build_prompt(block_clean, last_ingest["refine_prompt_key"])
+                    prev_p      = prompt_text.strip().replace("\n", " ")[:80]
+                    yield f"data: {json.dumps({'file':name,'step':f'使用プロンプト page{pg}','preview':prev_p,'full_text':prompt_text})}\n\n"
+
+                    # REM: ⑤ LLM整形実行
                     yield f"data: {json.dumps({'file':name,'step':'LLM整形中'})}\n\n"
                     t1 = time.time()
                     refined, lang, score, _ = refine_text_with_llm(
-                        block,
+                        block_clean,
                         model=OLLAMA_MODEL,
                         force_lang=last_ingest["refine_prompt_key"],
                         abort_flag=abort_flag
                     )
-                    dur2  = round(time.time() - t1, 2)
-                    prev2 = refined.strip().replace("\n"," ")[:40]
-                    yield f"data: {json.dumps({'file':name,'step':f'LLM整形 page{pg}','preview':prev2,'full_text':refined,'duration':dur2})}\n\n"
+                    dur2 = round(time.time() - t1, 2)
 
+                    # ✅ デバッグ出力：reprで全文の両端を明示（hidden char可視化用）
+                    print(f"[DEBUG refined Page{pg}] >>>{repr(refined)}<<<")
+
+                    file_min_score = min(file_min_score, score)
                     refined_pages.append(refined)
 
-                    # --- ベクトル化
-                    for mi, mkey in enumerate(last_ingest["embed_models"], start=1):
+                    # REM: ⑥ 整形結果表示
+                    prev_r = refined.strip().replace("\n", " ")[:40]
+                    yield f"data: {json.dumps({'file':name,'step':f'LLM整形結果 page{pg}','preview':prev_r,'full_text':refined,'duration':dur2})}\n\n"
+
+                    # REM: refined が空の場合はベクトル化をスキップ
+                    if not refined.strip():
+                        yield f"data: {json.dumps({'file':name,'step':f'LLM結果空のためベクトル化スキップ page{pg}'})}\n\n"
+                        continue
+
+                    # REM: ⑦ ベクトル化
+                    for mkey in last_ingest["embed_models"]:
                         if abort_flag["flag"]:
                             break
-                        t2 = time.time()
                         embed_and_insert(
                             texts=[refined],
                             filename=fp,
                             model_keys={mkey},
-                            quality_score=score
+                            quality_score=score,
+                            file_id=fid
                         )
-                        dur_vec = round(time.time() - t2, 2)
-                        mname   = EMBEDDING_OPTIONS[mkey]["model_name"]
-                        yield f"data: {json.dumps({'file':name,'step':f'ベクトル化（No.{mi}: {mname}）','duration':dur_vec,'last':mi==len(last_ingest['embed_models'])})}\n\n"
+                        mname = EMBEDDING_OPTIONS[mkey]["model_name"]
+                        yield f"data: {json.dumps({'file':name,'step':f'ベクトル化 ({mname})'})}\n\n"
 
-                # ── ④ ファイル単位で全文を結合して files.content を更新
-                if refined_pages:  # abort_flag に関わらず更新
+                # REM: ⑧ 全文保存判定＆更新
+                if refined_pages:
                     full_text = "\n\n".join(refined_pages)
                     with DB_ENGINE.begin() as tx:
-                        tx.execute(
-                            text("UPDATE files SET content=:c WHERE file_id=:id"),
-                            {"c": full_text, "id": fid}
+                        cur = tx.execute(
+                            text("SELECT content, quality_score FROM files WHERE file_id=:id"),
+                            {"id": fid}
+                        ).mappings().first()
+                        need_update = (
+                            overwrite_f
+                            or not cur["content"]
+                            or (cur["quality_score"] or 0.0) < q_thresh
+                            or file_min_score < (cur["quality_score"] or 1.0)
                         )
-                    yield f"data: {json.dumps({'file':name,'step':'全文保存完了'})}\n\n"
+                        if need_update:
+                            tx.execute(
+                                text("""
+                                    UPDATE files
+                                       SET content       = :c,
+                                           quality_score = :qs
+                                     WHERE file_id       = :id
+                                """),
+                                {"c": full_text, "qs": file_min_score, "id": fid}
+                            )
+                            yield f"data: {json.dumps({'file':name,'step':'全文保存完了（上書き実施）'})}\n\n"
+                        else:
+                            yield f"data: {json.dumps({'file':name,'step':'全文保存スキップ'})}\n\n"
 
-                yield "\n\n"  # REM: ファイル区切り
+                # REM: ファイル区切り
+                yield "\n\n"
         finally:
             dc_task.cancel()
 
-        yield f"data: {json.dumps({'done':True})}\n\n"
+        # REM: 全処理完了通知
+        yield f"data: {json.dumps({'done': True})}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

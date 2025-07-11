@@ -1,4 +1,4 @@
-<!-- app/fastapi/templates/base.html -->
+<!-- app/fastapi/templates/base.html  # REM: 最終更新 2025-07-10 17:55 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -42,14 +42,28 @@
       padding: 1em;
       overflow: auto;
     }
+    /* ───────────── タイトル統一スタイル ───────────── */
+    /* ingests/chat などデータ整形ページ用：フォント小・高さ合わせ */
+    .page-title {
+      margin: 0 0 8px;
+      font-size: 1.2em;
+      line-height: 1.5em;
+    }
+    /* index.html 用：フォントそのまま・高さだけ合わせ */
+    .index-title {
+      margin: 0 0 8px;
+      line-height: 1.5em;
+    }
   </style>
+  <!-- REM: ページ固有の head 要素をここに追加 -->
+  {% block head %}{% endblock %}
 </head>
 <body>
   <nav>
-    <h2>🔗研究部RAG</h2>
+    <h2>🧠 研究部RAG</h2>
     <ul>
-      <li><a href="/ingest">データ整形・登録</a></li>
-      <li><a href="/chat">チャット検索</a></li>
+      <li><a href="/ingest">✏️ データ整形/登録</a></li>
+      <li><a href="/chat">🔍 チャット検索</a></li>
     </ul>
   </nav>
   <main>

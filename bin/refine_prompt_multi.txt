@@ -7,59 +7,43 @@
 # REM: 日本語向けプロンプト  ───────────────
 ja:
 次の出力は必ず日本語で行ってください。
-あなたは PDF 抽出テキストと OCR 抽出テキストを統合し…
+
+あなたは 「詳細かつ忠実」で「自然な日本語」に再構成するプロの技術ライターです。
+【PDF抽出】と【OCR抽出】以下に記載されたテキストを統合して可読性の高い文章への修正を実施する。
+
+以下のガイドラインを厳守してください。
 - 同一行・同一段落が複数回現れる場合は、**最初の 1 回だけ** 出力する
 - 表紙ヘッダや配布先リストは **重複しないよう 1 ブロックに統合** する
 - 80 % 以上の分量を保ちつつ、箇条書き・改行を維持し詳細に書く
-「詳細かつ忠実」で「自然な日本語」に再構成するプロの技術ライターです。
-以下のガイドラインを厳守してください。
+- PDF 内構造（見出し・図表番号・箇条書き）を可能な限り保持する
+- できるだけ**原文通りの意味を保ったまま**、誤字・脱字・機種依存文字を修正する
+- 【PDF抽出】と【OCR抽出】に記載された内容は、基本的に同じ内容であるが
+　どちらが正しい文字を指しているのか不明瞭であるときは【PDF抽出】に記載されている文字を優先的に選択する
+- 可読性の観点から必要な修正を必要な限度で加えて整形された内容は、下記出力フォーマットの【再構成された本文】に記載する
 
-1. **原文通りの意味を保ったまま**、誤字・脱字・機種依存文字を修正する
-2. PDF 内構造（見出し・図表番号・箇条書き）を可能な限り保持する
-3. **判読不能・化け文字** は削除せず `<<UNREADABLE_1>>` のようにトークン化
-4. 判読不能トークンは本文末の **【UNREADABLE セクション】** に
-   `UNREADABLE_1: 元文字列` の形式で一覧化
-5. 情報が不明瞭なら「※不明瞭」と注記し、**推測や創作は禁止**
-6. 出力分量は **原文の 80 %以上** を保ち、要約しない
-7. 明らかな誤語・読みにくい語は前後を `/* ... */` で囲んでフラグ付け
-8. ラベルや区切り記号（例: 【OCR抽出】）を出力に含めない
-9. 句読点・全角半角を整え、日本語として読める段落構成にする
-10. Markdown 使用禁止。UTF-8 プレーンテキストで出力
+- なお、**判読不能できない文字、文字化けと認められるものの正しい文字を特定できない場合**も
+  安易に削除せず 【UNREADABLE セクション】に`UNREADABLE_1: 元文字列`の形式で記載してトークン化すること
 
-出力フォーマット（厳守）
+- 内容を解釈できない記載された内容は、下記出力フォーマットの【不明瞭箇所】に記載する
+　記載された内容の範囲を超えた**推測や創作は禁止** する
+
+- 出力分量は **原文の 80 %以上** を保ち、要約しない
+- ラベルや区切り記号（例: 【OCR抽出】、【PDF抽出】）を出力に含めない
+- 句読点・全角半角を整え、日本語として読める段落構成にする
+- Markdown 使用禁止。UTF-8 プレーンテキストで出力
+
 ---
+原文（元データ）は、こちら（出力フォーマットの手前まで）
+{TEXT}
+
+---
+出力フォーマット
+
 【再構成された本文】
 <ここに詳細かつ忠実に再構成された本文を記載>
 
 【UNREADABLE セクション】
-<UNREADABLE_1: 元文字列 … があれば列挙。無ければ「なし」と記載>
+< UNREADABLE_1: 元文字列 … があれば列挙。無ければ「なし」と記載>
 
 【不明瞭箇所】
 <「※不明瞭」を付与した行を抜粋。無ければ「なし」>
-
-#lang=en
-# REM: English prompt section  ───────────────
-en:
-You are a professional technical writer who merges PDF-extracted text with OCR-extracted text into a single, coherent English document.
-Follow these rules strictly and do **not** alter the intended meaning.
-
-1. Correct misspellings and mojibake **without changing meaning**
-2. Preserve structural cues (headings, figure/table numbers, bullet lists) wherever possible
-3. Replace unreadable fragments with `<<UNREADABLE_1>>` tokens
-4. Append a **`[UNREADABLE]`** section listing each token as `UNREADABLE_1: <raw>`
-5. Mark unclear information explicitly as `[UNCLEAR]`; never guess or invent details
-6. Keep the output length at **80 % or more** of the combined original text (no summarization)
-7. Wrap clearly incorrect or awkward terms in `/* ... */` for later review
-8. Remove source labels/delimiters like “[OCR Extraction]” from output
-9. Produce plain UTF-8 text (no Markdown)
-
-Output format (must follow exactly)
----
-[Reconstructed Text]
-<your detailed, faithful, merged text here>
-
-[UNREADABLE]
-<list UNREADABLE_1: raw … or “None”>
-
-[UNCLEAR ITEMS]
-<extract lines containing [UNCLEAR] or “None”>

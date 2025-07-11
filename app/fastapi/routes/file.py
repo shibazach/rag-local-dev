@@ -1,7 +1,5 @@
-# /workspace/app/routes/file.py
-"""
-PDF バイナリ / テキスト取得 / 保存 API
-"""
+# /workspace/app/fastapi/routes/file.py
+# REM: PDF バイナリ / テキスト取得 / 保存 API
 
 from urllib.parse import quote
 from fastapi import APIRouter, Form, HTTPException
@@ -23,20 +21,18 @@ def get_pdf(file_id: int):
     ).fetchone()
     if not row:
         raise HTTPException(404, "PDF not found")
-
     blob, filename = row
     # REM: 日本語等を含むファイル名を URL エンコード
-    quoted_fname = quote(filename)
-    content_disposition = f"inline; filename*=UTF-8''{quoted_fname}"
-
+    quoted = quote(filename)
     return Response(
         content=blob,
         media_type="application/pdf",
-        headers={"Content-Disposition": content_disposition}
+        headers={"Content-Disposition": f"inline; filename*=UTF-8''{quoted}"}
     )
 
 @router.get("/api/content/{file_id}")
 def get_content(file_id: int):
+    # REM: files.content を返却
     cont = DB_ENGINE.connect().execute(
         text("SELECT content FROM files WHERE file_id=:id"),
         {"id": file_id}
@@ -47,19 +43,30 @@ def get_content(file_id: int):
 
 @router.post("/api/save/{file_id}")
 def save_content(file_id: int, content: str = Form(...)):
-    # REM: ファイル名を取得
+    # 1) filename を取得（存在確認およびログ用）
     fname = DB_ENGINE.connect().execute(
         text("SELECT filename FROM files WHERE file_id=:id"),
         {"id": file_id}
     ).scalar()
     if not fname:
         raise HTTPException(404, "File not found")
-    # REM: content を更新
+
+    # 2) files テーブルの content を更新
     with DB_ENGINE.begin() as tx:
         tx.execute(
-            text("UPDATE files SET content=:c WHERE file_id=:id"),
+            text("UPDATE files SET content = :c WHERE file_id = :id"),
             {"c": content, "id": file_id}
         )
-    # REM: 保存後に再ベクトル化
-    embed_and_insert([content], fname, None, 0.0)
+
+    # 3) 保存後に再ベクトル化
+    #    overwrite=True で当該 file_id の古いチャンクを削除して再登録
+    embed_and_insert(
+        texts=[content],
+        filename=fname,         # REM: file_id 指定で upsert_file はスキップ
+        model_keys=None,
+        quality_score=0.0,
+        overwrite=True,         # REM: 古い埋め込みレコードをDELETE
+        file_id=file_id         # REM: 既存レコードの file_id を利用
+    )
+
     return {"status": "started"}

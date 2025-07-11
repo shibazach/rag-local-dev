@@ -1,85 +1,115 @@
-# /workspace/llm/refiner.py
-# REM: LangChain による LLM 整形処理（Ollama 利用）
+# llm/refiner.py  # REM: 修正済（Phi4-mini .invoke()デバッグ追加）
+"""
+LLM 整形用ユーティリティモジュール
+ - normalize_empty_lines: 空行圧縮
+ - build_prompt: テンプレートに生テキストを埋め込む
+ - refine_text_with_llm: LangChain + Ollama で整形実行
+"""
+
+# REM: 標準ライブラリ
+import re
+import time
+
+# REM: LangChain／Ollama
 from langchain_core.output_parsers import StrOutputParser
 from langchain.prompts import PromptTemplate
 from langchain_community.chat_models import ChatOllama
 
-from src.config import OLLAMA_BASE, OLLAMA_MODEL
-from bin.llm_text_refiner import detect_language
-from llm.prompt_loader import get_prompt_by_lang
-from llm.scorer import score_text_quality
+# REM: OCR 誤字補正
 from ocr import correct_text
 
-import re
+# REM: プロンプトロード
+from llm.prompt_loader import get_prompt_by_lang
 
-# REM: 空白のみの行を空行に変換し、連続空行を最大 1 行に
+# REM: 言語判定／スコア算出
+from llm.utils import detect_language
+from llm.scorer import score_text_quality
+
+# REM: 設定
+from src.config import OLLAMA_BASE, OLLAMA_MODEL
+
+
+# REM: 空行圧縮
 def normalize_empty_lines(text: str) -> str:
+    """
+    空白のみの行を削除し、連続空行は最大１行に圧縮する
+    """
     text = re.sub(r'^[\s\u3000]+$', '', text, flags=re.MULTILINE)
-    return re.sub(r'\n{2,}', '\n', text)
+    return re.sub(r'\n{3,}', '\n\n', text)
 
-# REM: 原文テキストを埋め込んだプロンプトを生成
+
+# REM: プロンプト組み立て
 def build_prompt(raw_text: str, lang: str = "ja") -> str:
-    _, base_prompt = get_prompt_by_lang(lang)
-    user_prompt = "次の出力は必ず日本語で行ってください。\n" + base_prompt
-    if ("{TEXT}" not in user_prompt) and ("{input_text}" not in user_prompt):
-        user_prompt += "\n\n【原文テキスト】\n{TEXT}"
-    return (user_prompt.replace("{TEXT}", raw_text)
-                       .replace("{input_text}", raw_text))
+    """
+    refine_prompt_multi.txt の #lang=lang セクション全体を取得し、
+    {TEXT} を置換して返す。
+    """
+    template = get_prompt_by_lang(lang)
+    cleaned = normalize_empty_lines(correct_text(raw_text))
+    return template.replace("{TEXT}", cleaned)
 
-# REM: LLM による整形処理
+
+# REM: LLM 整形処理
 def refine_text_with_llm(
     raw_text: str,
     model: str = OLLAMA_MODEL,
     force_lang: str | None = None,
     abort_flag: dict[str, bool] | None = None
-):
-    """LLM 整形本体
-
-    * abort_flag が True になると InterruptedError を発生させ即中断
-    * 戻り値: (refined_text, lang, score, prompt)
+) -> tuple[str, str, float, str]:
     """
-
+    LangChain + Ollama で raw_text を整形。
+    戻り値: (refined_text, lang, quality_score, prompt_used)
+    * abort_flag が True になると InterruptedError を送出して中断可能
+    """
+    # REM: 中断チェック
     def check_abort():
         if abort_flag and abort_flag.get("flag"):
             raise InterruptedError("処理が中断されました")
 
-    # 1) OCR 誤字補正＋空行整理
+    # REM: 1) OCR 誤字補正＋空行圧縮
     check_abort()
     corrected = normalize_empty_lines(correct_text(raw_text))
 
-    # 2) 言語判定（force_lang 優先）
+    # REM: 2) 言語判定
     check_abort()
     lang = detect_language(corrected, force_lang) or "ja"
 
-    # 3) デバッグ
-    txt_len = len(corrected)
-    print(f"🧠 LLM整形開始 len={txt_len}", flush=True)
-
-    # 4) プロンプト生成
+    # REM: 3) プロンプト組み立て
     check_abort()
-    prompt = build_prompt(corrected, lang)
+    prompt_text = build_prompt(raw_text, lang)
 
-    # 5) 生成パラメータ
+    # REM: PromptTemplate 用にエスケープ
+    safe_prompt = prompt_text.replace("{", "{{").replace("}", "}}")
+
+    # REM: 4) 生成パラメータ
     gen_kw = {
         "max_new_tokens": 1024,
-        "min_length":     max(1, int(txt_len * 0.8)),
+        "min_length":     max(1, int(len(corrected) * 0.8)),
         "temperature":    0.7,
     }
 
-    # 6) LLM インスタンス
+    # REM: 5) LLM インスタンス生成
     check_abort()
     llm = ChatOllama(model=model, base_url=OLLAMA_BASE, **gen_kw)
 
-    # 7) LangChain チェーン
-    safe_prompt = prompt.replace("{", "{{").replace("}", "}}")
+    # REM: 6) LangChain チェーン構築
     chain = PromptTemplate.from_template(safe_prompt) | llm | StrOutputParser()
 
-    # 8) 推論
+    # REM: 7) 推論実行＋debug出力（プロンプト確認＋タイマー＋空応答検知）
     check_abort()
+    print(f"[DEBUG invoke LLM model={model} prompt_len={len(prompt_text)}]")
+    print(f"[DEBUG prompt preview]\n---\n{prompt_text[:300]}...\n---")
+    start_time = time.time()
     refined = chain.invoke({})
+    elapsed = time.time() - start_time
+    print(f"[DEBUG invoke elapsed: {elapsed:.2f} sec]")
+    if not refined.strip():
+        print("[WARNING] LLM returned empty response.")
+        refined = "[EMPTY]"
 
-    # 9) スコアリング
+    # REM: 8) 品質スコア算出
     check_abort()
     score = score_text_quality(corrected, refined, lang)
 
-    return refined, lang, score, prompt
+    # REM: 返り値に使用プロンプトも含める
+    return refined, lang, score, prompt_text

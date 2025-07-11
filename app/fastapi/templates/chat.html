@@ -1,218 +1,160 @@
-<!-- app/fastapi/templates/chat.html -->
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>チャット検索</title>
-  <link rel="stylesheet" href="/static/styles.css">
-  <style>
-    #loading { display:none; color:#555; margin:8px 0; }
-    .card { border:1px solid #ddd; padding:12px; margin:8px 0; border-radius:4px; background:#fafafa; }
-    .card h3 { margin:0 0 6px; font-size:1.1em; }
-    .card pre { white-space:pre-wrap; background:#f5f5f5; padding:8px; border-radius:4px; overflow-x:auto; }
-    .card button { margin-top:6px; padding:4px 8px; }
-    .editor { margin-top:8px; }
-    .editor textarea { width:100%; height:200px; }
-    .editor button { margin-right:8px; }
+<!-- app/fastapi/templates/chat.html  # REM: 最終更新 2025-07-10 12:59 -->
+{% extends "base.html" %}
 
-    /* 統合回答エリアの余白を調整 */
+{% block head %}
+  <!-- キャッシュバイパス用バージョンクエリ -->
+  <link rel="stylesheet" href="/static/styles.css?v=20250710_1149">
+  <script src="/static/js/chat.js?v=20250710_1149" defer></script>
+
+  <style>
+    /* ───── chat専用：mainの上余白のみ消して、左右は1emのまま保持 */
+    main {
+      /* 上だけ 0 にして高さを揃える */
+      padding-top: 0 !important;
+      /* 左の1emは元のまま残す（データ整形ページと同位置） */
+      /* padding-left: 1em; ← base.html 由来なので上書き不要 */
+    }
+    /* #controls：上1em・右8px・下4px・左0 で、main の 1em が効くように */
+    #controls {
+      position: sticky;
+      top: 0;
+      margin: 0;
+      padding: 1em 8px 4px 0;
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      z-index: 100;
+    }
+    #controls h1.chat-title {
+      margin: 0 0 8px;
+      font-size: 1.2em;
+      line-height: 1.5em;
+    }
+
+    /* 全体の余白リセット */
+    html, body {
+      margin: 0;
+      background: #fff;
+    }
+
+    /* 質問入力 */
+    #query {
+      width: 100%;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
+    /* 統合回答エリア */
     #answer {
-      display: none;       /* ← 初期は隠しておく */
-      margin: 12px 0;         /* 上下 12px に */
-      padding: 8px 12px;      /* 内側も少し狭く */
+      display: none;
+      margin: 12px 0;
+      padding: 8px 12px;
       border: 1px solid #888;
       border-radius: 4px;
       background: #eef;
     }
     #answer h2 {
-      margin: 0 0 8px;        /* 見出しの上マージンをゼロに */
+      margin: 0 0 8px;
       font-size: 1.2em;
     }
     #answer pre {
-      margin: 0;              /* プレ領域の余計な余白カット */
+      margin: 0;
       white-space: pre-wrap;
     }
+
+    /* 結果カード */
+    .card {
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin: 8px 0;
+      border-radius: 4px;
+      background: #fafafa;
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 1.1em;
+    }
+    .card pre {
+      white-space: pre-wrap;
+      background: #f5f5f5;
+      padding: 8px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .card button {
+      margin-top: 6px;
+      padding: 4px 8px;
+    }
+
+    /* 編集ボックス */
+    .editor textarea {
+      width: 100%;
+      box-sizing: border-box;
+      resize: vertical;
+      height: 200px;
+    }
+    .editor button {
+      margin-right: 8px;
+    }
+
+    /* 再ベクトル化オーバーレイ */
+    #processing-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      z-index: 10000;
+      font-size: 1.4em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #processing-overlay button {
+      margin-top: 1em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+    }
+
+    /* ローディングテキスト */
+    #loading {
+      display: none;
+      color: #555;
+      margin-left: 8px;
+    }
   </style>
-</head>
-<body>
-  {% extends "base.html" %}
-  {% block content %}
-  <h1>🔍チャット検索</h1>
+{% endblock %}
 
-  <div>
-    <textarea id="query" rows="4" cols="60" placeholder="質問を入力してください…"></textarea><br>
+{% block content %}
+  <div id="controls">
+    <h1 class="chat-title">🔍 チャット検索</h1>
 
-    <label>検索モード:</label>
+    <textarea id="query" rows="4" placeholder="質問を入力してください…"></textarea><br><br>
+
+    <label for="mode">検索モード:</label>
     <select id="mode">
       <option value="チャンク統合">チャンク統合</option>
       <option value="ファイル別（要約+一致度）">ファイル別（要約+一致度）</option>
     </select>
-
-    <label>埋め込みモデル:</label>
+    &ensp;
+    <label for="model_key">埋め込みモデル:</label>
     <select id="model_key">
       {% for key, config in embedding_options.items() %}
         <option value="{{ key }}">{{ config["model_name"] }} ({{ config["embedder"] }})</option>
       {% endfor %}
-    </select><br><br>
-
+    </select>
+    <br><br>
     <button id="search-btn">🔍 検索実行</button>
     <button id="cancel-btn" disabled>✖️ キャンセル</button>
     <span id="loading">検索中…お待ちください</span>
+    <div id="pane-bottom"></div><br>
   </div>
-
-  <!-- 統合回答を入れる領域 -->
-  <div id="answer" style="border:1px solid #888;padding:12px;margin:12px 0;border-radius:4px;background:#eef;"></div>
-
-  <!-- 結果カード -->
+  
+  <div id="answer"></div>
   <div id="results"></div>
 
-  <script>
-    const searchBtn = document.getElementById("search-btn");
-    const cancelBtn = document.getElementById("cancel-btn");
-    const loading = document.getElementById("loading");
-    const resultsDiv = document.getElementById("results");
-    let controller = null;
-
-    searchBtn.addEventListener("click", async () => {
-      // ボタンとスピナーの切替
-      searchBtn.disabled = true;
-      cancelBtn.disabled = false;
-      loading.style.display = "inline";
-      resultsDiv.innerHTML = "";
-      document.getElementById("answer").innerHTML = "";
-
-      controller = new AbortController();
-      const signal = controller.signal;
-
-      const query = document.getElementById("query").value;
-      const mode = document.getElementById("mode").value;
-      const model_key = document.getElementById("model_key").value;
-
-      try {
-        const form = new FormData();
-        form.append("query", query);
-        form.append("mode", mode);
-        form.append("model_key", model_key);
-
-        const res = await fetch("/query", { method: "POST", body: form, signal });
-        const json = await res.json();
-
-        if (json.error) {
-          resultsDiv.innerHTML = `<p style="color:red;">エラー: ${json.error}</p>`;
-        } else {
-          // チャンク統合モード：統合回答とソース一覧を先に描画
-          if (json.mode === "チャンク統合") {
-            const answerDiv = document.getElementById("answer");
-            // 1) コンテンツ挿入
-            answerDiv.innerHTML = `<h2>統合回答</h2><pre>${json.answer}</pre>`;
-            // 2) 表示
-            answerDiv.style.display = "block";
-
-            // ソース一覧描画
-            resultsDiv.innerHTML = `<h3>ソースファイル</h3>`;
-            json.sources.forEach((src, i) => {
-              const num = i + 1;
-              resultsDiv.innerHTML +=
-                `<p>${num}. <a href="/viewer/${src.file_id}?num=${num}" target="_blank">${src.filename}</a></p>`;
-            });
-          } else {
-            // ファイル別モードなら answer を隠す
-            const answerDiv = document.getElementById("answer");
-            answerDiv.style.display = "none";
-            // 既存のファイル別カード描画へ
-          }
-
-          // 結果カード（通し番号付き）
-          json.results.forEach((item, idx) => {
-            const num = idx + 1;
-            const card = document.createElement("div");
-            card.className = "card";
-
-            // タイトル行（PDFプレビューリンク付き）
-            const h3 = document.createElement("h3");
-            if (item.file_id) {
-              h3.innerHTML = `${num}. <a href="/viewer/${item.file_id}?num=${num}" target="_blank">${item.filename}</a>`;
-            } else {
-              h3.textContent = `${num}. ${item.filename}`;
-            }
-            card.appendChild(h3);
-
-            // スニペット or 要約
-            const pre = document.createElement("pre");
-            pre.textContent = item.snippet || item.summary || "";
-            card.appendChild(pre);
-
-            // 一致度表示（ファイル別モードのみ）
-            if (item.score !== undefined) {
-              const p = document.createElement("p");
-              p.textContent = `一致度: ${item.score.toFixed(2)}`;
-              card.appendChild(p);
-            }
-
-            // 編集トグル
-            if (item.file_id) {
-              const toggleBtn = document.createElement("button");
-              toggleBtn.textContent = "✏️ 編集";
-              card.appendChild(toggleBtn);
-
-              const editorDiv = document.createElement("div");
-              editorDiv.className = "editor";
-              editorDiv.style.display = "none";
-              card.appendChild(editorDiv);
-
-              toggleBtn.addEventListener("click", async () => {
-                if (editorDiv.style.display === "none") {
-                  toggleBtn.textContent = "✖️ 閉じる";
-                  if (!editorDiv.innerHTML) {
-                    const resp = await fetch(`/api/content/${item.file_id}`);
-                    const data = await resp.json();
-                    editorDiv.innerHTML = `
-                      <textarea>${data.content}</textarea><br>
-                      <button class="save-btn">保存（再ベクトル化）</button>
-                    `;
-                    editorDiv.querySelector(".save-btn").addEventListener("click", async () => {
-                      const newContent = editorDiv.querySelector("textarea").value;
-                      const resSave = await fetch(`/api/save/${item.file_id}`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ content: newContent })
-                      });
-                      if (resSave.ok) {
-                        alert("✅ 再ベクトル化を開始しました");
-                      } else {
-                        alert("❌ エラー: " + (await resSave.text()));
-                      }
-                    });
-                  }
-                  editorDiv.style.display = "block";
-                } else {
-                  toggleBtn.textContent = "✏️ 編集";
-                  editorDiv.style.display = "none";
-                }
-              });
-            }
-
-            resultsDiv.appendChild(card);
-          });  // forEach
-        }
-      } catch (err) {
-        if (err.name === "AbortError") {
-          resultsDiv.innerHTML = `<p style="color:#888;">検索をキャンセルしました。</p>`;
-        } else {
-          resultsDiv.innerHTML = `<p style="color:red;">通信エラー: ${err.message}</p>`;
-        }
-      } finally {
-        searchBtn.disabled = false;
-        cancelBtn.disabled = true;
-        loading.style.display = "none";
-        controller = null;
-      }
-    });
-
-    cancelBtn.addEventListener("click", () => {
-      if (controller) controller.abort();
-    });
-  </script>
-  {% endblock %}
-</body>
-</html>
+  <div id="processing-overlay">
+    <div id="overlay-message">再ベクトル化中…<br>閉じないでください</div>
+    <button id="overlay-ok-btn" style="display:none;">OK</button>
+  </div>
+{% endblock %}

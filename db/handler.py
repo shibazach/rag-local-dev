@@ -1,9 +1,9 @@
-# db/handler.py
+# /workspace/db/handler.py  # REM: 最終更新 2025-07-11 00:41
 # REM: DB 操作ヘルパーを一元管理（files／embedding 共通）
 
 from __future__ import annotations
 import os, hashlib
-from typing import Sequence
+from typing import Sequence, Optional
 
 from sqlalchemy.sql import text as sql_text
 from src.config import DB_ENGINE, DEVELOPMENT_MODE
@@ -44,32 +44,61 @@ def _ensure_files_table() -> None:
 # REM: files 行を upsert して file_id を取得
 def upsert_file(
     filepath: str,
-    content: str = "",
-    score: float = 0.0,
+    content:  str = "",
+    score:    float = 0.0,
     *,
     truncate_once: bool = True,
+    overwrite:     bool = False,
 ) -> int:
     """
-    - 既に同一ハッシュ(file_hash) があればその file_id を返す  
-    - 無ければ INSERT して新規 file_id を返す  
-    - DEVELOPMENT_MODE かつ truncate_once=True の時、最初の 1 回だけ TRUNCATE
+    1. file_hash が一致する行があればその file_id を返す  
+       - overwrite=True の場合は無条件で UPDATE  
+       - overwrite=False の場合でも、以下いずれかで UPDATE  
+         (a) DB の content が空 → 引数 content が非空  
+         (b) 引数 score > DB の quality_score  
+    2. 行が無ければ INSERT して新規 file_id を返す  
+    3. DEVELOPMENT_MODE かつ truncate_once=True の時、最初の 1 回だけ TRUNCATE
     """
     _ensure_files_table()
     file_hash = _calc_sha256(filepath)
 
     with DB_ENGINE.begin() as conn:
-        # 初回のみ TRUNCATE
+        # 開発モード時：初回だけ files テーブル全体を TRUNCATE
         if DEVELOPMENT_MODE and truncate_once and not _guard.files_truncated:
             conn.execute(sql_text("TRUNCATE TABLE files CASCADE"))
             _guard.files_truncated = True
 
         row = conn.execute(
-            sql_text("SELECT file_id FROM files WHERE file_hash = :h"),
+            sql_text("""
+                SELECT file_id, content, quality_score
+                  FROM files
+                 WHERE file_hash = :h
+            """),
             {"h": file_hash}
         ).fetchone()
+
         if row:
+            need_update = False
+            if overwrite:
+                need_update = True
+            elif content and not row.content:
+                need_update = True
+            elif content and score > (row.quality_score or 0.0):
+                need_update = True
+
+            if need_update:
+                conn.execute(
+                    sql_text("""
+                        UPDATE files
+                           SET content       = :ct,
+                               quality_score = :sc
+                         WHERE file_id       = :fid
+                    """),
+                    {"ct": content or row.content, "sc": score, "fid": row.file_id}
+                )
             return row.file_id
 
+        # INSERT 新規レコード
         with open(filepath, "rb") as f:
             blob = f.read()
 
@@ -85,7 +114,7 @@ def upsert_file(
         }).scalar()
 
 # ──────────────────────────────────────────────────────────
-# REM: embedding テーブルを作成し、overwrite=True なら 1 回だけ TRUNCATE
+# REM: embedding テーブルを作成し、overwrite=True なら 1 回だけ全体TRUNCATE
 def prepare_embedding_table(table_name: str, dim: int, *, overwrite: bool) -> None:
     with DB_ENGINE.begin() as conn:
         conn.execute(sql_text(f"""
@@ -99,3 +128,34 @@ def prepare_embedding_table(table_name: str, dim: int, *, overwrite: bool) -> No
         if overwrite and table_name not in _guard.truncated_tables:
             conn.execute(sql_text(f'TRUNCATE TABLE "{table_name}" CASCADE'))
             _guard.truncated_tables.add(table_name)
+
+# ──────────────────────────────────────────────────────────
+# REM: 指定 file_id の古い埋め込みレコードを削除
+def delete_embedding_for_file(table_name: str, file_id: int) -> None:
+    with DB_ENGINE.begin() as conn:
+        conn.execute(
+            sql_text(f'DELETE FROM "{table_name}" WHERE file_id = :fid'),
+            {"fid": file_id}
+        )
+
+# ──────────────────────────────────────────────────────────
+# REM: 指定テーブルへ embedding レコードを一括 INSERT
+def insert_embeddings(table_name: str, records: list[dict]) -> None:
+    insert_sql = sql_text(f"""
+        INSERT INTO "{table_name}" (content, embedding, file_id)
+        VALUES (:content, :embedding, :file_id)
+    """)
+    with DB_ENGINE.begin() as conn:
+        # REM: debug 用出力（テーブル名とレコード数）
+        print(f"[DEBUG] insert_embeddings: table={table_name}, count={len(records)}")
+        # REM: レコードなしならスキップ
+        if not records:
+            print(f"[DEBUG] insert_embeddings: no records, skip insert into {table_name}")
+            return
+        # REM: 最初のレコードのキー一覧を確認
+        print(f"[DEBUG] first record keys = {list(records[0].keys())!r}")
+        # REM: content キー漏れチェック
+        for rec in records:
+            if "content" not in rec:
+                raise ValueError(f"[DEBUG] record missing 'content': {rec!r}")
+        conn.execute(insert_sql, records)

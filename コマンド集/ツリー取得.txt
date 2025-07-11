@@ -1,0 +1,1 @@
+tree -a -I '__pycache__|.git|.venv|node_modules|コマンド集|project_tree.txt' -L 3 > project_tree.txt

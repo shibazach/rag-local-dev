@@ -3,13 +3,16 @@ import torch
 from transformers import AutoTokenizer, BertForMaskedLM
 
 from src import bootstrap
+from src.utils import debug_print
 
+# REM: このコードは、BERTモデルを使用してテキストの誤りを修正するためのものです。
 AVAILABLE_MODELS = {
     "tohoku": "cl-tohoku/bert-base-japanese",
     "daigo": "daigo/bert-base-japanese-sentiment"
     # ⚠️ "yasuo": 削除。非公開 or 存在しないため無効
 }
 
+# REM: モデルのロードとテキストの修正を行う関数
 def load_model(model_key):
     model_name = AVAILABLE_MODELS.get(model_key)
     if not model_name:
@@ -19,6 +22,7 @@ def load_model(model_key):
     model.eval()
     return tokenizer, model
 
+# REM: テキストの誤りを修正する関数
 def correct_text_bert(text, model_key="tohoku", top_k=1):
     tokenizer, model = load_model(model_key)
     tokens = tokenizer.tokenize(text)
@@ -39,7 +43,7 @@ def correct_text_bert(text, model_key="tohoku", top_k=1):
         predicted_token = tokenizer.convert_ids_to_tokens([top_preds[0]])[0]
 
         if predicted_token != tokens[i]:
-            print(f"🔁 [{model_key}] 候補: {tokens[i]} → {predicted_token}")
+            debug_print(f"🔁 [{model_key}] 候補: {tokens[i]} → {predicted_token}")
             corrected_tokens[i] = predicted_token
 
     corrected_text = tokenizer.convert_tokens_to_string(corrected_tokens)

@@ -1,0 +1,14 @@
+<!-- app/templates/edit.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"><title>ファイル編集</title>
+</head>
+<body>
+  <h1>✏️ ファイル編集: {{ file_id }}</h1>
+  <form method="post" action="/edit/{{ file_id }}">
+    <textarea name="content" rows="20" cols="80">{{ content }}</textarea><br>
+    <button type="submit">保存して再ベクトル化</button>
+  </form>
+</body>
+</html>

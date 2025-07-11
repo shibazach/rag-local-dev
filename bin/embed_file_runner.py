@@ -13,10 +13,10 @@ from sqlalchemy.sql import text as sql_text
 from src import bootstrap
 from src.config import (
     DB_ENGINE, DEVELOPMENT_MODE, EMBEDDING_OPTIONS, OLLAMA_BASE)
-from src.error_handler import install_global_exception_handler
 from db.schema import TABLE_FILES
+from src.utils import debug_print
 
-# ── GPU 空きVRAMをチェックしてデバイスを返すユーティリティ ──
+# REM: GPU 空きVRAMをチェックしてデバイスを返すユーティリティ ──
 def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
     """
     GPU が利用可能かつ空き VRAM が min_free_vram_mb 以上あれば "cuda" を返す。
@@ -37,13 +37,11 @@ def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
             return "cuda"
     return "cpu"
 
-
 # REM: numpy配列をpgvector文字列リテラルに変換
 def to_pgvector_literal(vec):
     if isinstance(vec, np.ndarray):
         vec = vec.tolist()
     return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
-
 
 # REM: filesテーブルにファイルを登録しfile_idを返す
 _truncate_files_done = False
@@ -93,7 +91,6 @@ def insert_file_and_get_id(filepath, refined_ja, score, truncate_once=False):
             "hash": file_hash
         })
         return result.scalar()
-
 
 # REM: embedding_* テーブルの TRUNCATE 状態管理（モデルごとに1回のみ）
 _truncate_done_tables = set()
@@ -163,7 +160,7 @@ def embed_and_insert(texts, filename, model_keys=None, return_data=False, qualit
                     raise
 
         else:
-            print(f"⚠️ 未対応の埋め込み: {config['embedder']}")
+            debug_print(f"⚠️ 未対応の埋め込み: {config['embedder']}")
             continue
 
         # テーブル名生成

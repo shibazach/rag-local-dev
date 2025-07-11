@@ -5,11 +5,12 @@
 import uuid
 from sqlalchemy import (
     MetaData, Table, Column, String, Text, Integer, Float,
-    TIMESTAMP, LargeBinary, ForeignKey, event
-)
+    TIMESTAMP, LargeBinary, ForeignKey, event)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+
 from src import config
+from src.utils import debug_print
 
 # REM: メタデータ定義
 metadata = MetaData()
@@ -72,7 +73,7 @@ def init_schema(engine=config.DB_ENGINE) -> None:
     DB 接続済み engine を受け取り、テーブルが無ければ作成する。
     """
     metadata.create_all(engine)
-    print("[db_schema] Schema initialized (if not exists).")
+    debug_print("[db_schema] Schema initialized (if not exists).")
 
 # REM: 外部参照用のエイリアス定義（create_rag_data.py などから参照される）
 TABLE_FILES = file_metadata

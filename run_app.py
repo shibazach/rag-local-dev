@@ -3,10 +3,11 @@
 import os
 import subprocess
 import argparse
+from src.utils import debug_print
 
 # REM: Streamlitアプリ起動
 def run_streamlit():
-    print("📢 Streamlit起動中...")
+    debug_print("📢 Streamlit起動中...")
     env = os.environ.copy()
     env["PYTHONPATH"] = os.getcwd()
     subprocess.run(
@@ -17,7 +18,7 @@ def run_streamlit():
 
 # REM: FastAPIアプリ起動
 def run_fastapi():
-    print("🚀 FastAPI起動中...")
+    debug_print("🚀 FastAPI起動中...")
     subprocess.run(["uvicorn", "app.fastapi_main:app", "--reload"])
 
 # REM: 起動モード選択

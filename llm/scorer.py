@@ -2,7 +2,7 @@
 # REM: スコアリング用ユーティリティ
 
 import re
-from llm.utils import safe_len, detect_language_probs
+from llm.llm_utils import safe_len, detect_language_probs
 
 def score_text_quality(original: str, refined: str, lang: str) -> float:
     """

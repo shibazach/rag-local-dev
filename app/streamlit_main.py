@@ -1,4 +1,4 @@
-# app/streamlit/app.py
+# app/streamlit_main.py
 import streamlit as st
 from src import bootstrap 
 from src.error_handler import install_global_exception_handler

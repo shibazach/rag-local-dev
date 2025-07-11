@@ -8,7 +8,10 @@ from langchain_ollama import OllamaLLM
 MECAB_DICT_PATH = "/var/lib/mecab/dic/ipadic-utf8"
 
 # REM: 開発モード時のDB初期化制御フラグ（TrueならTRUNCATEされる）
-DEVELOPMENT_MODE = True
+DEVELOPMENT_MODE = False
+
+# REM: Falseにすればすべてのデバッグ出力が止まる
+DEBUG_MODE = True  
 
 # REM: GPU があれば "cuda"、無ければ "cpu"
 CUDA_AVAILABLE = True if torch.cuda.is_available() else False

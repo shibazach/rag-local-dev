@@ -5,7 +5,8 @@ import streamlit as st
 from src import bootstrap
 from src.config import EMBEDDING_OPTIONS, INPUT_DIR, LOG_DIR
 
-from bin.create_rag_data import extract_text_from_eml
+from app.streamlit.create_rag_data import extract_text_from_eml
+
 from llm.refiner import (
     refine_text_with_llm,
     normalize_empty_lines,   # REM: 空行圧縮ユーティリティ

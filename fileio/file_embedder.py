@@ -13,13 +13,8 @@ from src.config import (
     DB_ENGINE, DEVELOPMENT_MODE, EMBEDDING_OPTIONS, OLLAMA_BASE
 )
 
-# REM: DB ヘルパー
-from db.handler import (
-    upsert_file,
-    prepare_embedding_table,
-    delete_embedding_for_file,
-    insert_embeddings
-)
+from db.handler import (upsert_file, prepare_embedding_table, delete_embedding_for_file, insert_embeddings    )
+from src.utils import debug_print
 
 # ──────────────────────────────────────────────────────────
 # REM: GPU 空き VRAM をチェックしてエンベッド用デバイスを返す
@@ -67,31 +62,31 @@ def embed_and_insert(
     ・file_id       : None→upsert_file 呼び出し、指定→既存行利用  
     """
     # REM: debug 出力開始
-    print(f"[DEBUG] embed_and_insert start: filename={filename}, texts count={len(texts)}")
+    debug_print(f"[DEBUG] embed_and_insert start: filename={filename}, texts count={len(texts)}")
 
     # 1) チャンク分割 ------------------------------------------------------------
     splitter     = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks_lists = [splitter.split_text(t) for t in texts]
     flat_chunks  = [s for lst in chunks_lists for s in lst]
     full_text    = "\n".join(flat_chunks)
-    print(f"[DEBUG] total chunks = {len(flat_chunks)}")
+    debug_print(f"[DEBUG] total chunks = {len(flat_chunks)}")
 
     # REM: チャンク空の場合は以降の埋め込み処理をスキップ
     if not flat_chunks:
-        print(f"[DEBUG] embed_and_insert: no chunks for {filename}, skip embedding")
+        debug_print(f"[DEBUG] embed_and_insert: no chunks for {filename}, skip embedding")
         return
 
     # 2) files テーブル upsert or スキップ --------------------------------------
     if file_id is None:
         file_id = upsert_file(filename, full_text, quality_score, truncate_once=True)
-        print(f"[DEBUG] upsert_file returned file_id = {file_id}")
+        debug_print(f"[DEBUG] upsert_file returned file_id = {file_id}")
 
     # 3) 各モデルで埋め込み ------------------------------------------------------
     for key, cfg in EMBEDDING_OPTIONS.items():
         if model_keys and key not in model_keys:
             continue
 
-        print(f"[DEBUG] embedding with model = {cfg['model_name']}")
+        debug_print(f"[DEBUG] embedding with model = {cfg['model_name']}")
 
         # 3-A) 埋め込み生成
         if cfg["embedder"] == "OllamaEmbeddings":
@@ -118,16 +113,16 @@ def embed_and_insert(
         table_name = cfg["model_name"].replace("/", "_").replace("-", "_") + f"_{cfg['dimension']}"
         if overwrite and file_id is not None:
             delete_embedding_for_file(table_name, file_id)
-            print(f"[DEBUG] deleted existing embeddings for file_id = {file_id} in {table_name}")
+            debug_print(f"[DEBUG] deleted existing embeddings for file_id = {file_id} in {table_name}")
         prepare_embedding_table(table_name, cfg["dimension"], overwrite=False)
-        print(f"[DEBUG] prepared table = {table_name}")
+        debug_print(f"[DEBUG] prepared table = {table_name}")
 
         # 3-C) 新レコード挿入 ------------------------------------------------------
         records = [
             {"content": chunk, "embedding": to_pgvector_literal(vec), "file_id": file_id}
             for chunk, vec in zip(flat_chunks, embeddings)
         ]
-        print(f"[DEBUG] inserting {len(records)} records into {table_name}")
+        debug_print(f"[DEBUG] inserting {len(records)} records into {table_name}")
         insert_embeddings(table_name, records)
 
     # 4) 必要ならデータを返却 ----------------------------------------------------

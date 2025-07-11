@@ -5,6 +5,7 @@ import MeCab
 
 from src import bootstrap
 from src.config import MECAB_DICT_PATH
+from src.utils import debug_print
 
  # ✅ このファイルと同じディレクトリ基準
 base_dir = os.path.dirname(__file__) 
@@ -36,15 +37,14 @@ def load_kanji_mistakes(csv_path):
                     mapping[wrong] = correct
     return mapping
 
-
 # --- MeCab分かち書き ---
 def tokenize(text):
     try:
         mecab = MeCab.Tagger(f"-d {MECAB_DICT_PATH} -Owakati")
         return mecab.parse(text).strip().split()
     except RuntimeError as e:
-        print(f"❌ MeCabの初期化に失敗しました: {e}")
-        print(f"👉 config.py の MECAB_DICT_PATH を確認してください（現在: {MECAB_DICT_PATH}）")
+        debug_print(f"❌ MeCabの初期化に失敗しました: {e}")
+        debug_print(f"👉 config.py の MECAB_DICT_PATH を確認してください（現在: {MECAB_DICT_PATH}）")
         raise
 
 # --- メイン補正関数 ---

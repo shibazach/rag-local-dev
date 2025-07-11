@@ -7,8 +7,8 @@ from typing import Sequence, Optional
 
 from sqlalchemy.sql import text as sql_text
 from src.config import DB_ENGINE, DEVELOPMENT_MODE
+from src.utils import debug_print
 
-# ──────────────────────────────────────────────────────────
 # REM: guard オブジェクト（TRUNCATE を 1 処理で 1 回に抑える）
 class _Guard:
     files_truncated: bool = False
@@ -16,7 +16,6 @@ class _Guard:
 
 _guard = _Guard()
 
-# ──────────────────────────────────────────────────────────
 # REM: SHA256 計算ユーティリティ
 def _calc_sha256(path: str) -> str:
     h = hashlib.sha256()
@@ -25,7 +24,6 @@ def _calc_sha256(path: str) -> str:
             h.update(chunk)
     return h.hexdigest()
 
-# ──────────────────────────────────────────────────────────
 # REM: files テーブルを保証
 def _ensure_files_table() -> None:
     with DB_ENGINE.begin() as conn:
@@ -40,7 +38,6 @@ def _ensure_files_table() -> None:
             )
         """))
 
-# ──────────────────────────────────────────────────────────
 # REM: files 行を upsert して file_id を取得
 def upsert_file(
     filepath: str,
@@ -113,7 +110,6 @@ def upsert_file(
             "h": file_hash,
         }).scalar()
 
-# ──────────────────────────────────────────────────────────
 # REM: embedding テーブルを作成し、overwrite=True なら 1 回だけ全体TRUNCATE
 def prepare_embedding_table(table_name: str, dim: int, *, overwrite: bool) -> None:
     with DB_ENGINE.begin() as conn:
@@ -129,7 +125,6 @@ def prepare_embedding_table(table_name: str, dim: int, *, overwrite: bool) -> No
             conn.execute(sql_text(f'TRUNCATE TABLE "{table_name}" CASCADE'))
             _guard.truncated_tables.add(table_name)
 
-# ──────────────────────────────────────────────────────────
 # REM: 指定 file_id の古い埋め込みレコードを削除
 def delete_embedding_for_file(table_name: str, file_id: int) -> None:
     with DB_ENGINE.begin() as conn:
@@ -138,7 +133,6 @@ def delete_embedding_for_file(table_name: str, file_id: int) -> None:
             {"fid": file_id}
         )
 
-# ──────────────────────────────────────────────────────────
 # REM: 指定テーブルへ embedding レコードを一括 INSERT
 def insert_embeddings(table_name: str, records: list[dict]) -> None:
     insert_sql = sql_text(f"""
@@ -147,13 +141,13 @@ def insert_embeddings(table_name: str, records: list[dict]) -> None:
     """)
     with DB_ENGINE.begin() as conn:
         # REM: debug 用出力（テーブル名とレコード数）
-        print(f"[DEBUG] insert_embeddings: table={table_name}, count={len(records)}")
+        debug_print(f"[DEBUG] insert_embeddings: table={table_name}, count={len(records)}")
         # REM: レコードなしならスキップ
         if not records:
-            print(f"[DEBUG] insert_embeddings: no records, skip insert into {table_name}")
+            debug_print(f"[DEBUG] insert_embeddings: no records, skip insert into {table_name}")
             return
         # REM: 最初のレコードのキー一覧を確認
-        print(f"[DEBUG] first record keys = {list(records[0].keys())!r}")
+        debug_print(f"[DEBUG] first record keys = {list(records[0].keys())!r}")
         # REM: content キー漏れチェック
         for rec in records:
             if "content" not in rec:

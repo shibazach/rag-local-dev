@@ -14,21 +14,14 @@ from db.schema import TABLE_FILES
 from ocr import correct_text
 from llm.prompt_loader import get_prompt_by_lang
 from llm.scorer import score_text_quality
+from llm import detect_language
+from src.utils import debug_print
 
 # REM: スクリプトの実行ディレクトリを親ディレクトリに設定
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 # REM: 例外発生時のログをグローバルに記録するハンドラを有効化
 install_global_exception_handler()
-
-def detect_language(text: str, force_lang=None) -> str:
-    if force_lang:
-        return force_lang
-    try:
-        lang = detect_langs(text)[0].lang
-        return "en" if lang == "en" else "ja"
-    except Exception:
-        return "ja"
 
 def refine_text_with_llm(raw_text: str,
                          model: str = OLLAMA_MODEL,
@@ -43,8 +36,8 @@ def refine_text_with_llm(raw_text: str,
     # 3) デバッグ出力：文字数と推定トークン数
     text_len       = len(corrected)
     token_estimate = int(text_len * 1.6)
-    print(f"🧠 LLM整形を開始（文字数: {text_len}, 推定トークン: {token_estimate}）", flush=True)
-    print(f"🔤 整形言語: {lang}", flush=True)
+    debug_print(f"🧠 LLM整形を開始（文字数: {text_len}, 推定トークン: {token_estimate}）", flush=True)
+    debug_print(f"🔤 整形言語: {lang}", flush=True)
 
     # 4) プロンプト取得
     _, base_prompt = get_prompt_by_lang(lang)
@@ -54,7 +47,7 @@ def refine_text_with_llm(raw_text: str,
 
     # 6) プロンプト合成（{TEXT} と {input_text} の両方に対応）
     prompt = user_prompt.replace("{TEXT}", corrected).replace("{input_text}", corrected)
-    print(f"🧾 プロンプト合成後の文字数: {len(prompt)}", flush=True)
+    debug_print(f"🧾 プロンプト合成後の文字数: {len(prompt)}", flush=True)
 
     # 7) 生成パラメータ拡張
     generation_kwargs = {

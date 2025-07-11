@@ -1,4 +1,4 @@
-# app/fastapi/services/query_handler.py
+# app/services/query_handler.py
 import re
 import numpy as np
 

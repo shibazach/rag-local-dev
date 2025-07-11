@@ -1,0 +1,107 @@
+.
+├── .dockerignore
+├── .gitignore
+├── ignored
+│   └── input_files
+├── .devcontainer
+│   ├── .streamlit
+│   │   └── config.toml
+│   ├── Dockerfile
+│   ├── devcontainer.json
+│   └── init_pgvector.sql
+├── .vscode
+│   ├── launch.json
+│   └── settings.json
+├── __init__.py
+├── app
+│   ├── __init__.py
+│   ├── fastapi
+│   │   └── services
+│   ├── fastapi_main.py
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── edit.py
+│   │   ├── file.py
+│   │   ├── file_browser.py
+│   │   ├── ingest.py
+│   │   ├── ingest_api.py
+│   │   ├── query.py
+│   │   └── ui.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── query_embedder.py
+│   │   └── query_handler.py
+│   ├── static
+│   │   ├── __init__.py
+│   │   ├── js
+│   │   │   ├── chat.js
+│   │   │   └── ingest.js
+│   │   └── styles.css
+│   ├── streamlit
+│   │   ├── __init__.py
+│   │   ├── chat_main.py
+│   │   ├── create_rag_data.py
+│   │   ├── history_panel.py
+│   │   ├── ingest_view.py
+│   │   ├── query_input.py
+│   │   ├── result_chunk.py
+│   │   └── result_file.py
+│   ├── streamlit_main.py
+│   └── templates
+│       ├── __init__.py
+│       ├── base.html
+│       ├── chat.html
+│       ├── edit.html
+│       ├── index.html
+│       ├── ingest.html
+│       ├── partials
+│       └── viewer.html
+├── bin
+│   ├── __init__.py
+│   ├── embed_file_runner.py
+│   ├── llm_text_refiner.py
+│   └── refine_prompt_multi.txt
+├── db
+│   ├── __init__.py
+│   ├── handler.py
+│   └── schema.py
+├── fileio
+│   ├── __init__.py
+│   ├── extractor.py
+│   ├── file_embedder.py
+│   └── translator.py
+├── llm
+│   ├── __init__.py
+│   ├── chunker.py
+│   ├── llm_utils.py
+│   ├── prompt_loader.py
+│   ├── refiner.py
+│   └── scorer.py
+├── logs
+│   ├── full_logs
+│   ├── invalid_csv_log.txt
+│   └── refiner_log.csv
+├── ocr
+│   ├── __init__.py
+│   ├── bert_corrector.py
+│   ├── correct_text.py
+│   ├── known_words_common.csv
+│   ├── known_words_custom.csv
+│   ├── make_dict.sh
+│   ├── ocr_process.py
+│   ├── ocr_word_mistakes.csv
+│   ├── orientation_corrector.py
+│   ├── spellcheck.py
+│   ├── user_dict.csv
+│   └── word_mistakes.csv
+├── src
+│   ├── __init__.py
+│   ├── bootstrap.py
+│   ├── config.py
+│   ├── error_handler.py
+│   └── utils.py
+├── docker-compose.yml
+├── git_update.sh
+├── requirements.txt
+├── run_app.py
+└── switch_compose.sh

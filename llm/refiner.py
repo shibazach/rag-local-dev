@@ -12,8 +12,10 @@ import time
 
 # REM: LangChain／Ollama
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import PromptTemplate
+from langchain.prompts import PromptTemplate
 from langchain_community.chat_models import ChatOllama
+# REM: Ollamaエンドポイントエラー定義
+from langchain_community.llms.ollama import OllamaEndpointNotFoundError
 
 # REM: OCR／LLMユーティリティ
 from ocr import correct_text
@@ -30,9 +32,7 @@ def normalize_empty_lines(text: str) -> str:
     """
     空白のみの行を削除し、連続空行は最大１行に圧縮する
     """
-    # 全角スペース（U+3000）も含めて空行とみなす
     text = re.sub(r'^[\s\u3000]+$', '', text, flags=re.MULTILINE)
-    # 3行以上の連続改行を2行に圧縮
     return re.sub(r'\n{3,}', '\n\n', text)
 
 
@@ -59,7 +59,6 @@ def refine_text_with_llm(
     戻り値: (refined_text, lang, quality_score, prompt_used)
     * abort_flag が True になると InterruptedError を送出して中断可能
     """
-
     # REM: 中断チェック
     def check_abort():
         if abort_flag and abort_flag.get("flag"):
@@ -85,7 +84,7 @@ def refine_text_with_llm(
     check_abort()
     prompt_text = build_prompt(raw_text, lang)
 
-    # REM: PromptTemplate 用に波カッコをエスケープ
+    # REM: PromptTemplate 用にエスケープ
     safe_prompt = prompt_text.replace("{", "{{").replace("}", "}}")
 
     # REM: 4) 生成パラメータ
@@ -107,7 +106,13 @@ def refine_text_with_llm(
     debug_print(f"[DEBUG invoke LLM model={model} prompt_len={len(prompt_text)}]")
     debug_print(f"[DEBUG prompt preview]\n---\n{prompt_text[:300]}...\n---")
     start_time = time.time()
-    refined = chain.invoke({})
+    try:
+        refined = chain.invoke({})
+    except OllamaEndpointNotFoundError as e:
+        # REM: モデル未ロード時の明示的エラー
+        raise RuntimeError(
+            f"Ollama モデル '{model}' が見つかりません。`ollama pull {model}` を実行してください。"
+        ) from e
     elapsed = time.time() - start_time
     debug_print(f"[DEBUG invoke elapsed: {elapsed:.2f} sec]")
     if not refined.strip():

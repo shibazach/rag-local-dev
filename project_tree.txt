@@ -1,28 +1,11 @@
 .
 ├── .back
 │   ├── scripts
-│   │   ├── __init__.py
-│   │   ├── app.py
-│   │   ├── create_rag_data.py
-│   │   ├── llm_text_refiner.py
-│   │   ├── refine_prompt_multi.txt
 │   │   └── views
 │   ├── src
-│   │   ├── __init__.py
-│   │   ├── bootstrap.py
-│   │   ├── config.py
-│   │   ├── db_schema.py
-│   │   ├── error_handler.py
-│   │   ├── extractor.py
-│   │   ├── file_embedder.py
-│   │   ├── ocr_utils
-│   │   └── translator.py
+│   │   └── ocr_utils
 │   └── test
-│       ├── __init__.py
-│       ├── main.py
-│       ├── services
-│       ├── static
-│       └── templates
+│       └── services
 ├── .devcontainer
 │   ├── .streamlit
 │   │   └── config.toml
@@ -42,23 +25,46 @@
 ├── app
 │   ├── __init__.py
 │   ├── fastapi
-│   │   ├── routes
-│   │   ├── services
-│   │   ├── static
-│   │   └── templates
+│   │   └── services
 │   ├── fastapi_main.py
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── edit.py
+│   │   ├── file.py
+│   │   ├── file_browser.py
+│   │   ├── ingest.py
+│   │   ├── ingest_api.py
+│   │   ├── query.py
+│   │   └── ui.py
+│   ├── services
+│   │   ├── __init__.py
+│   │   ├── query_embedder.py
+│   │   └── query_handler.py
+│   ├── static
+│   │   ├── __init__.py
+│   │   ├── js
+│   │   └── styles.css
 │   ├── streamlit
 │   │   ├── __init__.py
 │   │   ├── chat_main.py
+│   │   ├── create_rag_data.py
 │   │   ├── history_panel.py
 │   │   ├── ingest_view.py
 │   │   ├── query_input.py
 │   │   ├── result_chunk.py
 │   │   └── result_file.py
-│   └── streamlit_main.py
+│   ├── streamlit_main.py
+│   └── templates
+│       ├── __init__.py
+│       ├── base.html
+│       ├── chat.html
+│       ├── edit.html
+│       ├── index.html
+│       ├── ingest.html
+│       ├── partials
+│       └── viewer.html
 ├── bin
 │   ├── __init__.py
-│   ├── create_rag_data.py
 │   ├── embed_file_runner.py
 │   ├── llm_text_refiner.py
 │   └── refine_prompt_multi.txt
@@ -77,7 +83,8 @@
 ├── git_update.sh
 ├── ignored
 │   ├── input_files
-│   │   ├── 20250619_RAG検討ファイル
+│   │   └── 20250619_RAG検討ファイル
+│   ├── input_files_back
 │   │   ├── DB10-070_NC_2010.05.10_5月度部内会議議事録.pdf
 │   │   ├── DB10-171_A_2010.11.05_11月度部内会議議事録.pdf
 │   │   ├── DB10-171_B_2010.11.05_11月度部内会議議事録.pdf
@@ -135,22 +142,29 @@
 │   │   ├── DB24-077_議事録_2024-12月度 研究部 部内会議.pdf
 │   │   ├── DB25-006_議事録_2025-1月度 研究部 部内会議.pdf
 │   │   ├── DB25-012_議事録_2025-3月度 研究部 部内会議.pdf
-│   │   ├── 依頼書_20250214.pdf
-│   │   ├── 依頼書_20250603.pdf
-│   │   └── 依頼書_20250605.pdf
-│   ├── input_files_back
 │   │   ├── data.txt
 │   │   ├── data2.txt
 │   │   ├── data3.txt
-│   │   └── data4.txt
-│   └── output_files
+│   │   ├── data4.txt
+│   │   ├── 依頼書_20250214.pdf
+│   │   ├── 依頼書_20250603.pdf
+│   │   └── 依頼書_20250605.pdf
+│   ├── output_files
+│   └── 新しいフォルダー
+│       ├── DN25-001_研究開発計画書兼完了報告書のWebシステム仕様書_250417.pptx
+│       ├── DR25-002_研究管理Webシステム概算見積（要件Excelファイル）.xlsx
+│       ├── Re  【研究部・寺本】ロボット溶接機適用検討の結果について - AKIHIKO TERAMOTO (teramo-a@spp.co.jp) - 2022-04-20 1320.eml
+│       ├── data4.txt
+│       ├── user_dict.csv
+│       ├── 依頼書_20241223.pdf
+│       └── 依頼書_20250108.docx
 ├── llm
 │   ├── __init__.py
 │   ├── chunker.py
+│   ├── llm_utils.py
 │   ├── prompt_loader.py
 │   ├── refiner.py
-│   ├── scorer.py
-│   └── utils.py
+│   └── scorer.py
 ├── logs
 │   ├── full_logs
 │   │   ├── 0516-1 (H14.9) ｸﾛﾑﾗﾌﾟﾁｬｰ.pdf.log
@@ -206,7 +220,8 @@
 │   ├── __init__.py
 │   ├── bootstrap.py
 │   ├── config.py
-│   └── error_handler.py
+│   ├── error_handler.py
+│   └── utils.py
 └── switch_compose.sh
 
-33 directories, 177 files
+35 directories, 190 files

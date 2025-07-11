@@ -1,4 +1,4 @@
-# app/fastapi/services/query_embedder.py
+# app/services/query_embedder.py
 import numpy as np
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer

@@ -1,4 +1,6 @@
-# app/streamlit/history_panel.py
+# app/streamlit/history_panel.py  最終更新 2025-07-12 15:40
+# REM: 検索履歴を表示し、ファイルに保存するパネルを提供するモジュール
+
 import datetime
 import streamlit as st
 from io import BytesIO

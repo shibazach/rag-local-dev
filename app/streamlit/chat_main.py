@@ -1,4 +1,6 @@
-# app/streamlit/chat_main.py
+# app/streamlit/chat_main.py  最終更新 2025-07-12 15:40
+# REM: チャット画面のメインビューをレンダリングするモジュール
+
 from app.streamlit.query_input import render_query_input
 from app.streamlit.result_chunk import render_chunk_mode
 from app.streamlit.result_file import render_file_mode

@@ -18,4 +18,8 @@
     // les.exclude": {
     //"**/__init__.py": true
     //}
+
+   // Pytestの設定
+   "python.testing.pytestEnabled": true,
+   "python.testing.pytestArgs": ["tests"]
 }

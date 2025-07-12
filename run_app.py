@@ -1,4 +1,5 @@
-# run_app.py
+# run_app.py  最終更新 2025-07-12 15:40
+# REM: RAGアプリケーションの起動スクリプト
 
 import os
 import subprocess

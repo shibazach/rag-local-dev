@@ -5,3 +5,6 @@ __pycache__/
 docker-compose.yml
 Dockerfile
 devcontainer.json
+.venv/
+venv/
+env/

@@ -1,20 +1,24 @@
-# /workspace/db/handler.py  # REM: 最終更新 2025-07-11 00:41
+# db/handler.py  # REM: 最終更新 2025-07-12 15:35
 # REM: DB 操作ヘルパーを一元管理（files／embedding 共通）
 
 from __future__ import annotations
 import os, hashlib
-from typing import Sequence, Optional
+from typing import Sequence, Optional, Any
 
 from sqlalchemy.sql import text as sql_text
 from src.config import DB_ENGINE, DEVELOPMENT_MODE
 from src.utils import debug_print
 
-# REM: guard オブジェクト（TRUNCATE を 1 処理で 1 回に抑える）
-class _Guard:
-    files_truncated: bool = False
-    truncated_tables: set[str] = set()
+# REM: 初回TRUNCATE実行済みテーブル管理
+_truncated_tables: set[str] = set()
 
-_guard = _Guard()
+# REM: テーブル名ごとに一度だけTRUNCATEを実行
+def truncate_table_once(table_name: str) -> None:
+    global _truncated_tables
+    if DEVELOPMENT_MODE and table_name not in _truncated_tables:
+        with DB_ENGINE.begin() as conn:
+            conn.execute(sql_text(f'TRUNCATE TABLE "{table_name}" CASCADE'))
+        _truncated_tables.add(table_name)
 
 # REM: SHA256 計算ユーティリティ
 def _calc_sha256(path: str) -> str:
@@ -44,7 +48,6 @@ def upsert_file(
     content:  str = "",
     score:    float = 0.0,
     *,
-    truncate_once: bool = True,
     overwrite:     bool = False,
 ) -> int:
     """
@@ -54,17 +57,13 @@ def upsert_file(
          (a) DB の content が空 → 引数 content が非空  
          (b) 引数 score > DB の quality_score  
     2. 行が無ければ INSERT して新規 file_id を返す  
-    3. DEVELOPMENT_MODE かつ truncate_once=True の時、最初の 1 回だけ TRUNCATE
     """
+    # REM: files テーブル初回TRUNCATE
+    truncate_table_once("files")
     _ensure_files_table()
     file_hash = _calc_sha256(filepath)
 
     with DB_ENGINE.begin() as conn:
-        # 開発モード時：初回だけ files テーブル全体を TRUNCATE
-        if DEVELOPMENT_MODE and truncate_once and not _guard.files_truncated:
-            conn.execute(sql_text("TRUNCATE TABLE files CASCADE"))
-            _guard.files_truncated = True
-
         row = conn.execute(
             sql_text("""
                 SELECT file_id, content, quality_score
@@ -95,7 +94,6 @@ def upsert_file(
                 )
             return row.file_id
 
-        # INSERT 新規レコード
         with open(filepath, "rb") as f:
             blob = f.read()
 
@@ -110,8 +108,8 @@ def upsert_file(
             "h": file_hash,
         }).scalar()
 
-# REM: embedding テーブルを作成し、overwrite=True なら 1 回だけ全体TRUNCATE
-def prepare_embedding_table(table_name: str, dim: int, *, overwrite: bool) -> None:
+# REM: embedding テーブルを作成
+def prepare_embedding_table(table_name: str, dim: int) -> None:
     with DB_ENGINE.begin() as conn:
         conn.execute(sql_text(f"""
             CREATE TABLE IF NOT EXISTS "{table_name}" (
@@ -121,9 +119,6 @@ def prepare_embedding_table(table_name: str, dim: int, *, overwrite: bool) -> No
                 file_id   INTEGER REFERENCES files(file_id)
             )
         """))
-        if overwrite and table_name not in _guard.truncated_tables:
-            conn.execute(sql_text(f'TRUNCATE TABLE "{table_name}" CASCADE'))
-            _guard.truncated_tables.add(table_name)
 
 # REM: 指定 file_id の古い埋め込みレコードを削除
 def delete_embedding_for_file(table_name: str, file_id: int) -> None:
@@ -140,15 +135,10 @@ def insert_embeddings(table_name: str, records: list[dict]) -> None:
         VALUES (:content, :embedding, :file_id)
     """)
     with DB_ENGINE.begin() as conn:
-        # REM: debug 用出力（テーブル名とレコード数）
         debug_print(f"[DEBUG] insert_embeddings: table={table_name}, count={len(records)}")
-        # REM: レコードなしならスキップ
         if not records:
             debug_print(f"[DEBUG] insert_embeddings: no records, skip insert into {table_name}")
             return
-        # REM: 最初のレコードのキー一覧を確認
-        debug_print(f"[DEBUG] first record keys = {list(records[0].keys())!r}")
-        # REM: content キー漏れチェック
         for rec in records:
             if "content" not in rec:
                 raise ValueError(f"[DEBUG] record missing 'content': {rec!r}")
@@ -180,19 +170,17 @@ def update_file_content(file_id: int, content: str, score: float) -> None:
             {"ct": content, "sc": score, "fid": file_id}
         )
 
-# db/handler.py に追記
-# REM: 埋め込みテーブルを作成・初回TRUNCATEまで実行
+# REM: 埋め込みテーブルを作成・初回TRUNCATE制御
 def ensure_embedding_table(
     table_name: str,
-    dim: int,
-    *,
-    overwrite: bool = False
+    dim: int
 ) -> None:
     """
     - テーブル作成
-    - overwrite=True なら1回だけTRUNCATE
+    - 初回TRUNCATEはtruncate_table_onceで担保
     """
-    prepare_embedding_table(table_name, dim, overwrite=overwrite)
+    prepare_embedding_table(table_name, dim)
+    truncate_table_once(table_name)
 
 # REM: 埋め込みレコードを一括挿入
 def bulk_insert_embeddings(
@@ -203,3 +191,52 @@ def bulk_insert_embeddings(
     - レコードリストを insert_embeddings 経由で一括INSERT
     """
     insert_embeddings(table_name, records)
+
+# ──────────────────────────────────────────────────────────
+# REM: 上位Kチャンクを取得
+def fetch_top_chunks(
+    query_vec: str,
+    table_name: str,
+    limit: int = 5
+) -> list[dict[str, Any]]:
+    """
+    - table_name の埋め込みテーブルから、クエリベクトルに近い上位limit件を取得
+    """
+    sql = f"""
+        SELECT e.content AS snippet,
+               f.file_id,
+               f.filename
+          FROM "{table_name}" AS e
+          JOIN files AS f ON e.file_id = f.file_id
+         ORDER BY e.embedding <-> '{query_vec}'::vector
+         LIMIT :limit
+    """
+    with DB_ENGINE.connect() as conn:
+        rows = conn.execute(sql_text(sql), {"limit": limit}).mappings().all()
+    return [dict(r) for r in rows]
+
+# REM: 上位Kファイルを取得
+def fetch_top_files(
+    query_vec: str,
+    table_name: str,
+    limit: int = 10
+) -> list[dict[str, Any]]:
+    """
+    - table_name の埋め込みテーブルから、ファイルごとに最小距離順で上位limit件を取得
+    """
+    sql = f"""
+        SELECT DISTINCT
+               f.file_id,
+               f.filename,
+               f.content,
+               f.file_blob,
+               MIN(e.embedding <-> '{query_vec}'::vector) AS distance
+          FROM "{table_name}" AS e
+          JOIN files AS f ON e.file_id = f.file_id
+         GROUP BY f.file_id, f.filename, f.content, f.file_blob
+         ORDER BY distance ASC
+         LIMIT :limit
+    """
+    with DB_ENGINE.connect() as conn:
+        rows = conn.execute(sql_text(sql), {"limit": limit}).mappings().all()
+    return [dict(r) for r in rows]

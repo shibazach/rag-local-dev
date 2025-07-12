@@ -1,12 +1,13 @@
-# app/services/query_handler.py
+# app/services/query_handler.py  最終更新 2025-07-12 15:35
 import re
 import numpy as np
 
 from langchain_community.embeddings import OllamaEmbeddings
 from sentence_transformers import SentenceTransformer
-from sqlalchemy import text
 from src.config import (
-    EMBEDDING_OPTIONS, DB_ENGINE, LLM_ENGINE, OLLAMA_BASE)
+    EMBEDDING_OPTIONS, LLM_ENGINE, OLLAMA_BASE)
+
+from db.handler import fetch_top_chunks, fetch_top_files
 
 def to_pgvector_literal(vec):
     if isinstance(vec, np.ndarray):
@@ -30,17 +31,7 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
     # チャンク統合モード
     if mode == "チャンク統合":
         # 2) 上位Kチャンクを取得
-        sql = f"""
-            SELECT e.content AS snippet,
-                   f.file_id,
-                   f.filename
-            FROM "{tablename}" AS e
-            JOIN files AS f ON e.file_id = f.file_id
-            ORDER BY e.embedding <-> '{embedding_str}'::vector
-            LIMIT 5
-        """
-        with DB_ENGINE.connect() as conn:
-            rows = conn.execute(text(sql)).mappings().all()
+        rows = fetch_top_chunks(embedding_str, tablename, limit=5)
 
         # 3) 統合回答用にスニペットを抽出＋LLM呼び出し
         snippets = [r["snippet"] for r in rows]
@@ -62,22 +53,13 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
             "mode": mode,
             "answer": answer,
             "sources": sources,
-            "results": [dict(r) for r in rows]
+            "results": rows
         }
 
     # ファイル別モード（要約＋一致度）
     else:
-        sql = f"""
-            SELECT DISTINCT f.file_id, f.filename, f.content, f.file_blob,
-                   MIN(e.embedding <-> '{embedding_str}'::vector) AS distance
-            FROM "{tablename}" AS e
-            JOIN files AS f ON e.file_id = f.file_id
-            GROUP BY f.file_id, f.filename, f.content, f.file_blob
-            ORDER BY distance ASC
-            LIMIT 10
-        """
-        with DB_ENGINE.connect() as conn:
-            rows = conn.execute(text(sql)).mappings().all()
+        # 2) 上位Kファイルを取得
+        rows = fetch_top_files(embedding_str, tablename, limit=10)
 
         summaries = []
         for row in rows:
@@ -92,12 +74,9 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
         return {"mode": mode, "results": summaries}
 
 def get_file_content(file_id: int) -> str:
-    with DB_ENGINE.connect() as conn:
-        row = conn.execute(
-            text("SELECT content FROM files WHERE file_id = :fid"),
-            {"fid": file_id}
-        ).fetchone()
-    return row[0] if row else ""
+    from db.handler import get_file_metadata
+    meta = get_file_metadata(file_id)
+    return meta["content"] if meta else ""
 
 def llm_summarize_with_score(query, content):
     prompt = f"""

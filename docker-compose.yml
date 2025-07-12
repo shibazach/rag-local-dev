@@ -46,7 +46,8 @@ services:
       POSTGRES_PASSWORD: ragpass
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./.devcontainer/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql:ro
+      #- ./.devcontainer/init_pgvector.sql:/docker-entrypoint-initdb.d/init_pgvector.sql:ro
+      - ./.devcontainer:/docker-entrypoint-initdb.d:ro
     networks:
       - ragnet
     ports:

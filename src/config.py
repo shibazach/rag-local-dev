@@ -8,7 +8,7 @@ from langchain_ollama import OllamaLLM
 MECAB_DICT_PATH = "/var/lib/mecab/dic/ipadic-utf8"
 
 # REM: 開発モード時のDB初期化制御フラグ（TrueならTRUNCATEされる）
-DEVELOPMENT_MODE = False
+DEVELOPMENT_MODE = True
 
 # REM: Falseにすればすべてのデバッグ出力が止まる
 DEBUG_MODE = True  

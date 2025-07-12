@@ -1,4 +1,6 @@
-# app/streamlit/query_input.py
+# app/streamlit/query_input.py  最終更新 2025-07-12 15:40
+# REM: ユーザーからの質問入力と検索モード選択を行う UI
+
 import streamlit as st
 from src.config import EMBEDDING_OPTIONS
 

@@ -1,4 +1,4 @@
-# bin/embed_file_runner.py  
+# bin/embed_file_runner.py  最終更新 2025-07-12 14:55
 # REM: ベクトル化処理とDB登録を行うユーティリティモジュール
 
 import os, hashlib
@@ -14,7 +14,7 @@ from src import bootstrap
 from src.config import (
     DB_ENGINE, DEVELOPMENT_MODE, EMBEDDING_OPTIONS, OLLAMA_BASE)
 from db.schema import TABLE_FILES
-from db.handler import upsert_file  # ← upsert_file 呼び出しを更新
+from db.handler import upsert_file, ensure_embedding_table, bulk_insert_embeddings
 from src.utils import debug_print
 
 # REM: GPU 空きVRAMをチェックしてデバイスを返すユーティリティ ──
@@ -28,7 +28,6 @@ def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
             free, _ = torch.cuda.mem_get_info()
             free_mb = free // (1024 * 1024)
         except Exception:
-            # 古い PyTorch 環境では NVML 経由
             from pynvml import nvmlInit, nvmlDeviceGetHandleByIndex, nvmlDeviceGetMemoryInfo
             nvmlInit()
             handle = nvmlDeviceGetHandleByIndex(0)
@@ -44,23 +43,18 @@ def to_pgvector_literal(vec):
         vec = vec.tolist()
     return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
-# REM: embedding_* テーブルの TRUNCATE 状態管理（モデルごとに1回のみ）
-_truncate_done_tables = set()
-
 # REM: ベクトル化とDB登録
 def embed_and_insert(texts, filename, model_keys=None, return_data=False, quality_score=0.0):
-    global _truncate_done_tables
-
     # チャンク分割
     splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks = [splitter.split_text(t) for t in texts]
     flat_chunks = [s for c in chunks for s in c]
     full_text = "\n".join(flat_chunks)
 
-    # REM: files テーブル登録（truncate_once 引数削除）
+    # REM: files テーブル登録（初回TRUNCATEは handler 側で実施）
     file_id = upsert_file(filename, full_text, quality_score)
 
-    # 各モデルごとに埋め込み
+    # REM: 各モデルごとに埋め込み
     for key, config in EMBEDDING_OPTIONS.items():
         if model_keys is not None and key not in model_keys:
             continue
@@ -122,34 +116,17 @@ def embed_and_insert(texts, filename, model_keys=None, return_data=False, qualit
             + f"_{config['dimension']}"
         )
 
-        # テーブル作成＆初期化（初回のみ）
-        with DB_ENGINE.begin() as conn:
-            conn.execute(sql_text(f"""
-                CREATE TABLE IF NOT EXISTS "{table_name}" (
-                    id SERIAL PRIMARY KEY,
-                    content TEXT,
-                    embedding VECTOR({config['dimension']}),
-                    file_id INTEGER REFERENCES files(file_id)
-                )
-            """))
-            if table_name not in _truncate_done_tables:
-                conn.execute(sql_text(f'TRUNCATE TABLE "{table_name}" CASCADE'))
-                _truncate_done_tables.add(table_name)
+        # REM: テーブル作成＆初回TRUNCATE制御
+        debug_print(f"[DEBUG] ⏳ ensure table before TRUNCATE/CREATE: {table_name}")
+        ensure_embedding_table(table_name, config["dimension"])
 
-            # レコード登録
-            insert_sql = sql_text(f"""
-                INSERT INTO "{table_name}" (content, embedding, file_id)
-                VALUES (:content, :embedding, :file_id)
-            """ )
-            records = [
-                {
-                    "content": chunk,
-                    "embedding": to_pgvector_literal(vec),
-                    "file_id": file_id
-                }
-                for chunk, vec in zip(flat_chunks, embeddings)
-            ]
-            conn.execute(insert_sql, records)
+        # REM: レコード一括INSERT
+        records = [
+            {"content": chunk, "embedding": to_pgvector_literal(vec), "file_id": file_id}
+            for chunk, vec in zip(flat_chunks, embeddings)
+        ]
+        debug_print(f"[DEBUG] ⏳ inserting {len(records)} records into: {table_name}")
+        bulk_insert_embeddings(table_name, records)
 
     # 必要ならチャンク＋埋め込みを返す
     if return_data:

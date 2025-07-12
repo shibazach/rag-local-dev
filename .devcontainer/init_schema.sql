@@ -15,12 +15,12 @@ CREATE TABLE files_meta (
 
 -- files_blob
 CREATE TABLE files_blob (
-    file_id   UUID PRIMARY KEY
-              REFERENCES files_meta(id)
-              ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    binary    BYTEA NOT NULL,
-    checksum  TEXT,
-    stored_at TIMESTAMPTZ DEFAULT NOW()
+    file_id    UUID PRIMARY KEY
+               REFERENCES files_meta(id)
+               ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    blob_data  BYTEA NOT NULL,
+    checksum   TEXT,
+    stored_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- files_text

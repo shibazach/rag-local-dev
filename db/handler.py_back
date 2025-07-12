@@ -43,7 +43,7 @@ def _ensure_files_table() -> None:
         """))
 
 # REM: files 行を upsert して file_id を取得
-def upsert_file(
+def insert_file_full(
     filepath: str,
     content:  str = "",
     score:    float = 0.0,
@@ -109,7 +109,7 @@ def upsert_file(
         }).scalar()
 
 # REM: embedding テーブルを作成
-def prepare_embedding_table(table_name: str, dim: int) -> None:
+def ensure_embedding_table(table_name: str, dim: int) -> None:
     with DB_ENGINE.begin() as conn:
         conn.execute(sql_text(f"""
             CREATE TABLE IF NOT EXISTS "{table_name}" (
@@ -121,7 +121,7 @@ def prepare_embedding_table(table_name: str, dim: int) -> None:
         """))
 
 # REM: 指定 file_id の古い埋め込みレコードを削除
-def delete_embedding_for_file(table_name: str, file_id: int) -> None:
+def delete_embedding_for_file(table_name: str, file_id: str) -> None:
     with DB_ENGINE.begin() as conn:
         conn.execute(
             sql_text(f'DELETE FROM "{table_name}" WHERE file_id = :fid'),
@@ -129,7 +129,7 @@ def delete_embedding_for_file(table_name: str, file_id: int) -> None:
         )
 
 # REM: 指定テーブルへ embedding レコードを一括 INSERT
-def insert_embeddings(table_name: str, records: list[dict]) -> None:
+def bulk_insert_embeddings(table_name: str, records: list[dict]) -> None:
     insert_sql = sql_text(f"""
         INSERT INTO "{table_name}" (content, embedding, file_id)
         VALUES (:content, :embedding, :file_id)
@@ -145,7 +145,7 @@ def insert_embeddings(table_name: str, records: list[dict]) -> None:
         conn.execute(insert_sql, records)
 
 # REM: 指定 file_id のファイルメタ情報（content, quality_score）を取得
-def get_file_metadata(file_id: int) -> Optional[dict]:
+def get_file_text(file_id: str) -> Optional[dict]:
     with DB_ENGINE.connect() as conn:
         row = conn.execute(
             sql_text("""
@@ -158,7 +158,7 @@ def get_file_metadata(file_id: int) -> Optional[dict]:
     return dict(row) if row else None
 
 # REM: 指定 file_id の content / score を更新
-def update_file_content(file_id: int, content: str, score: float) -> None:
+def update_file_text(file_id: str, content: str, score: float) -> None:
     with DB_ENGINE.begin() as conn:
         conn.execute(
             sql_text("""
@@ -179,7 +179,7 @@ def ensure_embedding_table(
     - テーブル作成
     - 初回TRUNCATEはtruncate_table_onceで担保
     """
-    prepare_embedding_table(table_name, dim)
+    ensure_embedding_table(table_name, dim)
     truncate_table_once(table_name)
 
 # REM: 埋め込みレコードを一括挿入
@@ -190,7 +190,7 @@ def bulk_insert_embeddings(
     """
     - レコードリストを insert_embeddings 経由で一括INSERT
     """
-    insert_embeddings(table_name, records)
+    bulk_insert_embeddings(table_name, records)
 
 # ──────────────────────────────────────────────────────────
 # REM: 上位Kチャンクを取得

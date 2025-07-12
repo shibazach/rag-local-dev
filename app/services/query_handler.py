@@ -73,9 +73,9 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合"):
         summaries.sort(key=lambda x: x["score"], reverse=True)
         return {"mode": mode, "results": summaries}
 
-def get_file_content(file_id: int) -> str:
+def get_file_content(file_id: str) -> str:
     from db.handler import get_file_metadata
-    meta = get_file_metadata(file_id)
+    meta = get_file_text(file_id)
     return meta["content"] if meta else ""
 
 def llm_summarize_with_score(query, content):

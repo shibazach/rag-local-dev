@@ -44,7 +44,7 @@ def ingest(request: Request):
 # ──────────────────────────────────────────────────────────
 # REM: ビューア画面（PDF プレビュー）
 @router.get("/viewer/{file_id}", response_class=HTMLResponse)
-def viewer(request: Request, file_id: int, num: int = 0):
+def viewer(request: Request, file_id: str, num: int = 0):
     row = DB_ENGINE.connect().execute(
         text("SELECT filename FROM files WHERE file_id=:id"),
         {"id": file_id}
@@ -62,7 +62,7 @@ def viewer(request: Request, file_id: int, num: int = 0):
 # ──────────────────────────────────────────────────────────
 # REM: 編集画面（内容取得）
 @router.get("/edit/{file_id}", response_class=HTMLResponse)
-def edit(request: Request, file_id: int):
+def edit(request: Request, file_id: str):
     from app.fastapi.services.query_handler import get_file_content
     content = get_file_content(file_id)
     return templates.TemplateResponse("edit.html", {
@@ -75,7 +75,7 @@ def edit(request: Request, file_id: int):
 # ──────────────────────────────────────────────────────────
 # REM: 編集画面保存 & 再ベクトル化
 @router.post("/edit/{file_id}", response_class=HTMLResponse)
-def edit_save(request: Request, file_id: int, content: str = Form(...)):
+def edit_save(request: Request, file_id: str, content: str = Form(...)):
     # REM: ファイル名取得
     fname = DB_ENGINE.connect().execute(
         text("SELECT filename FROM files WHERE file_id=:id"),

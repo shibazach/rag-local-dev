@@ -1,4 +1,4 @@
-# fileio/file_embedder.py  最終更新 2025-07-12 15:58
+# fileio/file_embedder.py  最終更新 2025-07-13 00:50
 # REM: ベクトル化処理と DB 登録ユーティリティ（handler 統合版）
 
 import os, hashlib, torch
@@ -83,7 +83,7 @@ def embed_and_insert(
     # 2) files テーブル upsert or スキップ
     if file_id is None:
         debug_print(f"[DEBUG] upsert_file returned file_id = {file_id}")
-        file_id = upsert_file(filename, full_text, quality_score)
+        file_id = insert_file_full(filename, full_text, quality_score, tags=[])
 
     # 3) 各モデルで埋め込み
     for key, cfg in EMBEDDING_OPTIONS.items():

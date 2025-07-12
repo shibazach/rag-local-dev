@@ -13,7 +13,7 @@ router = APIRouter()
 
 # REM: PDFバイナリを inline で返却（RFC5987 方式で UTF-8 エンコード）
 @router.get("/api/pdf/{file_id}")
-def get_pdf(file_id: int):
+def get_pdf(file_id: str):
     # REM: DB からファイル BLOB と元ファイル名を取得
     row = DB_ENGINE.connect().execute(
         text("SELECT file_blob, filename FROM files WHERE file_id=:id"),
@@ -31,7 +31,7 @@ def get_pdf(file_id: int):
     )
 
 @router.get("/api/content/{file_id}")
-def get_content(file_id: int):
+def get_content(file_id: str):
     # REM: files.content を返却
     cont = DB_ENGINE.connect().execute(
         text("SELECT content FROM files WHERE file_id=:id"),
@@ -42,7 +42,7 @@ def get_content(file_id: int):
     return {"content": cont}
 
 @router.post("/api/save/{file_id}")
-def save_content(file_id: int, content: str = Form(...)):
+def save_content(file_id: str, content: str = Form(...)):
     # 1) filename を取得（存在確認およびログ用）
     fname = DB_ENGINE.connect().execute(
         text("SELECT filename FROM files WHERE file_id=:id"),

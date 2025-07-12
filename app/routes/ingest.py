@@ -1,9 +1,6 @@
-# app/fastapi/routes/ingest.py
-# REM: 最終更新 2025-07-11 13:30 JST
-"""
-フォルダ内ファイルを一括インジェスト → OCR → LLM 整形 → ベクトル化
-ファイル指定 or フォルダ指定の両モードに対応し、SSE で進捗を返却する FastAPI ルーター
-"""
+# /workspace/app/routes/ingest.py  # REM: 最終更新 2025-07-12 00:34 JST
+# REM: フォルダ内ファイルを一括インジェスト → OCR → LLM 整形 → ベクトル化
+# REM: ファイル指定 or フォルダ指定の両モードに対応し、SSE で進捗を返却する FastAPI ルーター
 
 # REM: 標準ライブラリ
 import os
@@ -26,8 +23,8 @@ from src.config import DB_ENGINE, EMBEDDING_OPTIONS, OLLAMA_MODEL
 from fileio.file_embedder import embed_and_insert
 from fileio.extractor import extract_text_by_extension
 
-# REM: DB操作（ファイル仮登録）
-from db.handler import upsert_file
+# REM: DB操作（ファイル仮登録／取得／更新）
+from db.handler import upsert_file, get_file_metadata, update_file_content
 
 # REM: LLM整形ユーティリティ
 from llm.refiner import refine_text_with_llm, build_prompt
@@ -54,9 +51,9 @@ def ingest_config():
 @router.post("/ingest", response_class=JSONResponse)
 async def run_ingest_folder(
     input_mode:         str                 = Form(...),     # 'folder' or 'files'
-    input_folder:       str                 = Form(""),     # フォルダ指定モード用
+    input_folder:       str                 = Form(""),      # フォルダ指定モード用
     input_files:        List[UploadFile]    = File(None),   # ファイル指定モード用
-    include_subdirs:    bool                = Form(False),  # フォルダ指定時のみ使用
+    include_subdirs:    bool                = Form(False),   # フォルダ指定時のみ使用
     refine_prompt_key:  str                 = Form(...),
     embed_models:       List[str]           = Form(...),
     overwrite_existing: bool                = Form(False),
@@ -137,7 +134,7 @@ def ingest_stream(request: Request):
                 fp, name = info["path"], info["filename"]
 
                 # REM: ① ファイル仮登録（空コンテンツでレコード作成）
-                fid = upsert_file(fp, "", 0.0, truncate_once=True)
+                fid = upsert_file(fp, "", 0.0)
                 yield f"data: {json.dumps({'file':name,'file_id':fid,'step':'ファイル登録中','index':idx,'total':total})}\n\n"
                 yield f"data: {json.dumps({'file':name,'step':'登録完了'})}\n\n"
 
@@ -221,10 +218,7 @@ def ingest_stream(request: Request):
                 if refined_pages:
                     full_text = "\n\n".join(refined_pages)
                     with DB_ENGINE.begin() as tx:
-                        cur = tx.execute(
-                            text("SELECT content, quality_score FROM files WHERE file_id=:id"),
-                            {"id": fid}
-                        ).mappings().first()
+                        cur = get_file_metadata(fid)
                         need_update = (
                             overwrite_f
                             or not cur["content"]
@@ -232,15 +226,7 @@ def ingest_stream(request: Request):
                             or file_min_score < (cur["quality_score"] or 1.0)
                         )
                         if need_update:
-                            tx.execute(
-                                text("""
-                                    UPDATE files
-                                       SET content       = :c,
-                                           quality_score = :qs
-                                     WHERE file_id       = :id
-                                """),
-                                {"c": full_text, "qs": file_min_score, "id": fid}
-                            )
+                            update_file_content(fid, full_text, file_min_score)
                             yield f"data: {json.dumps({'file':name,'step':'全文保存完了（上書き実施）'})}\n\n"
                         else:
                             yield f"data: {json.dumps({'file':name,'step':'全文保存スキップ'})}\n\n"

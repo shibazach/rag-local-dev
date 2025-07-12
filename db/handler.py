@@ -153,3 +153,53 @@ def insert_embeddings(table_name: str, records: list[dict]) -> None:
             if "content" not in rec:
                 raise ValueError(f"[DEBUG] record missing 'content': {rec!r}")
         conn.execute(insert_sql, records)
+
+# REM: 指定 file_id のファイルメタ情報（content, quality_score）を取得
+def get_file_metadata(file_id: int) -> Optional[dict]:
+    with DB_ENGINE.connect() as conn:
+        row = conn.execute(
+            sql_text("""
+                SELECT content, quality_score
+                  FROM files
+                 WHERE file_id = :fid
+            """),
+            {"fid": file_id}
+        ).mappings().first()
+    return dict(row) if row else None
+
+# REM: 指定 file_id の content / score を更新
+def update_file_content(file_id: int, content: str, score: float) -> None:
+    with DB_ENGINE.begin() as conn:
+        conn.execute(
+            sql_text("""
+                UPDATE files
+                   SET content       = :ct,
+                       quality_score = :sc
+                 WHERE file_id       = :fid
+            """),
+            {"ct": content, "sc": score, "fid": file_id}
+        )
+
+# db/handler.py に追記
+# REM: 埋め込みテーブルを作成・初回TRUNCATEまで実行
+def ensure_embedding_table(
+    table_name: str,
+    dim: int,
+    *,
+    overwrite: bool = False
+) -> None:
+    """
+    - テーブル作成
+    - overwrite=True なら1回だけTRUNCATE
+    """
+    prepare_embedding_table(table_name, dim, overwrite=overwrite)
+
+# REM: 埋め込みレコードを一括挿入
+def bulk_insert_embeddings(
+    table_name: str,
+    records: list[dict]
+) -> None:
+    """
+    - レコードリストを insert_embeddings 経由で一括INSERT
+    """
+    insert_embeddings(table_name, records)

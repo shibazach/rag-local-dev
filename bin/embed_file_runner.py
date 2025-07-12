@@ -1,4 +1,4 @@
-# bin/embed_file_runner.py
+# bin/embed_file_runner.py  
 # REM: ベクトル化処理とDB登録を行うユーティリティモジュール
 
 import os, hashlib
@@ -14,6 +14,7 @@ from src import bootstrap
 from src.config import (
     DB_ENGINE, DEVELOPMENT_MODE, EMBEDDING_OPTIONS, OLLAMA_BASE)
 from db.schema import TABLE_FILES
+from db.handler import upsert_file  # ← upsert_file 呼び出しを更新
 from src.utils import debug_print
 
 # REM: GPU 空きVRAMをチェックしてデバイスを返すユーティリティ ──
@@ -43,55 +44,6 @@ def to_pgvector_literal(vec):
         vec = vec.tolist()
     return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
-# REM: filesテーブルにファイルを登録しfile_idを返す
-_truncate_files_done = False
-def insert_file_and_get_id(filepath, refined_ja, score, truncate_once=False):
-    global _truncate_files_done
-
-    with open(filepath, "rb") as f:
-        file_blob = f.read()
-
-    file_hash = hashlib.sha256(file_blob).hexdigest()
-
-    with DB_ENGINE.begin() as conn:
-        # テーブル作成
-        conn.execute(sql_text("""
-            CREATE TABLE IF NOT EXISTS files (
-                file_id SERIAL PRIMARY KEY,
-                filename TEXT,
-                content TEXT,
-                file_blob BYTEA,
-                quality_score FLOAT,
-                file_hash TEXT UNIQUE
-            )
-        """))
-
-        # 開発モードかつ初回のみ TRUNCATE
-        if DEVELOPMENT_MODE and truncate_once and not _truncate_files_done:
-            conn.execute(sql_text("TRUNCATE TABLE files CASCADE"))
-            _truncate_files_done = True
-
-        # 既存登録チェック
-        existing = conn.execute(sql_text(
-            "SELECT file_id FROM files WHERE file_hash = :hash"
-        ), {"hash": file_hash}).fetchone()
-        if existing:
-            return existing[0]
-
-        # 新規登録
-        result = conn.execute(sql_text("""
-            INSERT INTO files (filename, content, file_blob, quality_score, file_hash)
-            VALUES (:filename, :content, :file_blob, :score, :hash)
-            RETURNING file_id
-        """), {
-            "filename": os.path.basename(filepath),
-            "content": refined_ja,
-            "file_blob": file_blob,
-            "score": score,
-            "hash": file_hash
-        })
-        return result.scalar()
-
 # REM: embedding_* テーブルの TRUNCATE 状態管理（モデルごとに1回のみ）
 _truncate_done_tables = set()
 
@@ -105,8 +57,8 @@ def embed_and_insert(texts, filename, model_keys=None, return_data=False, qualit
     flat_chunks = [s for c in chunks for s in c]
     full_text = "\n".join(flat_chunks)
 
-    # files テーブル登録
-    file_id = insert_file_and_get_id(filename, full_text, quality_score, truncate_once=True)
+    # REM: files テーブル登録（truncate_once 引数削除）
+    file_id = upsert_file(filename, full_text, quality_score)
 
     # 各モデルごとに埋め込み
     for key, config in EMBEDDING_OPTIONS.items():
@@ -188,7 +140,7 @@ def embed_and_insert(texts, filename, model_keys=None, return_data=False, qualit
             insert_sql = sql_text(f"""
                 INSERT INTO "{table_name}" (content, embedding, file_id)
                 VALUES (:content, :embedding, :file_id)
-            """)
+            """ )
             records = [
                 {
                     "content": chunk,

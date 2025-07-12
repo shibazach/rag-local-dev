@@ -1,4 +1,4 @@
-# db/handler.py  # REM: 最終更新 2025-07-12 15:35
+# db/handler.py  最終更新 2025-07-12 15:35
 # REM: DB 操作ヘルパーを一元管理（files／embedding 共通）
 
 from __future__ import annotations

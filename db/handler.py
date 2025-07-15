@@ -206,29 +206,31 @@ def get_file_blob(file_id: str) -> Optional[bytes]:
 
 def update_file_text(
     file_id: str,
-    refined_text: str,
-    quality_score: float,
+    refined_text: str | None = None,
+    quality_score: float | None = None,
+    raw_text: str | None = None,          # ★ 追加
     tags: Optional[Sequence[str]] | None = None,
 ) -> None:
+    sets = ["updated_at = NOW()"]
+    params: dict[str, Any] = {"fid": file_id}
+
+    if refined_text is not None:
+        sets += ["refined_text = :ref"]
+        params["ref"] = refined_text
+    if raw_text is not None:              # ★
+        sets += ["raw_text = :raw"]
+        params["raw"] = raw_text
+    if quality_score is not None:
+        sets += ["quality_score = :qs"]
+        params["qs"] = quality_score
+    if tags is not None:
+        sets += ["tags = :tags"]
+        params["tags"] = _normalize_tags(tags)
+
+    sql = f"UPDATE files_text SET {', '.join(sets)} WHERE file_id = :fid"
     with DB_ENGINE.begin() as conn:
-        conn.execute(
-            sql_text(
-                """
-                UPDATE files_text
-                   SET refined_text  = :ref,
-                       quality_score = :qs,
-                       tags          = :tags,
-                       updated_at    = NOW()
-                 WHERE file_id       = :fid
-                """
-            ),
-            {
-                "ref": refined_text,
-                "qs": quality_score,
-                "tags": _normalize_tags(tags),
-                "fid": file_id,
-            },
-        )
+        conn.execute(sql_text(sql), params)
+
 
 # ──────────────────────────────────────────────────────────
 # REM: 埋め込み関連

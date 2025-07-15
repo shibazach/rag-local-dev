@@ -1,4 +1,4 @@
-<!-- app/templates/ingest.html (更新日時: 2025-07-13 09:20JST) -->
+<!-- REM: app/templates/ingest.html（更新日時: 2025-07-16 00:10 JST） -->
 {% extends "base.html" %}
 {% block content %}
 
@@ -83,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // REM: SSE & Abort 用
   let controller, es;
   const fileContainers = {};   // fileName → section div
-  const fileStartTime  = {};   // fileName → Date.now()
 
   // REM: 処理開始
   startBtn.onclick = async () => {
@@ -102,20 +101,17 @@ document.addEventListener('DOMContentLoaded', () => {
     es = new EventSource('/ingest/stream');
     es.onmessage = evt => {
       const d = JSON.parse(evt.data);
-      console.log('REM: SSE', d);      // REM: デバッグ出力
 
-      // REM: 全完了
+      /* ==================== 全完了 ==================== */
       if (d.done) {
         es.close();
-        const fin = document.createElement('div');
-        fin.textContent = '✅ 全処理完了';
-        paneBottom.prepend(fin);
+        paneBottom.prepend(Object.assign(document.createElement('div'), {textContent:'✅ 全処理完了'}));
         startBtn.disabled  = false;
         cancelBtn.disabled = true;
         return;
       }
 
-      // REM: ファイル開始
+      /* ==================== ファイルセクション確保 ==================== */
       if (!fileContainers[d.file]) {
         if (paneBottom.firstChild) paneBottom.prepend(document.createElement('br'));
 
@@ -140,35 +136,51 @@ document.addEventListener('DOMContentLoaded', () => {
         paneBottom.prepend(cont);
 
         fileContainers[d.file] = sec;
-        fileStartTime[d.file]  = Date.now();
       }
       const section = fileContainers[d.file];
 
-      // REM: ページ開始
-      if (d.step.startsWith('Page ')) {
+      /* ==================== ページ見出し ==================== */
+      if (d.step && d.step.startsWith('Page ')) {
         const ph = document.createElement('div'); ph.className='page-header';
         ph.textContent = d.step;
         section.prepend(ph);
         return;
       }
 
-      // REM: details / div 出力
-      const txt   = (d.full_text ?? d.preview ?? '').trim();   // REM: fallback 追加
-      const label = d.step + (d.duration ? ` (${d.duration}s)` : '');
-      let el;
-
-      if (txt) {
-        el = document.createElement('details');
-        const sum = document.createElement('summary'); sum.textContent = label;
-        el.appendChild(sum);
-
-        const pre = document.createElement('pre');
-        pre.textContent = txt.replace(/\n{3,}/g, '\n\n');      // REM: 空行 3→2
-        el.appendChild(pre);
-      } else {
-        el = document.createElement('div'); el.textContent = label;
+      /* ==================== prompt_text / refined_text 本文反映 ==================== */
+      if (d.step === 'prompt_text' || d.step === 'refined_text') {
+        const cat  = d.step === 'prompt_text' ? '使用プロンプト全文' : 'LLM整形結果全文';
+        const part = d.part ?? 'all';
+        const detail = section.querySelector(`details[data-cat="${cat}"][data-part="${part}"]`);
+        if (detail) {
+          let pre = detail.querySelector('pre');
+          if (!pre) {
+            pre = document.createElement('pre');
+            detail.appendChild(pre);
+          }
+          pre.textContent = (d.content || '').replace(/\n{3,}/g, '\n\n');
+        }
+        return;   // 新規行は作らない
       }
-      section.prepend(el);
+
+      /* ==================== ラベル行（使用プロンプト全文 / LLM整形結果全文 / その他） ==================== */
+      const label = d.step + (d.duration ? ` (${d.duration}s)` : '');
+      const isDetail = d.step && (d.step.startsWith('使用プロンプト全文') || d.step.startsWith('LLM整形結果全文'));
+
+      if (isDetail) {
+        const [cat, partLabel] = d.step.split(' part:');
+        const dt = document.createElement('details');
+        dt.dataset.cat  = cat;
+        dt.dataset.part = partLabel || 'all';
+
+        const sum = document.createElement('summary'); sum.textContent = label;
+        dt.appendChild(sum);
+        section.prepend(dt);
+      } else {
+        const div = document.createElement('div');
+        div.textContent = label;
+        section.prepend(div);
+      }
     };
   };
 

@@ -1,83 +1,38 @@
-<!-- app/templates/ingest.html @2025-07-11 10:33 JST -->
+<!-- app/templates/ingest.html (更新日時: 2025-07-13 09:20JST) -->
 {% extends "base.html" %}
 {% block content %}
 
 <style>
   /* REM: ペイン上下分割 */
-  #ingest-container {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 2em);
-  }
-  #pane-top {
-    flex: 0 0 auto;
-    padding-bottom: 1em;
-    border-bottom: 1px solid #ddd;
-  }
-  #pane-bottom {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 1em 1em 1em 0;
-  }
+  #ingest-container { display:flex; flex-direction:column; height:calc(100vh - 2em); }
+  #pane-top         { flex:0 0 auto; padding-bottom:1em; border-bottom:1px solid #ddd; }
+  #pane-bottom      { flex:1 1 auto; overflow-y:auto; padding:1em 1em 1em 0; }
 
-  /* REM: 帯付きファイル名 */
-  .file-header {
-    background: #eef;
-    padding: 4px 8px;
-    font-weight: bold;
-    margin-bottom: 0.5em;
-  }
+  /* REM: ファイル・ページ表示 */
+  .file-header  { background:#eef; padding:4px 8px; font-weight:bold; margin-bottom:0.5em; }
+  .file-progress{ font-size:0.9em; color:#555; margin-left:1ch; margin-bottom:0.5em; }
+  .page-header  { margin-left:1ch; font-style:italic; margin-bottom:0.5em; }
+  .file-section > div:not(.page-header), .file-section > details { margin-left:2ch; }
 
-  /* REM: ファイル進捗表示 */
-  .file-progress {
-    font-size: 0.9em;
-    color: #555;
-    margin-left: 1ch;
-    margin-bottom: 0.5em;
-  }
-
-  /* REM: ページ開始 */
-  .page-header {
-    margin-left: 1ch;
-    font-style: italic;
-    margin-bottom: 0.5em;
-  }
-
-  /* REM: アイテムインデント */
-  .file-section > div:not(.page-header),
-  .file-section > details {
-    margin-left: 2ch;
-  }
-
-  /* REM: カード風 */
-  #pane-bottom details {
-    width: 100%;
-    box-sizing: border-box;
-    margin-bottom: 8px;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #fafafa;
-  }
-  #pane-bottom details pre {
-    white-space: pre-wrap;
-    word-break: break-word;
-    margin-top: 8px;
-  }
+  /* REM: details カード風 */
+  #pane-bottom details { width:100%; box-sizing:border-box; margin-bottom:8px;
+                         padding:12px; border:1px solid #ddd; border-radius:4px; background:#fafafa; }
+  #pane-bottom details pre { white-space:pre-wrap; word-break:break-word; margin-top:8px; }
 </style>
 
 <div id="ingest-container">
   <div id="pane-top">
     <!-- REM: 入力フォーム -->
     <h1 class="page-title">✏️ データ整形/登録</h1>
+
     <form id="ingest-form">
-      <!-- REM: フォルダ選択 -->
+      <!-- REM: フォルダ or ファイル入力 -->
       <div class="form-section">
         {% include "partials/ingest/ingest_header.html" %}
         {% include "partials/ingest/folder_modal.html" %}
       </div><br>
 
-      <!-- REM: 整形プロンプト選択 -->
+      <!-- REM: LLM 整形プロンプト -->
       <div class="form-section">
         <label for="refine-prompt">📝 整形プロンプト：</label>
         <select id="refine-prompt" name="refine_prompt_key">
@@ -87,7 +42,7 @@
         </select>
       </div>
 
-      <!-- REM: 埋め込みモデルチェック -->
+      <!-- REM: 埋め込みモデル選択 -->
       <div class="form-section">
         <label>📝 埋め込みモデル：</label>
         {% for key, config in embedding_options.items() %}
@@ -98,13 +53,13 @@
         {% endfor %}
       </div><br>
 
-      <!-- REM: 上書き設定 -->
+      <!-- REM: オプション -->
       <div class="form-section">
         <label>既存上書き（overwrite）：<input type="checkbox" name="overwrite_existing" value="true"></label><br>
         <label>質スコア閾値：<input type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0"></label>
       </div><br>
 
-      <!-- REM: アクションボタン -->
+      <!-- REM: 実行ボタン -->
       <div class="form-actions">
         <button type="button" id="start-btn">🚀 処理開始</button>
         <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
@@ -112,110 +67,119 @@
     </form>
   </div>
 
-  <!-- REM: ログ出力領域 -->
+  <!-- REM: 処理ログ出力エリア -->
   <div id="pane-bottom"></div>
 </div>
 
 <script>
-  /* REM: クライアントサイドスクリプト */
+// REM: DOM 構築完了後に初期化
+document.addEventListener('DOMContentLoaded', () => {
+
+  // REM: 要素取得
   const startBtn   = document.getElementById('start-btn');
   const cancelBtn  = document.getElementById('cancel-btn');
   const paneBottom = document.getElementById('pane-bottom');
-  let controller, es, fileContainers = {}, fileStartTime = {};
 
-  // REM: 処理開始時のハンドラ
+  // REM: SSE & Abort 用
+  let controller, es;
+  const fileContainers = {};   // fileName → section div
+  const fileStartTime  = {};   // fileName → Date.now()
+
+  // REM: 処理開始
   startBtn.onclick = async () => {
-    // REM: ボタン状態切替
-    startBtn.disabled = true;
+    startBtn.disabled  = true;
     cancelBtn.disabled = false;
     paneBottom.innerHTML = '';
 
-    // REM: リクエスト中止用コントローラ
+    // REM: POST /ingest
     controller = new AbortController();
     const form = new FormData(document.getElementById('ingest-form'));
-    // REM: サブフォルダ含めるチェック状態を常に送信
-    form.append("include_subdirs", document.getElementById("include-subdirs").checked ? "true" : "false");
+    form.append('include_subdirs',
+      document.getElementById('include-subdirs').checked ? 'true' : 'false');
+    await fetch('/ingest', { method:'POST', body:form, signal:controller.signal });
 
-    // REM: ingest登録API実行
-    await fetch('/ingest', { method: 'POST', body: form, signal: controller.signal });
-
-    // REM: SSE 接続開始
+    // REM: SSE /ingest/stream
     es = new EventSource('/ingest/stream');
     es.onmessage = evt => {
       const d = JSON.parse(evt.data);
+      console.log('REM: SSE', d);      // REM: デバッグ出力
 
-      // REM: 全完了処理
+      // REM: 全完了
       if (d.done) {
         es.close();
-        const doneDiv = document.createElement('div');
-        doneDiv.textContent = '✅ 全処理完了';
-        paneBottom.insertBefore(doneDiv, paneBottom.firstChild);
-        startBtn.disabled = false;
+        const fin = document.createElement('div');
+        fin.textContent = '✅ 全処理完了';
+        paneBottom.prepend(fin);
+        startBtn.disabled  = false;
         cancelBtn.disabled = true;
         return;
       }
 
-      // REM: 新ファイル開始処理
+      // REM: ファイル開始
       if (!fileContainers[d.file]) {
-        if (paneBottom.firstChild) paneBottom.insertBefore(document.createElement('br'), paneBottom.firstChild);
-        fileStartTime[d.file] = Date.now();
-        const cont = document.createElement('div'); cont.className = 'file-container';
-        const hdr = document.createElement('div'); hdr.className = 'file-header';
-        const a = document.createElement('a');
-        a.textContent = d.file;
-        a.href = `/viewer/${d.file_id}`;
-        a.target = '_blank';
-        hdr.appendChild(a);
+        if (paneBottom.firstChild) paneBottom.prepend(document.createElement('br'));
+
+        const cont = document.createElement('div');   // container
+        const hdr  = document.createElement('div'); hdr.className='file-header';
+
+        const link = document.createElement('a');
+        link.textContent = d.file;
+        link.href   = `/viewer/${d.file_id}`;
+        link.target = '_blank';
+        hdr.appendChild(link);
         cont.appendChild(hdr);
+
         if (d.index && d.total) {
-          const prog = document.createElement('div'); prog.className = 'file-progress';
+          const prog = document.createElement('div'); prog.className='file-progress';
           prog.textContent = `${d.index}/${d.total}番目ファイル処理中…`;
           cont.appendChild(prog);
         }
-        const sec = document.createElement('div'); sec.className = 'file-section';
+
+        const sec = document.createElement('div'); sec.className='file-section';
         cont.appendChild(sec);
-        paneBottom.insertBefore(cont, paneBottom.firstChild);
+        paneBottom.prepend(cont);
+
         fileContainers[d.file] = sec;
+        fileStartTime[d.file]  = Date.now();
       }
       const section = fileContainers[d.file];
 
-      // REM: ページ開始表示
+      // REM: ページ開始
       if (d.step.startsWith('Page ')) {
-        const ph = document.createElement('div'); ph.className = 'page-header';
+        const ph = document.createElement('div'); ph.className='page-header';
         ph.textContent = d.step;
-        section.insertBefore(ph, section.firstChild);
+        section.prepend(ph);
         return;
       }
 
-      // REM: ログ生成（details or div）
+      // REM: details / div 出力
+      const txt   = (d.full_text ?? d.preview ?? '').trim();   // REM: fallback 追加
       const label = d.step + (d.duration ? ` (${d.duration}s)` : '');
       let el;
-      if (d.full_text) {
-        // REM: 折りたたみ詳細要素を生成
+
+      if (txt) {
         el = document.createElement('details');
-        const sum = document.createElement('summary');
-        sum.textContent = label;
+        const sum = document.createElement('summary'); sum.textContent = label;
         el.appendChild(sum);
+
         const pre = document.createElement('pre');
-        // REM: 空行3連以上を2行に圧縮
-        pre.textContent = d.full_text.replace(/\n{3,}/g, '\n\n');
+        pre.textContent = txt.replace(/\n{3,}/g, '\n\n');      // REM: 空行 3→2
         el.appendChild(pre);
       } else {
-        // REM: 単純テキスト表示
-        el = document.createElement('div');
-        el.textContent = label;
+        el = document.createElement('div'); el.textContent = label;
       }
-      section.insertBefore(el, section.firstChild);
+      section.prepend(el);
     };
   };
 
-  // REM: キャンセル時のハンドラ
+  // REM: キャンセル
   cancelBtn.onclick = () => {
     controller?.abort();
     es?.close();
-    startBtn.disabled = false;
+    startBtn.disabled  = false;
     cancelBtn.disabled = true;
   };
+}); // REM: DOMContentLoaded end
 </script>
 
 {% endblock %}

@@ -1,4 +1,4 @@
-# REM: db/handler.py（更新日時: 2025-07-13 00:00 JST）
+# REM: db/handler.py（更新日時: 2025-07-15 18:30 JST）
 """
 DB 操作ヘルパー（UUID ＋ 3 テーブル構成）
 -------------------------------------------------
@@ -44,6 +44,40 @@ DEFAULT_MIME = "application/octet-stream"
 # REM: タグを DB 用配列に変換
 def _normalize_tags(tags: Optional[Sequence[str]]) -> list[str]:
     return list(dict.fromkeys([t.strip() for t in (tags or []) if t.strip()]))
+
+
+# REM: -----------------------------------------------------------------------------
+# REM: 開発モード専用、DB 初期化ユーティリティ
+# REM: -----------------------------------------------------------------------------
+def reset_dev_database() -> None:
+    """
+    DEVELOPMENT_MODE = True のときに呼び出される。
+    - files_meta / files_blob / files_text を TRUNCATE
+    - 埋め込みテーブル ( *_<dim> 形式) を動的に TRUNCATE
+    """
+    from sqlalchemy import text as _t
+    if not DEVELOPMENT_MODE:
+        return
+
+    with DB_ENGINE.begin() as conn:
+        # --- メイン 3 テーブル --------------------------------------------------
+        conn.execute(_t("TRUNCATE files_meta, files_blob, files_text CASCADE"))
+
+        # --- 埋め込みテーブル一覧を取得 ----------------------------------------
+        tbl_rows = conn.execute(
+            _t("""
+                SELECT tablename
+                  FROM pg_tables
+                 WHERE schemaname = 'public'
+                   AND tablename ~ '^[a-zA-Z0-9_]+_[0-9]+$'
+            """)
+        ).fetchall()
+
+        for (tbl,) in tbl_rows:
+            conn.execute(_t(f'TRUNCATE "{tbl}"'))
+
+    debug_print("[DEBUG] reset_dev_database: all tables truncated.")
+
 
 # ──────────────────────────────────────────────────────────
 # REM: ファイル一括 INSERT
@@ -264,3 +298,30 @@ def fetch_top_files(query_vec: str, table_name: str, limit: int = 10) -> list[di
     with DB_ENGINE.connect() as conn:
         rows = conn.execute(sql_text(sql), {"limit": limit}).mappings().all()
     return [dict(r) for r in rows]
+
+
+# REM: 指定 UUID の古い埋め込みレコードを削除（overwrite 用）
+def delete_embedding_for_file(table_name: str, file_id: str) -> None:
+    with DB_ENGINE.begin() as conn:
+        conn.execute(
+            sql_text(f'DELETE FROM "{table_name}" WHERE file_id = :fid'),
+            {"fid": file_id}
+        )
+
+# REM: -----------------------------------------------------------------------------
+# REM:  ファイル処理ステータスを更新する（現状はダミー: ログだけ吐いて終了）
+# REM:  実際に使う場合は files_meta などに status / note カラムを追加した上で
+# REM:  SQL UPDATE を書いてください。
+# REM: -----------------------------------------------------------------------------
+def update_file_status(file_id: str, *, status: str, note: str | None = None) -> None:
+    """インジェスト進捗用ステータス更新（ダミー実装）"""
+    import logging
+    logging.getLogger("ingest").debug(
+        "update_file_status: %s status=%s note=%s", file_id, status, note
+    )
+    # REM: ここに UPDATE 文を書く想定:
+    # with DB_ENGINE.begin() as conn:
+    #     conn.execute(
+    #         text("UPDATE files_meta SET status=:st, note=:nt WHERE id=:fid"),
+    #         {"st": status, "nt": note, "fid": file_id},
+    #     )

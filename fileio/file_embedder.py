@@ -15,7 +15,7 @@ from src.config import (
 )
 
 from db.handler import (
-    upsert_file,
+    insert_file_full,
     delete_embedding_for_file,
     ensure_embedding_table,
     bulk_insert_embeddings

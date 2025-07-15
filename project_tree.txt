@@ -1,11 +1,4 @@
 .
-├── .back
-│   ├── scripts
-│   │   └── views
-│   ├── src
-│   │   └── ocr_utils
-│   └── test
-│       └── services
 ├── .devcontainer
 │   ├── .streamlit
 │   │   └── config.toml
@@ -15,17 +8,21 @@
 │   ├── devcontainer.cpu.jsonc
 │   ├── devcontainer.gpu.jsonc
 │   ├── devcontainer.json
-│   └── init_pgvector.sql
+│   └── init_schema.sql
 ├── .dockerignore
 ├── .gitignore
+├── .pytest_cache
+│   ├── .gitignore
+│   ├── CACHEDIR.TAG
+│   ├── README.md
+│   └── v
+│       └── cache
 ├── .vscode
 │   ├── launch.json
 │   └── settings.json
 ├── __init__.py
 ├── app
 │   ├── __init__.py
-│   ├── fastapi
-│   │   └── services
 │   ├── fastapi_main.py
 │   ├── routes
 │   │   ├── __init__.py
@@ -71,7 +68,9 @@
 ├── db
 │   ├── __init__.py
 │   ├── handler.py
-│   └── schema.py
+│   ├── handler.py_back
+│   ├── schema.py
+│   └── 構想.txt
 ├── docker-compose.cpu.yml
 ├── docker-compose.gpu.yml
 ├── docker-compose.yml
@@ -164,41 +163,10 @@
 │   ├── llm_utils.py
 │   ├── prompt_loader.py
 │   ├── refiner.py
-│   └── scorer.py
+│   ├── scorer.py
+│   └── summary.py
 ├── logs
 │   ├── full_logs
-│   │   ├── 0516-1 (H14.9) ｸﾛﾑﾗﾌﾟﾁｬｰ.pdf.log
-│   │   ├── 0516-1Ａ (H14.9) ｸﾛﾑﾗﾌﾟﾁｬｰ.pdf.log
-│   │   ├── 0516-2 (H14.9) ｸﾛﾑﾗﾌﾟﾁｬｰ写真.pdf.log
-│   │   ├── 0516-2Ａ (H14.9) ｸﾛﾑﾗﾌﾟﾁｬｰ写真.pdf.log
-│   │   ├── 0526-1(H14.10) ラプチャー.pdf.log
-│   │   ├── 0526-2(H14.10) ラプチャー写真.pdf.log
-│   │   ├── 0792(H16.2)ＡＬ溶接割れ結果.pdf.log
-│   │   ├── 1635　(H23.4)ＵＳ－２.pdf.log
-│   │   ├── 3353(2022.10) アルミ引張試験片観察結果.pdf.log
-│   │   ├── 3378(2022.12)MHI相模原ラジエータき裂調査.pdf.log
-│   │   ├── 3393(2023.1) オイルクーラー漏洩箇所観察結果報告書.pdf.log
-│   │   ├── 3411(2023.4) 水素熱交 破損調査.pdf.log
-│   │   ├── 3423(2023.5) AM造形品 引張試験片破面観察等.pdf.log
-│   │   ├── 3425(2023.5) 成膜装置で使用するスプリングの破断面調査.pdf.log
-│   │   ├── 3444(2023.7)ハウジングき裂調査.pdf.log
-│   │   ├── 3481(2023.11) 拡散接合 引張試験片観察結果報告書.pdf.log
-│   │   ├── 3482(2023.11) AM材 引張試験片観察結果報告書.pdf.log
-│   │   ├── 3491(2024.1)C-2熱交換器 破損調査.pdf.log
-│   │   ├── 3496(2024.2)QS62-125 クリセントき裂調査.pdf.log
-│   │   ├── 3503(2024.4)QD4R40_破損調査.pdf.log
-│   │   ├── 3505(2024.4)VCSレキュペレータ試験供試体_破損調査.pdf.log
-│   │   ├── 3506(2024.5) アルミ疲労試験片_破面観察.pdf.log
-│   │   ├── 3514(2024.6)試験供試体破損調査.pdf.log
-│   │   ├── 3521(2024.7)P1 BMV破損調査.pdf.log
-│   │   ├── 3521A(2024.7)P1 BMV破損調査.pdf.log
-│   │   ├── 3562(2025.2) 溶接き裂調査.pdf.log
-│   │   ├── 3570(2025.3)試験供試体破損調査.pdf.log
-│   │   ├── 3577(2025.5)ラプチャー試験片破面観察.pdf.log
-│   │   ├── 3577A(2025.5)ラプチャー試験片破面観察.pdf.log
-│   │   ├── 3583(2025.6)ラプチャー試験片破面観察.pdf.log
-│   │   ├── 3584(2025.6) アルミ製リングギア破面調査.pdf.log
-│   │   └── data4.txt.log
 │   ├── invalid_csv_log.txt
 │   └── refiner_log.csv
 ├── ocr
@@ -214,6 +182,7 @@
 │   ├── spellcheck.py
 │   ├── user_dict.csv
 │   └── word_mistakes.csv
+├── project_tree2.txt
 ├── requirements.txt
 ├── run_app.py
 ├── src
@@ -222,6 +191,8 @@
 │   ├── config.py
 │   ├── error_handler.py
 │   └── utils.py
-└── switch_compose.sh
+├── switch_compose.sh
+└── tests
+    └── test_db_handler.py
 
-35 directories, 190 files
+30 directories, 166 files

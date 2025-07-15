@@ -9,7 +9,8 @@ CREATE TABLE files_meta (
     file_name   TEXT        NOT NULL,
     mime_type   TEXT        NOT NULL,
     size        BIGINT      NOT NULL,
-    created_at  TIMESTAMPTZ DEFAULT NOW()
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (file_name, size) 
     -- 後日追加予定: image_pages INT[] DEFAULT '{}', chart_pages INT[] DEFAULT '{}'
 );
 
@@ -36,15 +37,6 @@ CREATE TABLE files_text (
 );
 
 CREATE INDEX idx_files_text_tags ON files_text USING GIN (tags);
-
--- embeddings
-CREATE TABLE embeddings (
-    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    file_id     UUID REFERENCES files_meta(id) ON DELETE CASCADE,
-    chunk_index INT   NOT NULL,
-    vector      VECTOR,
-    model_name  TEXT  NOT NULL
-);
 
 /* 任意: ベクトル専用インデックス
 CREATE INDEX idx_embeddings_vector

@@ -1,19 +1,19 @@
-// /workspace/app/fastapi/static/js/ingest.js 2025-07-11 13:16 JST
+// /workspace/app/fastapi/static/js/ingest.js  (更新日時: 2025-07-15 0845 JST)
 // REM: フォルダ/ファイル選択切り替えとフォーム制御
 document.addEventListener("DOMContentLoaded", () => {
-  const overlay = document.getElementById("folder-overlay");
-  const dlg     = document.getElementById("folder-dialog");
-  const listEl  = document.getElementById("folder-list");
-  const bcEl    = document.getElementById("folder-breadcrumbs");
-  const inputFolderEl      = document.getElementById("input-folder");
-  const inputFilesEl       = document.getElementById("input-files");
+  const overlay   = document.getElementById("folder-overlay");
+  const dlg       = document.getElementById("folder-dialog");
+  const listEl    = document.getElementById("folder-list");
+  const bcEl      = document.getElementById("folder-breadcrumbs");
+  const inputFolderEl        = document.getElementById("input-folder");
+  const inputFilesEl         = document.getElementById("input-files");
   const selectedFilesDisplay = document.getElementById("selected-files-display");
 
-  // 初期パスを保持
+  /* 初期パスを保持 */
   const basePath = inputFolderEl.value || "";
   let currentPath = basePath;
 
-  // REM: モード切替（フォルダ or ファイル）
+  // REM: モード切替（フォルダ / ファイル）
   document.getElementsByName("input_mode").forEach(radio => {
     radio.addEventListener("change", () => {
       const folderMode = document.getElementById("folder-mode");
@@ -30,13 +30,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // REM: フォルダモーダル読み込み
   async function loadFolders(path) {
-    currentPath = path;
+    currentPath      = path;
     bcEl.textContent = "/" + path;
-    const res = await fetch(`/api/list-folders?path=${encodeURIComponent(path)}`);
-    const { folders } = await res.json();
+    const res        = await fetch(`/api/list-folders?path=${encodeURIComponent(path)}`);
+    const { folders = [] } = await res.json();
     listEl.innerHTML = "";
 
-    // 「🔙 上へ」は basePath を超えない範囲で表示
     if (currentPath !== basePath) {
       const up = document.createElement("li");
       up.textContent = "🔙 上へ";
@@ -51,8 +50,8 @@ document.addEventListener("DOMContentLoaded", () => {
     folders.forEach(name => {
       const li = document.createElement("li");
       li.textContent = name;
-      li.onclick = () => loadFolders(path ? `${path}/${name}` : name);
-      li.ondblclick = () => {
+      li.onclick     = () => loadFolders(path ? `${path}/${name}` : name);
+      li.ondblclick  = () => {
         inputFolderEl.value = path ? `${path}/${name}` : name;
         closeDialog();
       };
@@ -60,13 +59,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function openDialog() {
-    overlay.style.display = dlg.style.display = 'block';
-    loadFolders(basePath);
-  }
-  function closeDialog() {
-    overlay.style.display = dlg.style.display = 'none';
-  }
+  function openDialog()  { overlay.style.display = dlg.style.display = "block"; loadFolders(basePath); }
+  function closeDialog() { overlay.style.display = dlg.style.display = "none"; }
 
   document.getElementById("browse-folder").onclick       = openDialog;
   document.getElementById("close-folder-dialog").onclick = closeDialog;
@@ -79,8 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // REM: ファイル選択表示
   inputFilesEl.addEventListener("change", () => {
     const files = Array.from(inputFilesEl.files).map(f => f.name);
-    selectedFilesDisplay.value = files.join("\n");
-    // 高さ自動調整
+    selectedFilesDisplay.value      = files.join("\n");
     selectedFilesDisplay.style.height = "auto";
     selectedFilesDisplay.style.height = selectedFilesDisplay.scrollHeight + "px";
   });

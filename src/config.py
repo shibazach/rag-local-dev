@@ -1,8 +1,8 @@
 # src/config.py
 import os, torch
-
 from sqlalchemy import create_engine
 from langchain_ollama import OllamaLLM
+import logging
 
 # REM: 環境変数から設定を取得
 MECAB_DICT_PATH = "/var/lib/mecab/dic/ipadic-utf8"
@@ -53,3 +53,10 @@ EMBEDDING_OPTIONS = {
 
 # REM: デフォルトは e5 を優先（番号順）
 DEFAULT_EMBEDDING_OPTION = "1"
+
+# REM: ログ設定
+logging.basicConfig(
+    level=logging.DEBUG if DEVELOPMENT_MODE else logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+LOGGER = logging.getLogger("rag")

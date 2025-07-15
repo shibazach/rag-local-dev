@@ -1,4 +1,4 @@
-<!-- app/fastapi/templates/partials/ingest/folder_modal.html @2025-07-11 12:30 JST -->
+<!-- REM: templates/partials/ingest/folder_modal.html（更新日時: 2025-07-13 JST） -->
 <div id="folder-overlay"></div>
 
 <div id="folder-dialog" class="modal">
@@ -18,36 +18,34 @@
 <style>
   /* REM: モーダル共通スタイル */
   #folder-overlay {
-    display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.4); z-index: 99;
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.4); z-index:99;
   }
   #folder-dialog {
-    display: none; position: fixed;
-    top: 10%; left: 50%; transform: translateX(-50%);
-    width: 400px; max-height: 70vh;
-    background: #fff; border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 100; overflow: hidden;
+    display:none; position:fixed;
+    top:10%; left:50%; transform:translateX(-50%);
+    width:400px; max-height:70vh;
+    background:#fff; border-radius:8px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+    z-index:100; overflow:hidden;
   }
   #folder-dialog header {
-    background: #007acc; color: #fff;
-    padding: 8px 12px; display: flex;
-    justify-content: space-between; align-items: center;
+    background:#007acc; color:#fff;
+    padding:8px 12px; display:flex;
+    justify-content:space-between; align-items:center;
   }
-  #folder-dialog .body {
-    padding: 8px 12px; overflow-y: auto; max-height: 60vh;
-  }
+  #folder-dialog .body { padding:8px 12px; overflow-y:auto; max-height:60vh; }
   #folder-dialog .breadcrumbs { font-size:0.9em; color:#555; margin-bottom:4px; }
   #folder-list { list-style:none; padding:0; margin:0; }
-  #folder-list li {
-    padding:6px 8px; cursor:pointer; border-radius:4px;
-  }
+  #folder-list li { padding:6px 8px; cursor:pointer; border-radius:4px; }
   #folder-list li:hover { background:#f0f8ff; }
   #folder-dialog .footer { padding:8px 12px; text-align:right; }
 </style>
 
+<!-- ─────────────────────────────────────────────── -->
+<!-- スクリプト① : モーダル本体ロジック（IIFE でスコープを閉じる） -->
 <script>
-  // REM: フォルダモーダル表示／非表示とツリー読み込み
+(() => {
   const overlay = document.getElementById("folder-overlay");
   const dlg     = document.getElementById("folder-dialog");
   const listEl  = document.getElementById("folder-list");
@@ -55,45 +53,54 @@
   const inputEl = document.getElementById("input-folder");
   let currentPath = "";
 
+  /* --- フォルダリスト取得 & 描画 --------------------------- */
   async function loadFolders(path) {
-    currentPath = path;
-    bcEl.textContent = '/' + (path || '');
-    const res = await fetch(`/api/list-folders?path=${encodeURIComponent(path || '')}`);
-    const { folders } = await res.json();
-    listEl.innerHTML = '';
+    currentPath            = path;
+    bcEl.textContent       = '/' + (path || '');
+    const res              = await fetch(`/api/list-folders?path=${encodeURIComponent(path || '')}`);
+    const { folders = [] } = await res.json();
+    listEl.innerHTML       = '';
+
+    /* 上へ… */
     if (currentPath) {
       const up = document.createElement('li');
       up.textContent = '🔙 上へ';
-      up.onclick = () => loadFolders(currentPath.split('/').slice(0, -1).join('/'));
+      up.onclick     = () => loadFolders(currentPath.split('/').slice(0, -1).join('/'));
       listEl.appendChild(up);
     }
+    /* 子フォルダ一覧 */
     folders.forEach(name => {
-      const li = document.createElement('li');
+      const li      = document.createElement('li');
       li.textContent = name;
-      li.onclick   = () => loadFolders(currentPath ? `${currentPath}/${name}` : name);
-      li.ondblclick = () => {
-        inputEl.value = currentPath ? `${currentPath}/${name}` : name;
-        closeDialog();
-      };
+      li.onclick     = () => loadFolders(currentPath ? `${currentPath}/${name}` : name);
+      li.ondblclick  = () => { inputEl.value = currentPath ? `${currentPath}/${name}` : name; closeDialog(); };
       listEl.appendChild(li);
     });
   }
 
-  function openDialog() {
-    overlay.style.display = dlg.style.display = 'block';
-    loadFolders('');
-  }
-  function closeDialog() {
-    overlay.style.display = dlg.style.display = 'none';
-  }
+  /* --- ダイアログ開閉 ------------------------------------- */
+  function openDialog()  { overlay.style.display = dlg.style.display = 'block'; loadFolders(''); }
+  function closeDialog() { overlay.style.display = dlg.style.display = 'none'; }
 
-  document.getElementById("browse-folder").onclick       = openDialog;
+  /* --- ボタン＆背景クリック ------------------------------- */
   document.getElementById("close-folder-dialog").onclick = closeDialog;
   document.getElementById("confirm-folder").onclick      = () => {
-    if (currentPath) {
-      inputEl.value = currentPath;
-      closeDialog();
-    }
+    if (currentPath) { inputEl.value = currentPath; closeDialog(); }
   };
   overlay.onclick = closeDialog;
+
+  /* --- 他スクリプトから呼び出せるよう公開 ---------------- */
+  window.openFolderModal = openDialog;
+})();
+</script>
+
+<!-- ─────────────────────────────────────────────── -->
+<!-- スクリプト② : メイン画面側ボタンに handler を付与（存在確認付き） -->
+<script>
+(() => {
+  document.addEventListener('DOMContentLoaded', () => {
+    const browseBtn = document.getElementById("browse-folder");
+    if (browseBtn) browseBtn.onclick = () => window.openFolderModal();
+  });
+})();
 </script>

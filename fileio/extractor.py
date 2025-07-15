@@ -1,4 +1,4 @@
-# fileio/extractor.py
+# fileio/extractor.py  最終更新 2025-07-08 00:00
 import os, json, csv, subprocess, tempfile
 from io import BytesIO
 from typing import List

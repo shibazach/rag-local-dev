@@ -15,6 +15,7 @@ services:
     restart: unless-stopped
     ports:
       - "8501:8501"
+      - "8000:8000"
     environment:
       DB_HOST: ragdb
       DB_PORT: "5432"
@@ -28,7 +29,8 @@ services:
       - ollama
     networks:
       - ragnet
-    command: bash
+    # command: bash
+    command: ["python3", "run_app.py", "fastapi"]
     stdin_open: true
     tty: true
     volumes:

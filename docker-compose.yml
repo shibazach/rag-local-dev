@@ -24,8 +24,6 @@ services:
       DB_PASSWORD: ragpass
       OLLAMA_BASE: http://ollama:11434
       PYTHONPATH: /workspace
-      USE_GPU: "1"  # GPU利用フラグを明示（config.py対応）
-      NVIDIA_VISIBLE_DEVICES: all
     depends_on:
       - ragdb
       - ollama
@@ -38,21 +36,6 @@ services:
     volumes:
       # ホストのプロジェクトルートを /workspace にマウント
       - ./:/workspace:cached
-
-    # 🔽🔽🔽 GPU 割当追加 🔽🔽🔽
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    devices:
-      - "/dev/nvidia0:/dev/nvidia0"
-      - "/dev/nvidiactl:/dev/nvidiactl"
-      - "/dev/nvidia-uvm:/dev/nvidia-uvm"
-      - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
-    gpus: all
 
   # PostgreSQL + pgvector
   ragdb:
@@ -72,7 +55,7 @@ services:
     ports:
       - "5432:5432"
 
-  # Ollama (GPU-enabled) 
+  # Ollama (CPU only) 
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -83,21 +66,5 @@ services:
       - ollama_data:/root/.ollama
     networks:
       - ragnet
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
-    environment:
-      NVIDIA_VISIBLE_DEVICES: all
-    # ── デバイスマッピング追加 ──
-    devices:
-      - "/dev/nvidia0:/dev/nvidia0"
-      - "/dev/nvidiactl:/dev/nvidiactl"
-      - "/dev/nvidia-uvm:/dev/nvidia-uvm"
-      - "/dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools"
-    gpus: all
     entrypoint: >
-      sh -c "ollama serve & sleep 5 && ollama pull gemma:7b && ollama pull nomic-embed-text && wait"
+      sh -c "ollama serve & sleep 5 && ollama pull phi4-mini && ollama pull nomic-embed-text && wait"

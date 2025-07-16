@@ -1,4 +1,4 @@
-<!-- app/templates/base.html  # REM: 最終更新 2025-07-10 17:55 -->
+<!-- app/templates/base.html  最終更新 2025-07-16 15:50 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -65,6 +65,33 @@
       <li><a href="/ingest">✏️ データ整形/登録</a></li>
       <li><a href="/chat">🔍 チャット検索</a></li>
     </ul>
+    <!-- REM: システムモニタリング表示用 -->
+    <hr>
+    <div id="system-monitor">
+      <p>CPU 使用率：<span id="cpu-usage">--</span>%</p>
+      <p id="gpu-info" style="display:none">
+        GPU 使用率：<span id="gpu-util">--</span>% /
+        消費電力：<span id="gpu-power">--</span>W
+      </p>
+    </div>
+    <!-- REM: システムモニタリング用スクリプト -->
+    <script>
+      setInterval(async () => {
+        try {
+          const res = await fetch('/metrics');
+          if (!res.ok) return;
+          const j = await res.json();
+          document.getElementById('cpu-usage').textContent = j.cpu.toFixed(1);
+          if (j.gpu) {
+            document.getElementById('gpu-info').style.display = 'block';
+            document.getElementById('gpu-util').textContent  = j.gpu.util;
+            document.getElementById('gpu-power').textContent = j.gpu.power.toFixed(1);
+          }
+        } catch (e) {
+          console.error('metrics fetch error:', e);
+        }
+      }, 3000);
+    </script>
   </nav>
   <main>
     {% block content %}{% endblock %}

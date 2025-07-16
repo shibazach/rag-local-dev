@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+  /* REM: ペイン上下分割 */
+  #ingest-container { display:flex; flex-direction:column; height:calc(100vh - 2em); }
+  #pane-top         { flex:0 0 auto; padding-bottom:1em; border-bottom:1px solid #ddd; }
+  #pane-bottom      { flex:1 1 auto; overflow-y:auto; padding:1em 1em 1em 0; }
+
+  /* REM: ファイル・ページ表示 */
+  .file-header  { background:#eef; padding:4px 8px; font-weight:bold; margin-bottom:0.5em; }
+  .file-progress{ font-size:0.9em; color:#555; margin-left:1ch; margin-bottom:0.5em; }
+  .page-header  { margin-left:1ch; font-style:italic; margin-bottom:0.5em; }
+  .file-section > div:not(.page-header), .file-section > details { margin-left:2ch; }
+
+  /* REM: details カード風 */
+  #pane-bottom details { width:100%; box-sizing:border-box; margin-bottom:8px;
+                         padding:12px; border:1px solid #ddd; border-radius:4px; background:#fafafa; }
+  #pane-bottom details pre { white-space:pre-wrap; word-break:break-word; margin-top:8px; }
+</style>
+
+<div id="ingest-container">
+  <div id="pane-top">
+    <!-- REM: 入力フォーム -->
+    <h1 class="page-title">✏️ データ整形/登録</h1>
+
+    <form id="ingest-form">
+      <!-- REM: フォルダ or ファイル入力 -->
+      <div class="form-section">
+        {% include "partials/ingest/ingest_header.html" %}
+        {% include "partials/ingest/folder_modal.html" %}
+      </div><br>
+
+      <!-- REM: LLM 整形プロンプト -->
+      <div class="form-section">
+        <label for="refine-prompt">📝 整形プロンプト：</label>
+        <select id="refine-prompt" name="refine_prompt_key">
+          {% for key in prompt_keys %}
+            <option value="{{ key }}">{{ key }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- REM: 埋め込みモデル選択 -->
+      <div class="form-section">
+        <label>📝 埋め込みモデル：</label>
+        {% for key, config in embedding_options.items() %}
+          <label>
+            <input type="checkbox" name="embed_models" value="{{ key }}" checked>
+            {{ loop.index }}. {{ config.model_name }}
+          </label>　　
+        {% endfor %}
+      </div><br>
+
+      <!-- REM: オプション -->
+      <div class="form-section">
+        <label>既存上書き（overwrite）：<input type="checkbox" name="overwrite_existing" value="true"></label><br>
+        <label>質スコア閾値：<input type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0"></label>
+      </div><br>
+
+      <!-- REM: 実行ボタン -->
+      <div class="form-actions">
+        <button type="button" id="start-btn">🚀 処理開始</button>
+        <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- REM: 処理ログ出力エリア -->
+  <div id="pane-bottom"></div>
+</div>
+
+<script>
+// REM: DOM 構築完了後に初期化
+document.addEventListener('DOMContentLoaded', () => {
+  const startBtn   = document.getElementById('start-btn');
+  const cancelBtn  = document.getElementById('cancel-btn');
+  const paneBottom = document.getElementById('pane-bottom');
+  let controller, es;
+  const fileContainers = {};
+
+  startBtn.onclick = async () => {
+    startBtn.disabled  = true;
+    cancelBtn.disabled = false;
+    paneBottom.innerHTML = '';
+
+    controller = new AbortController();
+    const form = new FormData(document.getElementById('ingest-form'));
+    form.append('include_subdirs',
+      document.getElementById('include-subdirs').checked ? 'true' : 'false');
+    await fetch('/ingest', { method:'POST', body:form, signal:controller.signal });
+
+    es = new EventSource('/ingest/stream');
+    es.onmessage = evt => {
+      const d = JSON.parse(evt.data);
+      if (!d.step || typeof d.step !== 'string' || !d.step.trim()) return;
+
+      // prompt_text / refined_text 本文挿入
+      if (d.step === 'prompt_text' || d.step === 'refined_text') {
+        const cat  = d.step === 'prompt_text' ? '使用プロンプト全文' : 'LLM整形結果全文';
+        const part = d.part ?? 'all';
+        const det  = paneBottom.querySelector(
+          `details[data-cat="${cat}"][data-part="${part}"]`);
+        if (det) {
+          let pre = det.querySelector('pre') || det.appendChild(document.createElement('pre'));
+          pre.textContent = (d.content || '').replace(/\n{3,}/g, '\n\n');
+        }
+        return;
+      }
+
+      // 見出しdetails生成
+      if (d.step.startsWith('使用プロンプト全文') || d.step.startsWith('LLM整形結果全文')) {
+        const [cat, partRaw] = d.step.split(' part:');
+        const part = partRaw || 'all';
+        if (!paneBottom.querySelector(`details[data-cat="${cat}"][data-part="${part}"]`)) {
+          const dt  = document.createElement('details');
+          dt.dataset.cat  = cat;
+          dt.dataset.part = part;
+          const sum = document.createElement('summary');
+          sum.textContent = d.step;
+          dt.appendChild(sum);
+          paneBottom.prepend(dt);
+        }
+        return;
+      }
+
+      // その他ステータス行
+      const div = document.createElement('div');
+      div.textContent = d.step;
+      paneBottom.prepend(div);
+
+      // 完了
+      if (d.done) {
+        es.close();
+        paneBottom.prepend(Object.assign(document.createElement('div'), {textContent:'✅ 全処理完了'}));
+        startBtn.disabled  = false;
+        cancelBtn.disabled = true;
+        return;
+      }
+
+      // ファイルセクション確保
+      if (!fileContainers[d.file]) {
+        if (paneBottom.firstChild) paneBottom.prepend(document.createElement('br'));
+        const cont = document.createElement('div');
+        const hdr  = document.createElement('div'); hdr.className='file-header';
+        const link = document.createElement('a');
+        link.textContent = d.file;
+        link.href   = `/viewer/${d.file_id}`;
+        link.target = '_blank';
+        hdr.appendChild(link);
+        cont.appendChild(hdr);
+        if (d.index && d.total) {
+          const prog = document.createElement('div'); prog.className='file-progress';
+          prog.textContent = `${d.index}/${d.total}番目ファイル処理中…`;
+          cont.appendChild(prog);
+        }
+        const sec = document.createElement('div'); sec.className='file-section';
+        cont.appendChild(sec);
+        paneBottom.prepend(cont);
+        fileContainers[d.file] = sec;
+      }
+      const section = fileContainers[d.file];
+
+      // ページ見出し
+      if (d.step.startsWith('Page ')) {
+        const ph = document.createElement('div'); ph.className='page-header';
+        ph.textContent = d.step;
+        section.prepend(ph);
+        return;
+      }
+
+      // ラベル行追加
+      const label = d.step + (d.duration ? ` (${d.duration}s)` : '');
+      const isDetail = d.step.startsWith('使用プロンプト全文') || d.step.startsWith('LLM整形結果全文');
+      if (isDetail) {
+        const [cat, partLabel] = d.step.split(' part:');
+        const dt = document.createElement('details');
+        dt.dataset.cat  = cat;
+        dt.dataset.part = partLabel || 'all';
+        const sum = document.createElement('summary'); sum.textContent = label;
+        dt.appendChild(sum);
+        section.prepend(dt);
+      } else {
+        const div2 = document.createElement('div');
+        div2.textContent = label;
+        section.prepend(div2);
+      }
+    };
+  };
+
+  cancelBtn.onclick = () => {
+    controller?.abort();
+    es?.close();
+    startBtn.disabled  = false;
+    cancelBtn.disabled = true;
+  };
+});
+</script>
+
+{% endblock %}

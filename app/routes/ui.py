@@ -17,7 +17,7 @@ from fastapi.responses import HTMLResponse
 
 # REM: ── SQLAlchemy / DB ─────────────────────────────
 from sqlalchemy import text as sql_text
-from src.config import DB_ENGINE, EMBEDDING_OPTIONS
+from src.config import DB_ENGINE, EMBEDDING_OPTIONS, OLLAMA_MODEL
 
 # REM: ── プロジェクト内 ───────────────────────────────
 from app.fastapi_main import templates
@@ -52,6 +52,7 @@ def ingest(request: Request):
         "request": request,
         "embedding_options": EMBEDDING_OPTIONS,
         "prompt_keys": list_prompt_keys(),
+        "llm_model": OLLAMA_MODEL,
     })
 
 

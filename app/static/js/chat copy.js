@@ -1,7 +1,5 @@
-// /workspace/app/static/js/chat.js  # REM: 最終更新 2025-07-10 17:20
+// /workspace/app/fastapi/static/js/chat.js  # REM: 最終更新 2025-07-10 17:20
 // REM: チャット検索 UI と再ベクトル化オーバーレイ制御
-
-console.log("✅ chat.js loaded");
 
 document.addEventListener("DOMContentLoaded", () => {
   const searchBtn = document.getElementById("search-btn");
@@ -42,8 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const res  = await fetch("/query", { method: "POST", body: form, signal });
       const json = await res.json();
 
-      console.log("★ fetch /query →", json);  // デバッグ: まずここで JSON の中身を確認！
-
       if (json.error) {
         resultsDiv.innerHTML = `<p style="color:red;">エラー: ${json.error}</p>`;
       } else {
@@ -71,16 +67,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // REM: 結果描画
   function renderResults(json) {
     resultsDiv.innerHTML = "";
-
-    // REM: チャンク統合モード
+    // チャンク統合モード
     if (json.mode === "チャンク統合") {
       answerDiv.innerHTML = `<h2>統合回答</h2><pre>${json.answer}</pre>`;
       answerDiv.style.display = "block";
       resultsDiv.innerHTML = `<h3>ソースファイル</h3>`;
       json.sources.forEach((src, i) => {
-        // フォールバックで色々チェック
-        const file_id   = src.file_id   || src.id   || "UNKNOWN_ID";
-        const file_name = src.file_name || src.filename || src.name || "[no name]";
+        const file_id   = src.file_id;
+        const file_name = src.file_name;
         resultsDiv.innerHTML +=
           `<p>${i+1}. <a href="/viewer/${file_id}" target="_blank">${file_name}</a></p>`;
       });
@@ -92,33 +86,32 @@ document.addEventListener("DOMContentLoaded", () => {
       const card = document.createElement("div");
       card.className = "card";
 
-      // REM: タイトル (ファイル別モード)
+      // タイトル
       const h3 = document.createElement("h3");
-      const file_id   = item.file_id   || item.id   || "UNKNOWN_ID";
-      const file_name = item.file_name || item.filename || item.name || "[no name]";
-      if (file_id && file_id !== "UNKNOWN_ID") {
-        h3.innerHTML = 
-          `${idx+1}. <a href="/viewer/${file_id}" target="_blank">${file_name}</a>`;
+      const file_id = item.file_id;
+      const file_name = item.file_name;
+      if (file_id) {
+        h3.innerHTML = `${idx+1}. <a href="/viewer/${file_id}" target="_blank">${file_name}</a>`;
       } else {
         h3.textContent = `${idx+1}. ${file_name}`;
       }
       card.appendChild(h3);
 
-      // REM: スニペット or 要約
+      // スニペット or 要約
       const pre = document.createElement("pre");
       pre.textContent = item.snippet || item.summary || "";
       card.appendChild(pre);
 
-      // REM: 一致度表示（ファイル別モードのみ）
+      // 一致度表示（ファイル別モードのみ）
       if (item.score !== undefined) {
         const p = document.createElement("p");
         p.textContent = `一致度: ${item.score.toFixed(2)}`;
         card.appendChild(p);
       }
 
-      // REM: 編集機能
-      if (file_id && file_id !== "UNKNOWN_ID") {
-        addEditor(file_id, card);
+      // 編集機能
+      if (item.file_id) {
+        addEditor(item.file_id, card);
       }
 
       resultsDiv.appendChild(card);
@@ -142,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!editorDiv.innerHTML) {
           const resp = await fetch(`/api/content/${file_id}`);
           const data = await resp.json();
-          console.log("★ fetch /api/content →", data);  // デバッグ
           editorDiv.innerHTML = `
             <textarea>${data.content}</textarea><br>
             <button class="save-btn">保存（再ベクトル化）</button>
@@ -170,13 +162,17 @@ document.addEventListener("DOMContentLoaded", () => {
               overlayMsg.innerHTML = `❌ 通信エラー: ${err.message}`;
             } finally {
               overlayOk.style.display = "block";
+              // 既存リスナをクリアして新しく設定
               overlayOk.replaceWith(overlayOk.cloneNode(true));
               const newOk = document.getElementById("overlay-ok-btn");
               newOk.addEventListener("click", () => {
+                // 1) オーバーレイを非表示
                 overlay.style.display    = "none";
                 newOk.style.display      = "none";
+                // 2) 編集画面を閉じる
                 editorDiv.style.display  = "none";
                 toggleBtn.textContent    = "✏️ 編集";
+                // 3) プレビュー(<pre>)を更新
                 const updated = editorDiv.querySelector("textarea").value;
                 const pre = container.querySelector("pre");
                 if (pre) pre.textContent = updated;

@@ -20,7 +20,20 @@ def run_streamlit():
 # REM: FastAPIアプリ起動
 def run_fastapi():
     debug_print("🚀 FastAPI起動中...")
-    subprocess.run(["uvicorn", "app.fastapi_main:app", "--reload"])
+    # subprocess.run(["uvicorn", "app.fastapi_main:app", "--reload"])
+
+    # ホスト・ポートは環境変数でもオーバーライド可
+    host = os.getenv("FASTAPI_HOST", "0.0.0.0")
+    port = os.getenv("FASTAPI_PORT", "8000")
+    cmd = [
+        "uvicorn",
+        "app.fastapi_main:app",
+        "--host", host,
+        "--port", port,
+        "--reload",
+    ]
+    debug_print(f"→ Running: {' '.join(cmd)}")
+    subprocess.run(cmd)
 
 # REM: 起動モード選択
 if __name__ == "__main__":

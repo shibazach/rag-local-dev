@@ -1,72 +1,77 @@
-# /workspace/app/fastapi/routes/file.py
-# REM: PDF バイナリ / テキスト取得 / 保存 API
-
+# app/routes/file.py
+# REM: PDF バイナリ／テキスト取得／保存 API
 from urllib.parse import quote
 from fastapi import APIRouter, Form, HTTPException
 from fastapi.responses import Response, JSONResponse
-from sqlalchemy import text
 
-from src.config import DB_ENGINE
+from db.handler import (
+    get_file_meta,
+    get_file_blob,
+    get_file_text,
+    update_file_text,
+)
 from fileio.file_embedder import embed_and_insert
 
 router = APIRouter()
 
-# REM: PDFバイナリを inline で返却（RFC5987 方式で UTF-8 エンコード）
+
 @router.get("/api/pdf/{file_id}")
 def get_pdf(file_id: str):
-    # REM: DB からファイル BLOB と元ファイル名を取得
-    row = DB_ENGINE.connect().execute(
-        text("SELECT file_blob, file_name FROM files WHERE file_id=:id"),
-        {"id": file_id}
-    ).fetchone()
-    if not row:
-        raise HTTPException(404, "PDF not found")
-    blob, file_name = row
-    # REM: 日本語等を含むファイル名を URL エンコード
-    quoted = quote(file_name)
+    """
+    files_blob から PDF バイナリを返却。
+    ファイル名は files_meta.file_name を利用。
+    """
+    meta = get_file_meta(file_id)
+    if not meta:
+        raise HTTPException(status_code=404, detail="PDF not found")
+
+    blob = get_file_blob(file_id)
+    if blob is None:
+        raise HTTPException(status_code=404, detail="PDF blob not found")
+
+    file_name = meta["file_name"]
+    quoted  = quote(file_name)
     return Response(
         content=blob,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; file_name*=UTF-8''{quoted}"}
+        headers={
+            "Content-Disposition": f"inline; file_name*=UTF-8''{quoted}"
+        }
     )
+
 
 @router.get("/api/content/{file_id}")
 def get_content(file_id: str):
-    # REM: files.content を返却
-    cont = DB_ENGINE.connect().execute(
-        text("SELECT content FROM files WHERE file_id=:id"),
-        {"id": file_id}
-    ).scalar()
-    if cont is None:
-        raise HTTPException(404, "Content not found")
-    return {"content": cont}
+    """
+    files_text.refined_text を返却。
+    """
+    textrec = get_file_text(file_id)
+    if not textrec or textrec.get("refined_text") is None:
+        raise HTTPException(status_code=404, detail="Content not found")
+    return JSONResponse({"content": textrec["refined_text"]})
+
 
 @router.post("/api/save/{file_id}")
 def save_content(file_id: str, content: str = Form(...)):
-    # 1) file_name を取得（存在確認およびログ用）
-    fname = DB_ENGINE.connect().execute(
-        text("SELECT file_name FROM files WHERE file_id=:id"),
-        {"id": file_id}
-    ).scalar()
-    if not fname:
-        raise HTTPException(404, "File not found")
+    """
+    編集後コンテンツを files_text にアップデートし、
+    再ベクトル化を行う。
+    """
+    meta = get_file_meta(file_id)
+    if not meta:
+        raise HTTPException(status_code=404, detail="File not found")
 
-    # 2) files テーブルの content を更新
-    with DB_ENGINE.begin() as tx:
-        tx.execute(
-            text("UPDATE files SET content = :c WHERE file_id = :id"),
-            {"c": content, "id": file_id}
-        )
+    # 1) テキスト更新
+    update_file_text(file_id, refined_text=content)
 
-    # 3) 保存後に再ベクトル化
-    #    overwrite=True で当該 file_id の古いチャンクを削除して再登録
+    # 2) 再ベクトル化
     embed_and_insert(
         texts=[content],
-        file_name=fname,         # REM: file_id 指定で upsert_file はスキップ
-        model_keys=None,
+        file_name=meta["file_name"],
+        model_keys=None,        # すべてのモデル or デフォルトモデルを渡す
         quality_score=0.0,
-        overwrite=True,         # REM: 古い埋め込みレコードをDELETE
-        file_id=file_id         # REM: 既存レコードの file_id を利用
+        overwrite=True,
+        file_id=file_id
     )
 
-    return {"status": "started"}
+    return JSONResponse({"status": "started"})

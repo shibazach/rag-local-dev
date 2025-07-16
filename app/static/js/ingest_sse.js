@@ -1,105 +1,152 @@
-// REM: app/fastapi/static/js/ingest_sse.js（新規: 2025-07-15 22:45 JST）
-/*
-  インジェスト SSE 受信＆ログ描画。
-  「使用プロンプト」「LLM整形結果」をアコーディオンで開閉表示する。
-*/
-
+// REM: app/fastapi/static/js/ingest_sse.js （更新日時: 2025-07-16）
 "use strict";
 
-// REM: ── 定数 ─────────────────────────────────────────
-const SSE_URL   = "/ingest/stream";
-const LOG_AREA  = "logArea";    // <div id="logArea"> を想定
-const ACC_HEAD  = "accord-head";
-const ACC_BODY  = "accord-body";
+let es = null;
+const fileContainers = {};
 
-// REM: ── 起動関数（別 JS から呼び出す） ───────────────
+/**
+ * SSE で /ingest/stream を受信し、
+ * pane-bottom にログを追加していくロジック
+ */
 function startIngestStream() {
-  const es = new EventSource(SSE_URL);
+  const pane = document.getElementById("pane-bottom");
+  es = new EventSource("/ingest/stream");
 
-  es.addEventListener("message", ev => {
-    const payload = JSON.parse(ev.data);
-    handleEvent(payload);
-  });
+  es.onmessage = evt => {
+    const d = JSON.parse(evt.data);
 
-  es.addEventListener("error", () => es.close());
+    // ── ジョブ開始イベント ────────────────────────────
+    if (d.start) {
+      pane.appendChild(createLine(`▶ 全 ${d.total_files} 件の処理を開始`));
+      scrollBottom(pane);
+      return;
+    }
+
+    // ── 全完了イベント ────────────────────────────────
+    if (d.done) {
+      pane.appendChild(createLine("✅ 全処理完了"));
+      scrollBottom(pane);
+      es.close();
+      return;
+    }
+
+    // ── 各ファイル・ステップイベント ───────────────────
+    const {
+      file, step, file_id, index, total, part, content, duration
+    } = d;
+
+    // ファイルごとのセクションを初期化
+    let section = fileContainers[file];
+    if (!section) {
+      pane.appendChild(document.createElement("br"));
+      pane.appendChild(createLine(
+        `${index}/${total} ${file} の処理中…`, "file-progress"
+      ));
+      scrollBottom(pane);
+
+      const header = document.createElement("div");
+      header.className = "file-header";
+      const link = document.createElement("a");
+      link.href       = `/viewer/${file_id}`;
+      link.target     = "_blank";
+      link.textContent = file;
+      header.appendChild(link);
+      pane.appendChild(header);
+      scrollBottom(pane);
+
+      section = document.createElement("div");
+      section.className = "file-section";
+      pane.appendChild(section);
+      scrollBottom(pane);
+
+      fileContainers[file] = section;
+    }
+
+    // ── ページ単位の見出し ────────────────────────────
+    if (step && step.startsWith("Page ")) {
+      section.appendChild(createLine(step, "page-header"));
+      scrollBottom(pane);
+      return;
+    }
+
+    // ── 「使用プロンプト全文」「LLM整形結果全文」見出し ───
+    if (step.startsWith("使用プロンプト全文") || step.startsWith("LLM整形結果全文")) {
+      const [title, raw] = step.split(" part:");
+      const p = raw || "all";
+      const key = `${file}__${title}__${p}`;
+      if (!section.querySelector(`details[data-key="${key}"]`)) {
+        const det = document.createElement("details");
+        det.setAttribute("data-key", key);
+        const sum = document.createElement("summary");
+        sum.textContent = step;
+        det.appendChild(sum);
+        section.appendChild(det);
+        scrollBottom(pane);
+      }
+      return;
+    }
+
+    // ── 本文挿入（プロンプト全文 / 整形結果全文）───────────
+    if (step === "prompt_text" || step === "refined_text") {
+      const title = step === "prompt_text"
+        ? "使用プロンプト全文"
+        : "LLM整形結果全文";
+      const p   = part || "all";
+      const key = `${file}__${title}__${p}`;
+      const det = section.querySelector(`details[data-key="${key}"]`);
+      if (det) {
+        let pre = det.querySelector("pre");
+        if (!pre) {
+          pre = document.createElement("pre");
+          det.appendChild(pre);
+        }
+        pre.textContent = (content || "").replace(/\n{3,}/g, "\n\n");
+        scrollBottom(pane);
+      }
+      return;
+    }
+
+    // ── 通常ログ行 ───────────────────────────────────
+    const label = duration ? `${step} (${duration}s)` : step;
+    section.appendChild(createLine(label));
+    scrollBottom(pane);
+  };
+
+  es.onerror = () => {
+    if (es) {
+      es.close();
+      es = null;
+    }
+  };
 }
 
-// REM: handleEvent ─ イベント分配
-function handleEvent(ev) {
-  switch (ev.step) {
-    case "prompt_text":
-      insertBody(ev, "使用プロンプト");
-      break;
-
-    case "refined_text":
-      insertBody(ev, "LLM整形結果");
-      break;
-
-    default:
-      // 見出し系は共通関数へ
-      if (ev.step.startsWith("使用プロンプト")) createHeading(ev, "使用プロンプト");
-      else if (ev.step.startsWith("LLM整形結果")) createHeading(ev, "LLM整形結果");
-      else     logLine(ev.step);
+/**
+ * SSE をキャンセル
+ */
+function cancelIngestStream() {
+  if (es) {
+    es.close();
+    es = null;
   }
 }
 
-// REM: createHeading ─ 見出し行を生成
-function createHeading(ev, title) {
-  const box = ensureAccord(ev.file, ev.part || getPart(ev.step), title);
-  // preview があれば先頭に表示（任意）
-  const body = box.querySelector("." + ACC_BODY);
-  if (!body.textContent && ev.preview) body.textContent = ev.preview;
-}
-
-// REM: insertBody ─ 本文を追加
-function insertBody(ev, title) {
-  const box = ensureAccord(ev.file, ev.part, title);
-  box.querySelector("." + ACC_BODY).textContent = ev.content;
-}
-
-// REM: ensureAccord ─ 見出し＋本文コンテナを確保
-function ensureAccord(file, part, title) {
-  const rootId = `${file}_${part}_${title}`;
-  let box      = document.getElementById(rootId);
-  if (box) return box;
-
-  box        = document.createElement("div");
-  box.id     = rootId;
-
-  const head = document.createElement("div");
-  head.className = ACC_HEAD;
-  head.textContent = `▶ ${title} part:${part}`;
-  head.onclick = () => toggleAccord(head, body);
-
-  const body = document.createElement("pre");
-  body.className = ACC_BODY;
-  body.style.display = "none";
-
-  box.appendChild(head);
-  box.appendChild(body);
-  document.getElementById(LOG_AREA).appendChild(box);
-  return box;
-}
-
-// REM: toggleAccord ─ 開閉トグル
-function toggleAccord(h, b) {
-  const open = b.style.display === "none";
-  b.style.display = open ? "block" : "none";
-  h.textContent = `${open ? "▼" : "▶"} ${h.textContent.slice(2)}`;
-}
-
-// REM: logLine ─ 単純ステータス行
-function logLine(text) {
+/**
+ * 単純なテキスト行を生成
+ */
+function createLine(text, cls) {
   const div = document.createElement("div");
+  if (cls) div.className = cls;
   div.textContent = text;
-  document.getElementById(LOG_AREA).appendChild(div);
+  return div;
 }
 
-// REM: getPart ─ 見出し文字列から part 抜粋
-function getPart(stepStr) {
-  const m = stepStr.match(/part:([^\s]+)/);
-  return m ? m[1] : "all";
+/**
+ * pane を常に下端にスクロール
+ */
+function scrollBottom(el) {
+  el.scrollTop = el.scrollHeight;
 }
 
-// グローバル公開（HTML から呼びやすく）
-window.startIngestStream = startIngestStream;
+// グローバル公開
+window.startIngestStream  = startIngestStream;
+window.cancelIngestStream = cancelIngestStream;

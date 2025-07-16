@@ -1,4 +1,9 @@
 .
+├── .back
+│   ├── ingest.html
+│   ├── ingest.js
+│   ├── ingest.py
+│   └── ingest_sse.js
 ├── .devcontainer
 │   ├── .streamlit
 │   │   └── config.toml
@@ -29,11 +34,15 @@
 │   │   └── ui.py
 │   ├── services
 │   │   ├── __init__.py
+│   │   ├── ingest_worker.py
 │   │   ├── query_embedder.py
 │   │   └── query_handler.py
 │   ├── static
 │   │   ├── __init__.py
 │   │   ├── js
+│   │   │   ├── chat.js
+│   │   │   ├── ingest.js
+│   │   │   └── ingest_sse.js
 │   │   └── styles.css
 │   ├── streamlit
 │   │   ├── __init__.py
@@ -53,6 +62,11 @@
 │       ├── index.html
 │       ├── ingest.html
 │       ├── partials
+│       │   ├── chat
+│       │   └── ingest
+│       │       ├── folder_modal.html
+│       │       ├── ingest_header.html
+│       │       └── ingest_log.html
 │       └── viewer.html
 ├── bin
 │   ├── __init__.py
@@ -62,7 +76,6 @@
 ├── db
 │   ├── __init__.py
 │   ├── handler.py
-│   ├── handler.py_back
 │   ├── schema.py
 │   └── 構想.txt
 ├── docker-compose.cpu.yml
@@ -75,7 +88,8 @@
 │   └── translator.py
 ├── git_update.sh
 ├── ignored
-│   └── input_files
+│   ├── input_files
+│   └── output_files
 ├── llm
 │   ├── __init__.py
 │   ├── chunker.py
@@ -85,7 +99,6 @@
 │   ├── scorer.py
 │   └── summary.py
 ├── logs
-│   ├── full_logs
 │   ├── invalid_csv_log.txt
 │   └── refiner_log.csv
 ├── ocr

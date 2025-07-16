@@ -244,3 +244,57 @@ def update_file_status(file_id: str, *, status: str, note: str | None = None) ->
     #         text("UPDATE files_meta SET status=:st, note=:nt WHERE id=:fid"),
     #         {"st": status, "nt": note, "fid": file_id},
     #     )
+
+
+def get_file_meta(file_id: str) -> Optional[dict]:
+    """files_meta から (file_name, mime_type, size, created_at) を取得"""
+    with DB_ENGINE.connect() as conn:
+        row = conn.execute(
+            sql_text("""
+                SELECT file_name, mime_type, size, created_at
+                  FROM files_meta
+                 WHERE id = :fid
+            """), {"fid": file_id}
+        ).mappings().first()
+    return dict(row) if row else None
+
+def get_file_blob(file_id: str) -> Optional[bytes]:
+    """files_blob からバイナリを取得"""
+    with DB_ENGINE.connect() as conn:
+        row = conn.execute(
+            sql_text("SELECT blob_data FROM files_blob WHERE file_id = :fid"),
+            {"fid": file_id}
+        ).first()
+    return row[0] if row else None
+
+def get_file_text(file_id: str) -> Optional[dict]:
+    """files_text から (raw_text, refined_text, quality_score, tags) を取得"""
+    with DB_ENGINE.connect() as conn:
+        row = conn.execute(
+            sql_text("""
+                SELECT raw_text, refined_text, quality_score, tags
+                  FROM files_text
+                 WHERE file_id = :fid
+            """), {"fid": file_id}
+        ).mappings().first()
+    return dict(row) if row else None
+
+def update_file_text(
+    file_id: str,
+    refined_text: str | None = None,
+    raw_text: str | None = None,
+    quality_score: float | None = None,
+    tags: Optional[Sequence[str]] | None = None,
+) -> None:
+    """files_text を更新"""
+    sets, params = [], {"fid": file_id}
+    if refined_text   is not None: sets.append("refined_text = :ref"); params["ref"] = refined_text
+    if raw_text       is not None: sets.append("raw_text = :raw");       params["raw"] = raw_text
+    if quality_score  is not None: sets.append("quality_score = :qs");   params["qs"]  = quality_score
+    if tags           is not None: sets.append("tags = :tags");          params["tags"]= tags
+    if not sets:
+        return
+
+    sql = f"UPDATE files_text SET {', '.join(sets)}, updated_at = NOW() WHERE file_id = :fid"
+    with DB_ENGINE.begin() as conn:
+        conn.execute(sql_text(sql), params)

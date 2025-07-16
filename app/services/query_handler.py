@@ -81,7 +81,7 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合") -
     for row in rows:
         summary, score = llm_summarize_with_score(query, row["refined_text"])
         summaries.append({
-            "file_id": row["file_id"],
+            "file_id":   row["file_id"],
             "file_name": row["file_name"],
             "score": score,
             "summary": summary

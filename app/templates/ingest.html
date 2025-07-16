@@ -102,6 +102,49 @@ document.addEventListener('DOMContentLoaded', () => {
     es.onmessage = evt => {
       const d = JSON.parse(evt.data);
 
+      /* ==== 無効イベントは捨てる ======================= */
+      if (!d.step || typeof d.step !== 'string' || !d.step.trim()) return;
+
+      /* ==== prompt_text / refined_text 本文挿入 ======= */
+      if (d.step === 'prompt_text' || d.step === 'refined_text') {
+        const cat  = d.step === 'prompt_text' ? '使用プロンプト全文' : 'LLM整形結果全文';
+        const part = d.part ?? 'all';
+        const det  = paneBottom.querySelector(
+          `details[data-cat="${cat}"][data-part="${part}"]`);
+        if (det) {
+          let pre = det.querySelector('pre');
+          if (!pre) {
+            pre = document.createElement('pre');
+            det.appendChild(pre);
+          }
+          pre.textContent = (d.content || '').replace(/\n{3,}/g, '\n\n');
+        }
+        return;
+      }
+
+      /* ==== 見出し details 生成 ======================= */
+      if (d.step.startsWith('使用プロンプト全文') ||
+          d.step.startsWith('LLM整形結果全文')) {
+        const [cat, partRaw] = d.step.split(' part:');
+        const part = partRaw || 'all';
+        if (!paneBottom.querySelector(
+              `details[data-cat="${cat}"][data-part="${part}"]`)) {
+          const dt  = document.createElement('details');
+          dt.dataset.cat  = cat;
+          dt.dataset.part = part;
+          const sum = document.createElement('summary');
+          sum.textContent = d.step;
+          dt.appendChild(sum);
+          paneBottom.prepend(dt);
+        }
+        return;
+      }
+
+      /* ==== その他 status 行 ========================== */
+      const div = document.createElement('div');
+      div.textContent = d.step;
+      paneBottom.prepend(div);
+
       /* ==================== 全完了 ==================== */
       if (d.done) {
         es.close();

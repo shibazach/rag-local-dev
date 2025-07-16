@@ -75,7 +75,7 @@ def viewer(request: Request, file_id: str, num: int = 0):
     return templates.TemplateResponse("viewer.html", {
         "request": request,
         "file_id": file_id,
-        "filename": fname,
+        "file_name": fname,
         "num": num,
     })
 

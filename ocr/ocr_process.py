@@ -114,10 +114,10 @@ def embed_text_back_to_pdf(pdf_path, structured_text, output_path):
 
 # REM: メイン処理
 def process_pdfs():
-    for filename in os.listdir(INPUT_DIR):
-        if filename.lower().endswith(".pdf"):
-            input_path = os.path.join(INPUT_DIR, filename)
-            output_path = os.path.join(OUTPUT_DIR, filename)
+    for file_name in os.listdir(INPUT_DIR):
+        if file_name.lower().endswith(".pdf"):
+            input_path = os.path.join(INPUT_DIR, file_name)
+            output_path = os.path.join(OUTPUT_DIR, file_name)
 
             if has_embedded_text(input_path):
                 doc = fitz.open(input_path)
@@ -133,12 +133,12 @@ def process_pdfs():
 
             doc = fitz.open(output_path)
             structured = extract_and_structure_text(doc)
-            txt_output = os.path.join(OUTPUT_DIR, filename.replace(".pdf", "_structured.txt"))
+            txt_output = os.path.join(OUTPUT_DIR, file_name.replace(".pdf", "_structured.txt"))
             save_structured_text_to_txt(structured, txt_output)
             debug_print("✅ 構造化テキストを保存しました:", txt_output)
 
             # PDFに構造化テキストを再埋め込み
-            embed_output_pdf = os.path.join(OUTPUT_DIR, filename.replace(".pdf", "_embedded.pdf"))
+            embed_output_pdf = os.path.join(OUTPUT_DIR, file_name.replace(".pdf", "_embedded.pdf"))
             embed_text_back_to_pdf(output_path, structured, embed_output_pdf)
             debug_print("✅ テキストをPDFに再埋め込み:", embed_output_pdf)
 

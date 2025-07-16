@@ -1,4 +1,4 @@
-# src/config.py
+# src/config.py（更新日時: 2025-07-15 18:20 JST）
 import os, torch
 from sqlalchemy import create_engine
 from langchain_ollama import OllamaLLM

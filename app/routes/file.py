@@ -16,18 +16,18 @@ router = APIRouter()
 def get_pdf(file_id: str):
     # REM: DB からファイル BLOB と元ファイル名を取得
     row = DB_ENGINE.connect().execute(
-        text("SELECT file_blob, filename FROM files WHERE file_id=:id"),
+        text("SELECT file_blob, file_name FROM files WHERE file_id=:id"),
         {"id": file_id}
     ).fetchone()
     if not row:
         raise HTTPException(404, "PDF not found")
-    blob, filename = row
+    blob, file_name = row
     # REM: 日本語等を含むファイル名を URL エンコード
-    quoted = quote(filename)
+    quoted = quote(file_name)
     return Response(
         content=blob,
         media_type="application/pdf",
-        headers={"Content-Disposition": f"inline; filename*=UTF-8''{quoted}"}
+        headers={"Content-Disposition": f"inline; file_name*=UTF-8''{quoted}"}
     )
 
 @router.get("/api/content/{file_id}")
@@ -43,9 +43,9 @@ def get_content(file_id: str):
 
 @router.post("/api/save/{file_id}")
 def save_content(file_id: str, content: str = Form(...)):
-    # 1) filename を取得（存在確認およびログ用）
+    # 1) file_name を取得（存在確認およびログ用）
     fname = DB_ENGINE.connect().execute(
-        text("SELECT filename FROM files WHERE file_id=:id"),
+        text("SELECT file_name FROM files WHERE file_id=:id"),
         {"id": file_id}
     ).scalar()
     if not fname:
@@ -62,7 +62,7 @@ def save_content(file_id: str, content: str = Form(...)):
     #    overwrite=True で当該 file_id の古いチャンクを削除して再登録
     embed_and_insert(
         texts=[content],
-        filename=fname,         # REM: file_id 指定で upsert_file はスキップ
+        file_name=fname,         # REM: file_id 指定で upsert_file はスキップ
         model_keys=None,
         quality_score=0.0,
         overwrite=True,         # REM: 古い埋め込みレコードをDELETE

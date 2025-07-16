@@ -109,11 +109,11 @@ def extract_text_from_csv(csv_path: str) -> List[str]:
         return []
 
 # EML（プレーンテキスト部分のみを対象、引用除去）
-def extract_text_from_eml(filepath: str) -> List[str]:
+def extract_text_from_eml(file_path: str) -> List[str]:
     from email import policy
     from email.parser import BytesParser
 
-    with open(filepath, "rb") as f:
+    with open(file_path, "rb") as f:
         msg = BytesParser(policy=policy.default).parse(f)
 
     text_blocks = []
@@ -137,17 +137,17 @@ def extract_text_from_json(json_path: str) -> List[str]:
         return [item["text"] for item in data if "text" in item]
 
 # 拡張子で振り分け
-def extract_text_by_extension(filepath: str) -> List[str]:
-    ext = os.path.splitext(filepath)[1].lower()
+def extract_text_by_extension(file_path: str) -> List[str]:
+    ext = os.path.splitext(file_path)[1].lower()
     if ext == ".pdf":
-        return extract_text_from_pdf(filepath)
+        return extract_text_from_pdf(file_path)
     elif ext == ".docx":
-        return extract_text_from_docx_combined(filepath)
+        return extract_text_from_docx_combined(file_path)
     elif ext == ".txt":
-        return extract_text_from_txt(filepath)
+        return extract_text_from_txt(file_path)
     elif ext == ".csv":
-        return extract_text_from_csv(filepath)
+        return extract_text_from_csv(file_path)
     elif ext == ".json":
-        return extract_text_from_json(filepath)
+        return extract_text_from_json(file_path)
     else:
         raise ValueError(f"未対応のファイル形式: {ext}")

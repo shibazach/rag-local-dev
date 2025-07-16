@@ -10,7 +10,8 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 
 # ── プロジェクト共通 ──────────────────────────────
-from src.config import EMBEDDING_OPTIONS
+from src.config import EMBEDDING_OPTIONS, DEVELOPMENT_MODE
+from db.handler import reset_dev_database
 import logging
 
 # ── サービス層 ────────────────────────────────────
@@ -52,6 +53,10 @@ async def run_ingest_folder(
 ) -> JSONResponse:
     global last_ingest
 
+    # ── 開発モードならここで DB 初期化 ─────────────────
+    if DEVELOPMENT_MODE:
+        reset_dev_database()
+
     # --- 対象ファイル列挙 ------------------------------------------------------
     if input_mode == "files":
         if not input_files:
@@ -77,7 +82,7 @@ async def run_ingest_folder(
         raise HTTPException(400, "対象ファイルが見つかりません")
 
     last_ingest = {
-        "files":             [{"path": p, "filename": os.path.basename(p)} for p in paths],
+        "files":             [{"path": p, "file_name": os.path.basename(p)} for p in paths],
         "refine_prompt_key": refine_prompt_key,
         "embed_models":      embed_models,
         "overwrite":         overwrite_existing,
@@ -114,7 +119,7 @@ def ingest_stream(request: Request) -> StreamingResponse:
 
             for ev in process_file(
                 file_path=info["path"],
-                filename=info["filename"],
+                file_name=info["file_name"],
                 index=idx,
                 total_files=total_files,
                 refine_prompt_key=last_ingest["refine_prompt_key"],

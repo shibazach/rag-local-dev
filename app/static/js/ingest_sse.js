@@ -1,4 +1,4 @@
-REM: app/fastapi/static/js/ingest_sse.js（新規: 2025-07-15 22:45 JST）
+// REM: app/fastapi/static/js/ingest_sse.js（新規: 2025-07-15 22:45 JST）
 /*
   インジェスト SSE 受信＆ログ描画。
   「使用プロンプト」「LLM整形結果」をアコーディオンで開閉表示する。

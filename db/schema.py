@@ -20,7 +20,7 @@ file_metadata = Table(
     "file_metadata",
     metadata,
     Column("file_uuid", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
-    Column("filename", String, nullable=False),
+    Column("file_name", String, nullable=False),
     Column("mime", String(128)),
     Column("size_bytes", Integer),
     Column("md5", String(32), unique=True, index=True),
@@ -50,7 +50,7 @@ def _add_comments(target, connection, **kw):
         """
         COMMENT ON TABLE file_metadata IS 'バイナリを除くファイル情報・全文テキスト';
         COMMENT ON COLUMN file_metadata.file_uuid IS 'UUID 主キー';
-        COMMENT ON COLUMN file_metadata.filename   IS 'アップロード時のファイル名';
+        COMMENT ON COLUMN file_metadata.file_name   IS 'アップロード時のファイル名';
         COMMENT ON COLUMN file_metadata.mime       IS 'MIME タイプ';
         COMMENT ON COLUMN file_metadata.size_bytes IS 'バイトサイズ';
         COMMENT ON COLUMN file_metadata.md5        IS '同一バイナリ判定用 md5ハッシュ';

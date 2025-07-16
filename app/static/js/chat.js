@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
       resultsDiv.innerHTML = `<h3>ソースファイル</h3>`;
       json.sources.forEach((src, i) => {
         resultsDiv.innerHTML +=
-          `<p>${i+1}. <a href="/viewer/${src.file_id}" target="_blank">${src.filename}</a></p>`;
+          `<p>${i+1}. <a href="/viewer/${src.file_id}" target="_blank">${src.file_name}</a></p>`;
       });
     } else {
       answerDiv.style.display = "none";
@@ -87,9 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
       // タイトル
       const h3 = document.createElement("h3");
       if (item.file_id) {
-        h3.innerHTML = `${idx+1}. <a href="/viewer/${item.file_id}" target="_blank">${item.filename}</a>`;
+        h3.innerHTML = `${idx+1}. <a href="/viewer/${item.file_id}" target="_blank">${item.file_name}</a>`;
       } else {
-        h3.textContent = `${idx+1}. ${item.filename}`;
+        h3.textContent = `${idx+1}. ${item.file_name}`;
       }
       card.appendChild(h3);
 

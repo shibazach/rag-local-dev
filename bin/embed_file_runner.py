@@ -50,7 +50,7 @@ def to_pgvector_literal(vec: Sequence[float] | np.ndarray) -> str:
 # REM: メイン関数
 def embed_and_insert(
     texts: List[str],
-    filepath: str,
+    file_path: str,
     *,
     model_keys: List[str] | None = None,
     quality_score: float = 0.0,
@@ -60,13 +60,13 @@ def embed_and_insert(
     splitter    = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
     chunks      = [s for t in texts for s in splitter.split_text(t)]
     if not chunks:
-        debug_print(f"[DEBUG] embed_and_insert: no chunks for {filepath}")
+        debug_print(f"[DEBUG] embed_and_insert: no chunks for {file_path}")
         return None
 
     full_text   = "\n".join(chunks)
 
     # ① files_* へ一括 INSERT（空 raw_text）
-    file_id = insert_file_full(filepath, "", full_text, quality_score, tags=[])
+    file_id = insert_file_full(file_path, "", full_text, quality_score, tags=[])
 
     # ② 各 Embedding モデルで処理
     for key, cfg in EMBEDDING_OPTIONS.items():

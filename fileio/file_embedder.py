@@ -50,7 +50,7 @@ def to_pgvector_literal(vec: Sequence[float] | np.ndarray) -> str:
 # REM: メイン関数 ─ チャンク分割 → 埋め込み → DB 登録
 def embed_and_insert(
     texts: List[str],
-    filename: str,
+    file_name: str,
     model_keys: Optional[List[str]] = None,
     *,
     return_data: bool = False,
@@ -60,14 +60,14 @@ def embed_and_insert(
 ):
     """
     ・texts         : 抽出／整形済みテキストリスト  
-    ・filename      : ファイルパス（file_id指定時はダミー可）  
+    ・file_name     : ファイルパス（file_id指定時はダミー可）  
     ・model_keys    : EMBEDDING_OPTIONS のキーリスト  
     ・return_data   : True で (chunks, embeddings) を返却  
     ・quality_score : files.quality_score へ  
     ・overwrite     : True で既存埋め込みを上書き  
     ・file_id       : None→upsert_file 呼び出し、指定→既存行利用  
     """
-    debug_print(f"[DEBUG] embed_and_insert start: filename={filename}, texts count={len(texts)}")
+    debug_print(f"[DEBUG] embed_and_insert start: file_name={file_name}, texts count={len(texts)}")
 
     # 1) チャンク分割
     splitter     = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
@@ -77,13 +77,13 @@ def embed_and_insert(
     debug_print(f"[DEBUG] total chunks = {len(flat_chunks)}")
 
     if not flat_chunks:
-        debug_print(f"[DEBUG] embed_and_insert: no chunks for {filename}, skip embedding")
+        debug_print(f"[DEBUG] embed_and_insert: no chunks for {file_name}, skip embedding")
         return
 
     # 2) files テーブル upsert or スキップ
     if file_id is None:
         debug_print(f"[DEBUG] upsert_file returned file_id = {file_id}")
-        file_id = insert_file_full(filename, full_text, quality_score, tags=[])
+        file_id = insert_file_full(file_name, full_text, quality_score, tags=[])
 
     # 3) 各モデルで埋め込み
     for key, cfg in EMBEDDING_OPTIONS.items():

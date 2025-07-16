@@ -76,17 +76,17 @@ def render_ingest_view():
             return
 
         total = len(selected_files)
-        for idx, filepath in enumerate(selected_files, start=1):
-            filename = os.path.basename(filepath)
-            st.markdown(f"---\n#### \U0001F4C4 {idx}/{total}件目: `{filename}`")
+        for idx, file_path in enumerate(selected_files, start=1):
+            file_name = os.path.basename(file_path)
+            st.markdown(f"---\n#### \U0001F4C4 {idx}/{total}件目: `{file_name}`")
 
             try:
                 # REM: 拡張子ごとに抽出
-                ext = os.path.splitext(filename)[1].lower()
+                ext = os.path.splitext(file_name)[1].lower()
                 texts = (
-                    extract_text_from_eml(filepath)
+                    extract_text_from_eml(file_path)
                     if ext == ".eml"
-                    else extract_text_by_extension(filepath)
+                    else extract_text_by_extension(file_path)
                 )
                 raw_joined = "\n".join(texts)
 
@@ -100,7 +100,7 @@ def render_ingest_view():
                     "抽出結果（空行正規化後）",
                     value=joined,
                     height=300,
-                    key=f"extracted_{filename}",
+                    key=f"extracted_{file_name}",
                 )
 
                 # --- 送信プロンプトのプレビュー -------------------------
@@ -110,7 +110,7 @@ def render_ingest_view():
                         "送信プロンプト",
                         value=preview_prompt,
                         height=300,
-                        key=f"pre_prompt_{filename}",
+                        key=f"pre_prompt_{file_name}",
                     )
 
                 # --- LLM整形 ------------------------------------------
@@ -126,7 +126,7 @@ def render_ingest_view():
                         "整形後テキスト",
                         value=refined,
                         height=300,
-                        key=f"refined_{filename}",
+                        key=f"refined_{file_name}",
                     )
 
                     # --- 使用プロンプト（内部実行時） ------------------
@@ -136,7 +136,7 @@ def render_ingest_view():
                             "実際に送信したプロンプト",
                             value=used_prompt,
                             height=300,
-                            key=f"prompt_{filename}",
+                            key=f"prompt_{file_name}",
                         )
 
                 # --- ベクトル化 ----------------------------------------
@@ -144,14 +144,14 @@ def render_ingest_view():
                 with st.spinner("ベクトル化中..."):
                     chunks, embeddings = embed_and_insert(
                         [refined],
-                        filepath,
+                        file_path,
                         model_keys=st.session_state.selected_models,
                         return_data=True,
                     )
                     st.success(f"{len(chunks)} チャンクを登録しました")
 
                 # --- ログ保存 -----------------------------------------
-                log_path = os.path.join(LOG_DIR, filename + ".log")
+                log_path = os.path.join(LOG_DIR, file_name + ".log")
                 with open(log_path, "w", encoding="utf-8") as f:
                     f.write(f"📝 整形後:\n{refined}\n\n")
                     f.write("\n=== ✂️ チャンク ===\n" + "\n".join(chunks))

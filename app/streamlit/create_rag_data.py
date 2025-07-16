@@ -52,8 +52,8 @@ def is_invalid_llm_output(text: str) -> bool:
 
 # ------------------------------------------------------------------
 # REM: .emlファイルから本文テキストを抽出する
-def extract_text_from_eml(filepath: str) -> list[str]:
-    with open(filepath, "rb") as f:
+def extract_text_from_eml(file_path: str) -> list[str]:
+    with open(file_path, "rb") as f:
         msg = BytesParser(policy=policy.default).parse(f)
 
     subject = msg.get("subject", "")
@@ -81,15 +81,15 @@ def extract_text_from_eml(filepath: str) -> list[str]:
 
 # ------------------------------------------------------------------
 # REM: 1ファイルの整形・ベクトル化・DB登録のログを保存
-def log_full_processing(filepath, refined_ja, refined_en, ja_chunks, en_chunks, ja_embeddings, en_embeddings):
+def log_full_processing(file_path, refined_ja, refined_en, ja_chunks, en_chunks, ja_embeddings, en_embeddings):
     log_dir = os.path.join("logs", "full_logs")
     os.makedirs(log_dir, exist_ok=True)
-    base_name = os.path.splitext(os.path.basename(filepath))[0]
+    base_name = os.path.splitext(os.path.basename(file_path))[0]
     log_path = os.path.join(log_dir, f"{base_name}.log")
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     with open(log_path, "w", encoding="utf-8") as f:
-        f.write(f"📅 実行日時: {now_str}\n📄 ファイル: {filepath}\n")
+        f.write(f"📅 実行日時: {now_str}\n📄 ファイル: {file_path}\n")
         f.write(f"🧠 日本語ベクトル数: {len(ja_embeddings)}\n")
         f.write(f"🧠 英語ベクトル数: {len(en_embeddings)}\n")
         f.write("\n=== 📝 整形済み日本語 ===\n" + refined_ja + "\n")
@@ -100,18 +100,18 @@ def log_full_processing(filepath, refined_ja, refined_en, ja_chunks, en_chunks, 
 
 # ------------------------------------------------------------------
 # REM: 単一ファイルに対して整形・登録処理を実行
-def process_file(filepath: str) -> None:
-    debug_print(f"\n📄 処理中: {filepath}")
+def process_file(file_path: str) -> None:
+    debug_print(f"\n📄 処理中: {file_path}")
     try:
         # REM: ファイルのバイナリ読み込み
-        with open(filepath, "rb") as f:
+        with open(file_path, "rb") as f:
             file_blob = f.read()
 
-        ext = os.path.splitext(filepath)[1].lower()
+        ext = os.path.splitext(file_path)[1].lower()
 
         # REM: テキスト抽出＋整形前チェック
         try:
-            texts = extract_text_from_eml(filepath) if ext == ".eml" else extract_text_by_extension(filepath)
+            texts = extract_text_from_eml(file_path) if ext == ".eml" else extract_text_by_extension(file_path)
             joined = "\n".join(texts)
 
             # REM: 英語テンプレ誤反映や空テキストなどの無効チェック
@@ -121,8 +121,8 @@ def process_file(filepath: str) -> None:
         except Exception as extract_error:
             os.makedirs("logs", exist_ok=True)
             with open("logs/invalid_csv_log.txt", "a", encoding="utf-8") as log:
-                log.write(f"{filepath}: {extract_error}\n")
-            debug_print(f"⚠️ 無効ファイルとしてスキップ: {filepath} ({extract_error})")
+                log.write(f"{file_path}: {extract_error}\n")
+            debug_print(f"⚠️ 無効ファイルとしてスキップ: {file_path} ({extract_error})")
             return
 
         # REM: 原文プレビュー
@@ -135,7 +135,7 @@ def process_file(filepath: str) -> None:
 
         # REM: .eml は段落整形、それ以外は一括整形
         if ext == ".eml":
-            texts = extract_text_from_eml(filepath)
+            texts = extract_text_from_eml(file_path)
             joined = "\n".join(texts)
             debug_print("📧 .emlファイルに対して段落整形モードを適用", flush=True)
             corrected = joined.replace(">>", "").replace("> >", "").replace("> ", "")
@@ -166,12 +166,12 @@ def process_file(filepath: str) -> None:
         debug_print(f"📊 整形品質スコア: {score}")
 
         # REM: files テーブルへ挿入
-        file_id = insert_file_and_get_id(filepath, refined_ja, score)
+        file_id = insert_file_and_get_id(file_path, refined_ja, score)
 
         # REM: ベクトル化＆DB登録
         ja_chunks, ja_embeddings = embed_and_insert(
             [refined_ja],
-            filepath,
+            file_path,
             TRUNCATE_DONE_TABLES if DEVELOPMENT_MODE else set(),
             return_data=True,
             quality_score=score,
@@ -180,11 +180,11 @@ def process_file(filepath: str) -> None:
         refined_en, en_chunks, en_embeddings = "", [], []
 
         # REM: logs/full_logs に保存
-        log_full_processing(filepath, refined_ja, refined_en, ja_chunks, en_chunks, ja_embeddings, en_embeddings)
+        log_full_processing(file_path, refined_ja, refined_en, ja_chunks, en_chunks, ja_embeddings, en_embeddings)
         debug_print("✅ 完了")
 
     except Exception as e:
-        debug_print(f"❌ エラー: {filepath}\n{e}")
+        debug_print(f"❌ エラー: {file_path}\n{e}")
 
 # ------------------------------------------------------------------
 # REM: 対話形式でファイル or フォルダ一括処理を選択する
@@ -200,11 +200,11 @@ def main() -> None:
         for path in files:
             process_file(path)
     elif mode == "n":
-        filepath = input("📄 ファイルパス: ").strip()
-        if not os.path.isfile(filepath):
+        file_path = input("📄 ファイルパス: ").strip()
+        if not os.path.isfile(file_path):
             debug_print("❌ ファイルが存在しません")
             return
-        process_file(filepath)
+        process_file(file_path)
     else:
         debug_print("⚠️ 'y' または 'n' を入力してください")
 

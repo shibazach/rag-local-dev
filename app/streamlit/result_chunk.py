@@ -16,8 +16,8 @@ def to_pgvector_literal(vec):
         vec = vec.tolist()
     return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
-def make_unique_key(file_id, filename):
-    safe = filename.replace(".", "_").replace(" ", "_")
+def make_unique_key(file_id, file_name):
+    safe = file_name.replace(".", "_").replace(" ", "_")
     return f"{file_id}_{safe}_{uuid.uuid4().hex[:6]}"
 
 def search_similar_documents(query_embedding, tablename, top_k=5):
@@ -25,7 +25,7 @@ def search_similar_documents(query_embedding, tablename, top_k=5):
     sql = f"""
         SELECT e.content AS snippet,
                e.file_id,
-               f.filename,
+               f.file_name,
                f.content AS full_text,
                f.file_blob
         FROM "{tablename}" AS e
@@ -54,20 +54,20 @@ def render_chunk_mode():
         query_embedding = embedder.encode([query], convert_to_numpy=True)[0]
 
     docs = search_similar_documents(query_embedding, tablename)
-    file_list = sorted({d["filename"] for d in docs})
+    file_list = sorted({d["file_name"] for d in docs})
     st.markdown("**対象ファイル**: " + ", ".join(file_list))
     docs_by_file = defaultdict(list)
     for d in docs:
-        docs_by_file[(d["file_id"], d["filename"])].append(d)
+        docs_by_file[(d["file_id"], d["file_name"])].append(d)
 
     st.markdown("### 🔍 検索結果プレビュー")
-    for (file_id, filename), group in docs_by_file.items():
-        st.markdown(f"**📄 {filename}**")
+    for (file_id, file_name), group in docs_by_file.items():
+        st.markdown(f"**📄 {file_name}**")
         for d in group:
             st.write(f"- {d['snippet']}")
         with st.expander("▶️ 全文をプレビュー"):
-            unique_key = make_unique_key(file_id, filename)
-            if filename.lower().endswith(".pdf"):
+            unique_key = make_unique_key(file_id, file_name)
+            if file_name.lower().endswith(".pdf"):
                 b64 = base64.b64encode(group[0]["file_blob"]).decode("utf-8")
                 iframe = f'<iframe src="data:application/pdf;base64,{b64}" width="100%" height="600px" style="border:none;"></iframe>'
                 components.html(iframe, height=600)
@@ -96,7 +96,7 @@ def render_chunk_mode():
                         )
                     st.success("✅ contentを更新し、旧ベクトルを削除しました")
                     embed_and_insert(
-                        texts=[edited_text], filename=filename,
+                        texts=[edited_text], file_name=file_name,
                         truncate_done_tables=set()
                     )
                     st.success("✅ 再ベクトル化完了！")
@@ -106,7 +106,7 @@ def render_chunk_mode():
             st.download_button(
                 label="元ファイルをダウンロード",
                 data=bytes(group[0]["file_blob"]),
-                file_name=filename,
+                file_name=file_name,
                 mime="application/pdf",
                 key=f"download_{unique_key}"
             )

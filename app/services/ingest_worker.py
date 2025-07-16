@@ -40,7 +40,7 @@ LOGGER       = logging.getLogger("ingest_worker")
 def process_file(
     *,
     file_path: str,
-    filename: str,
+    file_name: str,
     index: int,
     total_files: int,
     refine_prompt_key: str,
@@ -57,11 +57,11 @@ def process_file(
         file_id = insert_file_full(file_path, "", "", 0.0)
     except Exception as exc:
         LOGGER.exception("insert_file_full")
-        yield {"file": filename, "step": "DB登録失敗", "detail": str(exc)}
+        yield {"file": file_name, "step": "DB登録失敗", "detail": str(exc)}
         return
 
     yield {
-        "file": filename,
+        "file": file_name,
         "file_id": file_id,
         "step": "ファイル登録完了",
         "index": index,
@@ -69,21 +69,21 @@ def process_file(
     }
 
     # ── ② テキスト抽出 ─────────────────────────────────
-    yield {"file": filename, "step": "テキスト抽出中…"}
+    yield {"file": file_name, "step": "テキスト抽出中…"}
     try:
         pages = extract_text_by_extension(file_path)
     except Exception as exc:
         LOGGER.exception("extract_text_by_extension")
         update_file_status(file_id, status="error", note=str(exc))
-        yield {"file": filename, "step": "テキスト抽出失敗", "detail": str(exc)}
+        yield {"file": file_name, "step": "テキスト抽出失敗", "detail": str(exc)}
         return
 
     if not pages:
         update_file_status(file_id, status="error", note="no text")
-        yield {"file": filename, "step": "テキスト無し"}
+        yield {"file": file_name, "step": "テキスト無し"}
         return
 
-    yield {"file": filename, "step": "テキスト抽出完了", "pages": len(pages)}
+    yield {"file": file_name, "step": "テキスト抽出完了", "pages": len(pages)}
 
     # ── ③ 全文生成 → raw_text 保存 ────────────────────
     page_blocks = [
@@ -108,17 +108,17 @@ def process_file(
         prompt_text = build_prompt(block, refine_prompt_key)
 
         # プロンプト見出し（全文用）
-        yield {"file": filename, "step": f"使用プロンプト全文 part:{label}"}
+        yield {"file": file_name, "step": f"使用プロンプト全文 part:{label}"}
         # プロンプト全文
         yield {
-            "file":    filename,
+            "file":    file_name,
             "step":    "prompt_text",
             "part":    label,
             "content": prompt_text,
         }
 
         # 進行中メッセージ（※廃止しない）
-        yield {"file": filename, "step": f"LLM整形中 part:{label}"}
+        yield {"file": file_name, "step": f"LLM整形中 part:{label}"}
 
         job = functools.partial(
             refine_text_with_llm,
@@ -132,22 +132,22 @@ def process_file(
                 _run_with_timeout(job, llm_timeout_sec)
         except TimeoutError:
             update_file_status(file_id, status="error", note="llm timeout")
-            yield {"file": filename, "step": "LLMタイムアウト", "part": label}
+            yield {"file": file_name, "step": "LLMタイムアウト", "part": label}
             return
         except Exception as exc:
             LOGGER.exception("LLM refine")
             update_file_status(file_id, status="error", note=str(exc))
-            yield {"file": filename, "step": "LLM整形失敗", "detail": str(exc)}
+            yield {"file": file_name, "step": "LLM整形失敗", "detail": str(exc)}
             return
 
         refined_pages.append(refined)
         file_min_score = min(file_min_score, score)
 
         # 整形結果見出し（全文）
-        yield {"file": filename, "step": f"LLM整形結果全文 part:{label}"}
+        yield {"file": file_name, "step": f"LLM整形結果全文 part:{label}"}
         # 整形結果全文
         yield {
-            "file":    filename,
+            "file":    file_name,
             "step":    "refined_text",
             "part":    label,
             "content": refined,
@@ -159,24 +159,24 @@ def process_file(
     # ── ⑤ チャンク分割 ─────────────────────────────────
     final_text = "\n\n".join(refined_pages)
     chunks = split_into_chunks(final_text, chunk_size=CHUNK_SIZE, overlap=OVERLAP_SIZE)
-    yield {"file": filename, "step": f"チャンク分割完了 chunks={len(chunks)}"}
+    yield {"file": file_name, "step": f"チャンク分割完了 chunks={len(chunks)}"}
 
     # ── ⑥ ベクトル化 ───────────────────────────────────
     embed_job = functools.partial(
         embed_and_insert,
         texts=chunks,
-        filename=file_path,
+        file_name=file_path,
         model_keys=embed_models,
         quality_score=file_min_score,
         file_id=file_id,
     )
     try:
         embed_job()
-        yield {"file": filename, "step": "ベクトル化完了"}
+        yield {"file": file_name, "step": "ベクトル化完了"}
     except Exception as exc:
         LOGGER.exception("embed_and_insert")
         update_file_status(file_id, status="error", note=str(exc))
-        yield {"file": filename, "step": "ベクトル化失敗", "detail": str(exc)}
+        yield {"file": file_name, "step": "ベクトル化失敗", "detail": str(exc)}
         return
 
     # ── ⑦ refined_text 保存 ────────────────────────────
@@ -188,13 +188,13 @@ def process_file(
     )
     if need_upd:
         update_file_text(file_id, refined_text=final_text, quality_score=file_min_score)
-        yield {"file": filename, "step": "全文保存完了（上書き実施）"}
+        yield {"file": file_name, "step": "全文保存完了（上書き実施）"}
     else:
-        yield {"file": filename, "step": "全文保存スキップ"}
+        yield {"file": file_name, "step": "全文保存スキップ"}
 
     update_file_status(file_id, status="done")
     yield {
-        "file": filename,
+        "file": file_name,
         "step": "file_done",
         "elapsed": round(time.perf_counter() - t0, 2),
     }

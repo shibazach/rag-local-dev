@@ -38,9 +38,9 @@ def render_file_mode():
     st.markdown("### 📑 ファイル別の結果（スコア順）")
     for row in rows:
         summary, score = llm_summarize_with_score(query, row["content"])
-        st.markdown(f"**📄 {row['filename']}（一致度: {score:.2f}）**")
+        st.markdown(f"**📄 {row['file_name']}（一致度: {score:.2f}）**")
 
-        if row['filename'].lower().endswith(".pdf"):
+        if row['file_name'].lower().endswith(".pdf"):
             b64    = base64.b64encode(row["file_blob"]).decode("utf-8")
             iframe = (
                 f'<iframe src="data:application/pdf;base64,{b64}" '
@@ -48,9 +48,9 @@ def render_file_mode():
             )
             components.html(iframe, height=600)
             st.download_button(
-                label=f"Download {row['filename']}",
+                label=f"Download {row['file_name']}",
                 data=bytes(row["file_blob"]),
-                file_name=row["filename"],
+                file_name=row["file_name"],
                 mime="application/pdf",
                 key=f"dl_{row['file_id']}"
             )

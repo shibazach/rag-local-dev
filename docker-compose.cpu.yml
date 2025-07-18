@@ -29,8 +29,8 @@ services:
       - ollama
     networks:
       - ragnet
-    # command: bash
-    command: ["python3", "run_app.py", "fastapi"]
+    command: bash
+    #  command: ["python3", "run_app.py", "fastapi"]
     stdin_open: true
     tty: true
     volumes:

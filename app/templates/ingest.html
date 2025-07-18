@@ -1,4 +1,4 @@
-REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
+<!-- app/templates/ingest.html @更新日時: 2025-07-18 17:00 JST -->
 {% extends "base.html" %}
 {% block content %}
 
@@ -28,6 +28,14 @@ REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
     background:#fafafa;
     box-sizing:border-box;
   }
+
+  /* REM: ペイン間スプリッター */
+  #splitter {
+    flex: 0 0 5px;
+    cursor: col-resize;
+    background: #ccc;
+  }
+
   /* 右カラム：編集エリア */
   #editor-pane {
     flex:0 0 40%;
@@ -48,6 +56,8 @@ REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
     display:flex; align-items:center;
     margin-bottom:0.1em; line-height:1.2; width:100%;
   }
+  /* REM: 質スコア閾値入力を中央寄せ */
+  #quality_threshold { text-align: center; }
   .form-actions { margin-top:1em; }
   .form-actions button { margin-right:1em; }
 
@@ -67,8 +77,6 @@ REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
       <div class="form-section">
         {% include "partials/ingest/ingest_header.html" %}
       </div>
-
-      <!-- 整形プロンプト -->
       <div class="form-section">
         <label for="refine-prompt">📝 整形プロンプト：</label>
         <select id="refine-prompt" name="refine_prompt_key">
@@ -78,8 +86,7 @@ REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
         </select>
         <button type="button" id="prompt-edit-btn">確認</button>
       </div>
-
-      <!-- 埋め込みモデル -->
+      <!-- 省略：埋め込みモデル・上書き・ボタン群 -->
       <div class="form-section">
         <label>📝 埋め込みモデル：</label>
         {% for key, opt in embedding_options.items() %}
@@ -89,8 +96,6 @@ REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
           </label>
         {% endfor %}
       </div>
-
-      <!-- 上書き／質スコア -->
       <div class="form-section">
         <label for="overwrite_existing">既存レコード上書き：</label>
         <input id="overwrite_existing" type="checkbox" name="overwrite_existing" value="true">
@@ -98,11 +103,14 @@ REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
         <input id="quality_threshold" type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0" style="width:4em;">
         <label>以上はSKIP）</label>
       </div>
-
-      <!-- 実行／キャンセル -->
       <div class="form-actions">
         <button type="button" id="start-btn">🚀 処理開始</button>
         <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
+        <!-- REM: PDF表示モード選択 -->
+        <span style="margin-left:1em;">
+          <label><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内表示</label>
+          <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ表示</label>
+        </span>
       </div>
     </form>
   </div>
@@ -110,16 +118,19 @@ REM: app/templates/ingest.html @2025-07-18 00:00 UTC +9
   <!-- 下ペイン：ログ and 編集 -->
   <div id="pane-bottom">
     <div id="log-pane"></div>
+
+    <!-- REM: ログペインと編集ペインの間に可変スプリッター -->
+    <div id="splitter"></div>
     <div id="editor-pane">
       <textarea id="prompt-editor"></textarea>
     </div>
   </div>
 </div>
 
-<!-- JS: フォルダ選択＋フォーム送信 -->
 <script src="{{ url_for('static', path='js/ingest.js') }}"></script>
-
-<!-- JS: SSE 受信＆ログ描画 -->
 <script src="{{ url_for('static', path='js/ingest_sse.js') }}"></script>
+
+<!-- REM: PDFリンク用クラス付与の例 -->
+<!-- <a href="***/file.pdf" class="pdf-link" target="_blank">file.pdf</a> -->
 
 {% endblock %}

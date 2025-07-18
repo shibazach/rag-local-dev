@@ -1,0 +1,3 @@
+# プロジェクトルートで実行
+sudo chown -R $USER:$USER .
+sudo chmod -R 755 .

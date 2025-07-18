@@ -23,11 +23,16 @@ def pdf_page_to_image(pdf_path, page_number, dpi=300) -> Image.Image:
     return Image.open(BytesIO(img_data))
 
 # PDFからテキスト（PyMuPDF + OCR 両方、OCRは向き補正つき）
-def extract_text_from_pdf(pdf_path: str) -> List[str]:
+def extract_text_from_pdf(pdf_path: str, progress_callback=None) -> List[str]:
     doc = fitz.open(pdf_path)
     text_list = []
+    total_pages = len(doc)
 
-    for page_number in range(len(doc)):
+    for page_number in range(total_pages):
+        # 進捗コールバック
+        if progress_callback:
+            progress_callback(f"ページ {page_number + 1}/{total_pages} 処理中...")
+
         page = doc.load_page(page_number)
 
         # PyMuPDF抽出（テキスト層）
@@ -44,6 +49,35 @@ def extract_text_from_pdf(pdf_path: str) -> List[str]:
         text_list.append(merged)
 
     return text_list
+
+# PDFからテキスト（ジェネレータ版 - 進捗をyield）
+def extract_text_from_pdf_with_progress(pdf_path: str):
+    """PDFテキスト抽出をページごとに進捗をyieldしながら実行"""
+    doc = fitz.open(pdf_path)
+    text_list = []
+    total_pages = len(doc)
+
+    for page_number in range(total_pages):
+        # 進捗をyield
+        yield {"progress": f"ページ {page_number + 1}/{total_pages} 処理中..."}
+
+        page = doc.load_page(page_number)
+
+        # PyMuPDF抽出（テキスト層）
+        pdf_text = page.get_text().strip()
+
+        # OCR抽出（画像層 + 向き補正）
+        image = pdf_page_to_image(pdf_path, page_number)
+        angle = detect_rotation_angle(image)
+        rotated = correct_orientation(image, angle)
+        ocr_text = pytesseract.image_to_string(rotated, lang="jpn+eng").strip()
+
+        # 結合して1ページ分として格納
+        merged = f"【PDF抽出】\n{pdf_text}\n\n【OCR抽出】\n{ocr_text}"
+        text_list.append(merged)
+
+    # 最終結果をyield
+    yield {"result": text_list}
 
 # Wordファイルから構造とOCRを統合して抽出
 def extract_text_from_docx_combined(docx_path: str) -> List[str]:
@@ -137,17 +171,25 @@ def extract_text_from_json(json_path: str) -> List[str]:
         return [item["text"] for item in data if "text" in item]
 
 # 拡張子で振り分け
-def extract_text_by_extension(file_path: str) -> List[str]:
+def extract_text_by_extension(file_path: str, progress_callback=None) -> List[str]:
     ext = os.path.splitext(file_path)[1].lower()
     if ext == ".pdf":
-        return extract_text_from_pdf(file_path)
+        return extract_text_from_pdf(file_path, progress_callback)
     elif ext == ".docx":
+        if progress_callback:
+            progress_callback("Word文書を処理中...")
         return extract_text_from_docx_combined(file_path)
     elif ext == ".txt":
+        if progress_callback:
+            progress_callback("テキストファイルを処理中...")
         return extract_text_from_txt(file_path)
     elif ext == ".csv":
+        if progress_callback:
+            progress_callback("CSVファイルを処理中...")
         return extract_text_from_csv(file_path)
     elif ext == ".json":
+        if progress_callback:
+            progress_callback("JSONファイルを処理中...")
         return extract_text_from_json(file_path)
     else:
         raise ValueError(f"未対応のファイル形式: {ext}")

@@ -8,7 +8,10 @@ import numpy as np
 # REM: デバッグ出力を制御するラッパー関数
 def debug_print(*args, **kwargs):
     if DEBUG_MODE:
-        print(*args, **kwargs)
+        print("🐛 [DEBUG]", *args, **kwargs)
+        # 強制的にstdoutをフラッシュ
+        import sys
+        sys.stdout.flush()
 
 # REM: ベクトルを PostgreSQL の pgvector リテラル形式に変換する関数
 def to_pgvector_literal(vec: Sequence[float] | np.ndarray) -> str:

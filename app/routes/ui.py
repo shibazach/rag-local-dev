@@ -66,7 +66,7 @@ def viewer(request: Request, file_id: str, num: int = 0):
         raise HTTPException(400, "bad uuid")
 
     fname: Optional[str] = DB_ENGINE.connect().execute(
-        sql_text("SELECT file_name FROM files_meta WHERE id=:fid"),
+        sql_text("SELECT file_name FROM files_meta WHERE blob_id=:fid"),
         {"fid": file_id},
     ).scalar()
 
@@ -86,7 +86,7 @@ def viewer(request: Request, file_id: str, num: int = 0):
 def edit(request: Request, file_id: str):
     row = DB_ENGINE.connect().execute(
         sql_text(
-            "SELECT refined_text FROM files_text WHERE file_id=:fid"
+            "SELECT refined_text FROM files_text WHERE blob_id=:fid"
         ),
         {"fid": file_id},
     ).scalar()
@@ -107,7 +107,7 @@ def edit_save(request: Request, file_id: str, content: str = Form(...)):
         # 更新
         rows = tx.execute(
             sql_text(
-                "UPDATE files_text SET refined_text=:c, updated_at=NOW() WHERE file_id=:fid"
+                "UPDATE files_text SET refined_text=:c, updated_at=NOW() WHERE blob_id=:fid"
             ),
             {"c": content, "fid": file_id},
         ).rowcount
@@ -116,7 +116,7 @@ def edit_save(request: Request, file_id: str, content: str = Form(...)):
 
     # ファイル名取得（再ベクトル化に利用）
     fname = DB_ENGINE.connect().execute(
-        sql_text("SELECT file_name FROM files_meta WHERE id=:fid"),
+        sql_text("SELECT file_name FROM files_meta WHERE blob_id=:fid"),
         {"fid": file_id},
     ).scalar()
 

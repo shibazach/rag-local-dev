@@ -9,7 +9,8 @@ git config --global user.name  "shibazach"
 git config --global user.email "shibazach@gmail.com"
 
 
-
+export GIT_USERNAME="shibazach"
+export GIT_USEREMAIL="shibazach@gmail.com"
 
 
 

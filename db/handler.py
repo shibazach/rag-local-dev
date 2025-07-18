@@ -1,13 +1,14 @@
-# REM: db/handler.py（更新日時: 2025-07-16 10:35 JST）
+# REM: db/handler.py（更新日時: 2025-07-18 15:30 JST）
 """
-DB 操作ヘルパー（UUID ＋ 3 テーブル構成）
+DB 操作ヘルパー（UUID ＋ 3 テーブル構成 - checksum主導設計）
 -------------------------------------------------
-- files_meta   : 不変メタデータ
-- files_blob   : バイナリ
-- files_text   : OCR & 整形テキスト / タグ
+- files_blob   : バイナリ（主テーブル、checksum一意制約）
+- files_meta   : メタデータ（1:1対応）
+- files_text   : OCR & 整形テキスト / タグ（1:1対応）
 - embeddings   : ベクトル（外部でテーブル作成済み）
 
 呼び出し側は極力このモジュール経由で DB に触れる。
+全てのテーブルは blob_id で統一された UUID を使用。
 """
 
 from __future__ import annotations
@@ -48,7 +49,7 @@ def reset_dev_database() -> None:
         return
     from sqlalchemy import text as _t
     with DB_ENGINE.begin() as conn:
-        conn.execute(_t("TRUNCATE files_meta, files_blob, files_text CASCADE"))
+        conn.execute(_t("TRUNCATE files_blob, files_meta, files_text CASCADE"))
         rows = conn.execute(
             _t("""SELECT tablename FROM pg_tables
                    WHERE schemaname='public'
@@ -57,6 +58,18 @@ def reset_dev_database() -> None:
         for (tbl,) in rows:
             conn.execute(_t(f'TRUNCATE "{tbl}"'))
     debug_print("[DEBUG] reset_dev_database: all tables truncated.")
+
+# ──────────────────────────────────────────────────────────
+# REM: 重複チェック機能
+# ──────────────────────────────────────────────────────────
+def find_existing_by_checksum(checksum: str) -> Optional[str]:
+    """checksumで既存ファイルを検索し、あればそのblob_idを返す"""
+    with DB_ENGINE.connect() as conn:
+        row = conn.execute(
+            sql_text("SELECT id FROM files_blob WHERE checksum = :checksum"),
+            {"checksum": checksum}
+        ).first()
+    return str(row[0]) if row else None
 
 # ──────────────────────────────────────────────────────────
 # REM: ファイル一括 INSERT
@@ -68,121 +81,168 @@ def insert_file_full(
     quality_score: float,
     tags: Optional[Sequence[str]] | None = None,
 ) -> str:
+    """
+    新しい設計でのファイル一括INSERT
+    1. checksum計算
+    2. 既存blob検索（重複チェック）
+    3. files_blob INSERT（新規の場合）
+    4. files_meta INSERT/UPDATE
+    5. files_text INSERT/UPDATE
+    """
     file_hash = _calc_sha256(file_path)
-    size      = os.path.getsize(file_path)
+    size = os.path.getsize(file_path)
     mime_type = mimetypes.guess_type(file_path)[0] or DEFAULT_MIME
     tags_list = _normalize_tags(tags)
+    
     with open(file_path, "rb") as fp:
         data = fp.read()
 
     with DB_ENGINE.begin() as conn:
-        file_id = conn.execute(
-            sql_text("""
-                INSERT INTO files_meta (file_name, mime_type, size)
-                VALUES (:fn, :mt, :sz)
-                ON CONFLICT (file_name, size) DO UPDATE       -- 衝突しても必ず 1 行
-                  SET mime_type = EXCLUDED.mime_type
-                RETURNING id
-            """),
-            {"fn": os.path.basename(file_path), "mt": mime_type, "sz": size},
-        ).scalar_one()
+        # 1. 既存blob検索
+        existing_blob_id = find_existing_by_checksum(file_hash)
+        
+        if existing_blob_id:
+            # 既存blobを使用
+            blob_id = existing_blob_id
+            debug_print(f"[handler] Using existing blob: {blob_id}")
+        else:
+            # 新規blob作成
+            blob_id = conn.execute(
+                sql_text("""
+                    INSERT INTO files_blob (checksum, blob_data)
+                    VALUES (:checksum, :data)
+                    RETURNING id
+                """),
+                {"checksum": file_hash, "data": data}
+            ).scalar_one()
+            debug_print(f"[handler] Created new blob: {blob_id}")
 
+        # 2. files_meta INSERT/UPDATE
         conn.execute(
             sql_text("""
-                INSERT INTO files_blob (file_id, blob_data, checksum)
-                VALUES (:fid, :bl, :ch)
-                ON CONFLICT (file_id) DO UPDATE SET
-                    blob_data = EXCLUDED.blob_data,
-                    checksum  = EXCLUDED.checksum
+                INSERT INTO files_meta (blob_id, file_name, mime_type, size)
+                VALUES (:blob_id, :fn, :mt, :sz)
+                ON CONFLICT (blob_id) DO UPDATE SET
+                    file_name = EXCLUDED.file_name,
+                    mime_type = EXCLUDED.mime_type,
+                    size = EXCLUDED.size,
+                    created_at = NOW()
             """),
-            {"fid": file_id, "bl": data, "ch": file_hash},
+            {"blob_id": blob_id, "fn": os.path.basename(file_path), 
+             "mt": mime_type, "sz": size}
         )
+
+        # 3. files_text INSERT/UPDATE
         conn.execute(
             sql_text("""
-                INSERT INTO files_text (file_id, raw_text, refined_text, quality_score, tags)
-                VALUES (:fid, :raw, :ref, :qs, :tags)
-                ON CONFLICT (file_id) DO UPDATE SET
-                    raw_text      = EXCLUDED.raw_text,
-                    refined_text  = EXCLUDED.refined_text,
+                INSERT INTO files_text (blob_id, raw_text, refined_text, quality_score, tags)
+                VALUES (:blob_id, :raw, :ref, :qs, :tags)
+                ON CONFLICT (blob_id) DO UPDATE SET
+                    raw_text = EXCLUDED.raw_text,
+                    refined_text = EXCLUDED.refined_text,
                     quality_score = EXCLUDED.quality_score,
-                    tags          = EXCLUDED.tags
+                    tags = EXCLUDED.tags,
+                    updated_at = NOW()
             """),
-            {"fid": file_id, "raw": raw_text, "ref": refined_text,
-             "qs": quality_score, "tags": tags_list},
+            {"blob_id": blob_id, "raw": raw_text, "ref": refined_text,
+             "qs": quality_score, "tags": tags_list}
         )
-    return str(file_id)
+    
+    return str(blob_id)
 
 # ──────────────────────────────────────────────────────────
 # REM: 取得系
 # ──────────────────────────────────────────────────────────
-def get_file_meta(file_id: str) -> Optional[dict]:
+def get_file_meta(blob_id: str) -> Optional[dict]:
+    """files_meta から (file_name, mime_type, size, created_at) を取得"""
     with DB_ENGINE.connect() as conn:
         row = conn.execute(
             sql_text("""
                 SELECT file_name, mime_type, size, created_at
                   FROM files_meta
-                 WHERE id=:fid
-            """), {"fid": file_id}).mappings().first()
+                 WHERE blob_id = :blob_id
+            """), {"blob_id": blob_id}
+        ).mappings().first()
     return dict(row) if row else None
 
-def get_file_text(file_id: str) -> Optional[dict]:
+def get_file_blob(blob_id: str) -> Optional[bytes]:
+    """files_blob からバイナリを取得"""
+    with DB_ENGINE.connect() as conn:
+        row = conn.execute(
+            sql_text("SELECT blob_data FROM files_blob WHERE id = :blob_id"),
+            {"blob_id": blob_id}
+        ).first()
+    return row[0] if row else None
+
+def get_file_text(blob_id: str) -> Optional[dict]:
+    """files_text から (raw_text, refined_text, quality_score, tags) を取得"""
     with DB_ENGINE.connect() as conn:
         row = conn.execute(
             sql_text("""
                 SELECT raw_text, refined_text, quality_score, tags
                   FROM files_text
-                 WHERE file_id=:fid
-            """), {"fid": file_id}).mappings().first()
+                 WHERE blob_id = :blob_id
+            """), {"blob_id": blob_id}
+        ).mappings().first()
     return dict(row) if row else None
-
-def get_file_blob(file_id: str) -> Optional[bytes]:
-    with DB_ENGINE.connect() as conn:
-        row = conn.execute(
-            sql_text("SELECT blob_data FROM files_blob WHERE file_id=:fid"),
-            {"fid": file_id}).first()
-    return row[0] if row else None
 
 # ──────────────────────────────────────────────────────────
 # REM: 更新系
 # ──────────────────────────────────────────────────────────
 def update_file_text(
-    file_id: str,
+    blob_id: str,
     refined_text: str | None = None,
-    quality_score: float | None = None,
     raw_text: str | None = None,
+    quality_score: float | None = None,
     tags: Optional[Sequence[str]] | None = None,
 ) -> None:
-    sets, params = ["updated_at=NOW()"], {"fid": file_id}
-    if refined_text is not None: sets += ["refined_text=:ref"]; params["ref"] = refined_text
-    if raw_text     is not None: sets += ["raw_text=:raw"];     params["raw"] = raw_text
-    if quality_score is not None: sets += ["quality_score=:qs"]; params["qs"] = quality_score
-    if tags is not None: sets += ["tags=:tags"]; params["tags"] = _normalize_tags(tags)
+    """files_text を更新"""
+    sets, params = [], {"blob_id": blob_id}
+    if refined_text is not None: 
+        sets.append("refined_text = :ref")
+        params["ref"] = refined_text
+    if raw_text is not None: 
+        sets.append("raw_text = :raw")
+        params["raw"] = raw_text
+    if quality_score is not None: 
+        sets.append("quality_score = :qs")
+        params["qs"] = quality_score
+    if tags is not None: 
+        sets.append("tags = :tags")
+        params["tags"] = _normalize_tags(tags)
+    
+    if not sets:
+        return
+
+    sets.append("updated_at = NOW()")
+    sql = f"UPDATE files_text SET {', '.join(sets)} WHERE blob_id = :blob_id"
     with DB_ENGINE.begin() as conn:
-        conn.execute(sql_text(f"""
-            UPDATE files_text SET {', '.join(sets)} WHERE file_id=:fid
-        """), params)
+        conn.execute(sql_text(sql), params)
 
 # ──────────────────────────────────────────────────────────
 # REM: 埋め込みテーブル操作
 # ──────────────────────────────────────────────────────────
 def ensure_embedding_table(table_name: str, dim: int) -> None:
+    """埋め込みテーブルを作成（blob_id参照に変更）"""
     with DB_ENGINE.begin() as conn:
         conn.execute(sql_text(f"""
             CREATE TABLE IF NOT EXISTS "{table_name}" (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 content TEXT,
                 embedding VECTOR({dim}),
-                file_id UUID REFERENCES files_meta(id) ON DELETE CASCADE
+                blob_id UUID REFERENCES files_blob(id) ON DELETE CASCADE
             )
         """))
 
 def bulk_insert_embeddings(table_name: str, records: List[Dict[str, Any]]) -> None:
-    if not records: return
+    """埋め込みレコードの一括INSERT（blob_id使用）"""
+    if not records: 
+        return
     with DB_ENGINE.begin() as conn:
         conn.execute(
             sql_text(f"""INSERT INTO "{table_name}"
-                         (content, embedding, file_id)
-                         VALUES (:content, :embedding, :file_id)"""),
+                         (content, embedding, blob_id)
+                         VALUES (:content, :embedding, :blob_id)"""),
             records
         )
 
@@ -190,12 +250,14 @@ def bulk_insert_embeddings(table_name: str, records: List[Dict[str, Any]]) -> No
 # REM: 近傍検索
 # ──────────────────────────────────────────────────────────
 def fetch_top_chunks(query_vec: str, table_name: str, limit: int = 5) -> list[dict]:
+    """チャンク単位での近傍検索（新しいJOIN構造）"""
     sql = f"""
         SELECT e.content   AS snippet,
-               f.id        AS file_id,
-               f.file_name AS file_name
+               b.id        AS blob_id,
+               m.file_name AS file_name
           FROM "{table_name}" AS e
-          JOIN files_meta AS f ON e.file_id=f.id
+          JOIN files_blob AS b ON e.blob_id = b.id
+          JOIN files_meta AS m ON b.id = m.blob_id
          ORDER BY e.embedding <-> '{query_vec}'::vector
          LIMIT :limit
     """
@@ -204,16 +266,18 @@ def fetch_top_chunks(query_vec: str, table_name: str, limit: int = 5) -> list[di
     return [dict(r) for r in rows]
 
 def fetch_top_files(query_vec: str, table_name: str, limit: int = 10) -> list[dict]:
+    """ファイル単位での近傍検索（新しいJOIN構造）"""
     sql = f"""
         SELECT DISTINCT
-               f.id            AS file_id,
-               f.file_name     AS file_name,
+               b.id            AS blob_id,
+               m.file_name     AS file_name,
                t.refined_text  AS refined_text,
                MIN(e.embedding <-> '{query_vec}'::vector) AS distance
           FROM "{table_name}" AS e
-          JOIN files_meta  AS f ON e.file_id=f.id
-          JOIN files_text  AS t ON e.file_id=t.file_id
-         GROUP BY f.id, f.file_name, t.refined_text
+          JOIN files_blob AS b ON e.blob_id = b.id
+          JOIN files_meta AS m ON b.id = m.blob_id
+          JOIN files_text AS t ON b.id = t.blob_id
+         GROUP BY b.id, m.file_name, t.refined_text
          ORDER BY distance ASC
          LIMIT :limit
     """
@@ -221,80 +285,27 @@ def fetch_top_files(query_vec: str, table_name: str, limit: int = 10) -> list[di
         rows = conn.execute(sql_text(sql), {"limit": limit}).mappings().all()
     return [dict(r) for r in rows]
 
-# REM: 指定 UUID の古い埋め込みレコードを削除（overwrite 用）
-def delete_embedding_for_file(table_name: str, file_id: str) -> None:
+# ──────────────────────────────────────────────────────────
+# REM: 削除系
+# ──────────────────────────────────────────────────────────
+def delete_embedding_for_file(table_name: str, blob_id: str) -> None:
+    """指定blob_idの古い埋め込みレコードを削除（overwrite用）"""
     with DB_ENGINE.begin() as conn:
-        conn.execute(sql_text(f'DELETE FROM "{table_name}" WHERE file_id=:fid'),
-                     {"fid": file_id})
+        conn.execute(sql_text(f'DELETE FROM "{table_name}" WHERE blob_id = :blob_id'),
+                     {"blob_id": blob_id})
 
-# REM: -----------------------------------------------------------------------------
-# REM:  ファイル処理ステータスを更新する（現状はダミー: ログだけ吐いて終了）
-# REM:  実際に使う場合は files_meta などに status / note カラムを追加した上で
-# REM:  SQL UPDATE を書いてください。
-# REM: -----------------------------------------------------------------------------
-def update_file_status(file_id: str, *, status: str, note: str | None = None) -> None:
+# ──────────────────────────────────────────────────────────
+# REM: ステータス更新（将来拡張用）
+# ──────────────────────────────────────────────────────────
+def update_file_status(blob_id: str, *, status: str, note: str | None = None) -> None:
     """インジェスト進捗用ステータス更新（ダミー実装）"""
     import logging
     logging.getLogger("ingest").debug(
-        "update_file_status: %s status=%s note=%s", file_id, status, note
+        "update_file_status: %s status=%s note=%s", blob_id, status, note
     )
-    # REM: ここに UPDATE 文を書く想定:
+    # REM: 将来files_metaにstatus/noteカラムを追加した場合:
     # with DB_ENGINE.begin() as conn:
     #     conn.execute(
-    #         text("UPDATE files_meta SET status=:st, note=:nt WHERE id=:fid"),
-    #         {"st": status, "nt": note, "fid": file_id},
+    #         sql_text("UPDATE files_meta SET status=:st, note=:nt WHERE blob_id=:bid"),
+    #         {"st": status, "nt": note, "bid": blob_id},
     #     )
-
-
-def get_file_meta(file_id: str) -> Optional[dict]:
-    """files_meta から (file_name, mime_type, size, created_at) を取得"""
-    with DB_ENGINE.connect() as conn:
-        row = conn.execute(
-            sql_text("""
-                SELECT file_name, mime_type, size, created_at
-                  FROM files_meta
-                 WHERE id = :fid
-            """), {"fid": file_id}
-        ).mappings().first()
-    return dict(row) if row else None
-
-def get_file_blob(file_id: str) -> Optional[bytes]:
-    """files_blob からバイナリを取得"""
-    with DB_ENGINE.connect() as conn:
-        row = conn.execute(
-            sql_text("SELECT blob_data FROM files_blob WHERE file_id = :fid"),
-            {"fid": file_id}
-        ).first()
-    return row[0] if row else None
-
-def get_file_text(file_id: str) -> Optional[dict]:
-    """files_text から (raw_text, refined_text, quality_score, tags) を取得"""
-    with DB_ENGINE.connect() as conn:
-        row = conn.execute(
-            sql_text("""
-                SELECT raw_text, refined_text, quality_score, tags
-                  FROM files_text
-                 WHERE file_id = :fid
-            """), {"fid": file_id}
-        ).mappings().first()
-    return dict(row) if row else None
-
-def update_file_text(
-    file_id: str,
-    refined_text: str | None = None,
-    raw_text: str | None = None,
-    quality_score: float | None = None,
-    tags: Optional[Sequence[str]] | None = None,
-) -> None:
-    """files_text を更新"""
-    sets, params = [], {"fid": file_id}
-    if refined_text   is not None: sets.append("refined_text = :ref"); params["ref"] = refined_text
-    if raw_text       is not None: sets.append("raw_text = :raw");       params["raw"] = raw_text
-    if quality_score  is not None: sets.append("quality_score = :qs");   params["qs"]  = quality_score
-    if tags           is not None: sets.append("tags = :tags");          params["tags"]= tags
-    if not sets:
-        return
-
-    sql = f"UPDATE files_text SET {', '.join(sets)}, updated_at = NOW() WHERE file_id = :fid"
-    with DB_ENGINE.begin() as conn:
-        conn.execute(sql_text(sql), params)

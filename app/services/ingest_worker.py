@@ -5,7 +5,7 @@ StreamingResponse 側へ dict を逐次 yield し、SSE で送出してもらう
 """
 
 # REM: ── 標準ライブラリ ────────────────────────────────
-import functools, time, unicodedata
+import functools, time, unicodedata, os
 from typing import Dict, Generator, List
 import logging
 
@@ -70,9 +70,30 @@ def process_file(
     }
 
     # ── ② テキスト抽出 ─────────────────────────────────
-    yield {"file": file_name, "step": "テキスト抽出中…"}
+    yield {"file": file_name, "step": "テキスト抽出開始"}
+    
     try:
-        pages = extract_text_by_extension(file_path)
+        # ファイル拡張子を確認
+        ext = os.path.splitext(file_path)[1].lower()
+        
+        if ext == ".pdf":
+            # PDFの場合はページごとの進捗を表示
+            from fileio.extractor import extract_text_from_pdf_with_progress
+            pages = None
+            
+            for event in extract_text_from_pdf_with_progress(file_path):
+                if "progress" in event:
+                    # ページごとの進捗をWeb画面に表示
+                    yield {"file": file_name, "step": f"テキスト抽出中: {event['progress']}"}
+                elif "result" in event:
+                    # 最終結果を取得
+                    pages = event["result"]
+                    break
+        else:
+            # PDF以外の場合は従来通り
+            pages = extract_text_by_extension(file_path)
+            yield {"file": file_name, "step": "テキスト抽出中..."}
+            
     except Exception as exc:
         LOGGER.exception("extract_text_by_extension")
         update_file_status(file_id, status="error", note=str(exc))
@@ -107,9 +128,10 @@ def process_file(
             return
 
         label = f"page{pg}" if use_page else "all"
-        # REM: 編集ペインのテキストがあればそれを使う
+        # REM: 編集ペインのテキストがあればそれを使う（{TEXT}置換のみ）
         if refine_prompt_text:
-            prompt_text = refine_prompt_text
+            cleaned = normalize_empty_lines(correct_text(block))
+            prompt_text = refine_prompt_text.replace("{TEXT}", cleaned)
         else:
             prompt_text = build_prompt(block, refine_prompt_key)
 

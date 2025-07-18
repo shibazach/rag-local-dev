@@ -1,33 +1,32 @@
--- .devcontainer/init_schema.sql  最終更新 2025-07-12 22:45
+-- .devcontainer/init_schema.sql  最終更新 2025-07-18 15:00
 -- 拡張
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS vector;
 
--- files_meta
-CREATE TABLE files_meta (
+-- files_blob (主テーブル - checksum が真の一意性)
+CREATE TABLE files_blob (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    file_name   TEXT        NOT NULL,
-    mime_type   TEXT        NOT NULL,
-    size        BIGINT      NOT NULL,
-    created_at  TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE (file_name, size) 
+    checksum    TEXT UNIQUE NOT NULL,
+    blob_data   BYTEA NOT NULL,
+    stored_at   TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- files_meta (1:1対応)
+CREATE TABLE files_meta (
+    blob_id     UUID PRIMARY KEY
+                REFERENCES files_blob(id)
+                ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
+    file_name   TEXT NOT NULL,
+    mime_type   TEXT NOT NULL,
+    size        BIGINT NOT NULL,
+    created_at  TIMESTAMPTZ DEFAULT NOW()
     -- 後日追加予定: image_pages INT[] DEFAULT '{}', chart_pages INT[] DEFAULT '{}'
 );
 
--- files_blob
-CREATE TABLE files_blob (
-    file_id    UUID PRIMARY KEY
-               REFERENCES files_meta(id)
-               ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
-    blob_data  BYTEA NOT NULL,
-    checksum   TEXT,
-    stored_at  TIMESTAMPTZ DEFAULT NOW()
-);
-
--- files_text
+-- files_text (1:1対応)
 CREATE TABLE files_text (
-    file_id        UUID PRIMARY KEY
-                   REFERENCES files_meta(id)
+    blob_id        UUID PRIMARY KEY
+                   REFERENCES files_blob(id)
                    ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED,
     raw_text       TEXT,
     refined_text   TEXT,

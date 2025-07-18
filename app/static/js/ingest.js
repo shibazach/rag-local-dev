@@ -94,6 +94,7 @@
       });
     }
 
+    // REM: フォーム要素一括無効化／有効化
     function setFormDisabled(disabled) {
       // REM: pdf_mode ラジオだけは対象外にして常に操作可能に
       document.querySelectorAll(
@@ -178,13 +179,24 @@
     cancelBtn.addEventListener("click", async () => {
       // REM: ボタン二度押し防止
       cancelBtn.disabled = true;
+      // REM: 即時フィードバック：キャンセル中メッセージ（重複防止）
+      const last = logPane.lastElementChild;
+      if (!(last && last.textContent === "⏳ キャンセル中…")) {
+        const cancelDiv = document.createElement("div");
+        cancelDiv.textContent = "⏳ キャンセル中…";
+        // REM: ログペインに追加
+        logPane.appendChild(cancelDiv);
+        // REM: 强制スクロール
+        logPane.scrollTop = logPane.scrollHeight;
+      }
+
       // REM: バックエンドにキャンセル指示を送信
       try {
         await fetch("/ingest/cancel", { method: "POST" });
       } catch (e) {
         console.error("キャンセルAPIエラー", e);
       }
-      // REM: SSE は切断せず、バックエンドからの 'cancelling'/'stopped' イベントを待つ
+      // REM: SSE は切断せず、バックエンドからの 'stopped' イベントを待つ
     });
 
     // REM: SSE完了時のコールバック（UI再活性化）
@@ -235,7 +247,7 @@
       function onMouseMove(e) {
         if (!dragging) return;
         const dx = e.clientX - startX;
-        const newW = startW + dx;
+        const newW = startW + dx
         const containerW = document.getElementById("pane-bottom").clientWidth;
         if (newW < 100 || newW > containerW * 0.8) return;
         // REM: flexBasis を用いて安定的に幅変更
@@ -259,7 +271,6 @@
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
       });
-    })();
-
+    })();    
   }); // REM: DOMContentLoaded end
 })(); // REM: IIFE end

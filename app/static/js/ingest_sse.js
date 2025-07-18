@@ -25,6 +25,11 @@ function startIngestStream() {
   es.onmessage = evt => {
     const d = JSON.parse(evt.data);
 
+    // REM: cancelling イベントはログ化しない（即時フィードバックのみ）
+    if (d.cancelling) {
+      return;
+    }
+
     // REM: 全体開始イベント
     if (d.start) {
       logPane.appendChild(createLine(`▶ 全 ${d.total_files} 件の処理を開始`));

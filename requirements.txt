@@ -27,3 +27,4 @@ uvicorn
 jinja2
 python-multipart
 jaconv
+psutil

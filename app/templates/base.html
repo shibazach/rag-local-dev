@@ -6,12 +6,14 @@
   <title>研究部RAG</title>
   <link rel="stylesheet" href="/static/styles.css">
   <style>
+    /* REM: 全体レイアウト */
     body {
       margin: 0;
       display: flex;
       height: 100vh;
       font-family: sans-serif;
     }
+    /* REM: ナビゲーション */
     nav {
       width: 200px;
       background: #f4f4f4;
@@ -37,19 +39,18 @@
     nav a:hover {
       text-decoration: underline;
     }
+    /* REM: メインコンテンツ */
     main {
       flex: 1;
       padding: 1em;
       overflow: auto;
     }
-    /* ───────────── タイトル統一スタイル ───────────── */
-    /* ingests/chat などデータ整形ページ用：フォント小・高さ合わせ */
+    /* REM: ページごとのタイトルスタイル */
     .page-title {
       margin: 0 0 8px;
       font-size: 1.2em;
       line-height: 1.5em;
     }
-    /* index.html 用：フォントそのまま・高さだけ合わせ */
     .index-title {
       margin: 0 0 8px;
       line-height: 1.5em;
@@ -60,39 +61,48 @@
 </head>
 <body>
   <nav>
+    <!-- REM: サイドバータイトル -->
     <h2>🧠 研究部RAG</h2>
     <ul>
       <li><a href="/ingest">✏️ データ整形/登録</a></li>
       <li><a href="/chat">🔍 チャット検索</a></li>
     </ul>
-    <!-- REM: システムモニタリング表示用 -->
     <hr>
+    <!-- REM: システムモニタリング表示用 -->
     <div id="system-monitor">
       <p>CPU 使用率：<span id="cpu-usage">--</span>%</p>
       <p id="gpu-info" style="display:none">
-        GPU 使用率：<span id="gpu-util">--</span>% /
+        GPU 使用率：<span id="gpu-util">--</span>%<br>
         消費電力：<span id="gpu-power">--</span>W
       </p>
     </div>
-    <!-- REM: システムモニタリング用スクリプト -->
-    <script>
-      setInterval(async () => {
-        try {
-          const res = await fetch('/metrics');
-          if (!res.ok) return;
-          const j = await res.json();
-          document.getElementById('cpu-usage').textContent = j.cpu.toFixed(1);
-          if (j.gpu) {
-            document.getElementById('gpu-info').style.display = 'block';
-            document.getElementById('gpu-util').textContent  = j.gpu.util;
+  </nav>
+
+  <!-- REM: システムモニタリング用スクリプト -->
+  <script>
+    setInterval(async () => {
+      try {
+        const res = await fetch('/metrics');
+        if (!res.ok) return;
+        const j = await res.json();
+        // REM: j.cpu が未定義の場合はスキップ
+        if (!j || typeof j.cpu !== 'number') return;
+        document.getElementById('cpu-usage').textContent = j.cpu.toFixed(1);
+        // REM: GPU 情報がある場合のみ表示
+        if (j.gpu && typeof j.gpu.util === 'number') {
+          document.getElementById('gpu-info').style.display = 'block';
+          document.getElementById('gpu-util').textContent = j.gpu.util.toFixed(1);
+          // REM: GPU power が数値なら表示
+          if (typeof j.gpu.power === 'number') {
             document.getElementById('gpu-power').textContent = j.gpu.power.toFixed(1);
           }
-        } catch (e) {
-          console.error('metrics fetch error:', e);
         }
-      }, 3000);
-    </script>
-  </nav>
+      } catch (e) {
+        console.error('metrics fetch error:', e);
+      }
+    }, 3000);
+  </script>
+
   <main>
     {% block content %}{% endblock %}
   </main>

@@ -127,10 +127,8 @@
   </div>
 </div>
 
-<script src="{{ url_for('static', path='js/ingest.js') }}"></script>
-<script src="{{ url_for('static', path='js/ingest_sse.js') }}"></script>
-
-<!-- REM: PDFリンク用クラス付与の例 -->
-<!-- <a href="***/file.pdf" class="pdf-link" target="_blank">file.pdf</a> -->
+<!-- REM: スクリプト読み込み（バージョン管理付き） -->
+<script src="{{ url_for('static', path='js/ingest.js') }}?v=20250718"></script>
+<script src="{{ url_for('static', path='js/ingest_sse.js') }}?v=20250718"></script>
 
 {% endblock %}

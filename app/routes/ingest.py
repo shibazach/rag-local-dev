@@ -24,7 +24,11 @@ from app.services.ingest_worker import process_file
 
 # REM: ルーター定義
 router    = APIRouter(prefix="/ingest", tags=["ingest"])
-templates = Jinja2Templates(directory="app/fastapi/templates")
+
+BASE_DIR      = os.path.dirname(__file__) 
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
 LOGGER    = logging.getLogger("ingest")
 
 # REM: 定数

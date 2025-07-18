@@ -25,6 +25,9 @@ app.include_router(api_router)
 
 # REM: プロンプト配信用エンドポイント登録
 from app.routes.ingest_api import router as ingest_api_router
+from app.routes.metrics import router as metrics_router
+app.include_router(metrics_router)
+
 # prefix="/api" の下に "/refine_prompt" をマウント
 app.include_router(ingest_api_router, prefix="/api")
 

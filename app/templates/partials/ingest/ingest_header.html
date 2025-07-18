@@ -1,43 +1,35 @@
-<!-- app/fastapi/templates/partials/ingest/ingest_header.html @2025-07-11 13:17 JST -->
-<div id="ingest-header">
+<!-- app/templates/partials/ingest/ingest_header.html @2025-07-18 00:00 UTC +9 -->
+<div id="ingest-header" style="display: flex; flex-direction: column; gap:0.2em;">
   <!-- REM: モード切替（フォルダ or ファイル） -->
-  <label>
-    <input type="radio" name="input_mode" value="folder" checked>
-    フォルダ指定
-  </label>
-  <label style="margin-left:10px;">
-    <input type="radio" name="input_mode" value="files">
-    ファイル指定
-  </label>
+  <div style="display: flex; align-items: center; gap:1em;">
+    <label>
+      <input type="radio" name="input_mode" value="folder" checked>
+      フォルダ指定（<input type="checkbox" id="include-subdirs" name="include_subdirs" checked> サブフォルダも含める）
+    </label>
+    <label>
+      <input type="radio" name="input_mode" value="files">
+      ファイル指定
+    </label>
+  </div>
 
   <!-- REM: フォルダ選択（初期表示） -->
-  <div id="folder-mode" style="margin-top:8px;">
+  <div id="folder-mode" style="display: flex; align-items: center; gap: 0.5em;">
     <label for="input-folder">処理対象フォルダ：</label>
     <input type="text" id="input-folder" name="input_folder"
-           value="ignored/input_files" readonly style="width:280px;">
+           value="ignored/input_files" readonly style="width:240px;">
     <button type="button" id="browse-folder">📂 参照</button>
   </div>
 
   <!-- REM: ファイル選択（非表示） -->
-  <div id="files-mode" style="display:none; margin-top:8px;">
+  <div id="files-mode" style="display:none; align-items: center; gap: 0.5em;">
     <label for="input-files">処理対象ファイル：</label>
-    <input type="file" id="input-files" name="input_files" multiple
-           style="width:320px;">
+    <input type="file" id="input-files" name="input_files" multiple style="width:240px;">
     <textarea id="selected-files-display" readonly
       placeholder="選択したファイル名がここに表示されます"
-      style="width:100%; min-height:3em; resize:vertical; margin-top:4px;">
+      style="display:none; width:100%; min-height:3em; resize:vertical; margin-top:4px;">
     </textarea>
   </div>
-
-  <!-- REM: サブフォルダ含めるチェック -->
-  <label style="margin-left:12px;">
-    <input type="checkbox" id="include-subdirs" name="include_subdirs" checked>
-    サブフォルダも含める
-  </label>
 </div>
 
-<!-- フォルダブラウズ用モーダル -->
 {% include "partials/ingest/folder_modal.html" %}
-
-<!-- スクリプト読み込み -->
-<script src="{{ url_for('static', path='js/ingest.js') }}"></script>
+<script src="{{ url_for('static', path='js/ingest.js') }}?v=20250718"></script>

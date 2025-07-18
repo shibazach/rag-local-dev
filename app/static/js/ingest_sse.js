@@ -1,79 +1,94 @@
-// REM: app/fastapi/static/js/ingest_sse.js （更新日時: 2025-07-16）
+// REM: app/static/js/ingest_sse.js @2025-07-18 00:00 UTC +9
+// REM: SSE で /ingest/stream を受信し、ログを #log-pane に追加していくロジック
+
 "use strict";
 
 let es = null;
-const fileContainers = {};
+// REM: ファイルごとのログセクション管理
+let fileContainers = {};
 
 /**
- * SSE で /ingest/stream を受信し、
- * pane-bottom にログを追加していくロジック
+ * REM: SSE を開始し、ログを #log-pane に追記
  */
 function startIngestStream() {
-  const pane = document.getElementById("pane-bottom");
+  // REM: 既存の接続があればクローズ
+  if (es) {
+    es.close();
+    es = null;
+  }
+  // REM: ファイルコンテナを初期化
+  fileContainers = {};
+
+  const logPane = document.getElementById("log-pane");
   es = new EventSource("/ingest/stream");
 
   es.onmessage = evt => {
     const d = JSON.parse(evt.data);
 
-    // ── ジョブ開始イベント ────────────────────────────
+    // REM: 全体開始イベント
     if (d.start) {
-      pane.appendChild(createLine(`▶ 全 ${d.total_files} 件の処理を開始`));
-      scrollBottom(pane);
+      logPane.appendChild(createLine(`▶ 全 ${d.total_files} 件の処理を開始`));
+      scrollBottom(logPane);
       return;
     }
 
-    // ── 全完了イベント ────────────────────────────────
-    if (d.done) {
-      pane.appendChild(createLine("✅ 全処理完了"));
-      scrollBottom(pane);
+    // REM: 停止完了通知
+    if (d.stopped) {
+      logPane.appendChild(createLine("⏹️ 処理が停止しました"));
+      scrollBottom(logPane);
       es.close();
+      if (window.onIngestComplete) window.onIngestComplete();
       return;
     }
 
-    // ── 各ファイル・ステップイベント ───────────────────
-    const {
-      file, step, file_id, index, total, part, content, duration
-    } = d;
+    // REM: 全完了イベント
+    if (d.done) {
+      logPane.appendChild(createLine("✅ 全処理完了"));
+      scrollBottom(logPane);
+      es.close();
+      if (window.onIngestComplete) window.onIngestComplete();
+      return;
+    }
 
-    // ファイルごとのセクションを初期化
+    // REM: 各ファイル・ステップイベント
+    const { file, step, file_id, index, total, part, content, duration } = d;
+
+    // REM: ファイルセクション準備
     let section = fileContainers[file];
     if (!section) {
-      pane.appendChild(document.createElement("br"));
-      pane.appendChild(createLine(
-        `${index}/${total} ${file} の処理中…`, "file-progress"
-      ));
-      scrollBottom(pane);
+      logPane.appendChild(document.createElement("br"));
+      logPane.appendChild(createLine(`${index}/${total} ${file} の処理中…`, "file-progress"));
+      scrollBottom(logPane);
 
       const header = document.createElement("div");
       header.className = "file-header";
       const link = document.createElement("a");
       link.href       = `/viewer/${file_id}`;
-      link.target     = "_blank";
+      link.target     = "_blank";  // REM: 別タブ表示
       link.textContent = file;
       header.appendChild(link);
-      pane.appendChild(header);
-      scrollBottom(pane);
+      logPane.appendChild(header);
+      scrollBottom(logPane);
 
       section = document.createElement("div");
       section.className = "file-section";
-      pane.appendChild(section);
-      scrollBottom(pane);
+      logPane.appendChild(section);
+      scrollBottom(logPane);
 
       fileContainers[file] = section;
     }
 
-    // ── ページ単位の見出し ────────────────────────────
+    // REM: ページ単位の見出し
     if (step && step.startsWith("Page ")) {
       section.appendChild(createLine(step, "page-header"));
-      scrollBottom(pane);
+      scrollBottom(logPane);
       return;
     }
 
-    // ── 「使用プロンプト全文」「LLM整形結果全文」見出し ───
+    // REM: プロンプト全文／整形結果全文の details 初期化
     if (step.startsWith("使用プロンプト全文") || step.startsWith("LLM整形結果全文")) {
       const [title, raw] = step.split(" part:");
-      const p = raw || "all";
-      const key = `${file}__${title}__${p}`;
+      const key = `${file}__${title}__${raw||"all"}`;
       if (!section.querySelector(`details[data-key="${key}"]`)) {
         const det = document.createElement("details");
         det.setAttribute("data-key", key);
@@ -81,18 +96,15 @@ function startIngestStream() {
         sum.textContent = step;
         det.appendChild(sum);
         section.appendChild(det);
-        scrollBottom(pane);
+        scrollBottom(logPane);
       }
       return;
     }
 
-    // ── 本文挿入（プロンプト全文 / 整形結果全文）───────────
+    // REM: プロンプト／整形結果のテキスト挿入
     if (step === "prompt_text" || step === "refined_text") {
-      const title = step === "prompt_text"
-        ? "使用プロンプト全文"
-        : "LLM整形結果全文";
-      const p   = part || "all";
-      const key = `${file}__${title}__${p}`;
+      const title = step === "prompt_text" ? "使用プロンプト全文" : "LLM整形結果全文";
+      const key = `${file}__${title}__${part||"all"}`;
       const det = section.querySelector(`details[data-key="${key}"]`);
       if (det) {
         let pre = det.querySelector("pre");
@@ -101,15 +113,15 @@ function startIngestStream() {
           det.appendChild(pre);
         }
         pre.textContent = (content || "").replace(/\n{3,}/g, "\n\n");
-        scrollBottom(pane);
+        scrollBottom(logPane);
       }
       return;
     }
 
-    // ── 通常ログ行 ───────────────────────────────────
+    // REM: 通常ログ行
     const label = duration ? `${step} (${duration}s)` : step;
     section.appendChild(createLine(label));
-    scrollBottom(pane);
+    scrollBottom(logPane);
   };
 
   es.onerror = () => {
@@ -121,17 +133,14 @@ function startIngestStream() {
 }
 
 /**
- * SSE をキャンセル
+ * REM: SSE をキャンセル（何もしない）
  */
 function cancelIngestStream() {
-  if (es) {
-    es.close();
-    es = null;
-  }
+  // noop
 }
 
 /**
- * 単純なテキスト行を生成
+ * REM: 単純なテキスト行を生成
  */
 function createLine(text, cls) {
   const div = document.createElement("div");
@@ -141,12 +150,14 @@ function createLine(text, cls) {
 }
 
 /**
- * pane を常に下端にスクロール
+ * REM: 自動スクロール
  */
 function scrollBottom(el) {
-  el.scrollTop = el.scrollHeight;
+  const threshold = 32;
+  const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+  if (distance <= threshold) el.scrollTop = el.scrollHeight;
 }
 
-// グローバル公開
+// REM: グローバル公開
 window.startIngestStream  = startIngestStream;
 window.cancelIngestStream = cancelIngestStream;

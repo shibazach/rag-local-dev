@@ -1,5 +1,5 @@
 {
-  // ========== ragdev : CPU ==========
+  // ========== rag-dev : GPU ==========
   "name": "ragdev",
   "dockerComposeFile": [
     "../docker-compose.yml"
@@ -7,11 +7,24 @@
   "service": "ragapp",
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  // ホストの環境変数をコンテナ内に確実に渡す
+  "containerEnv": {
+    "GIT_USERNAME": "${localEnv:GIT_USERNAME}",
+    "GIT_USEREMAIL": "${localEnv:GIT_USEREMAIL}"
+  },
+  // ランタイム内パス設定などは containerEnv か settings 側で
   "remoteEnv": {
     "PYTHONPATH": "/workspace"
   },
   "forwardPorts": [
     8501
+  ],
+  "runArgs": [
+    "--gpus","all",                // 既存の GPU オプションはそのまま
+    "--device","/dev/nvidia0",
+    "--device","/dev/nvidiactl",
+    "--device","/dev/nvidia-uvm",
+    "--device","/dev/nvidia-uvm-tools"
   ],
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash"
@@ -19,6 +32,8 @@
   "extensions": [
     "ms-python.python"
   ],
-  // コンテナ作成後にワークスペース配下を vscode:vscode に chown
-  "postCreateCommand": ""
-}
+  "postCreateCommand": [
+    // コンテナの環境変数 $GIT_USERNAME / $GIT_USEREMAIL を使う
+    "git config --global user.name \"$GIT_USERNAME\"",
+    "git config --global user.email \"$GIT_USEREMAIL\""
+  ]

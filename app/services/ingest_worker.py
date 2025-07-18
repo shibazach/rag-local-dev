@@ -1,4 +1,4 @@
-# REM: app/services/ingest_worker.py（更新日時: 2025-07-15 23:50 JST）
+# REM: app/services/ingest_worker.py @2025-07-18 00:00 UTC +9
 """
 1ファイル分のインジェスト処理本体。
 StreamingResponse 側へ dict を逐次 yield し、SSE で送出してもらう。
@@ -9,7 +9,7 @@ import functools, time, unicodedata
 from typing import Dict, Generator, List
 import logging
 
-# REM: ── プロジェクト共通 ────────────────────────────
+# REM: ── プロジェクト共通 ────────────────────────────────
 from src.config import OLLAMA_MODEL
 
 # REM: ── I/O・LLM・DB ─────────────────────────────────
@@ -44,6 +44,7 @@ def process_file(
     index: int,
     total_files: int,
     refine_prompt_key: str,
+    refine_prompt_text: str = None,        # REM: 追加
     embed_models: List[str],
     overwrite_existing: bool,
     quality_threshold: float,
@@ -104,8 +105,13 @@ def process_file(
     for pg, block in unit_iter:
         if abort_flag["flag"]:
             return
-        label       = f"page{pg}" if use_page else "all"
-        prompt_text = build_prompt(block, refine_prompt_key)
+
+        label = f"page{pg}" if use_page else "all"
+        # REM: 編集ペインのテキストがあればそれを使う
+        if refine_prompt_text:
+            prompt_text = refine_prompt_text
+        else:
+            prompt_text = build_prompt(block, refine_prompt_key)
 
         # プロンプト見出し（全文用）
         yield {"file": file_name, "step": f"使用プロンプト全文 part:{label}"}

@@ -1,4 +1,4 @@
-# app/fastapi/routes/__init__.py  2025-07-11 13:00 JST
+# app/routes/__init__.py  2025-07-11 13:00 JST
 from fastapi import APIRouter
 
 # 各ルーターを import

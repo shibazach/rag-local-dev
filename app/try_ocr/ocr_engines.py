@@ -164,7 +164,7 @@ class PaddleOCREngine(OCREngine):
             
             # PaddleOCRで処理
             ocr = self._get_ocr()
-            result = ocr.ocr(img_data, cls=True)
+            result = ocr.ocr(img_data)
             
             # 結果をテキストに変換
             text_lines = []

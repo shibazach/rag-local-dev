@@ -45,8 +45,10 @@ app.include_router(api_router)
 from app.routes.ingest_api import router as ingest_api_router
 from app.routes.metrics import router as metrics_router
 from app.routes.try_ocr import router as try_ocr_router
+from app.routes.dict_editor import router as dict_editor_router
 app.include_router(metrics_router)
 app.include_router(try_ocr_router)
+app.include_router(dict_editor_router)
 
 # prefix="/api" の下に "/refine_prompt" をマウント
 app.include_router(ingest_api_router, prefix="/api")

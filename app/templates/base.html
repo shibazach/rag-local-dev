@@ -42,7 +42,7 @@
     /* REM: メインコンテンツ */
     main {
       flex: 1;
-      padding: 1em;
+      padding: 0;
       overflow: auto;
     }
     /* REM: ページごとのタイトルスタイル */
@@ -62,12 +62,37 @@
 <body>
   <nav>
     <!-- REM: サイドバータイトル -->
-    <h2>🧠 研究部RAG</h2>
+    <h2><a href="/" style="text-decoration:none; color:inherit;">研究部 RAG</a></h2>
     <ul>
-      <li><a href="/ingest">✏️ データ整形/登録</a></li>
+      <li><a href="/ingest">📚 データ整形/登録</a></li>
       <li><a href="/chat">🔍 チャット検索</a></li>
-      <li><a href="/try_ocr">🔍 OCR比較</a></li>
+      <li><a href="/try_ocr">🔬 OCR機能比較</a></li>
     </ul>
+    <hr>
+    <!-- 辞書編集ボタン群 -->
+    <div id="dict-buttons" style="padding:0.5em 0;">
+      <div style="font-weight:bold; margin-bottom:0.5em; font-size:0.9em;">📝 OCR辞書編集</div>
+      
+      <div class="dict-btn-container" onclick="loadDictDirect('一般用語')" style="cursor:pointer; margin-bottom:0.3em; padding:0.4em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center;">
+        <div style="font-size:0.85em; font-weight:bold;">📄 一般用語</div>
+        <div style="font-size:0.7em; color:#888;" id="dict-count-一般用語">--件</div>
+      </div>
+      
+      <div class="dict-btn-container" onclick="loadDictDirect('専門用語')" style="cursor:pointer; margin-bottom:0.3em; padding:0.4em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center;">
+        <div style="font-size:0.85em; font-weight:bold;">🔬 専門用語</div>
+        <div style="font-size:0.7em; color:#888;" id="dict-count-専門用語">--件</div>
+      </div>
+      
+      <div class="dict-btn-container" onclick="loadDictDirect('誤字修正')" style="cursor:pointer; margin-bottom:0.3em; padding:0.4em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center;">
+        <div style="font-size:0.85em; font-weight:bold;">🔧 誤字修正</div>
+        <div style="font-size:0.7em; color:#888;" id="dict-count-誤字修正">--件</div>
+      </div>
+      
+      <div class="dict-btn-container" onclick="loadDictDirect('形態素辞書')" style="cursor:pointer; margin-bottom:0.3em; padding:0.4em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center;">
+        <div style="font-size:0.85em; font-weight:bold;">⚙️ 形態素辞書</div>
+        <div style="font-size:0.7em; color:#888;" id="dict-count-形態素辞書">--件</div>
+      </div>
+    </div>
     <hr>
     <!-- REM: システムモニタリング表示用 -->
     <div id="system-monitor">
@@ -79,8 +104,32 @@
     </div>
   </nav>
 
+  <!-- 辞書編集モーダル -->
+  <div id="dict-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000;">
+    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; border-radius:8px; width:80%; max-width:800px; max-height:80%; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+      <div style="padding:1em; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0;" id="dict-modal-title">📝 OCR辞書編集</h3>
+        <button id="dict-modal-close" style="background:none; border:none; font-size:1.5em; cursor:pointer;">&times;</button>
+      </div>
+      <div style="display:flex; flex-direction:column; height:60vh;">
+        <div id="dict-editor" style="display:flex; flex-direction:column; height:100%;">
+          <div style="margin-bottom:1em; display:flex; justify-content:flex-end; align-items:center; flex-shrink:0; padding:0 1em;">
+            <div>
+              <button id="dict-save-btn" style="background:#4CAF50; color:white; border:none; padding:0.5em 1em; border-radius:4px; cursor:pointer;">💾 保存</button>
+              <button id="dict-add-btn" style="background:#2196F3; color:white; border:none; padding:0.5em 1em; border-radius:4px; cursor:pointer; margin-left:0.5em;">➕ 追加</button>
+            </div>
+          </div>
+          <div id="dict-content" style="flex:1; padding:0 1em 1em 1em; overflow:hidden;">
+            <textarea id="dict-textarea" style="width:100%; height:100%; font-family:monospace; font-size:0.9em; border:1px solid #ddd; border-radius:4px; padding:0.5em; box-sizing:border-box; resize:none;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- REM: システムモニタリング用スクリプト -->
   <script>
+    // システムメトリクス監視
     setInterval(async () => {
       try {
         const res = await fetch('/metrics');
@@ -102,6 +151,148 @@
         console.error('metrics fetch error:', e);
       }
     }, 3000);
+
+    // 辞書編集モーダル機能
+    document.addEventListener('DOMContentLoaded', () => {
+      const dictModal = document.getElementById('dict-modal');
+      const dictModalClose = document.getElementById('dict-modal-close');
+      const dictSaveBtn = document.getElementById('dict-save-btn');
+      const dictAddBtn = document.getElementById('dict-add-btn');
+      const dictTextarea = document.getElementById('dict-textarea');
+      
+      let currentDict = null;
+
+      // 直接辞書編集を開く
+      window.loadDictDirect = async function(dictName) {
+        dictModal.style.display = 'block';
+        
+        try {
+          // 辞書情報を取得してタイトルを更新
+          const [contentResponse, listResponse] = await Promise.all([
+            fetch(`/api/dict/content/${encodeURIComponent(dictName)}`),
+            fetch('/api/dict/list')
+          ]);
+          
+          const dictData = await contentResponse.json();
+          const dictList = await listResponse.json();
+          
+          currentDict = dictData;
+          
+          // タイトルに詳細情報を表示
+          const dictInfo = dictList.find(d => d.name === dictName);
+          if (dictInfo) {
+            const titleElement = document.getElementById('dict-modal-title');
+            const icon = dictName === '一般用語' ? '📄' : 
+                        dictName === '専門用語' ? '🔬' : 
+                        dictName === '誤字修正' ? '🔧' : '⚙️';
+            titleElement.innerHTML = `
+              <div style="font-size:1.2em; font-weight:bold; line-height:1.5em;">${icon} ${dictName}</div>
+              <div style="font-size:0.75em; color:#666; font-weight:normal; margin-top:0.2em;">${dictInfo.description} | ${dictInfo.entry_count}件 | ${dictInfo.modified}</div>
+            `;
+          }
+          
+          // CSVデータをテキストエリアに表示
+          let content = '';
+          if (dictData.headers && dictData.headers.length > 0) {
+            content += dictData.headers.join(',') + '\n';
+          }
+          if (dictData.data && dictData.data.length > 0) {
+            dictData.data.forEach(row => {
+              content += row.join(',') + '\n';
+            });
+          }
+          
+          dictTextarea.value = content;
+          
+        } catch (error) {
+          alert('辞書の読み込みに失敗しました: ' + error.message);
+          console.error('辞書読み込みエラー:', error);
+          dictModal.style.display = 'none';
+        }
+      };
+
+      // ページ読み込み時に辞書ボタンの件数を更新
+      loadDictButtonCounts();
+
+      // 辞書ボタンの件数を読み込み
+      async function loadDictButtonCounts() {
+        try {
+          const response = await fetch('/api/dict/list');
+          const dicts = await response.json();
+          
+          dicts.forEach(dict => {
+            const countElement = document.getElementById(`dict-count-${dict.name}`);
+            if (countElement) {
+              countElement.textContent = `${dict.entry_count}件`;
+            }
+          });
+          
+        } catch (error) {
+          console.error('辞書件数読み込みエラー:', error);
+        }
+      }
+
+      // モーダル閉じる
+      dictModalClose.addEventListener('click', () => {
+        dictModal.style.display = 'none';
+      });
+
+      // モーダル外クリックで閉じる
+      dictModal.addEventListener('click', (e) => {
+        if (e.target === dictModal) {
+          dictModal.style.display = 'none';
+        }
+      });
+
+      // 辞書を保存
+      dictSaveBtn.addEventListener('click', async () => {
+        if (!currentDict) return;
+        
+        try {
+          const formData = new FormData();
+          formData.append('content', dictTextarea.value);
+          
+          const response = await fetch(`/api/dict/save/${encodeURIComponent(currentDict.name)}`, {
+            method: 'POST',
+            body: formData
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            alert('保存しました');
+          } else {
+            alert('保存に失敗しました: ' + result.message);
+          }
+          
+        } catch (error) {
+          alert('保存エラー: ' + error.message);
+          console.error('保存エラー:', error);
+        }
+      });
+
+      // エントリ追加
+      dictAddBtn.addEventListener('click', () => {
+        if (!currentDict) return;
+        
+        let newEntry = '';
+        if (currentDict.type === 'single_column') {
+          newEntry = prompt('追加する用語を入力してください:');
+          if (newEntry) {
+            dictTextarea.value += newEntry + '\n';
+          }
+        } else if (currentDict.type === 'two_column') {
+          newEntry = prompt('誤字,正字 の形式で入力してください:');
+          if (newEntry && newEntry.includes(',')) {
+            dictTextarea.value += newEntry + '\n';
+          } else if (newEntry) {
+            alert('カンマ区切りで入力してください（例: 契約所,契約書）');
+          }
+        } else {
+          alert('この辞書タイプの追加機能は未実装です');
+        }
+      });
+    });
   </script>
 
   <main>

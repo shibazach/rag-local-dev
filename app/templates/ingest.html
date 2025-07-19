@@ -56,6 +56,10 @@
     display:flex; align-items:center;
     margin-bottom:0.1em; line-height:1.2; width:100%;
   }
+  .form-section label {
+    min-width: 120px;
+    flex-shrink: 0;
+  }
   /* REM: 質スコア閾値入力を中央寄せ */
   #quality_threshold { text-align: center; }
   .form-actions { margin-top:1em; }
@@ -72,7 +76,7 @@
 <div id="ingest-container">
   <!-- 上ペイン -->
   <div id="pane-top">
-    <h1 class="page-title">✏️ データ整形/登録（LLM モデル：{{ llm_model }}）</h1>
+    <h1 class="page-title">✏️ データ整形/登録</h1>
     <form id="ingest-form">
       <div class="form-section">
         {% include "partials/ingest/ingest_header.html" %}
@@ -84,11 +88,12 @@
             <option value="{{ key }}">{{ key }}</option>
           {% endfor %}
         </select>
-        <button type="button" id="prompt-edit-btn">確認</button>
+        <button type="button" id="prompt-edit-btn" style="margin-left: 0.5em;">確認</button>
+        <span style="margin-left: 1em; color: #666; font-size: 0.9em;">（LLM モデル：{{ llm_model }}）</span>
       </div>
       <!-- 省略：埋め込みモデル・上書き・ボタン群 -->
       <div class="form-section">
-        <label>📝 埋め込みモデル：</label>
+        <label style="min-width: 140px;">📝 埋め込みモデル：</label>
         {% for key, opt in embedding_options.items() %}
           <label style="margin-left:0.5em;">
             <input type="checkbox" name="embed_models" value="{{ key }}" checked>
@@ -97,7 +102,7 @@
         {% endfor %}
       </div>
       <div class="form-section">
-        <label for="overwrite_existing">既存レコード上書き：</label>
+        <label for="overwrite_existing" style="margin-left: 1.5em;">既存レコード上書き：</label>
         <input id="overwrite_existing" type="checkbox" name="overwrite_existing" value="true">
         <label for="quality_threshold">（質スコア閾値</label>
         <input id="quality_threshold" type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0" style="width:4em;">

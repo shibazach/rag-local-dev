@@ -17,14 +17,14 @@
   /* 左上ペイン：基本設定（ファイル選択含む） */
   #top-left {
     flex:1 1 auto;
-    padding:1em;
+    padding:1em 1em 1em 1em;
     border-right:1px solid #ddd;
   }
   
   /* 右上ペイン：エンジン調整 */
   #top-right {
     flex:1 1 auto;
-    padding:1em;
+    padding:1em 1em 1em 1em;
     background:#f9f9f9;
   }
 
@@ -74,20 +74,21 @@
 
   /* パラメータ調整用スタイル */
   .parameter-group {
-    margin-bottom: 0.5em;
-    padding: 0.3em;
+    margin-bottom: 0.3em;
+    padding: 0.25em;
     border: 1px solid #ddd;
     border-radius: 4px;
     background: #fff;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
+    line-height: 1.2;
   }
   .parameter-label {
     font-weight: bold;
     margin-right: 0.5em;
     min-width: 80px;
-    font-size: 0.9em;
+    font-size: 0.85em;
   }
   .parameter-input {
     margin-right: 0.5em;
@@ -105,7 +106,7 @@
     width: 150px;
   }
   .parameter-description {
-    font-size: 0.75em;
+    font-size: 0.7em;
     color: #666;
     flex: 1;
     margin-left: 0.3em;
@@ -181,16 +182,14 @@
   <div id="pane-top">
     <!-- 左上ペイン：基本設定（ファイル選択含む） -->
     <div id="top-left">
-      <h3 style="margin-top:0;">⚙️ 基本設定</h3>
+      <h1 class="page-title">⚙️ 基本設定</h1>
       <div class="form-section">
-        <label for="file-select">ファイル:</label>
-        <select id="file-select" style="width:100%;">
-          <option value="">-- ファイルを選択 --</option>
-          {% for file in files %}
-            <option value="{{ file.id }}">{{ file.file_name }}</option>
-          {% endfor %}
-        </select>
+        <label for="file-input">ファイル指定:</label>
+        <input type="text" id="file-input" readonly style="width:240px;" placeholder="ファイルを選択してください">
+        <button type="button" id="browse-file" style="margin-left:0.5em;">📂 参照</button>
       </div>
+      <input type="file" id="file-picker" style="display:none;" accept=".pdf,.png,.jpg,.jpeg">
+      <div id="selected-file-info" style="display:none; margin-top:0.5em; font-size:0.8em; color:#666;"></div>
       <div class="form-section">
         <label for="engine-select">OCRエンジン:</label>
         <select id="engine-select" style="width:250px;">
@@ -202,7 +201,7 @@
       <div class="form-section">
         <label for="page-num">ページ番号:</label>
         <input type="number" id="page-num" value="1" min="0" style="width:4em;">
-        <span style="margin-left:0.5em; color:#666; font-size:0.8em;">(0と1は1頁目)</span>
+        <span style="margin-left:0.5em; color:#666; font-size:0.8em;">(0は全ページ)</span>
       </div>
       <div class="form-section">
         <label>PDF表示:</label>
@@ -218,7 +217,7 @@
 
     <!-- 右上ペイン：エンジン調整 -->
     <div id="top-right">
-      <h3 style="margin-top:0;">🔧 エンジン調整</h3>
+      <h1 class="page-title">🔧 エンジン調整</h1>
       <div id="engine-parameters">
         <p style="color:#888; font-size:0.9em;">OCRエンジンを選択すると、調整項目が表示されます</p>
       </div>
@@ -257,7 +256,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearBtn = document.getElementById("clear-btn");
   const compareAllBtn = document.getElementById("compare-all-btn");
   const engineSelect = document.getElementById("engine-select");
-  const fileSelect = document.getElementById("file-select");
+  const fileInput = document.getElementById("file-input");
+  const browseFileBtn = document.getElementById("browse-file");
+  const filePicker = document.getElementById("file-picker");
+  const selectedFileInfo = document.getElementById("selected-file-info");
+  
+  let selectedFile = null;
   const pageNumInput = document.getElementById("page-num");
   const resultsContainer = document.getElementById("results-container");
   const pdfPane = document.getElementById("pdf-pane");
@@ -278,36 +282,51 @@ document.addEventListener("DOMContentLoaded", () => {
     processingOverlay.style.display = "none";
   }
 
+  // ファイル選択機能
+  browseFileBtn.addEventListener("click", () => {
+    filePicker.click();
+  });
+
+  filePicker.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      selectedFile = file;
+      fileInput.value = file.name;
+      selectedFileInfo.textContent = `ファイル: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+      selectedFileInfo.style.display = "block";
+      updatePdfDisplay();
+    }
+  });
+
   // PDF表示の切り替え
   function updatePdfDisplay() {
     const pdfMode = document.querySelector('input[name="pdf_mode"]:checked').value;
-    const fileId = fileSelect.value;
     
-    if (pdfMode === "embed" && fileId) {
+    if (pdfMode === "embed" && selectedFile) {
       pdfPane.style.display = "block";
-      updatePdfPage();
+      // ローカルファイルのプレビュー表示
+      const fileURL = URL.createObjectURL(selectedFile);
+      pdfViewer.src = fileURL;
     } else {
       pdfPane.style.display = "none";
     }
   }
 
-  // PDFページの更新
+  // PDFページの更新（ローカルファイル用）
   function updatePdfPage() {
-    const fileId = fileSelect.value;
-    const pageNum = parseInt(pageNumInput.value) || 1;
-    
-    if (fileId && pdfPane.style.display !== "none") {
-      // ページ番号を1ベースに変換（0と1は両方1ページ目）
+    if (selectedFile && pdfPane.style.display !== "none") {
+      const pageNum = parseInt(pageNumInput.value) || 1;
+      const fileURL = URL.createObjectURL(selectedFile);
+      // ページ指定はPDFビューアーの機能に依存
       const displayPage = pageNum === 0 ? 1 : pageNum;
-      pdfViewer.src = `/viewer/${fileId}#page=${displayPage}`;
+      pdfViewer.src = `${fileURL}#page=${displayPage}`;
     }
   }
 
   // OCRエンジン選択時にパラメータを表示
   engineSelect.addEventListener("change", loadEngineParameters);
 
-  // ファイル選択時にPDF表示を更新
-  fileSelect.addEventListener("change", updatePdfDisplay);
+  // PDF表示モード変更時にPDF表示を更新
   document.querySelectorAll('input[name="pdf_mode"]').forEach(radio => {
     radio.addEventListener("change", updatePdfDisplay);
   });
@@ -432,12 +451,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // OCR実行
   processBtn.addEventListener("click", async () => {
     const engineName = engineSelect.value;
-    const fileId = fileSelect.value;
     const pageNumInput_value = parseInt(pageNumInput.value) || 1;
     // 人間用の1から始まる番号を、プログラム用の0から始まる番号に変換
     const pageNum = pageNumInput_value === 0 ? -1 : pageNumInput_value - 1;
 
-    if (!fileId) {
+    if (!selectedFile) {
       alert("ファイルを選択してください");
       return;
     }
@@ -446,18 +464,22 @@ document.addEventListener("DOMContentLoaded", () => {
     
     try {
       const formData = new FormData();
-      formData.append("file_id", fileId);
+      formData.append("file", selectedFile);
       formData.append("engine_name", engineName);
       formData.append("page_num", pageNum);
+      
+      // カスタムパラメータも送信
+      for (const [key, value] of Object.entries(currentEngineParameters)) {
+        formData.append(`param_${key}`, value);
+      }
 
-      const response = await fetch("/api/try_ocr/process", {
+      const response = await fetch("/api/try_ocr/process_file", {
         method: "POST",
         body: formData
       });
 
       const result = await response.json();
       displayResult(result);
-      updatePdfDisplay();
 
     } catch (error) {
       displayError("通信エラー: " + error.message);
@@ -468,12 +490,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 全エンジン比較
   compareAllBtn.addEventListener("click", async () => {
-    const fileId = fileSelect.value;
     const pageNumInput_value = parseInt(pageNumInput.value) || 1;
     // 人間用の1から始まる番号を、プログラム用の0から始まる番号に変換
     const pageNum = pageNumInput_value === 0 ? -1 : pageNumInput_value - 1;
 
-    if (!fileId) {
+    if (!selectedFile) {
       alert("ファイルを選択してください");
       return;
     }
@@ -487,12 +508,12 @@ document.addEventListener("DOMContentLoaded", () => {
       
       for (const engineName of engines) {
         const formData = new FormData();
-        formData.append("file_id", fileId);
+        formData.append("file", selectedFile);
         formData.append("engine_name", engineName);
         formData.append("page_num", pageNum);
 
         try {
-          const response = await fetch("/api/try_ocr/process", {
+          const response = await fetch("/api/try_ocr/process_file", {
             method: "POST",
             body: formData
           });
@@ -502,8 +523,6 @@ document.addEventListener("DOMContentLoaded", () => {
           displayError(`${engineName}: ${error.message}`);
         }
       }
-      
-      updatePdfDisplay();
 
     } finally {
       hideProcessing();
@@ -544,7 +563,8 @@ document.addEventListener("DOMContentLoaded", () => {
       resultsContainer.innerHTML = "";
     }
     
-    resultsContainer.appendChild(card);
+    // 最新結果を上側に挿入
+    resultsContainer.insertBefore(card, resultsContainer.firstChild);
   }
 
   function displayError(message) {

@@ -199,12 +199,12 @@
       <textarea id="query" rows="4" placeholder="質問を入力してください…"></textarea>
     </div>
     <div class="form-section">
-      <label for="mode">検索モード:</label>
+      <label for="mode">検索モード：</label>
       <select id="mode">
         <option value="チャンク統合">チャンク統合</option>
         <option value="ファイル別（要約+一致度）">ファイル別（要約+一致度）</option>
       </select>
-      <label for="model_key" style="margin-left:1em;">埋め込みモデル:</label>
+      <label for="model_key" style="margin-left:1em;">埋め込みモデル：</label>
       <select id="model_key">
         {% for key, config in embedding_options.items() %}
           <option value="{{ key }}">{{ config["model_name"] }} ({{ config["embedder"] }})</option>

@@ -74,6 +74,51 @@ async def process_ocr(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.post("/api/try_ocr/process_file")
+async def process_ocr_file(
+    file: UploadFile = File(...),
+    engine_name: str = Form(...),
+    page_num: int = Form(0)
+):
+    """アップロードされたファイルでOCR処理を実行"""
+    try:
+        # 一時ファイルに保存
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+            content = await file.read()
+            temp_file.write(content)
+            temp_path = temp_file.name
+        
+        try:
+            # OCRエンジンを取得
+            engine = get_engine_by_name(engine_name)
+            
+            # 処理時間を測定
+            start_time = time.time()
+            
+            # ページ番号の処理
+            if page_num == -1:  # 全ページ処理
+                result = process_all_pages(engine, temp_path)
+            else:
+                result = engine.process(temp_path, page_num)
+            
+            processing_time = time.time() - start_time
+            
+            # 処理時間を結果に追加
+            result["processing_time"] = round(processing_time, 2)
+            result["engine_name"] = engine_name
+            result["page_num"] = page_num
+            result["file_name"] = file.filename
+            
+            return result
+            
+        finally:
+            # 一時ファイルを削除
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 def process_all_pages(engine, file_path: str) -> dict:
     """全ページをOCR処理"""
     import fitz

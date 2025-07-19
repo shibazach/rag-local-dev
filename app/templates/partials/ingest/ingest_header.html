@@ -14,7 +14,7 @@
 
   <!-- REM: フォルダ選択（初期表示） -->
   <div id="folder-mode" style="display: flex; align-items: center; gap: 0.5em;">
-    <label for="input-folder">処理対象フォルダ：</label>
+    <label for="input-folder" style="margin-left: 1.5em;">処理対象フォルダ：</label>
     <input type="text" id="input-folder" name="input_folder"
            value="ignored/input_files" readonly style="width:240px;">
     <button type="button" id="browse-folder">📂 参照</button>
@@ -22,8 +22,8 @@
 
   <!-- REM: ファイル選択（非表示） -->
   <div id="files-mode" style="display:none; align-items: center; gap: 0.5em;">
-    <label for="input-files">処理対象ファイル：</label>
-    <input type="file" id="input-files" name="input_files" multiple style="width:240px;">
+    <label for="input-files" style="margin-left: 1.5em;">処理対象ファイル：</label>
+    <input type="file" id="input-files" name="input_files" multiple style="width:350px;">
     <textarea id="selected-files-display" readonly
       placeholder="選択したファイル名がここに表示されます"
       style="display:none; width:100%; min-height:3em; resize:vertical; margin-top:4px;">

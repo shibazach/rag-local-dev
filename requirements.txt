@@ -32,3 +32,4 @@ psutil
 paddlepaddle
 paddleocr
 easyocr
+ocrmypdf

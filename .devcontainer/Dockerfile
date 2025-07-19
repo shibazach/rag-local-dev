@@ -10,7 +10,10 @@ RUN apt-get update -y && \
     DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
       build-essential git curl ca-certificates \
-      tesseract-ocr tesseract-ocr-jpn libreoffice && \
+      tesseract-ocr tesseract-ocr-jpn libreoffice \
+      ghostscript ocrmypdf \
+      libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 \
+      libxrender-dev libgomp1 libgcc-s1 && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- 3. 作業ディレクトリ ----------
@@ -36,11 +39,13 @@ RUN pip install --no-cache-dir \
       --index-url https://download.pytorch.org/whl/cpu && \
     rm /tmp/requirements.txt
 
+    
 # ---------- 5. パッケージ化準備 ----------
 RUN mkdir -p src scripts/views && \
     touch src/__init__.py \
           scripts/__init__.py \
           scripts/views/__init__.py
+
 
 # REM: Streamlit ポート公開（必要に応じてアンコメント）
 # EXPOSE 8501

@@ -6,12 +6,26 @@
   /* ペイン上下分割（ingest/chatと同様） */
   #try-ocr-container { display:flex; flex-direction:column; height:calc(100vh - 2em); }
 
-  /* 上ペイン：OCR選択・ファイル選択 */
+  /* 上ペイン：2分割 */
   #pane-top {
     flex:0 0 auto;
-    padding:1em;
+    display:flex;
     border-bottom:1px solid #ddd;
     box-sizing:border-box;
+  }
+  
+  /* 左上ペイン：基本設定（ファイル選択含む） */
+  #top-left {
+    flex:1 1 auto;
+    padding:1em;
+    border-right:1px solid #ddd;
+  }
+  
+  /* 右上ペイン：エンジン調整 */
+  #top-right {
+    flex:1 1 auto;
+    padding:1em;
+    background:#f9f9f9;
   }
 
   /* 下ペイン：結果表示エリア */
@@ -51,8 +65,51 @@
     display:flex; align-items:center;
     margin-bottom:0.1em; line-height:1.2; width:100%;
   }
+  .form-section label {
+    min-width: 120px;
+    flex-shrink: 0;
+  }
   .form-actions { margin-top:1em; }
   .form-actions button { margin-right:1em; }
+
+  /* パラメータ調整用スタイル */
+  .parameter-group {
+    margin-bottom: 0.5em;
+    padding: 0.3em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .parameter-label {
+    font-weight: bold;
+    margin-right: 0.5em;
+    min-width: 80px;
+    font-size: 0.9em;
+  }
+  .parameter-input {
+    margin-right: 0.5em;
+  }
+  .parameter-input[type="number"] {
+    width: 60px;
+  }
+  .parameter-input[type="text"] {
+    width: 120px;
+  }
+  .parameter-input[type="checkbox"] {
+    width: auto;
+  }
+  .parameter-input select {
+    width: 150px;
+  }
+  .parameter-description {
+    font-size: 0.75em;
+    color: #666;
+    flex: 1;
+    margin-left: 0.3em;
+  }
 
   /* 結果表示 */
   .result-card {
@@ -120,44 +177,51 @@
 
 {% block content %}
 <div id="try-ocr-container">
-  <!-- 上ペイン：設定 -->
+  <!-- 上ペイン：2分割設定 -->
   <div id="pane-top">
-    <h1 class="page-title">🔍 OCR比較テスト</h1>
-    
-    <div class="form-section">
-      <label for="engine-select">OCRエンジン:</label>
-      <select id="engine-select">
-        {% for engine in engines %}
-          <option value="{{ engine }}">{{ engine }}</option>
-        {% endfor %}
-      </select>
+    <!-- 左上ペイン：基本設定（ファイル選択含む） -->
+    <div id="top-left">
+      <h3 style="margin-top:0;">⚙️ 基本設定</h3>
+      <div class="form-section">
+        <label for="file-select">ファイル:</label>
+        <select id="file-select" style="width:100%;">
+          <option value="">-- ファイルを選択 --</option>
+          {% for file in files %}
+            <option value="{{ file.id }}">{{ file.file_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-section">
+        <label for="engine-select">OCRエンジン:</label>
+        <select id="engine-select" style="width:250px;">
+          {% for engine in engines %}
+            <option value="{{ engine }}">{{ engine }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-section">
+        <label for="page-num">ページ番号:</label>
+        <input type="number" id="page-num" value="1" min="0" style="width:4em;">
+        <span style="margin-left:0.5em; color:#666; font-size:0.8em;">(0と1は1頁目)</span>
+      </div>
+      <div class="form-section">
+        <label>PDF表示:</label>
+        <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked> 表示</label>
+        <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="hide"> 非表示</label>
+      </div>
+      <div class="form-actions">
+        <button id="process-btn">🚀 OCR実行</button>
+        <button id="clear-btn">🗑️ 結果クリア</button>
+        <button id="compare-all-btn">📊 全エンジン比較</button>
+      </div>
     </div>
-    
-    <div class="form-section">
-      <label for="file-select">ファイル:</label>
-      <select id="file-select">
-        <option value="">-- ファイルを選択 --</option>
-        {% for file in files %}
-          <option value="{{ file.id }}">{{ file.file_name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    
-    <div class="form-section">
-      <label for="page-num">ページ番号:</label>
-      <input type="number" id="page-num" value="0" min="0" style="width:4em;">
-      <span style="margin-left:0.5em; color:#666;">(0から開始)</span>
-    </div>
-    
-    <div class="form-actions">
-      <button id="process-btn">🚀 OCR実行</button>
-      <button id="clear-btn">🗑️ 結果クリア</button>
-      <button id="compare-all-btn">📊 全エンジン比較</button>
-      <!-- PDF表示モード -->
-      <span style="margin-left:1em;">
-        <label><input type="radio" name="pdf_mode" value="embed" checked> PDF表示</label>
-        <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="hide"> PDF非表示</label>
-      </span>
+
+    <!-- 右上ペイン：エンジン調整 -->
+    <div id="top-right">
+      <h3 style="margin-top:0;">🔧 エンジン調整</h3>
+      <div id="engine-parameters">
+        <p style="color:#888; font-size:0.9em;">OCRエンジンを選択すると、調整項目が表示されます</p>
+      </div>
     </div>
   </div>
 
@@ -200,8 +264,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const pdfViewer = document.getElementById("pdf-viewer");
   const processingOverlay = document.getElementById("processing-overlay");
   const splitter = document.getElementById("splitter");
+  const engineParametersDiv = document.getElementById("engine-parameters");
   
   let isResizing = false;
+  let currentEngineParameters = {};
 
   // 処理中オーバーレイの表示/非表示
   function showProcessing() {
@@ -219,11 +285,26 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (pdfMode === "embed" && fileId) {
       pdfPane.style.display = "block";
-      pdfViewer.src = `/viewer/${fileId}`;
+      updatePdfPage();
     } else {
       pdfPane.style.display = "none";
     }
   }
+
+  // PDFページの更新
+  function updatePdfPage() {
+    const fileId = fileSelect.value;
+    const pageNum = parseInt(pageNumInput.value) || 1;
+    
+    if (fileId && pdfPane.style.display !== "none") {
+      // ページ番号を1ベースに変換（0と1は両方1ページ目）
+      const displayPage = pageNum === 0 ? 1 : pageNum;
+      pdfViewer.src = `/viewer/${fileId}#page=${displayPage}`;
+    }
+  }
+
+  // OCRエンジン選択時にパラメータを表示
+  engineSelect.addEventListener("change", loadEngineParameters);
 
   // ファイル選択時にPDF表示を更新
   fileSelect.addEventListener("change", updatePdfDisplay);
@@ -231,11 +312,130 @@ document.addEventListener("DOMContentLoaded", () => {
     radio.addEventListener("change", updatePdfDisplay);
   });
 
+  // ページ番号変更時にPDFページを更新
+  pageNumInput.addEventListener("change", updatePdfPage);
+  pageNumInput.addEventListener("input", updatePdfPage);
+
+  // OCRエンジンのパラメータを読み込み
+  async function loadEngineParameters() {
+    const engineName = engineSelect.value;
+    if (!engineName) {
+      engineParametersDiv.innerHTML = '<p style="color:#888; font-size:0.9em;">OCRエンジンを選択すると、調整項目が表示されます</p>';
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/try_ocr/engine_parameters/${encodeURIComponent(engineName)}`);
+      const data = await response.json();
+      
+      if (data.parameters && data.parameters.length > 0) {
+        renderEngineParameters(data.parameters);
+      } else {
+        engineParametersDiv.innerHTML = '<p style="color:#888; font-size:0.9em;">このエンジンには調整項目がありません</p>';
+      }
+    } catch (error) {
+      engineParametersDiv.innerHTML = '<p style="color:#d32f2f; font-size:0.9em;">パラメータの読み込みに失敗しました</p>';
+      console.error('パラメータ読み込みエラー:', error);
+    }
+  }
+
+  // エンジンパラメータのUI生成
+  function renderEngineParameters(parameters) {
+    engineParametersDiv.innerHTML = '';
+    currentEngineParameters = {};
+
+    parameters.forEach(param => {
+      const group = document.createElement('div');
+      group.className = 'parameter-group';
+
+      const label = document.createElement('label');
+      label.className = 'parameter-label';
+      label.textContent = param.label;
+
+      let input;
+      const inputId = `param-${param.name}`;
+
+      switch (param.type) {
+        case 'checkbox':
+          input = document.createElement('input');
+          input.type = 'checkbox';
+          input.checked = param.default;
+          input.className = 'parameter-input';
+          currentEngineParameters[param.name] = param.default;
+          input.addEventListener('change', () => {
+            currentEngineParameters[param.name] = input.checked;
+          });
+          break;
+
+        case 'number':
+          input = document.createElement('input');
+          input.type = 'number';
+          input.value = param.default;
+          input.min = param.min || '';
+          input.max = param.max || '';
+          input.step = param.step || '';
+          input.className = 'parameter-input';
+          currentEngineParameters[param.name] = param.default;
+          input.addEventListener('change', () => {
+            currentEngineParameters[param.name] = parseFloat(input.value) || param.default;
+          });
+          break;
+
+        case 'text':
+          input = document.createElement('input');
+          input.type = 'text';
+          input.value = param.default || '';
+          input.className = 'parameter-input';
+          currentEngineParameters[param.name] = param.default || '';
+          input.addEventListener('change', () => {
+            currentEngineParameters[param.name] = input.value;
+          });
+          break;
+
+        case 'select':
+          input = document.createElement('select');
+          input.className = 'parameter-input';
+          param.options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option.value;
+            opt.textContent = option.label;
+            if (option.value === param.default) {
+              opt.selected = true;
+            }
+            input.appendChild(opt);
+          });
+          currentEngineParameters[param.name] = param.default;
+          input.addEventListener('change', () => {
+            currentEngineParameters[param.name] = input.value;
+          });
+          break;
+
+        default:
+          input = document.createElement('span');
+          input.textContent = '未対応の入力タイプ';
+      }
+
+      input.id = inputId;
+      label.setAttribute('for', inputId);
+
+      const description = document.createElement('div');
+      description.className = 'parameter-description';
+      description.textContent = param.description;
+
+      group.appendChild(label);
+      group.appendChild(input);
+      group.appendChild(description);
+      engineParametersDiv.appendChild(group);
+    });
+  }
+
   // OCR実行
   processBtn.addEventListener("click", async () => {
     const engineName = engineSelect.value;
     const fileId = fileSelect.value;
-    const pageNum = parseInt(pageNumInput.value) || 0;
+    const pageNumInput_value = parseInt(pageNumInput.value) || 1;
+    // 人間用の1から始まる番号を、プログラム用の0から始まる番号に変換
+    const pageNum = pageNumInput_value === 0 ? -1 : pageNumInput_value - 1;
 
     if (!fileId) {
       alert("ファイルを選択してください");
@@ -269,7 +469,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // 全エンジン比較
   compareAllBtn.addEventListener("click", async () => {
     const fileId = fileSelect.value;
-    const pageNum = parseInt(pageNumInput.value) || 0;
+    const pageNumInput_value = parseInt(pageNumInput.value) || 1;
+    // 人間用の1から始まる番号を、プログラム用の0から始まる番号に変換
+    const pageNum = pageNumInput_value === 0 ? -1 : pageNumInput_value - 1;
 
     if (!fileId) {
       alert("ファイルを選択してください");
@@ -379,8 +581,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.removeEventListener("mouseup", handleMouseUp);
   }
 
-  // 初期化時にオーバーレイを隠す
+  // 初期化時にオーバーレイを隠し、デフォルトエンジンのパラメータを表示
   hideProcessing();
+  loadEngineParameters();
 });
 </script>
 {% endblock %}

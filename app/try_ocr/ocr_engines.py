@@ -15,13 +15,17 @@ class OCREngine:
     def __init__(self, name: str):
         self.name = name
     
-    def process(self, pdf_path: str, page_num: int = 0) -> Dict[str, Any]:
+    def process(self, pdf_path: str, page_num: int = 0, **kwargs) -> Dict[str, Any]:
         """PDFの指定ページをOCR処理"""
         raise NotImplementedError
     
     def is_available(self) -> bool:
         """エンジンが利用可能かチェック"""
         raise NotImplementedError
+    
+    def get_parameters(self) -> List[Dict[str, Any]]:
+        """調整可能なパラメータの定義を返す"""
+        return []
 
 class OCRMyPDFEngine(OCREngine):
     """現在使用中のOCRMyPDF"""
@@ -72,12 +76,57 @@ class OCRMyPDFEngine(OCREngine):
                 "processing_time": 0
             }
     
+    def get_parameters(self) -> List[Dict[str, Any]]:
+        """OCRMyPDFの調整可能パラメータ"""
+        return [
+            {
+                "name": "deskew",
+                "label": "傾き補正",
+                "type": "checkbox",
+                "default": False,
+                "description": "ページの傾きを自動補正"
+            },
+            {
+                "name": "rotate_pages",
+                "label": "ページ回転",
+                "type": "checkbox", 
+                "default": False,
+                "description": "ページを自動回転"
+            },
+            {
+                "name": "remove_background",
+                "label": "背景除去",
+                "type": "checkbox",
+                "default": False,
+                "description": "背景を除去してテキストを強調"
+            },
+            {
+                "name": "clean",
+                "label": "ノイズ除去",
+                "type": "checkbox",
+                "default": False,
+                "description": "画像のノイズを除去"
+            },
+            {
+                "name": "oversample",
+                "label": "解像度向上倍率",
+                "type": "number",
+                "default": 300,
+                "min": 150,
+                "max": 600,
+                "step": 50,
+                "description": "DPI設定（高いほど精度向上、処理時間増加）"
+            }
+        ]
+    
     def is_available(self) -> bool:
         try:
             result = subprocess.run(["ocrmypdf", "--version"], 
                                   capture_output=True, text=True, timeout=5)
+            print(f"🔍 OCRMyPDF check: returncode={result.returncode}, stdout={result.stdout[:50]}")
             return result.returncode == 0
-        except:
+        except Exception as e:
+            print(f"🔍 OCRMyPDF check failed: {e}")
             return False
 
 class PaddleOCREngine(OCREngine):
@@ -148,11 +197,68 @@ class PaddleOCREngine(OCREngine):
                 "processing_time": 0
             }
     
+    def get_parameters(self) -> List[Dict[str, Any]]:
+        """PaddleOCRの調整可能パラメータ"""
+        return [
+            {
+                "name": "use_angle_cls",
+                "label": "角度分類使用",
+                "type": "checkbox",
+                "default": True,
+                "description": "テキストの角度を自動分類"
+            },
+            {
+                "name": "det_db_thresh",
+                "label": "検出閾値",
+                "type": "number",
+                "default": 0.3,
+                "min": 0.1,
+                "max": 0.9,
+                "step": 0.1,
+                "description": "テキスト検出の閾値（低いほど検出感度高）"
+            },
+            {
+                "name": "det_db_box_thresh",
+                "label": "ボックス閾値",
+                "type": "number",
+                "default": 0.5,
+                "min": 0.1,
+                "max": 0.9,
+                "step": 0.1,
+                "description": "テキストボックス生成の閾値"
+            },
+            {
+                "name": "det_db_unclip_ratio",
+                "label": "アンクリップ比率",
+                "type": "number",
+                "default": 1.6,
+                "min": 1.0,
+                "max": 3.0,
+                "step": 0.1,
+                "description": "テキスト領域の拡張比率"
+            },
+            {
+                "name": "max_text_length",
+                "label": "最大テキスト長",
+                "type": "number",
+                "default": 25,
+                "min": 10,
+                "max": 100,
+                "step": 5,
+                "description": "認識する最大文字数"
+            }
+        ]
+    
     def is_available(self) -> bool:
         try:
-            from paddleocr import PaddleOCR
+            import paddleocr
+            print(f"🔍 PaddleOCR import: ✅ 成功")
             return True
-        except ImportError:
+        except ImportError as e:
+            print(f"🔍 PaddleOCR import: ❌ 失敗 - {e}")
+            return False
+        except Exception as e:
+            print(f"🔍 PaddleOCR check: ❌ エラー - {e}")
             return False
 
 class EasyOCREngine(OCREngine):
@@ -217,11 +323,69 @@ class EasyOCREngine(OCREngine):
                 "processing_time": 0
             }
     
+    def get_parameters(self) -> List[Dict[str, Any]]:
+        """EasyOCRの調整可能パラメータ"""
+        return [
+            {
+                "name": "width_ths",
+                "label": "幅閾値",
+                "type": "number",
+                "default": 0.7,
+                "min": 0.1,
+                "max": 1.0,
+                "step": 0.1,
+                "description": "テキスト幅の閾値"
+            },
+            {
+                "name": "height_ths",
+                "label": "高さ閾値",
+                "type": "number",
+                "default": 0.7,
+                "min": 0.1,
+                "max": 1.0,
+                "step": 0.1,
+                "description": "テキスト高さの閾値"
+            },
+            {
+                "name": "decoder",
+                "label": "デコーダー",
+                "type": "select",
+                "default": "greedy",
+                "options": [
+                    {"value": "greedy", "label": "Greedy（高速）"},
+                    {"value": "beamsearch", "label": "BeamSearch（高精度）"}
+                ],
+                "description": "テキスト認識アルゴリズム"
+            },
+            {
+                "name": "beamWidth",
+                "label": "ビーム幅",
+                "type": "number",
+                "default": 5,
+                "min": 1,
+                "max": 20,
+                "step": 1,
+                "description": "BeamSearch使用時のビーム幅"
+            },
+            {
+                "name": "paragraph",
+                "label": "段落グループ化",
+                "type": "checkbox",
+                "default": False,
+                "description": "テキストを段落単位でグループ化"
+            }
+        ]
+    
     def is_available(self) -> bool:
         try:
             import easyocr
+            print(f"🔍 EasyOCR import: ✅ 成功")
             return True
-        except ImportError:
+        except ImportError as e:
+            print(f"🔍 EasyOCR import: ❌ 失敗 - {e}")
+            return False
+        except Exception as e:
+            print(f"🔍 EasyOCR check: ❌ エラー - {e}")
             return False
 
 class TesseractEngine(OCREngine):
@@ -270,6 +434,64 @@ class TesseractEngine(OCREngine):
                 "processing_time": 0
             }
     
+    def get_parameters(self) -> List[Dict[str, Any]]:
+        """Tesseractの調整可能パラメータ"""
+        return [
+            {
+                "name": "psm",
+                "label": "ページセグメンテーションモード",
+                "type": "select",
+                "default": "6",
+                "options": [
+                    {"value": "0", "label": "0: 向き・スクリプト検出のみ"},
+                    {"value": "1", "label": "1: 自動ページセグメンテーション（OSD付き）"},
+                    {"value": "3", "label": "3: 完全自動ページセグメンテーション"},
+                    {"value": "6", "label": "6: 単一テキストブロック（デフォルト）"},
+                    {"value": "7", "label": "7: 単一テキスト行"},
+                    {"value": "8", "label": "8: 単一単語"},
+                    {"value": "13", "label": "13: 生テキスト行（セグメンテーション無し）"}
+                ],
+                "description": "テキスト認識の方法を指定"
+            },
+            {
+                "name": "oem",
+                "label": "OCRエンジンモード",
+                "type": "select",
+                "default": "3",
+                "options": [
+                    {"value": "0", "label": "0: レガシーエンジンのみ"},
+                    {"value": "1", "label": "1: ニューラルネットワークLSTMのみ"},
+                    {"value": "2", "label": "2: レガシー + LSTM"},
+                    {"value": "3", "label": "3: デフォルト（利用可能なもの）"}
+                ],
+                "description": "使用するOCRエンジンの種類"
+            },
+            {
+                "name": "dpi",
+                "label": "DPI設定",
+                "type": "number",
+                "default": 300,
+                "min": 150,
+                "max": 600,
+                "step": 50,
+                "description": "画像解像度（高いほど精度向上）"
+            },
+            {
+                "name": "preserve_interword_spaces",
+                "label": "単語間スペース保持",
+                "type": "checkbox",
+                "default": False,
+                "description": "単語間のスペースを保持"
+            },
+            {
+                "name": "char_whitelist",
+                "label": "許可文字",
+                "type": "text",
+                "default": "",
+                "description": "認識を許可する文字（空白=全て許可）"
+            }
+        ]
+    
     def is_available(self) -> bool:
         try:
             import pytesseract
@@ -289,7 +511,15 @@ def get_available_engines() -> List[OCREngine]:
         TesseractEngine()
     ]
     
-    return [engine for engine in engines if engine.is_available()]
+    # デバッグ情報を追加
+    available_engines = []
+    for engine in engines:
+        is_avail = engine.is_available()
+        print(f"🔍 {engine.name}: {'✅ 利用可能' if is_avail else '❌ 利用不可'}")
+        if is_avail:
+            available_engines.append(engine)
+    
+    return available_engines
 
 def get_engine_by_name(name: str) -> OCREngine:
     """名前でOCRエンジンを取得"""

@@ -308,10 +308,9 @@ def update_file_status(blob_id: str, *, status: str, note: str | None = None) ->
     #     conn.execute(
     #         sql_text("UPDATE files_meta SET status=:st, note=:nt WHERE blob_id=:bid"),
     #         {"st": status, "nt": note, "bid": blob_id},
-    #     )# ───
-───────────────────────────────────────────────────────
+    #     )
+
 # REM: OCR比較用の追加関数
-# ──────────────────────────────────────────────────────────
 def get_all_files() -> List[Dict[str, Any]]:
     """全ファイルの一覧を取得（OCR比較用）"""
     sql = """

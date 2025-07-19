@@ -1,0 +1,2 @@
+# リアルタイムログ監視
+docker logs ragapp -f

@@ -79,6 +79,12 @@ def embed_and_insert(
     if not flat_chunks:
         debug_print(f"[DEBUG] embed_and_insert: no chunks for {file_name}, skip embedding")
         return
+    
+    # CPU環境でのチャンク数制限（メモリ不足対策）
+    MAX_CHUNKS_CPU = 100  # CPU環境での最大チャンク数
+    if len(flat_chunks) > MAX_CHUNKS_CPU:
+        debug_print(f"[WARNING] Too many chunks ({len(flat_chunks)}), limiting to {MAX_CHUNKS_CPU} for CPU processing")
+        flat_chunks = flat_chunks[:MAX_CHUNKS_CPU]
 
     # 2) files テーブル upsert or スキップ
     if file_id is None:
@@ -93,25 +99,42 @@ def embed_and_insert(
         debug_print(f"[DEBUG] embedding with model = {cfg['model_name']}")
 
         # 3-A) 埋め込み生成
-        if cfg["embedder"] == "OllamaEmbeddings":
-            embedder   = OllamaEmbeddings(model=cfg["model_name"], base_url=OLLAMA_BASE)
-            embeddings = embedder.embed_documents(flat_chunks)
-        else:
-            from torch.cuda import OutOfMemoryError
-            device = pick_embed_device()
-            try:
-                st_model = SentenceTransformer(cfg["model_name"], device=device)
-            except OutOfMemoryError:
-                torch.cuda.empty_cache()
-                device   = "cpu"
-                st_model = SentenceTransformer(cfg["model_name"], device=device)
-            batch      = 16 if device == "cuda" else 8
-            embeddings = st_model.encode(
-                flat_chunks,
-                batch_size=batch,
-                convert_to_numpy=True,
-                show_progress_bar=(device == "cuda"),
-            )
+        try:
+            if cfg["embedder"] == "OllamaEmbeddings":
+                debug_print(f"[DEBUG] Using Ollama embeddings: {cfg['model_name']}")
+                embedder   = OllamaEmbeddings(model=cfg["model_name"], base_url=OLLAMA_BASE)
+                embeddings = embedder.embed_documents(flat_chunks)
+            else:
+                from torch.cuda import OutOfMemoryError
+                device = pick_embed_device()
+                debug_print(f"[DEBUG] Using SentenceTransformer on device: {device}")
+                
+                try:
+                    debug_print(f"[DEBUG] Loading model: {cfg['model_name']}")
+                    st_model = SentenceTransformer(cfg["model_name"], device=device)
+                except OutOfMemoryError as e:
+                    debug_print(f"[WARNING] GPU OOM, falling back to CPU: {e}")
+                    torch.cuda.empty_cache()
+                    device   = "cpu"
+                    st_model = SentenceTransformer(cfg["model_name"], device=device)
+                except Exception as e:
+                    debug_print(f"[ERROR] Failed to load SentenceTransformer model: {e}")
+                    raise
+                
+                batch = 16 if device == "cuda" else 2  # CPU環境でさらに削減
+                debug_print(f"[DEBUG] Encoding {len(flat_chunks)} chunks with batch_size={batch}")
+                
+                embeddings = st_model.encode(
+                    flat_chunks,
+                    batch_size=batch,
+                    convert_to_numpy=True,
+                    show_progress_bar=True,  # CPU環境でも進捗表示
+                )
+                debug_print(f"[DEBUG] Encoding completed, embeddings shape: {embeddings.shape}")
+                
+        except Exception as e:
+            debug_print(f"[ERROR] Embedding generation failed for model {cfg['model_name']}: {e}")
+            raise
 
         # 3-B) 埋め込みテーブル名 & 旧レコード削除／準備
         table_name = cfg["model_name"].replace("/", "_").replace("-", "_") + f"_{cfg['dimension']}"
@@ -125,7 +148,7 @@ def embed_and_insert(
 
         # 3-C) 新レコード挿入
         records = [
-            {"content": chunk, "embedding": to_pgvector_literal(vec), "file_id": file_id}
+            {"content": chunk, "embedding": to_pgvector_literal(vec), "blob_id": file_id}
             for chunk, vec in zip(flat_chunks, embeddings)
         ]
         debug_print(f"[DEBUG] bulk_insert_embeddings into {table_name}: count={len(records)}")

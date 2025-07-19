@@ -6,16 +6,19 @@ console.log("✅ chat.js loaded");
 document.addEventListener("DOMContentLoaded", () => {
   const searchBtn = document.getElementById("search-btn");
   const cancelBtn = document.getElementById("cancel-btn");
-  const loading   = document.getElementById("loading");
-  const resultsDiv= document.getElementById("results");
+  const loading = document.getElementById("loading");
+  const resultsDiv = document.getElementById("results");
   const answerDiv = document.getElementById("answer");
-  const overlay   = document.getElementById("processing-overlay");
-  const overlayMsg= document.getElementById("overlay-message");
+  const overlay = document.getElementById("processing-overlay");
+  const overlayMsg = document.getElementById("overlay-message");
   const overlayOk = document.getElementById("overlay-ok-btn");
-  let controller  = null;
+  const searchOverlay = document.getElementById("search-overlay");
+  const searchMessage = document.getElementById("search-message");
+  let controller = null;
 
   // REM: 初期表示時にオーバーレイを確実に隠す
   hideOverlay();
+  hideSearchOverlay();
 
   // REM: 検索実行ボタン
   searchBtn.addEventListener("click", async () => {
@@ -23,11 +26,17 @@ document.addEventListener("DOMContentLoaded", () => {
     cancelBtn.disabled = false;
     loading.style.display = "inline";
     resultsDiv.innerHTML = "";
-    answerDiv.innerHTML  = "";
+    answerDiv.innerHTML = "";
     hideOverlay();
+    showSearchOverlay();
 
-    const query     = document.getElementById("query").value;
-    const mode      = document.getElementById("mode").value;
+    // REM: 検索中は入力フィールドをグレーアウト
+    document.getElementById("query").disabled = true;
+    document.getElementById("mode").disabled = true;
+    document.getElementById("model_key").disabled = true;
+
+    const query = document.getElementById("query").value;
+    const mode = document.getElementById("mode").value;
     const model_key = document.getElementById("model_key").value;
 
     controller = new AbortController();
@@ -39,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
       form.append("mode", mode);
       form.append("model_key", model_key);
 
-      const res  = await fetch("/query", { method: "POST", body: form, signal });
+      const res = await fetch("/query", { method: "POST", body: form, signal });
       const json = await res.json();
 
       console.log("★ fetch /query →", json);  // デバッグ: まずここで JSON の中身を確認！
@@ -60,6 +69,12 @@ document.addEventListener("DOMContentLoaded", () => {
       cancelBtn.disabled = true;
       loading.style.display = "none";
       controller = null;
+      hideSearchOverlay();
+
+      // REM: 検索完了後は入力フィールドを有効に戻す
+      document.getElementById("query").disabled = false;
+      document.getElementById("mode").disabled = false;
+      document.getElementById("model_key").disabled = false;
     }
   });
 
@@ -78,11 +93,10 @@ document.addEventListener("DOMContentLoaded", () => {
       answerDiv.style.display = "block";
       resultsDiv.innerHTML = `<h3>ソースファイル</h3>`;
       json.sources.forEach((src, i) => {
-        // フォールバックで色々チェック
-        const file_id   = src.file_id   || src.id   || "UNKNOWN_ID";
-        const file_name = src.file_name || src.filename || src.name || "[no name]";
+        const file_id = src.file_id;
+        const file_name = src.file_name;
         resultsDiv.innerHTML +=
-          `<p>${i+1}. <a href="/viewer/${file_id}" target="_blank">${file_name}</a></p>`;
+          `<p>${i + 1}. <a href="#" onclick="openFile('${file_id}', '${file_name}')">${file_name}</a></p>`;
       });
     } else {
       answerDiv.style.display = "none";
@@ -94,19 +108,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // REM: タイトル (ファイル別モード)
       const h3 = document.createElement("h3");
-      const file_id   = item.file_id   || item.id   || "UNKNOWN_ID";
-      const file_name = item.file_name || item.filename || item.name || "[no name]";
-      if (file_id && file_id !== "UNKNOWN_ID") {
-        h3.innerHTML = 
-          `${idx+1}. <a href="/viewer/${file_id}" target="_blank">${file_name}</a>`;
+      const file_id = item.file_id;
+      const file_name = item.file_name;
+      if (file_id) {
+        h3.innerHTML =
+          `${idx + 1}. <a href="#" onclick="openFile('${file_id}', '${file_name}')">${file_name}</a>`;
       } else {
-        h3.textContent = `${idx+1}. ${file_name}`;
+        h3.textContent = `${idx + 1}. ${file_name}`;
       }
       card.appendChild(h3);
 
-      // REM: スニペット or 要約
+      // REM: コンテンツ表示
+      // REM: チャンク統合 → snippet（元データのまま）、ファイル別 → summary（要約）
       const pre = document.createElement("pre");
-      pre.textContent = item.snippet || item.summary || "";
+      const content = json.mode === "チャンク統合" ? item.snippet : item.summary;
+      pre.textContent = content || "";
       card.appendChild(pre);
 
       // REM: 一致度表示（ファイル別モードのみ）
@@ -117,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // REM: 編集機能
-      if (file_id && file_id !== "UNKNOWN_ID") {
+      if (file_id) {
         addEditor(file_id, card);
       }
 
@@ -173,10 +189,10 @@ document.addEventListener("DOMContentLoaded", () => {
               overlayOk.replaceWith(overlayOk.cloneNode(true));
               const newOk = document.getElementById("overlay-ok-btn");
               newOk.addEventListener("click", () => {
-                overlay.style.display    = "none";
-                newOk.style.display      = "none";
-                editorDiv.style.display  = "none";
-                toggleBtn.textContent    = "✏️ 編集";
+                overlay.style.display = "none";
+                newOk.style.display = "none";
+                editorDiv.style.display = "none";
+                toggleBtn.textContent = "✏️ 編集";
                 const updated = editorDiv.querySelector("textarea").value;
                 const pre = container.querySelector("pre");
                 if (pre) pre.textContent = updated;
@@ -200,4 +216,64 @@ document.addEventListener("DOMContentLoaded", () => {
   function hideOverlay() {
     overlay.style.display = "none";
   }
+
+  // REM: 検索中オーバーレイ表示
+  function showSearchOverlay() {
+    searchOverlay.style.display = "flex";
+  }
+  // REM: 検索中オーバーレイ非表示
+  function hideSearchOverlay() {
+    searchOverlay.style.display = "none";
+  }
+
+  // REM: スプリッター機能（ingestと同様）
+  const splitter = document.getElementById("splitter");
+  const rightPane = document.getElementById("right-pane");
+  const resultsPane = document.getElementById("results-pane");
+  let isResizing = false;
+
+  splitter.addEventListener("mousedown", (e) => {
+    isResizing = true;
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  });
+
+  function handleMouseMove(e) {
+    if (!isResizing) return;
+    const containerWidth = document.getElementById("pane-bottom").offsetWidth;
+    const newRightWidth = containerWidth - e.clientX;
+    const minWidth = 200;
+    const maxWidth = containerWidth - 300;
+
+    if (newRightWidth >= minWidth && newRightWidth <= maxWidth) {
+      rightPane.style.flex = `0 0 ${newRightWidth}px`;
+    }
+  }
+
+  function handleMouseUp() {
+    isResizing = false;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+  }
 });
+
+// REM: ファイル表示機能（グローバル関数として定義）
+function openFile(fileId, fileName) {
+  const pdfMode = document.querySelector('input[name="pdf_mode"]:checked').value;
+  const rightPane = document.getElementById("right-pane");
+  const pdfViewer = document.getElementById("pdf-viewer");
+  const promptEditor = document.getElementById("prompt-editor-area");
+
+  if (pdfMode === "newtab") {
+    // 別タブで開く
+    window.open(`/viewer/${fileId}`, '_blank');
+  } else {
+    // 同一タブ内表示（右ペインに表示）
+    rightPane.style.display = "block";
+    pdfViewer.style.display = "block";
+    promptEditor.style.display = "none";
+    pdfViewer.src = `/viewer/${fileId}`;
+
+    console.log(`📄 PDF表示: ${fileName} (${fileId})`);
+  }
+}

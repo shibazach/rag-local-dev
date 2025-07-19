@@ -1,0 +1,386 @@
+<!-- app/templates/try_ocr.html -->
+{% extends "base.html" %}
+
+{% block head %}
+<style>
+  /* ペイン上下分割（ingest/chatと同様） */
+  #try-ocr-container { display:flex; flex-direction:column; height:calc(100vh - 2em); }
+
+  /* 上ペイン：OCR選択・ファイル選択 */
+  #pane-top {
+    flex:0 0 auto;
+    padding:1em;
+    border-bottom:1px solid #ddd;
+    box-sizing:border-box;
+  }
+
+  /* 下ペイン：結果表示エリア */
+  #pane-bottom {
+    flex:1 1 auto;
+    display:flex;
+    overflow:hidden;
+  }
+
+  /* 左ペイン：OCR結果テキスト */
+  #results-pane {
+    flex:1 1 auto;
+    overflow-y:auto;
+    padding:1em;
+    background:#fafafa;
+    box-sizing:border-box;
+  }
+
+  /* スプリッター */
+  #splitter {
+    flex: 0 0 5px;
+    cursor: col-resize;
+    background: #ccc;
+  }
+
+  /* 右ペイン：PDF表示 */
+  #pdf-pane {
+    flex:0 0 40%;
+    display:none;
+    border-left:1px solid #ccc;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+
+  /* フォーム */
+  .form-section {
+    display:flex; align-items:center;
+    margin-bottom:0.1em; line-height:1.2; width:100%;
+  }
+  .form-actions { margin-top:1em; }
+  .form-actions button { margin-right:1em; }
+
+  /* 結果表示 */
+  .result-card {
+    border: 1px solid #ddd;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 4px;
+    background: #fff;
+  }
+  .result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+  }
+  .result-stats {
+    font-size: 0.9em;
+    color: #666;
+  }
+  .result-text {
+    white-space: pre-wrap;
+    background: #f5f5f5;
+    padding: 8px;
+    border-radius: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+  .error-text {
+    color: #d32f2f;
+    background: #ffebee;
+  }
+
+  /* 処理中オーバーレイ */
+  #processing-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    z-index: 9999;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1em;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="try-ocr-container">
+  <!-- 上ペイン：設定 -->
+  <div id="pane-top">
+    <h1 class="page-title">🔍 OCR比較テスト</h1>
+    
+    <div class="form-section">
+      <label for="engine-select">OCRエンジン:</label>
+      <select id="engine-select">
+        {% for engine in engines %}
+          <option value="{{ engine }}">{{ engine }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="form-section">
+      <label for="file-select">ファイル:</label>
+      <select id="file-select">
+        <option value="">-- ファイルを選択 --</option>
+        {% for file in files %}
+          <option value="{{ file.id }}">{{ file.file_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="form-section">
+      <label for="page-num">ページ番号:</label>
+      <input type="number" id="page-num" value="0" min="0" style="width:4em;">
+      <span style="margin-left:0.5em; color:#666;">(0から開始)</span>
+    </div>
+    
+    <div class="form-actions">
+      <button id="process-btn">🚀 OCR実行</button>
+      <button id="clear-btn">🗑️ 結果クリア</button>
+      <button id="compare-all-btn">📊 全エンジン比較</button>
+      <!-- PDF表示モード -->
+      <span style="margin-left:1em;">
+        <label><input type="radio" name="pdf_mode" value="embed" checked> PDF表示</label>
+        <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="hide"> PDF非表示</label>
+      </span>
+    </div>
+  </div>
+
+  <!-- 下ペイン：結果とPDF -->
+  <div id="pane-bottom">
+    <div id="results-pane">
+      <div id="results-container">
+        <p style="color:#888; text-align:center; margin-top:2em;">
+          OCRエンジンとファイルを選択して「OCR実行」ボタンを押してください
+        </p>
+      </div>
+    </div>
+
+    <!-- スプリッター -->
+    <div id="splitter"></div>
+    
+    <!-- PDF表示ペイン -->
+    <div id="pdf-pane">
+      <iframe id="pdf-viewer" style="width:100%; height:100%; border:none;"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- 処理中オーバーレイ -->
+<div id="processing-overlay">
+  <div class="spinner"></div>
+  <div id="processing-message">OCR処理中…お待ちください</div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const processBtn = document.getElementById("process-btn");
+  const clearBtn = document.getElementById("clear-btn");
+  const compareAllBtn = document.getElementById("compare-all-btn");
+  const engineSelect = document.getElementById("engine-select");
+  const fileSelect = document.getElementById("file-select");
+  const pageNumInput = document.getElementById("page-num");
+  const resultsContainer = document.getElementById("results-container");
+  const pdfPane = document.getElementById("pdf-pane");
+  const pdfViewer = document.getElementById("pdf-viewer");
+  const processingOverlay = document.getElementById("processing-overlay");
+  const splitter = document.getElementById("splitter");
+  
+  let isResizing = false;
+
+  // 処理中オーバーレイの表示/非表示
+  function showProcessing() {
+    processingOverlay.style.display = "flex";
+  }
+  
+  function hideProcessing() {
+    processingOverlay.style.display = "none";
+  }
+
+  // PDF表示の切り替え
+  function updatePdfDisplay() {
+    const pdfMode = document.querySelector('input[name="pdf_mode"]:checked').value;
+    const fileId = fileSelect.value;
+    
+    if (pdfMode === "embed" && fileId) {
+      pdfPane.style.display = "block";
+      pdfViewer.src = `/viewer/${fileId}`;
+    } else {
+      pdfPane.style.display = "none";
+    }
+  }
+
+  // ファイル選択時にPDF表示を更新
+  fileSelect.addEventListener("change", updatePdfDisplay);
+  document.querySelectorAll('input[name="pdf_mode"]').forEach(radio => {
+    radio.addEventListener("change", updatePdfDisplay);
+  });
+
+  // OCR実行
+  processBtn.addEventListener("click", async () => {
+    const engineName = engineSelect.value;
+    const fileId = fileSelect.value;
+    const pageNum = parseInt(pageNumInput.value) || 0;
+
+    if (!fileId) {
+      alert("ファイルを選択してください");
+      return;
+    }
+
+    showProcessing();
+    
+    try {
+      const formData = new FormData();
+      formData.append("file_id", fileId);
+      formData.append("engine_name", engineName);
+      formData.append("page_num", pageNum);
+
+      const response = await fetch("/api/try_ocr/process", {
+        method: "POST",
+        body: formData
+      });
+
+      const result = await response.json();
+      displayResult(result);
+      updatePdfDisplay();
+
+    } catch (error) {
+      displayError("通信エラー: " + error.message);
+    } finally {
+      hideProcessing();
+    }
+  });
+
+  // 全エンジン比較
+  compareAllBtn.addEventListener("click", async () => {
+    const fileId = fileSelect.value;
+    const pageNum = parseInt(pageNumInput.value) || 0;
+
+    if (!fileId) {
+      alert("ファイルを選択してください");
+      return;
+    }
+
+    showProcessing();
+    resultsContainer.innerHTML = "";
+
+    try {
+      // 全エンジンで順次処理
+      const engines = Array.from(engineSelect.options).map(opt => opt.value);
+      
+      for (const engineName of engines) {
+        const formData = new FormData();
+        formData.append("file_id", fileId);
+        formData.append("engine_name", engineName);
+        formData.append("page_num", pageNum);
+
+        try {
+          const response = await fetch("/api/try_ocr/process", {
+            method: "POST",
+            body: formData
+          });
+          const result = await response.json();
+          displayResult(result);
+        } catch (error) {
+          displayError(`${engineName}: ${error.message}`);
+        }
+      }
+      
+      updatePdfDisplay();
+
+    } finally {
+      hideProcessing();
+    }
+  });
+
+  // 結果クリア
+  clearBtn.addEventListener("click", () => {
+    resultsContainer.innerHTML = '<p style="color:#888; text-align:center; margin-top:2em;">結果をクリアしました</p>';
+  });
+
+  // 結果表示
+  function displayResult(result) {
+    const card = document.createElement("div");
+    card.className = "result-card";
+
+    const header = document.createElement("div");
+    header.className = "result-header";
+    header.innerHTML = `
+      <span>${result.engine_name}</span>
+      <span class="result-stats">
+        ${result.success ? '✅' : '❌'} 
+        ${result.processing_time}秒
+        ${result.confidence ? ` | 信頼度: ${(result.confidence * 100).toFixed(1)}%` : ''}
+      </span>
+    `;
+
+    const textDiv = document.createElement("div");
+    textDiv.className = `result-text ${result.success ? '' : 'error-text'}`;
+    textDiv.textContent = result.success ? result.text : result.error;
+
+    card.appendChild(header);
+    card.appendChild(textDiv);
+    
+    // 最初の結果の場合は既存内容をクリア
+    if (resultsContainer.children.length === 1 && 
+        resultsContainer.children[0].tagName === 'P') {
+      resultsContainer.innerHTML = "";
+    }
+    
+    resultsContainer.appendChild(card);
+  }
+
+  function displayError(message) {
+    displayResult({
+      engine_name: "エラー",
+      success: false,
+      error: message,
+      processing_time: 0
+    });
+  }
+
+  // スプリッター機能
+  splitter.addEventListener("mousedown", (e) => {
+    isResizing = true;
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+  });
+
+  function handleMouseMove(e) {
+    if (!isResizing) return;
+    const containerWidth = document.getElementById("pane-bottom").offsetWidth;
+    const newRightWidth = containerWidth - e.clientX;
+    const minWidth = 200;
+    const maxWidth = containerWidth - 300;
+
+    if (newRightWidth >= minWidth && newRightWidth <= maxWidth) {
+      pdfPane.style.flex = `0 0 ${newRightWidth}px`;
+    }
+  }
+
+  function handleMouseUp() {
+    isResizing = false;
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mouseup", handleMouseUp);
+  }
+
+  // 初期化時にオーバーレイを隠す
+  hideProcessing();
+});
+</script>
+{% endblock %}

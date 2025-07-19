@@ -308,4 +308,40 @@ def update_file_status(blob_id: str, *, status: str, note: str | None = None) ->
     #     conn.execute(
     #         sql_text("UPDATE files_meta SET status=:st, note=:nt WHERE blob_id=:bid"),
     #         {"st": status, "nt": note, "bid": blob_id},
-    #     )
+    #     )# ───
+───────────────────────────────────────────────────────
+# REM: OCR比較用の追加関数
+# ──────────────────────────────────────────────────────────
+def get_all_files() -> List[Dict[str, Any]]:
+    """全ファイルの一覧を取得（OCR比較用）"""
+    sql = """
+        SELECT b.id, m.file_name, m.mime_type, m.size, m.created_at
+        FROM files_blob b
+        JOIN files_meta m ON b.id = m.blob_id
+        ORDER BY m.created_at DESC
+    """
+    with DB_ENGINE.connect() as conn:
+        rows = conn.execute(sql_text(sql)).mappings().all()
+    return [dict(r) for r in rows]
+
+def get_file_path(blob_id: str) -> Optional[str]:
+    """ファイルIDからファイルパスを取得（一時的な実装）"""
+    # 注意: 実際の実装では、ファイルはDBに保存されているため、
+    # 一時ファイルとして書き出す必要があります
+    import tempfile
+    
+    # バイナリデータを取得
+    blob_data = get_file_blob(blob_id)
+    if not blob_data:
+        return None
+    
+    # メタデータを取得してファイル名を決定
+    meta = get_file_meta(blob_id)
+    if not meta:
+        return None
+    
+    # 一時ファイルに書き出し
+    suffix = os.path.splitext(meta['file_name'])[1] or '.pdf'
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+        temp_file.write(blob_data)
+        return temp_file.name

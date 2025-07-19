@@ -1,6 +1,6 @@
-# REM: app/services/query_handler.py（更新日時: 2025-07-16 05:00 JST）
+# REM: app/services/chat_handler.py（更新日時: 2025-07-18 18:00 JST）
 """
-検索リクエストハンドラ
+チャット検索リクエストハンドラ
   ・チャンク統合
   ・ファイル別（要約＋一致度）
 """
@@ -64,8 +64,8 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合") -
         answer = LLM_ENGINE.invoke(prompt).strip()
 
         # 4) 使用されたファイルをユニーク抽出
-        seen = {r["file_id"]: r["file_name"] for r in rows}
-        sources = [{"file_id": fid, "file_name": fn} for fid, fn in seen.items()]
+        seen = {r["blob_id"]: r["file_name"] for r in rows}
+        sources = [{"file_id": blob_id, "file_name": fn} for blob_id, fn in seen.items()]
 
         return {
             "mode": mode,
@@ -81,7 +81,7 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合") -
     for row in rows:
         summary, score = llm_summarize_with_score(query, row["refined_text"])
         summaries.append({
-            "file_id":   row["file_id"],
+            "file_id":   row["blob_id"],  # 新しいテーブル構造に対応
             "file_name": row["file_name"],
             "score": score,
             "summary": summary

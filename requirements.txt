@@ -28,3 +28,7 @@ jinja2
 python-multipart
 jaconv
 psutil
+# OCR比較用パッケージ
+paddlepaddle
+paddleocr
+easyocr

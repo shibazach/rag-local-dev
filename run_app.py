@@ -31,6 +31,7 @@ def run_fastapi():
         "--host", host,
         "--port", port,
         "--reload",
+        "--log-level", "warning",  # アクセスログを警告レベル以上のみ表示
     ]
     debug_print(f"→ Running: {' '.join(cmd)}")
     subprocess.run(cmd)

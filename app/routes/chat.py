@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter, Form
 from fastapi.responses import JSONResponse
-from app.services.query_handler import handle_query
+from app.services.chat_handler import handle_query
 
 router = APIRouter()
 

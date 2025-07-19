@@ -41,10 +41,15 @@ DB_ENGINE = create_engine("postgresql://raguser:ragpass@ragdb:5432/rag")
 EMBEDDING_OPTIONS = {
     "1": {
         "embedder": "SentenceTransformer",
-        "model_name": "intfloat/e5-large-v2",
+        "model_name": "intfloat/e5-large-v2",  # GPU環境用（本番）
         "dimension": 1024
     },
     "2": {
+        "embedder": "SentenceTransformer",
+        "model_name": "intfloat/e5-small-v2",  # CPU環境用（開発）
+        "dimension": 384
+    },
+    "3": {
         "embedder": "OllamaEmbeddings",
         "model_name": "nomic-embed-text",
         "dimension": 768

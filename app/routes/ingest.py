@@ -32,7 +32,7 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 LOGGER    = logging.getLogger("ingest")
 
 # REM: 定数
-LLM_TIMEOUT_SEC = int(os.getenv("LLM_TIMEOUT_SEC", "0"))
+LLM_TIMEOUT_SEC = int(os.getenv("LLM_TIMEOUT_SEC", "300"))  # デフォルト5分
 OK_EXT          = {".txt", ".pdf", ".docx", ".csv", ".json", ".eml"}
 
 # REM: 直近ジョブ保持

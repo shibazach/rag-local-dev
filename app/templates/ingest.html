@@ -10,8 +10,24 @@
   #pane-top {
     flex:0 0 auto;
     padding:1em;
-    border-bottom:1px solid #ddd;
+    border-bottom:1px solid rgba(255, 255, 255, 0.4);
     box-sizing:border-box;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: relative;
+  }
+  
+  /* 上ペインの背景オーバーレイ */
+  #pane-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
+    z-index: -1;
   }
 
   /* 下ペイン：ログと編集ペインを左右並びに */
@@ -19,6 +35,7 @@
     flex:1 1 auto;
     display:flex;
     overflow:hidden;
+    position: relative;
   }
   /* 左カラム：ログ */
   #log-pane {
@@ -71,6 +88,44 @@
   .page-header   { margin-left:1ch; font-style:italic; }
   .file-section  { margin-left:1em; margin-bottom:1em; }
   .file-section pre { white-space:pre-wrap; word-break:break-word; background:#fff; padding:8px; border:1px solid #ddd; }
+
+  /* 処理中のナビゲーション無効化 */
+  body.processing-in-progress nav a {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  body.processing-in-progress nav a::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1;
+  }
+  
+  /* 処理中の警告メッセージ */
+  #nav-warning {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 193, 7, 0.95);
+    color: #856404;
+    padding: 1em 1.5em;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid #ffc107;
+  }
+
+
 </style>
 
 <div id="ingest-container">
@@ -113,8 +168,8 @@
         <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
         <!-- REM: PDF表示モード選択 -->
         <span style="margin-left:1em;">
-          <label><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内表示</label>
-          <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ表示</label>
+          PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内</label>
+          <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>
         </span>
       </div>
     </form>
@@ -129,11 +184,112 @@
     <div id="editor-pane">
       <textarea id="prompt-editor"></textarea>
     </div>
+    
+
   </div>
+</div>
+
+<!-- 処理中のナビゲーション警告 -->
+<div id="nav-warning">
+  ⚠️ データ処理中です<br>
+  他のページへの移動はできません<br>
+  <small>キャンセルボタンで処理を中止できます</small>
 </div>
 
 <!-- REM: スクリプト読み込み（バージョン管理付き） -->
 <script src="{{ url_for('static', path='js/ingest.js') }}?v=20250718"></script>
 <script src="{{ url_for('static', path='js/ingest_sse.js') }}?v=20250718"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  let processingInProgress = false;
+  const navWarning = document.getElementById('nav-warning');
+  
+  // 処理開始時の制御
+  function startProcessing() {
+    processingInProgress = true;
+    document.body.classList.add('processing-in-progress');
+    
+    // ページ離脱の警告
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // ナビゲーションリンクのクリックを監視
+    document.querySelectorAll('nav a').forEach(link => {
+      link.addEventListener('click', handleNavClick);
+    });
+  }
+  
+  // 処理終了時の制御
+  function endProcessing() {
+    processingInProgress = false;
+    document.body.classList.remove('processing-in-progress');
+    
+    // イベントリスナーを削除
+    window.removeEventListener('beforeunload', handleBeforeUnload);
+    document.querySelectorAll('nav a').forEach(link => {
+      link.removeEventListener('click', handleNavClick);
+    });
+    
+    // 警告メッセージを隠す
+    navWarning.style.display = 'none';
+  }
+  
+  // ページ離脱時の警告
+  function handleBeforeUnload(e) {
+    if (processingInProgress) {
+      const message = 'データ処理中です。ページを離れると処理が中断されます。';
+      e.preventDefault();
+      e.returnValue = message;
+      return message;
+    }
+  }
+  
+  // ナビゲーションリンククリック時の処理
+  function handleNavClick(e) {
+    if (processingInProgress) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // 警告メッセージを表示
+      navWarning.style.display = 'block';
+      
+      // 3秒後に自動で隠す
+      setTimeout(() => {
+        navWarning.style.display = 'none';
+      }, 3000);
+      
+      return false;
+    }
+  }
+  
+  // 処理開始ボタンのイベントリスナー（既存のJavaScriptと連携）
+  const startBtn = document.getElementById('start-btn');
+  const cancelBtn = document.getElementById('cancel-btn');
+  
+  if (startBtn) {
+    startBtn.addEventListener('click', function() {
+      // 処理開始の制御を追加
+      startProcessing();
+    });
+  }
+  
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      // キャンセル時の制御を追加
+      endProcessing();
+    });
+  }
+  
+  // 処理完了時の制御（既存のJavaScriptから呼び出される想定）
+  window.onIngestComplete = function() {
+    endProcessing();
+  };
+  
+  // 処理エラー時の制御（既存のJavaScriptから呼び出される想定）
+  window.ingestProcessError = function() {
+    endProcessing();
+  };
+});
+</script>
 
 {% endblock %}

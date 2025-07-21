@@ -29,7 +29,7 @@
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     position: relative;
     overflow-x: hidden;
-    padding: 8vh 1em 2em 1em;
+    padding: 1vh 1em 2em 1em;
     box-sizing: border-box;
     margin: 0;
   }
@@ -75,7 +75,7 @@
   .hero-subtitle {
     font-size: 1.1em;
     color: #6c757d;
-    margin-bottom: 2em;
+    margin-bottom: 1.5em;
     font-weight: 300;
     position: relative;
     z-index: 1;
@@ -84,7 +84,7 @@
   .research-features {
     display: flex;
     gap: 2em;
-    margin-top: 1em;
+    margin-top: 0.5em;
     position: relative;
     z-index: 1;
   }
@@ -133,7 +133,7 @@
 
   /* RAGシステム図のスタイル */
   .rag-system {
-    margin-top: 4em;
+    margin-top: 2em;
     width: 100%;
     max-width: 1000px;
     position: relative;
@@ -144,21 +144,23 @@
     font-size: 1.3em;
     font-weight: 400;
     color: #2c3e50;
-    margin-bottom: 2em;
+    margin-bottom: 1em;
     text-align: center;
   }
 
   .system-flow {
     display: flex;
+    flex-direction: column;
+    gap: 1em;
+  }
+
+  .flow-section {
+    display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 1em;
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(10px);
-    border-radius: 16px;
-    padding: 2em;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    width: 100%;
   }
 
   .system-component {
@@ -168,11 +170,12 @@
     text-align: center;
     min-width: 120px;
     flex: 1;
+    padding: 0.2em;
   }
 
   .component-icon {
     font-size: 2.5em;
-    margin-bottom: 0.5em;
+    margin-bottom: 0.2em;
     display: block;
   }
 
@@ -180,13 +183,13 @@
     font-size: 0.9em;
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 0.3em;
+    margin-bottom: 0.1em;
   }
 
   .component-desc {
     font-size: 0.75em;
     color: #6c757d;
-    line-height: 1.3;
+    line-height: 0.9;
   }
 
   .flow-arrow {
@@ -194,6 +197,47 @@
     color: #4a90e2;
     margin: 0 0.5em;
     flex-shrink: 0;
+  }
+
+  .flow-arrow-vertical {
+    font-size: 1.5em;
+    color: #4a90e2;
+    margin: 0 auto;
+    transform: rotate(90deg);
+  }
+
+  .flow-phase {
+    font-size: 1em;
+    font-weight: 500;
+    color: #4a90e2;
+    margin-bottom: 0.5em;
+    margin-top: 2em;
+    text-align: left;
+    width: 100%;
+    border-bottom: 1px solid rgba(74, 144, 226, 0.3);
+    padding-bottom: 0.5em;
+  }
+
+  .flow-phase:first-child {
+    margin-top: 0;
+  }
+
+  .reference-links {
+    margin-top: 1.5em;
+    font-size: 0.8em;
+    color: #6c757d;
+    text-align: right;
+    width: 100%;
+  }
+
+  .reference-links a {
+    color: #4a90e2;
+    text-decoration: none;
+    margin-left: 0.5em;
+  }
+
+  .reference-links a:hover {
+    text-decoration: underline;
   }
 
   @media (max-width: 768px) {
@@ -231,7 +275,7 @@
   <div class="research-features">
     <a href="/ingest" class="feature-card">
       <span class="feature-icon">📚</span>
-      <div class="feature-title">データ整形</div>
+      <div class="feature-title">データ整形/登録</div>
       <div class="feature-desc">文書を構造化し<br>知識ベースを構築</div>
     </a>
 
@@ -252,42 +296,113 @@
   <div class="rag-system">
     <h2 class="system-title">RAGシステムの仕組み</h2>
     <div class="system-flow">
-      <div class="system-component">
-        <span class="component-icon">🗄️</span>
-        <div class="component-title">Database</div>
-        <div class="component-desc">PostgreSQL<br>文書データ保存</div>
+      <!-- インデックス構築フェーズ -->
+      <div class="flow-phase">1. インデックス構築フェーズ</div>
+      <div class="flow-section">
+        <div class="system-component">
+          <span class="component-icon">📄</span>
+          <div class="component-title">文書収集</div>
+          <div class="component-desc">PDFやテキスト<br>研究資料</div>
+        </div>
+
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">✂️</span>
+          <div class="component-title">チャンク分割</div>
+          <div class="component-desc">文書を意味のある<br>単位に分割</div>
+        </div>
+
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">🔤</span>
+          <div class="component-title">Embedding生成</div>
+          <div class="component-desc">SentenceTransformer<br>テキストをベクトル化</div>
+        </div>
+
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">🗄️</span>
+          <div class="component-title">ベクトルDB保存</div>
+          <div class="component-desc">PostgreSQL<br>pgvector拡張</div>
+        </div>
       </div>
 
-      <span class="flow-arrow">→</span>
+      <!-- 検索・回答生成フェーズ -->
+      <div class="flow-phase">2. 検索・回答生成フェーズ</div>
+      <div class="flow-section">
+        <div class="system-component">
+          <span class="component-icon">❓</span>
+          <div class="component-title">ユーザー質問</div>
+          <div class="component-desc">自然言語での<br>問い合わせ</div>
+        </div>
 
-      <div class="system-component">
-        <span class="component-icon">🔤</span>
-        <div class="component-title">Embedding</div>
-        <div class="component-desc">Ollama<br>SentenceTransformer<br>ベクトル化</div>
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">🔤</span>
+          <div class="component-title">質問Embedding</div>
+          <div class="component-desc">質問文を<br>ベクトル化</div>
+        </div>
+
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">🔍</span>
+          <div class="component-title">類似度検索</div>
+          <div class="component-desc">コサイン類似度<br>関連文書抽出</div>
+        </div>
+
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">🧩</span>
+          <div class="component-title">コンテキスト構築</div>
+          <div class="component-desc">関連文書を<br>プロンプトに統合</div>
+        </div>
       </div>
 
-      <span class="flow-arrow">→</span>
+      <!-- 回答生成フェーズ -->
+      <div class="flow-phase">3. 回答生成フェーズ</div>
+      <div class="flow-section">
+        <div class="system-component">
+          <span class="component-icon">📝</span>
+          <div class="component-title">プロンプト構築</div>
+          <div class="component-desc">質問と関連文書を<br>統合</div>
+        </div>
 
-      <div class="system-component">
-        <span class="component-icon">🔍</span>
-        <div class="component-title">RAG検索</div>
-        <div class="component-desc">関連情報<br>抽出・取得</div>
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">🤖</span>
+          <div class="component-title">LLM処理</div>
+          <div class="component-desc">Gemma / Ollama<br>コンテキスト考慮</div>
+        </div>
+
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">💬</span>
+          <div class="component-title">回答生成</div>
+          <div class="component-desc">根拠に基づいた<br>正確な回答</div>
+        </div>
+
+        <span class="flow-arrow">→</span>
+
+        <div class="system-component">
+          <span class="component-icon">👤</span>
+          <div class="component-title">ユーザー</div>
+          <div class="component-desc">回答の受け取り<br>フィードバック</div>
+        </div>
       </div>
 
-      <span class="flow-arrow">→</span>
-
-      <div class="system-component">
-        <span class="component-icon">🤖</span>
-        <div class="component-title">LLM</div>
-        <div class="component-desc">Gemma / Ollama<br>回答生成</div>
-      </div>
-
-      <span class="flow-arrow">→</span>
-
-      <div class="system-component">
-        <span class="component-icon">💬</span>
-        <div class="component-title">ユーザー</div>
-        <div class="component-desc">チャット形式<br>質問・回答</div>
+      <!-- 参考リンク -->
+      <div class="reference-links">
+        参考文献：
+        <a href="https://qiita.com/dennis_wang/items/04251529a2f4fe12aa31" target="_blank">RAGシステムの基本概念</a>
+        <a href="https://qiita.com/dennis_wang/items/d40b848a21e4d8239472" target="_blank">RAG実装テクニック</a>
       </div>
     </div>
   </div>

@@ -2,191 +2,447 @@
 {% extends "base.html" %}
 
 {% block head %}
-  <!-- キャッシュバイパス用バージョンクエリ -->
-  <link rel="stylesheet" href="/static/styles.css?v=20250710_1149">
-  <script src="/static/js/chat.js?v=20250710_1149" defer></script>
+<!-- キャッシュバイパス用バージョンクエリ -->
+<link rel="stylesheet" href="/static/styles.css?v=20250710_1149">
+<script src="/static/js/chat.js?v=20250710_1149" defer></script>
 
-  <style>
-    /* ペイン上下分割（ingestと同様） */
-    #chat-container { display:flex; flex-direction:column; height:calc(100vh - 2em); }
+<style>
+  /* ペイン上下分割（ingestと同様） */
+  #chat-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 2em);
+  }
 
-    /* 上ペイン：検索コントロール */
-    #pane-top {
-      flex:0 0 auto;
-      padding:1em;
-      border-bottom:1px solid #ddd;
-      box-sizing:border-box;
+  /* 上ペイン：検索コントロール */
+  #pane-top {
+    flex: 0 0 auto !important;
+    padding: 1em !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+    box-sizing: border-box !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(20px) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+    position: relative !important;
+    border-radius: 0 0 8px 8px !important;
+  }
+
+  /* 上ペインの背景オーバーレイ */
+  #pane-top::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, rgba(248, 249, 250, 0.15) 100%) !important;
+    border-radius: inherit !important;
+    z-index: -1 !important;
+  }
+
+  /* 下ペイン：結果と右ペインを左右並びに */
+  #pane-bottom {
+    flex: 1 1 auto;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* 左カラム：検索結果 */
+  #results-pane {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1em;
+    background: #fafafa;
+    box-sizing: border-box;
+  }
+
+  /* REM: ペイン間スプリッター */
+  #splitter {
+    flex: 0 0 5px;
+    cursor: col-resize;
+    background: #ccc;
+  }
+
+  /* 右カラム：PDF表示/プロンプト編集エリア */
+  #right-pane {
+    flex: 0 0 40%;
+    display: none;
+    border-left: 1px solid #ccc;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  /* 全体の余白リセット */
+  html,
+  body {
+    margin: 0;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  /* 質問入力 */
+  #query {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+  }
+
+  /* 統合回答エリア */
+  #answer {
+    display: none;
+    margin: 12px 0;
+    padding: 8px 12px;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background: #eef;
+  }
+
+  #answer h2 {
+    margin: 0 0 8px;
+    font-size: 1.2em;
+  }
+
+  #answer pre {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  /* 結果カード */
+  .card {
+    border: 1px solid #ddd;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 4px;
+    background: #fafafa;
+  }
+
+  .card h3 {
+    margin: 0 0 6px;
+    font-size: 1.1em;
+  }
+
+  .card pre {
+    white-space: pre-wrap;
+    background: #f5f5f5;
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+  }
+
+  .card button {
+    margin-top: 6px;
+    padding: 4px 8px;
+  }
+
+  /* 編集ボックス */
+  .editor textarea {
+    width: 100%;
+    box-sizing: border-box;
+    resize: vertical;
+    height: 200px;
+  }
+
+  .editor button {
+    margin-right: 8px;
+  }
+
+  /* 再ベクトル化オーバーレイ */
+  #processing-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    z-index: 10000;
+    font-size: 1.4em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  #processing-overlay button {
+    margin-top: 1em;
+    padding: 0.5em 1em;
+    font-size: 1em;
+  }
+
+  /* 検索中オーバーレイ（下ペインのみ） */
+  #search-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    z-index: 9999;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  #search-overlay .spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1em;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
     }
 
-    /* 下ペイン：結果と右ペインを左右並びに */
-    #pane-bottom {
-      flex:1 1 auto;
-      display:flex;
-      overflow:hidden;
+    100% {
+      transform: rotate(360deg);
     }
-    /* 左カラム：検索結果 */
-    #results-pane {
-      flex:1 1 auto;
-      overflow-y:auto;
-      padding:1em;
-      background:#fafafa;
-      box-sizing:border-box;
-    }
+  }
 
-    /* REM: ペイン間スプリッター */
-    #splitter {
-      flex: 0 0 5px;
-      cursor: col-resize;
-      background: #ccc;
-    }
+  /* フォーム */
+  .form-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.1em;
+    line-height: 1.2;
+    width: 100%;
+  }
 
-    /* 右カラム：PDF表示/プロンプト編集エリア */
-    #right-pane {
-      flex:0 0 40%;
-      display:none;
-      border-left:1px solid #ccc;
-      box-sizing:border-box;
-      overflow:hidden;
-    }
+  .form-actions {
+    margin-top: 1em;
+  }
 
-    /* 全体の余白リセット */
-    html, body {
-      margin: 0;
-      background: #fff;
-    }
-    main {
-      padding: 0 !important;
-    }
+  .form-actions button {
+    margin-right: 1em;
+  }
 
-    /* 全体の余白リセット */
-    html, body {
-      margin: 0;
-      background: #fff;
-    }
+  /* ローディングテキスト */
+  #loading {
+    display: none;
+    color: #555;
+    margin-left: 8px;
+  }
 
-    /* 質問入力 */
-    #query {
-      width: 100%;
-      box-sizing: border-box;
-      resize: vertical;
-    }
+  /* 検索中のナビゲーション無効化 */
+  body.search-in-progress nav a {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 
-    /* 統合回答エリア */
-    #answer {
-      display: none;
-      margin: 12px 0;
-      padding: 8px 12px;
-      border: 1px solid #888;
-      border-radius: 4px;
-      background: #eef;
-    }
-    #answer h2 {
-      margin: 0 0 8px;
-      font-size: 1.2em;
-    }
-    #answer pre {
-      margin: 0;
-      white-space: pre-wrap;
-    }
+  body.search-in-progress nav a::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1;
+  }
 
-    /* 結果カード */
-    .card {
-      border: 1px solid #ddd;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 4px;
-      background: #fafafa;
-    }
-    .card h3 {
-      margin: 0 0 6px;
-      font-size: 1.1em;
-    }
-    .card pre {
-      white-space: pre-wrap;
-      background: #f5f5f5;
-      padding: 8px;
-      border-radius: 4px;
-      overflow-x: auto;
-    }
-    .card button {
-      margin-top: 6px;
-      padding: 4px 8px;
-    }
+  /* 検索中の警告メッセージ */
+  #nav-warning {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 193, 7, 0.95);
+    color: #856404;
+    padding: 1em 1.5em;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid #ffc107;
+  }
 
-    /* 編集ボックス */
-    .editor textarea {
-      width: 100%;
-      box-sizing: border-box;
-      resize: vertical;
-      height: 200px;
-    }
-    .editor button {
-      margin-right: 8px;
-    }
+  /* 履歴ダイアログ */
+  #history-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10002;
+  }
 
-    /* 再ベクトル化オーバーレイ */
-    #processing-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      color: #fff;
-      z-index: 10000;
-      font-size: 1.4em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-    }
-    #processing-overlay button {
-      margin-top: 1em;
-      padding: 0.5em 1em;
-      font-size: 1em;
-    }
+  #history-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+  }
 
-    /* 検索中オーバーレイ */
-    #search-overlay {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      color: #fff;
-      z-index: 9999;
-      font-size: 1.2em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-    }
-    #search-overlay .spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 1em;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+  #history-modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    max-width: 800px;
+    height: 70%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+  }
 
-    /* フォーム */
-    .form-section {
-      display:flex; align-items:center;
-      margin-bottom:0.1em; line-height:1.2; width:100%;
-    }
-    .form-actions { margin-top:1em; }
-    .form-actions button { margin-right:1em; }
+  #history-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em;
+    border-bottom: 1px solid #ddd;
+    background: #f8f9fa;
+    border-radius: 8px 8px 0 0;
+  }
 
-    /* ローディングテキスト */
-    #loading {
-      display: none;
-      color: #555;
-      margin-left: 8px;
-    }
-  </style>
+  #history-modal-header h3 {
+    margin: 0;
+    color: #333;
+  }
+
+  #history-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 0.5em;
+    border-radius: 4px;
+  }
+
+  #history-modal-close:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+
+  #history-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1em;
+  }
+
+  #history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+  }
+
+  .history-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 0.8em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .history-item:hover {
+    background: #f8f9fa;
+  }
+
+  .history-item.selected {
+    background: #e3f2fd;
+    border-color: #2196f3;
+  }
+
+  .history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5em;
+  }
+
+  .history-item-query {
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+    margin-right: 1em;
+  }
+
+  .history-item-meta {
+    font-size: 0.8em;
+    color: #666;
+    display: flex;
+    gap: 1em;
+  }
+
+  .history-item-preview {
+    font-size: 0.9em;
+    color: #555;
+    line-height: 1.4;
+    max-height: 3em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .history-item-expanded {
+    margin-top: 0.5em;
+    padding-top: 0.5em;
+    border-top: 1px solid #eee;
+    display: none;
+  }
+
+  .history-item-expanded.show {
+    display: block;
+  }
+
+  .history-item-result {
+    background: #f5f5f5;
+    padding: 0.5em;
+    border-radius: 4px;
+    margin-top: 0.5em;
+    font-size: 0.9em;
+    white-space: pre-wrap;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  #history-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1em;
+    border-top: 1px solid #ddd;
+    background: #f8f9fa;
+    border-radius: 0 0 8px 8px;
+    gap: 0.5em;
+  }
+
+  #history-modal-footer button,
+  #history-modal-footer select {
+    padding: 0.5em 1em;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+  }
+
+  #history-modal-footer button:hover {
+    background: #f8f9fa;
+  }
+
+  #history-modal-footer button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -199,26 +455,36 @@
       <textarea id="query" rows="4" placeholder="質問を入力してください…"></textarea>
     </div>
     <div class="form-section">
-      <label for="mode">検索モード：</label>
+      <label for="mode" style="min-width: 120px;">検索モード：</label>
       <select id="mode">
         <option value="チャンク統合">チャンク統合</option>
-        <option value="ファイル別（要約+一致度）">ファイル別（要約+一致度）</option>
+        <option value="ファイル別（要約+一致度）" selected>ファイル別（要約+一致度）</option>
       </select>
       <label for="model_key" style="margin-left:1em;">埋め込みモデル：</label>
       <select id="model_key">
         {% for key, config in embedding_options.items() %}
-          <option value="{{ key }}">{{ config["model_name"] }} ({{ config["embedder"] }})</option>
+        <option value="{{ key }}">{{ config["model_name"] }} ({{ config["embedder"] }})</option>
         {% endfor %}
       </select>
+    </div>
+    <div class="form-section">
+      <label for="search_limit" style="min-width: 120px;">検索件数：</label>
+      <input type="number" id="search_limit" min="1" max="50" value="10" style="width:4em;">
+      <span style="margin-left:0.5em; color:#666; font-size:0.9em;">件</span>
+
+      <label for="min_score" style="margin-left:1em;">最小一致度：</label>
+      <input type="number" id="min_score" min="0" max="1" step="0.1" value="0.0" style="width:4em;">
+      <span style="margin-left:0.5em; color:#666; font-size:0.9em;">以上</span>
     </div>
     <div class="form-actions">
       <button id="search-btn">🔍 検索実行</button>
       <button id="cancel-btn" disabled>✖️ キャンセル</button>
+      <button id="history-btn">📜 履歴</button>
       <span id="loading">検索中…お待ちください</span>
       <!-- REM: PDF表示モード選択（ingestと同様） -->
       <span style="margin-left:1em;">
-        <label><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内表示</label>
-        <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ表示</label>
+        PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内</label>
+        <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>
       </span>
     </div>
   </div>
@@ -236,8 +502,16 @@
       <!-- PDF表示またはプロンプト編集エリア -->
       <iframe id="pdf-viewer" style="width:100%; height:100%; border:none; display:none;"></iframe>
       <div id="prompt-editor-area" style="display:none; height:100%;">
-        <textarea id="prompt-editor" style="width:100%; height:100%; border:none; padding:1em; box-sizing:border-box; resize:none;"></textarea>
+        <textarea id="prompt-editor"
+          style="width:100%; height:100%; border:none; padding:1em; box-sizing:border-box; resize:none;"></textarea>
       </div>
+    </div>
+
+    <!-- 検索中オーバーレイ（下ペイン内に配置） -->
+    <div id="search-overlay">
+      <div class="spinner"></div>
+      <div id="search-message">検索準備中…</div>
+      <div id="search-details" style="font-size: 0.9em; margin-top: 0.5em; opacity: 0.8;"></div>
     </div>
   </div>
 </div>
@@ -247,8 +521,154 @@
   <button id="overlay-ok-btn" style="display:none;">OK</button>
 </div>
 
-<div id="search-overlay">
-  <div class="spinner"></div>
-  <div id="search-message">検索中…お待ちください</div>
+<!-- 検索中のナビゲーション警告 -->
+<div id="nav-warning">
+  ⚠️ 検索処理中です<br>
+  他のページへの移動はできません<br>
+  <small>キャンセルボタンで処理を中止できます</small>
 </div>
+
+<!-- 履歴ダイアログ -->
+<div id="history-modal" style="display: none;">
+  <div id="history-modal-overlay"></div>
+  <div id="history-modal-content">
+    <div id="history-modal-header">
+      <h3>📜 検索履歴</h3>
+      <button id="history-modal-close">✖️</button>
+    </div>
+    <div id="history-modal-body">
+      <div id="history-list"></div>
+    </div>
+    <div id="history-modal-footer">
+      <button id="history-expand-btn" disabled>📖 展開</button>
+      <button id="history-restore-btn" disabled>🔄 復元</button>
+      <button id="history-delete-btn" disabled>🗑️ 削除</button>
+      <select id="history-download-format">
+        <option value="txt">TXT</option>
+        <option value="json">JSON</option>
+        <option value="rtf">RTF</option>
+        <option value="docx">DOCX</option>
+      </select>
+      <button id="history-download-btn">💾 ダウンロード</button>
+      <button id="history-clear-btn">🗑️ 全削除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ナビゲーション制御機能のみを残す
+  document.addEventListener('DOMContentLoaded', function () {
+    let searchInProgress = false;
+    const navWarning = document.getElementById('nav-warning');
+
+    // 検索開始時の処理
+    function startSearch() {
+      searchInProgress = true;
+      document.body.classList.add('search-in-progress');
+
+      // ページ離脱の警告
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      // ナビゲーションリンクのクリックを監視
+      document.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', handleNavClick);
+      });
+    }
+
+    // 検索終了時の処理
+    function endSearch() {
+      searchInProgress = false;
+      document.body.classList.remove('search-in-progress');
+
+      // イベントリスナーを削除
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.querySelectorAll('nav a').forEach(link => {
+        link.removeEventListener('click', handleNavClick);
+      });
+
+      // 警告メッセージを隠す
+      navWarning.style.display = 'none';
+    }
+
+    // ページ離脱時の警告
+    function handleBeforeUnload(e) {
+      if (searchInProgress) {
+        const message = '検索処理中です。ページを離れると処理が中断されます。';
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      }
+    }
+
+    // ナビゲーションリンククリック時の処理
+    function handleNavClick(e) {
+      if (searchInProgress) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // 警告メッセージを表示
+        navWarning.style.display = 'block';
+
+        // 3秒後に自動で隠す
+        setTimeout(() => {
+          navWarning.style.display = 'none';
+        }, 3000);
+
+        return false;
+      }
+    }
+
+    // 検索進行状況の更新（経過時間付き）
+    let searchStartTime = null;
+    let searchTimerInterval = null;
+    
+    function updateSearchProgress(message, details = '') {
+      const searchMessage = document.getElementById('search-message');
+      const searchDetails = document.getElementById('search-details');
+
+      if (searchMessage) {
+        if (searchStartTime) {
+          const elapsed = Math.floor((Date.now() - searchStartTime) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          const timeStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+          searchMessage.textContent = `${message} (${timeStr})`;
+        } else {
+          searchMessage.textContent = message;
+        }
+      }
+      if (searchDetails) {
+        searchDetails.textContent = details;
+      }
+    }
+    
+    function startSearchTimer() {
+      searchStartTime = Date.now();
+      // 1秒間隔で経過時間を更新
+      searchTimerInterval = setInterval(() => {
+        const searchMessage = document.getElementById('search-message');
+        if (searchMessage && searchStartTime) {
+          const currentText = searchMessage.textContent;
+          const baseMessage = currentText.replace(/ \(\d+[分秒]+\)$/, '');
+          updateSearchProgress(baseMessage);
+        }
+      }, 1000);
+    }
+    
+    function stopSearchTimer() {
+      if (searchTimerInterval) {
+        clearInterval(searchTimerInterval);
+        searchTimerInterval = null;
+      }
+      searchStartTime = null;
+    }
+
+    // グローバル関数として公開
+    window.chatSearchStart = startSearch;
+    window.chatSearchEnd = endSearch;
+    window.updateChatSearchProgress = updateSearchProgress;
+    window.startSearchTimer = startSearchTimer;
+    window.stopSearchTimer = stopSearchTimer;
+  });
+</script>
 {% endblock %}

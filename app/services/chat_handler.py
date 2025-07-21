@@ -7,6 +7,7 @@
 
 # ── 標準ライブラリ ───────────────────────────
 import re
+import asyncio
 from typing import List, Dict
 
 # ── サードパーティ ───────────────────────────
@@ -29,7 +30,7 @@ def to_pgvector_literal(vec) -> str:
     return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
 # ═════════════════════════════════════════════
-def handle_query(query: str, model_key: str, mode: str = "チャンク統合") -> Dict:
+async def handle_query(query: str, model_key: str, mode: str = "チャンク統合", search_limit: int = 10, min_score: float = 0.0) -> Dict:
     selected_model = EMBEDDING_OPTIONS[model_key]
     tablename = (
         f"{selected_model['model_name'].replace('/', '_').replace('-', '_')}"
@@ -51,8 +52,8 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合") -
 
     # ── A. チャンク統合 ────────────────────────
     if mode == "チャンク統合":
-         # 2) 上位Kチャンクを取得
-        rows = fetch_top_chunks(embedding_str, tablename, limit=5)
+         # 2) 上位Kチャンクを取得（ユーザー指定の件数）
+        rows = fetch_top_chunks(embedding_str, tablename, limit=search_limit)
 
          # 3) 統合回答用にスニペットを抽出＋LLM呼び出し
         snippets = [r["snippet"] for r in rows]
@@ -61,7 +62,9 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合") -
             "以下の文書スニペットを参照し、一つの回答を出力してください：\n\n"
             + "\n---\n".join(snippets)
         )
-        answer = LLM_ENGINE.invoke(prompt).strip()
+        # 非同期でLLM呼び出し
+        loop = asyncio.get_event_loop()
+        answer = await loop.run_in_executor(None, lambda: LLM_ENGINE.invoke(prompt).strip())
 
         # 4) 使用されたファイルをユニーク抽出
         seen = {r["blob_id"]: r["file_name"] for r in rows}
@@ -75,20 +78,39 @@ def handle_query(query: str, model_key: str, mode: str = "チャンク統合") -
         }
 
     # ── B. ファイル別（要約＋一致度）──────────────
-    rows = fetch_top_files(embedding_str, tablename, limit=10)
+    rows = fetch_top_files(embedding_str, tablename, limit=search_limit)
 
-    summaries: List[Dict] = []
+    # 並列でLLM処理を実行
+    tasks = []
     for row in rows:
-        summary, score = llm_summarize_with_score(query, row["refined_text"])
-        summaries.append({
-            "file_id":   row["blob_id"],  # 新しいテーブル構造に対応
-            "file_name": row["file_name"],
-            "score": score,
-            "summary": summary
-        })
+        task = llm_summarize_with_score_async(query, row["refined_text"], row["blob_id"], row["file_name"])
+        tasks.append(task)
+    
+    # 全てのタスクを並列実行
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    summaries: List[Dict] = []
+    for result in results:
+        if isinstance(result, Exception):
+            continue  # エラーの場合はスキップ
+        summary, score, file_id, file_name = result
+        # 最小一致度フィルタリング
+        if score >= min_score:
+            summaries.append({
+                "file_id": file_id,
+                "file_name": file_name,
+                "score": score,
+                "summary": summary
+            })
     summaries.sort(key=lambda x: x["score"], reverse=True)
 
-    return {"mode": mode, "results": summaries}
+    return {
+        "mode": mode, 
+        "results": summaries,
+        "total_found": len(rows),
+        "filtered_count": len(summaries),
+        "min_score_threshold": min_score
+    }
 
 # ═════════════════════════════════════════════
 def get_file_content(file_id: str) -> str:
@@ -118,3 +140,36 @@ def llm_summarize_with_score(query: str, content: str):
     if m:
         return m.group(2).strip(), float(m.group(1))
     return result.strip(), 0.0
+
+# ═════════════════════════════════════════════
+async def llm_summarize_with_score_async(query: str, content: str, file_id: str, file_name: str):
+    """非同期版のLLM要約・評価関数"""
+    prompt = f"""
+以下はユーザーの質問と文書の内容です。
+
+【質問】
+{query}
+
+【文書】
+{content[:3000]}
+
+この文書が質問にどの程度一致しているか（0.0〜1.0）で評価し、次の形式で出力してください：
+
+一致度: <score>
+要約: <summary>
+"""
+    # 非同期でLLM呼び出し
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(None, lambda: LLM_ENGINE.invoke(prompt))
+    
+    m = re.search(
+        r"一致度[:：]\s*([0-9.]+).*?要約[:：]\s*(.+)", result, re.DOTALL
+    )
+    if m:
+        summary = m.group(2).strip()
+        score = float(m.group(1))
+    else:
+        summary = result.strip()
+        score = 0.0
+    
+    return summary, score, file_id, file_name

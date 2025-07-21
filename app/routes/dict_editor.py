@@ -14,25 +14,25 @@ router = APIRouter()
 # 辞書ファイルの定義
 DICT_FILES = {
     "一般用語": {
-        "file": "ocr/known_words_common.csv",
+        "file": "ocr/dic/known_words_common.csv",
         "description": "契約書、請求書などの一般的な業務用語",
         "type": "single_column",
         "header": "common_word"
     },
     "専門用語": {
-        "file": "ocr/known_words_custom.csv", 
+        "file": "ocr/dic/known_words_custom.csv", 
         "description": "航宇、熱交などの専門用語・略語",
         "type": "single_column",
         "header": "custom_word"
     },
     "誤字修正": {
-        "file": "ocr/ocr_word_mistakes.csv",
+        "file": "ocr/dic/ocr_word_mistakes.csv",
         "description": "OCRでよく発生する誤字とその修正",
         "type": "two_column",
         "headers": ["wrong", "correct"]
     },
     "形態素辞書": {
-        "file": "ocr/user_dict.csv",
+        "file": "ocr/dic/user_dict.csv",
         "description": "MeCab用のユーザー辞書（高度な設定）",
         "type": "mecab_dict",
         "headers": ["表層形", "左文脈ID", "右文脈ID", "コスト", "品詞1", "品詞2", "品詞3", "品詞4", "活用形", "活用型", "原形", "読み", "発音"]
@@ -138,7 +138,12 @@ async def save_dict_content(dict_name: str, content: str = Form(...)):
     try:
         # バックアップを作成
         if os.path.exists(file_path):
-            backup_path = f"{file_path}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            # バックアップファイルはocr/dic/back/に保存
+            backup_dir = "ocr/dic/back"
+            os.makedirs(backup_dir, exist_ok=True)
+            filename = os.path.basename(file_path)
+            backup_filename = f"{filename}.backup.{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            backup_path = os.path.join(backup_dir, backup_filename)
             shutil.copy2(file_path, backup_path)
         
         # ディレクトリが存在しない場合は作成

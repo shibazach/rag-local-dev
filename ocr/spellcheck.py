@@ -49,8 +49,8 @@ def tokenize(text):
 
 # --- メイン補正関数 ---
 def correct_text(text,
-                 known_word_paths=["known_words_common.csv", "known_words_custom.csv"],
-                 kanji_mistakes_path="ocr_word_mistakes.csv"):
+                 known_word_paths=["dic/known_words_common.csv", "dic/known_words_custom.csv"],
+                 kanji_mistakes_path="dic/ocr_word_mistakes.csv"):
     known_words = load_known_words(known_word_paths)
     kanji_mistakes = load_kanji_mistakes(kanji_mistakes_path)
     for wrong, correct in kanji_mistakes.items():

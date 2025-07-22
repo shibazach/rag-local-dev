@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "timestamp": "2025-07-22T04:37:41.618817",
+    "query": "SEM観察結果をまとめて",
+    "model_key": "2",
+    "mode": "ファイル別（要約+一致度）",
+    "processing_time": 1449.19,
+    "result": {
+      "mode": "ファイル別（要約+一致度）",
+      "results": [
+        {
+          "file_id": 

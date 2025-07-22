@@ -20,7 +20,7 @@ from sqlalchemy import text as sql_text
 from src.config import DB_ENGINE, EMBEDDING_OPTIONS, OLLAMA_MODEL
 
 # REM: ── プロジェクト内 ───────────────────────────────
-from app.fastapi_main import templates
+from app.main import templates
 from llm.prompt_loader import list_prompt_keys
 from fileio.file_embedder import embed_and_insert
 

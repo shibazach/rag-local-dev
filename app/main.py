@@ -1,4 +1,4 @@
-# REM: app/fastapi_main.py @2025-07-18 00:00 UTC +9
+# REM: app/main.py @2025-07-18 00:00 UTC +9
 # REM: FastAPI 起動エントリ。ここではアプリ生成 & ルーター登録だけを行う。
 import os
 import uvicorn
@@ -72,7 +72,7 @@ def setup_logging():
 if __name__ == "__main__":
     setup_logging()
     uvicorn.run(
-        "app.fastapi_main:app",
+        "app.main:app",
         host="0.0.0.0",
         port=8000,
         reload=True

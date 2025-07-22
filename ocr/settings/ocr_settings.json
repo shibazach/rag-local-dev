@@ -1,0 +1,44 @@
+{
+  "default_engine": "ocrmypdf",
+  "engines": {
+    "ocrmypdf": {
+      "deskew": false,
+      "rotate_pages": false,
+      "remove_background": false,
+      "clean": false,
+      "oversample": 300
+    },
+    "tesseract": {
+      "psm": 6,
+      "oem": 3,
+      "lang": "jpn+eng"
+    },
+    "easyocr": {
+      "languages": "ja",
+      "use_gpu": false,
+      "zoom_factor": 4,
+      "detail": "0",
+      "paragraph": false,
+      "high_quality_mode": true,
+      "text_threshold": 0.7,
+      "link_threshold": 0.4,
+      "low_text": 0.4,
+      "canvas_size": 2560,
+      "mag_ratio": 1.5
+    },
+    "paddleocr": {
+      "lang": "japan",
+      "use_gpu": false,
+      "zoom_factor": 2.0,
+      "use_angle_cls": true,
+      "use_detection": true,
+      "use_recognition": true,
+      "use_classification": true,
+      "show_log": false
+    }
+  },
+  "global": {
+    "timeout": 300,
+    "max_retries": 3
+  }
+}

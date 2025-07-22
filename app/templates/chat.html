@@ -642,23 +642,46 @@
       }
     }
     
+    // 基本メッセージを保存する変数
+    let baseSearchMessage = '';
+    
     function startSearchTimer() {
+      // 既存のタイマーがあれば停止
+      if (searchTimerInterval) {
+        clearInterval(searchTimerInterval);
+        searchTimerInterval = null;
+      }
+      
       searchStartTime = Date.now();
+      console.log('🕐 検索タイマー開始:', new Date().toLocaleTimeString());
+      
+      // 現在のメッセージを基本メッセージとして保存
+      const searchMessage = document.getElementById('search-message');
+      if (searchMessage) {
+        baseSearchMessage = searchMessage.textContent.replace(/ \(\d+[分秒]+\)$/, '') || '検索中';
+      }
+      
       // 1秒間隔で経過時間を更新
       searchTimerInterval = setInterval(() => {
         const searchMessage = document.getElementById('search-message');
         if (searchMessage && searchStartTime) {
-          const currentText = searchMessage.textContent;
-          const baseMessage = currentText.replace(/ \(\d+[分秒]+\)$/, '');
-          updateSearchProgress(baseMessage);
+          const elapsed = Math.floor((Date.now() - searchStartTime) / 1000);
+          const minutes = Math.floor(elapsed / 60);
+          const seconds = elapsed % 60;
+          const timeStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
+          
+          // 基本メッセージに時間を追加して直接設定
+          searchMessage.textContent = `${baseSearchMessage} (${timeStr})`;
         }
       }, 1000);
     }
     
     function stopSearchTimer() {
+      console.log('🛑 検索タイマー停止:', new Date().toLocaleTimeString());
       if (searchTimerInterval) {
         clearInterval(searchTimerInterval);
         searchTimerInterval = null;
+        console.log('✅ タイマーをクリアしました');
       }
       searchStartTime = null;
     }

@@ -20,7 +20,9 @@ from db.handler import reset_dev_database
 import logging
 
 # REM: ── サービス層 ───────────────────────────────────
-from app.services.ingest_worker import process_file
+from app.services.ingest.worker import process_file
+from app.services.ocr import OCREngineFactory
+from app.services.ingest import IngestSettingsManager
 
 # REM: ルーター定義
 router    = APIRouter(prefix="/ingest", tags=["ingest"])
@@ -41,6 +43,10 @@ last_ingest: Optional[dict] = None
 # REM: キャンセル制御用イベント
 cancel_event: Optional[asyncio.Event] = None
 
+# REM: OCRファクトリとIngest設定管理
+ocr_factory = OCREngineFactory()
+ingest_settings = IngestSettingsManager()
+
 # ══════════════════════ 1. GET /ingest (管理画面表示) ══════════════════════
 @router.get("", response_class=HTMLResponse)
 def ingest_page(request: Request):
@@ -55,11 +61,78 @@ def ingest_page(request: Request):
 # ══════════════════════ 2. GET /ingest/config (UI 設定取得) ══════════════════════
 @router.get("/config", response_class=JSONResponse)
 def ingest_config() -> JSONResponse:
-    """フロント向け設定情報を返す"""
+    """フロント向け設定情報を返す（OCR設定含む）"""
+    # OCRエンジン情報を取得
+    available_engines = ocr_factory.get_available_engines()
+    current_settings = ingest_settings.load_settings()
+    
     return JSONResponse({
         "prompt_keys": list(EMBEDDING_OPTIONS.keys()),
         "embedding_options": {k: v["model_name"] for k, v in EMBEDDING_OPTIONS.items()},
+        "ocr": {
+            "available_engines": available_engines,
+            "default_engine": current_settings.get("ocr", {}).get("default_engine", "ocrmypdf"),
+            "current_settings": current_settings
+        }
     })
+
+# ══════════════════════ 2.1 GET /ingest/ocr/engines (OCRエンジン一覧) ══════════════════════
+@router.get("/ocr/engines", response_class=JSONResponse)
+def get_ocr_engines() -> JSONResponse:
+    """利用可能なOCRエンジン一覧を返す"""
+    return JSONResponse(ocr_factory.get_available_engines())
+
+# ══════════════════════ 2.2 GET /ingest/ocr/settings/{engine_id} (OCRエンジン設定取得) ══════════════════════
+@router.get("/ocr/settings/{engine_id}", response_class=JSONResponse)
+def get_ocr_engine_settings(engine_id: str) -> JSONResponse:
+    """指定エンジンの現在の設定を返す"""
+    settings = ocr_factory.get_engine_settings(engine_id)
+    return JSONResponse({"engine_id": engine_id, "settings": settings})
+
+# ══════════════════════ 2.3 POST /ingest/ocr/settings/{engine_id} (OCRエンジン設定更新) ══════════════════════
+@router.post("/ocr/settings/{engine_id}", response_class=JSONResponse)
+async def update_ocr_engine_settings(engine_id: str, request: Request) -> JSONResponse:
+    """指定エンジンの設定を更新"""
+    try:
+        settings_data = await request.json()
+        ocr_factory.update_engine_settings(engine_id, settings_data)
+        return JSONResponse({"status": "success", "engine_id": engine_id})
+    except Exception as e:
+        raise HTTPException(400, f"設定更新エラー: {str(e)}")
+
+# ══════════════════════ 2.4 GET /ingest/ocr/presets (OCRプリセット一覧) ══════════════════════
+@router.get("/ocr/presets", response_class=JSONResponse)
+def get_ocr_presets() -> JSONResponse:
+    """OCRプリセット一覧を返す"""
+    return JSONResponse(ocr_factory.get_presets())
+
+# ══════════════════════ 2.5 POST /ingest/ocr/presets (OCRプリセット保存) ══════════════════════
+@router.post("/ocr/presets", response_class=JSONResponse)
+async def save_ocr_preset(request: Request) -> JSONResponse:
+    """OCRプリセットを保存"""
+    try:
+        data = await request.json()
+        preset_name = data.get("preset_name")
+        engine_id = data.get("engine_id")
+        settings = data.get("settings", {})
+        
+        if not preset_name or not engine_id:
+            raise HTTPException(400, "preset_name と engine_id は必須です")
+        
+        ocr_factory.save_preset(preset_name, engine_id, settings)
+        return JSONResponse({"status": "success", "preset_name": preset_name})
+    except Exception as e:
+        raise HTTPException(400, f"プリセット保存エラー: {str(e)}")
+
+# ══════════════════════ 2.6 DELETE /ingest/ocr/presets/{preset_name} (OCRプリセット削除) ══════════════════════
+@router.delete("/ocr/presets/{preset_name}", response_class=JSONResponse)
+def delete_ocr_preset(preset_name: str) -> JSONResponse:
+    """OCRプリセットを削除"""
+    try:
+        ocr_factory.delete_preset(preset_name)
+        return JSONResponse({"status": "success", "preset_name": preset_name})
+    except Exception as e:
+        raise HTTPException(400, f"プリセット削除エラー: {str(e)}")
 
 # ══════════════════════ 3. POST /ingest (ジョブ登録) ══════════════════════
 @router.post("", response_class=JSONResponse)
@@ -74,6 +147,8 @@ async def run_ingest_folder(
     embed_models: List[str]       = Form(...),
     overwrite_existing: bool      = Form(False),
     quality_threshold: float      = Form(0.0),
+    ocr_engine_id: str            = Form(None),  # REM: OCRエンジン指定
+    ocr_settings: str             = Form("{}"),  # REM: OCR設定（JSON文字列）
 ) -> JSONResponse:
     """ジョブ情報を保持し即時返却"""
     global last_ingest, cancel_event
@@ -110,7 +185,13 @@ async def run_ingest_folder(
     if not paths:
         raise HTTPException(400, "対象ファイルが見つかりません")
 
-    # REM: ジョブ情報保持 — 編集ペインのテキストも格納
+    # REM: OCR設定の解析
+    try:
+        ocr_settings_dict = json.loads(ocr_settings) if ocr_settings else {}
+    except json.JSONDecodeError:
+        raise HTTPException(400, "OCR設定のJSON形式が不正です")
+
+    # REM: ジョブ情報保持 — 編集ペインのテキストとOCR設定も格納
     last_ingest = {
         "files":                [{"path": p, "file_name": os.path.basename(p)} for p in paths],
         "refine_prompt_key":    refine_prompt_key,
@@ -118,6 +199,8 @@ async def run_ingest_folder(
         "embed_models":         embed_models,
         "overwrite_existing":   overwrite_existing,
         "quality_threshold":    quality_threshold,
+        "ocr_engine_id":        ocr_engine_id,
+        "ocr_settings":         ocr_settings_dict,
     }
 
     return JSONResponse({"status": "started", "count": len(paths), "mode": input_mode})
@@ -179,7 +262,7 @@ async def ingest_stream(request: Request) -> StreamingResponse:
                 yield f"data: {json.dumps({'cancelling': True})}\n\n"
                 break
 
-            # REM: 編集ペインのテキストを渡す
+            # REM: 編集ペインのテキストとOCR設定を渡す
             gen = process_file(
                 file_path           = info["path"],
                 file_name           = info["file_name"],
@@ -192,6 +275,8 @@ async def ingest_stream(request: Request) -> StreamingResponse:
                 quality_threshold   = last_ingest["quality_threshold"],
                 llm_timeout_sec     = LLM_TIMEOUT_SEC,
                 abort_flag          = abort_flag,
+                ocr_engine_id       = last_ingest.get("ocr_engine_id"),
+                ocr_settings        = last_ingest.get("ocr_settings", {}),
             )
 
             # REM: ジェネレータからイベントを取り出しストリーミング

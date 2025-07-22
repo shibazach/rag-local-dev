@@ -18,9 +18,9 @@
     height: calc(100vh - 2em);
   }
 
-  /* 上ペイン：2分割 */
+  /* 上ペイン：2分割（リサイズ可能） */
   #pane-top {
-    flex: 0 0 auto;
+    flex: 0 0 50%;
     display: flex;
     border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     box-sizing: border-box;
@@ -28,6 +28,7 @@
     backdrop-filter: blur(15px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     position: relative;
+    min-height: 200px;
   }
 
   /* 上ペインの背景オーバーレイ */
@@ -44,11 +45,26 @@
 
   /* 左上ペイン：基本設定（ファイル選択含む） */
   #top-left {
-    flex: 1 1 auto;
+    flex: 0 0 50%;
     padding: 1em 1em 1em 1em;
-    border-right: 1px solid rgba(255, 255, 255, 0.4);
     position: relative;
     z-index: 1;
+    overflow-y: auto;
+  }
+
+  /* 上ペイン用スプリッター */
+  #top-splitter {
+    flex: 0 0 5px;
+    cursor: col-resize;
+    background: rgba(255, 255, 255, 0.4);
+    border-left: 1px solid rgba(255, 255, 255, 0.6);
+    border-right: 1px solid rgba(255, 255, 255, 0.6);
+    position: relative;
+    z-index: 2;
+  }
+
+  #top-splitter:hover {
+    background: rgba(0, 123, 255, 0.3);
   }
 
   /* 右上ペイン：エンジン調整 */
@@ -57,6 +73,213 @@
     padding: 1em 1em 1em 1em;
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* エンジンパラメータ表示エリア */
+  #engine-parameters {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    max-height: 400px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+    background: white;
+  }
+
+  /* パラメータカテゴリ */
+  .parameter-category {
+    margin-bottom: 8px;
+  }
+
+  .category-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid #e9ecef;
+    margin-bottom: 4px;
+    font-size: 13px;
+    min-height: 24px;
+  }
+
+  .category-header:hover {
+    background: #e9ecef;
+  }
+
+  .category-title {
+    font-weight: bold;
+    color: #495057;
+  }
+
+  .category-toggle {
+    font-size: 10px;
+    color: #6c757d;
+    transition: transform 0.2s;
+  }
+
+  .category-toggle.collapsed {
+    transform: rotate(-90deg);
+  }
+
+  .category-content {
+    display: block;
+    padding-left: 4px;
+  }
+
+  .category-content.collapsed {
+    display: none;
+  }
+
+  /* パラメータ項目 */
+  .parameter-item {
+    margin-bottom: 6px;
+    padding: 4px 6px;
+    border-left: 2px solid #007bff;
+    background: #f8f9fa;
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* パラメータの横並びレイアウト */
+  .parameter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 28px;
+  }
+
+  .parameter-left {
+    flex: 0 0 140px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .parameter-right {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+  }
+
+  .parameter-label {
+    font-weight: 500;
+    color: #495057;
+    font-size: 12px;
+    line-height: 1.2;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .parameter-input {
+    padding: 4px 6px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 13px;
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-width: 60px;
+  }
+
+  .parameter-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  }
+
+  .parameter-description {
+    font-size: 11px;
+    color: #6c757d;
+    line-height: 1.2;
+    margin-left: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* チェックボックス用スタイル */
+  .parameter-input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    flex: 0 0 auto;
+  }
+
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+  }
+
+  .checkbox-container .parameter-input {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .checkbox-label {
+    font-size: 12px;
+    color: #495057;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  /* チェックボックスタイトル用スタイル */
+  .checkbox-title {
+    font-weight: bold;
+    font-size: 12px;
+    color: #495057;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+
+  /* セレクトボックス用スタイル */
+  .parameter-input[type="select"],
+  .parameter-input select {
+    flex: 1 1 auto;
+    min-width: 100px;
+  }
+
+  /* 数値入力用スタイル */
+  .parameter-input[type="number"] {
+    flex: 0 0 80px;
+    min-width: 80px;
+    max-width: 120px;
+    text-align: center;
+  }
+
+  /* 大きな数値（キャンバスサイズなど）用スタイル */
+  .parameter-input[type="number"].large-number {
+    flex: 0 0 100px;
+    min-width: 100px;
+    max-width: 140px;
+  }
+
+  /* テキスト入力用スタイル */
+  .parameter-input[type="text"] {
+    font-family: monospace;
+    font-size: 12px;
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+
+  /* 上下分割用スプリッター */
+  #vertical-splitter {
+    flex: 0 0 5px;
+    cursor: row-resize;
+    background: rgba(255, 255, 255, 0.4);
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+    position: relative;
+    z-index: 2;
+  }
+
+  #vertical-splitter:hover {
+    background: rgba(0, 123, 255, 0.3);
   }
 
   /* 下ペイン：結果表示エリア */
@@ -64,6 +287,7 @@
     flex: 1 1 auto;
     display: flex;
     overflow: hidden;
+    min-height: 200px;
   }
 
   /* 左ペイン：OCR結果テキスト */
@@ -281,6 +505,9 @@
       </div>
     </div>
 
+    <!-- 上ペイン用スプリッター -->
+    <div id="top-splitter"></div>
+
     <!-- 右上ペイン：エンジン調整 -->
     <div id="top-right">
       <h1 class="page-title">🔧 エンジン調整</h1>
@@ -289,6 +516,9 @@
       </div>
     </div>
   </div>
+
+  <!-- 上下分割用スプリッター -->
+  <div id="vertical-splitter"></div>
 
   <!-- 下ペイン：結果とPDF -->
   <div id="pane-bottom">
@@ -338,6 +568,86 @@
 
     let isResizing = false;
     let currentEngineParameters = {};
+
+    // 上ペインのリサイズ機能
+    const topSplitter = document.getElementById("top-splitter");
+    const topLeft = document.getElementById("top-left");
+    const topRight = document.getElementById("top-right");
+    let isTopResizing = false;
+
+    topSplitter.addEventListener("mousedown", (e) => {
+      isTopResizing = true;
+      document.body.style.cursor = "col-resize";
+      document.body.style.userSelect = "none";
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isTopResizing) return;
+
+      const containerRect = document.getElementById("pane-top").getBoundingClientRect();
+      const mouseX = e.clientX - containerRect.left;
+      const containerWidth = containerRect.width;
+      
+      // 最小幅を20%、最大幅を80%に制限
+      const minWidth = containerWidth * 0.2;
+      const maxWidth = containerWidth * 0.8;
+      const newLeftWidth = Math.max(minWidth, Math.min(maxWidth, mouseX));
+      
+      const leftPercentage = (newLeftWidth / containerWidth) * 100;
+      
+      topLeft.style.flex = `0 0 ${leftPercentage}%`;
+      
+      e.preventDefault();
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (isTopResizing) {
+        isTopResizing = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    });
+
+    // 上下ペインのリサイズ機能
+    const verticalSplitter = document.getElementById("vertical-splitter");
+    const paneTop = document.getElementById("pane-top");
+    const paneBottom = document.getElementById("pane-bottom");
+    let isVerticalResizing = false;
+
+    verticalSplitter.addEventListener("mousedown", (e) => {
+      isVerticalResizing = true;
+      document.body.style.cursor = "row-resize";
+      document.body.style.userSelect = "none";
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isVerticalResizing) return;
+
+      const containerRect = document.getElementById("try-ocr-container").getBoundingClientRect();
+      const mouseY = e.clientY - containerRect.top;
+      const containerHeight = containerRect.height;
+      
+      // 最小高さを20%、最大高さを80%に制限
+      const minHeight = containerHeight * 0.2;
+      const maxHeight = containerHeight * 0.8;
+      const newTopHeight = Math.max(minHeight, Math.min(maxHeight, mouseY));
+      
+      const topPercentage = (newTopHeight / containerHeight) * 100;
+      
+      paneTop.style.flex = `0 0 ${topPercentage}%`;
+      
+      e.preventDefault();
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (isVerticalResizing) {
+        isVerticalResizing = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    });
 
     // 処理中オーバーレイの表示/非表示（経過時間付き）
     let processingStartTime = null;
@@ -667,93 +977,200 @@
       }
     }
 
-    // エンジンパラメータのUI生成
+    // エンジンパラメータのUI生成（カテゴリ別表示対応）
     function renderEngineParameters(parameters) {
       engineParametersDiv.innerHTML = '';
       currentEngineParameters = {};
 
+      // パラメータをカテゴリ別にグループ化
+      const categorizedParams = {};
       parameters.forEach(param => {
-        const group = document.createElement('div');
-        group.className = 'parameter-group';
+        const category = param.category || '基本設定';
+        if (!categorizedParams[category]) {
+          categorizedParams[category] = [];
+        }
+        categorizedParams[category].push(param);
+      });
 
-        const label = document.createElement('label');
-        label.className = 'parameter-label';
-        label.textContent = param.label;
+      // カテゴリ別にUI生成
+      Object.keys(categorizedParams).forEach((categoryName, index) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'parameter-category';
 
-        let input;
-        const inputId = `param-${param.name}`;
+        // カテゴリヘッダー
+        const headerDiv = document.createElement('div');
+        headerDiv.className = 'category-header';
+        
+        const titleSpan = document.createElement('span');
+        titleSpan.className = 'category-title';
+        titleSpan.textContent = categoryName;
+        
+        const toggleSpan = document.createElement('span');
+        toggleSpan.className = 'category-toggle';
+        toggleSpan.textContent = '▼';
+        
+        headerDiv.appendChild(titleSpan);
+        headerDiv.appendChild(toggleSpan);
 
-        switch (param.type) {
-          case 'checkbox':
-            input = document.createElement('input');
-            input.type = 'checkbox';
-            input.checked = param.default;
-            input.className = 'parameter-input';
-            currentEngineParameters[param.name] = param.default;
-            input.addEventListener('change', () => {
-              currentEngineParameters[param.name] = input.checked;
-            });
-            break;
-
-          case 'number':
-            input = document.createElement('input');
-            input.type = 'number';
-            input.value = param.default;
-            input.min = param.min || '';
-            input.max = param.max || '';
-            input.step = param.step || '';
-            input.className = 'parameter-input';
-            currentEngineParameters[param.name] = param.default;
-            input.addEventListener('change', () => {
-              currentEngineParameters[param.name] = parseFloat(input.value) || param.default;
-            });
-            break;
-
-          case 'text':
-            input = document.createElement('input');
-            input.type = 'text';
-            input.value = param.default || '';
-            input.className = 'parameter-input';
-            currentEngineParameters[param.name] = param.default || '';
-            input.addEventListener('change', () => {
-              currentEngineParameters[param.name] = input.value;
-            });
-            break;
-
-          case 'select':
-            input = document.createElement('select');
-            input.className = 'parameter-input';
-            param.options.forEach(option => {
-              const opt = document.createElement('option');
-              opt.value = option.value;
-              opt.textContent = option.label;
-              if (option.value === param.default) {
-                opt.selected = true;
-              }
-              input.appendChild(opt);
-            });
-            currentEngineParameters[param.name] = param.default;
-            input.addEventListener('change', () => {
-              currentEngineParameters[param.name] = input.value;
-            });
-            break;
-
-          default:
-            input = document.createElement('span');
-            input.textContent = '未対応の入力タイプ';
+        // カテゴリコンテンツ
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'category-content';
+        
+        // 基本設定以外は初期状態で折りたたみ
+        if (index > 0) {
+          contentDiv.classList.add('collapsed');
+          toggleSpan.classList.add('collapsed');
         }
 
-        input.id = inputId;
-        label.setAttribute('for', inputId);
+        // カテゴリヘッダーのクリックイベント
+        headerDiv.addEventListener('click', () => {
+          const isCollapsed = contentDiv.classList.contains('collapsed');
+          if (isCollapsed) {
+            contentDiv.classList.remove('collapsed');
+            toggleSpan.classList.remove('collapsed');
+          } else {
+            contentDiv.classList.add('collapsed');
+            toggleSpan.classList.add('collapsed');
+          }
+        });
 
-        const description = document.createElement('div');
-        description.className = 'parameter-description';
-        description.textContent = param.description;
+        // パラメータ項目を生成（横並びレイアウト）
+        categorizedParams[categoryName].forEach(param => {
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'parameter-item';
 
-        group.appendChild(label);
-        group.appendChild(input);
-        group.appendChild(description);
-        engineParametersDiv.appendChild(group);
+          // 横並びレイアウト用のコンテナ
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'parameter-row';
+
+          // 左側：ラベルとコントロール
+          const leftDiv = document.createElement('div');
+          leftDiv.className = 'parameter-left';
+
+          const label = document.createElement('label');
+          label.className = 'parameter-label';
+          label.textContent = param.label;
+
+          let input;
+          const inputId = `param-${param.name}`;
+
+          switch (param.type) {
+            case 'checkbox':
+              // チェックボックスは項目名を太字で前に表示
+              const checkboxContainer = document.createElement('div');
+              checkboxContainer.className = 'checkbox-container';
+              
+              // 項目名を太字で表示
+              const checkboxTitle = document.createElement('span');
+              checkboxTitle.className = 'checkbox-title';
+              checkboxTitle.textContent = param.label;
+              
+              input = document.createElement('input');
+              input.type = 'checkbox';
+              input.checked = param.default;
+              input.className = 'parameter-input';
+              input.id = inputId;
+              
+              checkboxContainer.appendChild(checkboxTitle);
+              checkboxContainer.appendChild(input);
+              leftDiv.appendChild(checkboxContainer);
+              
+              currentEngineParameters[param.name] = param.default;
+              input.addEventListener('change', () => {
+                currentEngineParameters[param.name] = input.checked;
+              });
+              break;
+
+            case 'number':
+              input = document.createElement('input');
+              input.type = 'number';
+              input.value = param.default;
+              input.min = param.min || '';
+              input.max = param.max || '';
+              input.step = param.step || '';
+              input.className = 'parameter-input';
+              input.id = inputId;
+              
+              // 大きな数値（キャンバスサイズなど）の場合は専用クラスを適用
+              if (param.name === 'canvas_size' || param.name === 'oversample' || 
+                  param.name === 'det_limit_side_len' || param.default >= 1000) {
+                input.classList.add('large-number');
+              }
+              
+              leftDiv.appendChild(label);
+              leftDiv.appendChild(input);
+              
+              currentEngineParameters[param.name] = param.default;
+              input.addEventListener('change', () => {
+                currentEngineParameters[param.name] = parseFloat(input.value) || param.default;
+              });
+              break;
+
+            case 'text':
+              input = document.createElement('input');
+              input.type = 'text';
+              input.value = param.default || '';
+              input.className = 'parameter-input';
+              input.id = inputId;
+              
+              leftDiv.appendChild(label);
+              leftDiv.appendChild(input);
+              
+              currentEngineParameters[param.name] = param.default || '';
+              input.addEventListener('change', () => {
+                currentEngineParameters[param.name] = input.value;
+              });
+              break;
+
+            case 'select':
+              input = document.createElement('select');
+              input.className = 'parameter-input';
+              input.id = inputId;
+              param.options.forEach(option => {
+                const opt = document.createElement('option');
+                opt.value = option.value;
+                opt.textContent = option.label;
+                if (option.value === param.default) {
+                  opt.selected = true;
+                }
+                input.appendChild(opt);
+              });
+              
+              leftDiv.appendChild(label);
+              leftDiv.appendChild(input);
+              
+              currentEngineParameters[param.name] = param.default;
+              input.addEventListener('change', () => {
+                currentEngineParameters[param.name] = input.value;
+              });
+              break;
+
+            default:
+              input = document.createElement('span');
+              input.textContent = '未対応の入力タイプ';
+              leftDiv.appendChild(label);
+              leftDiv.appendChild(input);
+          }
+
+          // 右側：説明
+          const rightDiv = document.createElement('div');
+          rightDiv.className = 'parameter-right';
+          
+          const description = document.createElement('div');
+          description.className = 'parameter-description';
+          description.textContent = param.description;
+          rightDiv.appendChild(description);
+
+          // 横並びレイアウトに追加
+          rowDiv.appendChild(leftDiv);
+          rowDiv.appendChild(rightDiv);
+          itemDiv.appendChild(rowDiv);
+          contentDiv.appendChild(itemDiv);
+        });
+
+        categoryDiv.appendChild(headerDiv);
+        categoryDiv.appendChild(contentDiv);
+        engineParametersDiv.appendChild(categoryDiv);
       });
     }
 
@@ -878,7 +1295,7 @@
       <span class="result-stats">
         ${result.success ? '✅' : '❌'} 
         ${result.processing_time}秒
-        ${result.confidence ? ` | 信頼度: ${(result.confidence * 100).toFixed(1)}%` : ''}
+        ${result.confidence ? ` | 信頼度: ${result.confidence.toFixed(1)}%` : ''}
         ${correctionInfo}
       </span>
     `;

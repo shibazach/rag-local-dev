@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter, Form
 from fastapi.responses import JSONResponse, StreamingResponse
-from app.services.chat_handler import handle_query
+from app.services.chat.handler import handle_query
 import json
 import os
 import datetime

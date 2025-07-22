@@ -1,4 +1,4 @@
-# REM: app/services/chat_handler.py（更新日時: 2025-07-18 18:00 JST）
+# app/services/chat/handler.py（更新日時: 2025-07-18 18:00 JST）
 """
 チャット検索リクエストハンドラ
   ・チャンク統合
@@ -17,6 +17,7 @@ from sentence_transformers import SentenceTransformer
 
 # ── プロジェクト共通 ──────────────────────────
 from src.config import EMBEDDING_OPTIONS, LLM_ENGINE, OLLAMA_BASE
+from src.utils import to_pgvector_literal
 from db.handler import (
     fetch_top_chunks,
     fetch_top_files,
@@ -24,10 +25,6 @@ from db.handler import (
 )
 
 # ═════════════════════════════════════════════
-def to_pgvector_literal(vec) -> str:
-    if isinstance(vec, np.ndarray):
-        vec = vec.tolist()
-    return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
 # ═════════════════════════════════════════════
 async def handle_query(query: str, model_key: str, mode: str = "チャンク統合", search_limit: int = 10, min_score: float = 0.0) -> Dict:

@@ -20,7 +20,7 @@ from db.handler import (
     ensure_embedding_table,
     bulk_insert_embeddings
 )
-from src.utils import debug_print
+from src.utils import debug_print, to_pgvector_literal
 
 # ──────────────────────────────────────────────────────────
 # REM: GPU 空き VRAM をチェックしてエンベッド用デバイスを返す
@@ -40,11 +40,6 @@ def pick_embed_device(min_free_vram_mb: int = 1024) -> str:
     return "cpu"
 
 # ──────────────────────────────────────────────────────────
-# REM: numpy 配列を pgvector 文字列リテラルに変換
-def to_pgvector_literal(vec: Sequence[float] | np.ndarray) -> str:
-    if isinstance(vec, np.ndarray):
-        vec = vec.tolist()
-    return "[" + ",".join(f"{float(x):.6f}" for x in vec) + "]"
 
 # ──────────────────────────────────────────────────────────
 # REM: メイン関数 ─ チャンク分割 → 埋め込み → DB 登録

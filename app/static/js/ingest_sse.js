@@ -123,9 +123,24 @@ function startIngestStream() {
       return;
     }
 
-    // REM: 通常ログ行
-    const label = duration ? `${step} (${duration}s)` : step;
-    section.appendChild(createLine(label));
+    // REM: 進捗更新の場合は同じ行を上書き
+    if (d.is_progress_update && d.page_id) {
+      // 既存の進捗行を検索
+      const existingProgress = section.querySelector(`[data-page-id="${d.page_id}"]`);
+      if (existingProgress) {
+        // 既存の行を更新
+        existingProgress.textContent = step;
+      } else {
+        // 新しい進捗行を作成
+        const progressLine = createLine(step);
+        progressLine.setAttribute('data-page-id', d.page_id);
+        section.appendChild(progressLine);
+      }
+    } else {
+      // REM: 通常ログ行
+      const label = duration ? `${step} (${duration}s)` : step;
+      section.appendChild(createLine(label));
+    }
     scrollBottom(logPane);
   };
 

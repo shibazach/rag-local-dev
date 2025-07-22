@@ -9,8 +9,8 @@ router = APIRouter()
 
 @router.get("/metrics")
 def get_metrics():
-    # REM: CPU 使用率（直近瞬間値）
-    cpu = psutil.cpu_percent(interval=None)
+    # REM: CPU 使用率（0.1秒間隔で測定）
+    cpu = psutil.cpu_percent(interval=0.1)
     # REM: GPU 使用率・消費電力（nvidia-smi コマンド）
     gpu_data = {}
     try:

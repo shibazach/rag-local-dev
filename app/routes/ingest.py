@@ -147,6 +147,7 @@ async def run_ingest_folder(
     embed_models: List[str]       = Form(...),
     overwrite_existing: bool      = Form(False),
     quality_threshold: float      = Form(0.0),
+    llm_timeout: int              = Form(300),   # REM: LLMタイムアウト設定（秒）
     ocr_engine_id: str            = Form(None),  # REM: OCRエンジン指定
     ocr_settings: str             = Form("{}"),  # REM: OCR設定（JSON文字列）
 ) -> JSONResponse:
@@ -199,6 +200,7 @@ async def run_ingest_folder(
         "embed_models":         embed_models,
         "overwrite_existing":   overwrite_existing,
         "quality_threshold":    quality_threshold,
+        "llm_timeout_sec":      llm_timeout,
         "ocr_engine_id":        ocr_engine_id,
         "ocr_settings":         ocr_settings_dict,
     }
@@ -273,7 +275,7 @@ async def ingest_stream(request: Request) -> StreamingResponse:
                 embed_models        = last_ingest["embed_models"],
                 overwrite_existing  = last_ingest["overwrite_existing"],
                 quality_threshold   = last_ingest["quality_threshold"],
-                llm_timeout_sec     = LLM_TIMEOUT_SEC,
+                llm_timeout_sec     = last_ingest["llm_timeout_sec"],
                 abort_flag          = abort_flag,
                 ocr_engine_id       = last_ingest.get("ocr_engine_id"),
                 ocr_settings        = last_ingest.get("ocr_settings", {}),

@@ -9,9 +9,22 @@
       "oversample": 300
     },
     "tesseract": {
-      "psm": 6,
-      "oem": 3,
-      "lang": "jpn+eng"
+      "psm": "3",
+      "oem": "3",
+      "lang": "jpn+eng",
+      "dpi": 600,
+      "preserve_interword_spaces": true,
+      "tessedit_char_whitelist": "",
+      "tessedit_char_blacklist": "",
+      "classify_bln_numeric_mode": false,
+      "textord_really_old_xheight": false,
+      "textord_min_linesize": 1.25,
+      "tosp_threshold_bias1": 1.5,
+      "tosp_threshold_bias2": 0,
+      "edges_max_children_per_outline": 10,
+      "edges_children_per_grandchild": 2,
+      "language_model_penalty_non_freq_dict_word": 0.1,
+      "language_model_penalty_case": 0.1
     },
     "easyocr": {
       "languages": "ja",

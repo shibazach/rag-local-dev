@@ -4,20 +4,160 @@
 
 <style>
   /* ペイン上下分割 */
-  #ingest-container { display:flex; flex-direction:column; height:calc(100vh - 2em); }
+  #ingest-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 2em);
+  }
+
+  /* 左側コンテナ（通常モードでは表示されない） */
+  #left-container {
+    display: contents; /* 通常モードでは子要素をそのまま表示 */
+  }
 
   /* 上ペイン */
   #pane-top {
-    flex:0 0 auto;
-    padding:1em;
-    border-bottom:1px solid rgba(255, 255, 255, 0.4);
-    box-sizing:border-box;
+    flex: 0 0 auto;
+    padding: 1em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    box-sizing: border-box;
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(15px);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     position: relative;
+    display: flex;
+    transition: all 0.3s ease;
   }
-  
+
+  /* 上ペイン左側（フォーム部分） */
+  #pane-top-left {
+    flex: 1 1 auto;
+    transition: all 0.3s ease;
+  }
+
+  /* 上ペイン右側（PDFプレビュー用） */
+  #pane-top-right {
+    flex: 0 0 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 1px solid rgba(255, 255, 255, 0.4);
+  }
+
+  /* レイアウト切り替えボタン */
+  .layout-toggle-btn {
+    position: absolute;
+    top: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    transition: all 0.2s ease;
+    z-index: 100;
+  }
+
+  .layout-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  #expand-btn {
+    right: 10px;
+  }
+
+  #collapse-btn {
+    right: 10px;
+    display: none;
+  }
+
+  /* 拡張モード時のボタン位置調整 */
+  .layout-expanded #collapse-btn {
+    right: 10px;
+    left: auto;
+  }
+
+  /* 第2パターン（拡張モード）のスタイル */
+  .layout-expanded #ingest-container {
+    display: flex;
+    flex-direction: row;
+    height: calc(100vh - 2em);
+  }
+
+  /* 拡張モード時: 中央エリア（設定+ログ） */
+  .layout-expanded #left-container {
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* 拡張モード時の上ペイン（設定画面） */
+  .layout-expanded #pane-top {
+    flex: 0 0 auto;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    border-right: none;
+  }
+
+  .layout-expanded #pane-top-left {
+    flex: 1 1 auto;
+  }
+
+  .layout-expanded #pane-top-right {
+    display: none;
+  }
+
+  /* 拡張モード時の下ペイン（ログのみ） */
+  .layout-expanded #pane-bottom {
+    flex: 1 1 auto;
+    display: block;
+  }
+
+  .layout-expanded #log-pane {
+    width: 100%;
+    height: 100%;
+  }
+
+  .layout-expanded #splitter,
+  .layout-expanded #editor-pane {
+    display: none;
+  }
+
+  .layout-expanded #expand-btn {
+    display: none;
+  }
+
+  .layout-expanded #collapse-btn {
+    display: block;
+  }
+
+  /* PDFプレビューエリア - 拡張モード用（画面右半分全体） */
+  #pdf-preview-expanded {
+    display: none;
+    background: white;
+    border-left: 1px solid #ccc;
+  }
+
+  .layout-expanded #pdf-preview-expanded {
+    display: flex;
+    flex: 0 0 50%;
+    height: 100%;
+  }
+
+  /* PDFプレビューエリア */
+  #pdf-preview-area {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+  }
+
+  .layout-expanded #pdf-preview-area {
+    display: flex;
+  }
+
   /* 上ペインの背景オーバーレイ */
   #pane-top::before {
     content: '';
@@ -32,18 +172,19 @@
 
   /* 下ペイン：ログと編集ペインを左右並びに */
   #pane-bottom {
-    flex:1 1 auto;
-    display:flex;
-    overflow:hidden;
+    flex: 1 1 auto;
+    display: flex;
+    overflow: hidden;
     position: relative;
   }
+
   /* 左カラム：ログ */
   #log-pane {
-    flex:1 1 auto;
-    overflow-y:auto;
-    padding:1em;
-    background:#fafafa;
-    box-sizing:border-box;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1em;
+    background: #fafafa;
+    box-sizing: border-box;
   }
 
   /* REM: ペイン間スプリッター */
@@ -55,39 +196,86 @@
 
   /* 右カラム：編集エリア */
   #editor-pane {
-    flex:0 0 40%;
-    display:none;
-    border-left:1px solid #ccc;
-    box-sizing:border-box;
-    overflow:hidden;
+    flex: 0 0 40%;
+    display: none;
+    border-left: 1px solid #ccc;
+    box-sizing: border-box;
+    overflow: hidden;
   }
+
   #editor-pane textarea {
-    width:100%; height:100%; border:none;
-    padding:1em; box-sizing:border-box;
-    resize:none; overflow:auto;
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 1em;
+    box-sizing: border-box;
+    resize: none;
+    overflow: auto;
   }
 
   /* フォーム */
-  #ingest-form { display:block; width:100%; }
-  .form-section {
-    display:flex; align-items:center;
-    margin-bottom:0.1em; line-height:1.2; width:100%;
+  #ingest-form {
+    display: block;
+    width: 100%;
   }
+
+  .form-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.1em;
+    line-height: 1.2;
+    width: 100%;
+  }
+
   .form-section label {
     min-width: 120px;
     flex-shrink: 0;
   }
+
   /* REM: 質スコア閾値入力を中央寄せ */
-  #quality_threshold { text-align: center; }
-  .form-actions { margin-top:1em; }
-  .form-actions button { margin-right:1em; }
+  #quality_threshold {
+    text-align: center;
+  }
+
+  .form-actions {
+    margin-top: 1em;
+  }
+
+  .form-actions button {
+    margin-right: 1em;
+  }
 
   /* ログ表示 */
-  .file-header   { background:#eef; padding:4px 8px; font-weight:bold; margin-top:1em; }
-  .file-progress { font-size:0.9em; color:#555; margin-left:1ch; }
-  .page-header   { margin-left:1ch; font-style:italic; }
-  .file-section  { margin-left:1em; margin-bottom:1em; }
-  .file-section pre { white-space:pre-wrap; word-break:break-word; background:#fff; padding:8px; border:1px solid #ddd; }
+  .file-header {
+    background: #eef;
+    padding: 4px 8px;
+    font-weight: bold;
+    margin-top: 1em;
+  }
+
+  .file-progress {
+    font-size: 0.9em;
+    color: #555;
+    margin-left: 1ch;
+  }
+
+  .page-header {
+    margin-left: 1ch;
+    font-style: italic;
+  }
+
+  .file-section {
+    margin-left: 1em;
+    margin-bottom: 1em;
+  }
+
+  .file-section pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #fff;
+    padding: 8px;
+    border: 1px solid #ddd;
+  }
 
   /* 処理中のナビゲーション無効化 */
   body.processing-in-progress nav a {
@@ -95,7 +283,7 @@
     opacity: 0.5;
     cursor: not-allowed;
   }
-  
+
   body.processing-in-progress nav a::after {
     content: '';
     position: absolute;
@@ -106,7 +294,7 @@
     background: rgba(0, 0, 0, 0.1);
     z-index: 1;
   }
-  
+
   /* 処理中の警告メッセージ */
   #nav-warning {
     display: none;
@@ -134,9 +322,9 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.5);
   }
-  
+
   .modal-content {
     background-color: #fefefe;
     margin: 5% auto;
@@ -148,7 +336,7 @@
     max-height: 80vh;
     overflow-y: auto;
   }
-  
+
   .modal-header {
     display: flex;
     justify-content: space-between;
@@ -157,29 +345,29 @@
     border-bottom: 1px solid #ddd;
     padding-bottom: 10px;
   }
-  
+
   .close {
     color: #aaa;
     font-size: 28px;
     font-weight: bold;
     cursor: pointer;
   }
-  
+
   .close:hover,
   .close:focus {
     color: black;
   }
-  
+
   .ocr-setting-group {
     margin-bottom: 15px;
   }
-  
+
   .ocr-setting-group label {
     display: block;
     margin-bottom: 5px;
     font-weight: bold;
   }
-  
+
   .ocr-setting-group input,
   .ocr-setting-group select {
     width: 100%;
@@ -188,25 +376,25 @@
     border-radius: 4px;
     box-sizing: border-box;
   }
-  
+
   .ocr-setting-group input[type="checkbox"] {
     width: auto;
     margin-right: 8px;
   }
-  
+
   .ocr-setting-description {
     font-size: 0.9em;
     color: #666;
     margin-top: 3px;
   }
-  
+
   .modal-actions {
     margin-top: 20px;
     text-align: right;
     border-top: 1px solid #ddd;
     padding-top: 15px;
   }
-  
+
   .modal-actions button {
     margin-left: 10px;
     padding: 8px 16px;
@@ -214,17 +402,17 @@
     border-radius: 4px;
     cursor: pointer;
   }
-  
+
   .btn-primary {
     background-color: #007bff;
     color: white;
   }
-  
+
   .btn-secondary {
     background-color: #6c757d;
     color: white;
   }
-  
+
   .preset-item {
     display: flex;
     justify-content: space-between;
@@ -234,91 +422,117 @@
     border-radius: 4px;
     margin-bottom: 8px;
   }
-  
+
   .preset-info {
     flex: 1;
   }
-  
+
   .preset-name {
     font-weight: bold;
   }
-  
+
   .preset-details {
     font-size: 0.9em;
     color: #666;
   }
-
-
 </style>
 
 <div id="ingest-container">
-  <!-- 上ペイン -->
-  <div id="pane-top">
-    <h1 class="page-title">✏️ データ整形/登録</h1>
-    <form id="ingest-form">
-      <div class="form-section">
-        {% include "partials/ingest/ingest_header.html" %}
-      </div>
-      <div class="form-section">
-        <label for="refine-prompt">📝 整形プロンプト：</label>
-        <select id="refine-prompt" name="refine_prompt_key">
-          {% for key in prompt_keys %}
-            <option value="{{ key }}">{{ key }}</option>
-          {% endfor %}
-        </select>
-        <button type="button" id="prompt-edit-btn" style="margin-left: 0.5em;">確認</button>
-        <span style="margin-left: 1em; color: #666; font-size: 0.9em;">（LLM モデル：{{ llm_model }}）</span>
+  <!-- レイアウト切り替えボタン -->
+  <button id="expand-btn" class="layout-toggle-btn" title="PDFプレビューを拡張表示">&lt;&lt;</button>
+  <button id="collapse-btn" class="layout-toggle-btn" title="通常表示に戻す">&gt;&gt;</button>
+  
+  <!-- 左側コンテナ（拡張モード時に使用） -->
+  <div id="left-container">
+    <!-- 上ペイン -->
+    <div id="pane-top">
+      <!-- 上ペイン左側（フォーム部分） -->
+      <div id="pane-top-left">
+        <h1 class="page-title">✏️ データ整形/登録</h1>
+        <form id="ingest-form">
+          <div class="form-section">
+            {% include "partials/ingest/ingest_header.html" %}
+          </div>
+          <div class="form-section">
+            <label for="refine-prompt">📝 整形プロンプト：</label>
+            <select id="refine-prompt" name="refine_prompt_key">
+              {% for key in prompt_keys %}
+              <option value="{{ key }}">{{ key }}</option>
+              {% endfor %}
+            </select>
+            <button type="button" id="prompt-edit-btn" style="margin-left: 0.5em;">確認</button>
+            <span style="margin-left: 1em; color: #666; font-size: 0.9em;">（LLM モデル：{{ llm_model }}）</span>
+          </div>
+
+          <!-- OCR設定セクション -->
+          <div class="form-section">
+            <label for="ocr-engine">🔍 OCRエンジン：</label>
+            <select id="ocr-engine" name="ocr_engine_id">
+              <option value="">デフォルト</option>
+            </select>
+            <button type="button" id="ocr-settings-btn" style="margin-left: 0.5em;">設定</button>
+            <button type="button" id="ocr-presets-btn" style="margin-left: 0.5em;">プリセット</button>
+          </div>
+          <!-- 省略：埋め込みモデル・上書き・ボタン群 -->
+          <div class="form-section">
+            <label style="min-width: 140px;">📝 埋め込みモデル：</label>
+            {% for key, opt in embedding_options.items() %}
+            <label style="margin-left:0.5em;">
+              <input type="checkbox" name="embed_models" value="{{ key }}" checked>
+              {{ loop.index }}. {{ opt.model_name }}
+            </label>
+            {% endfor %}
+          </div>
+          <div class="form-section">
+            <label for="overwrite_existing" style="margin-left: 1.5em;">既存レコード上書き：</label>
+            <input id="overwrite_existing" type="checkbox" name="overwrite_existing" value="true">
+            <label for="quality_threshold">（質スコア閾値</label>
+            <input id="quality_threshold" type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0"
+              style="width:4em;">
+            <label>以上はSKIP）</label>
+          </div>
+          <div class="form-section">
+            <label for="llm_timeout">⏱️ LLMタイムアウト：</label>
+            <input id="llm_timeout" type="number" name="llm_timeout" min="0" max="3600" step="10" value="300"
+              style="width:5em; text-align:center;">
+            <label>秒（0でタイムアウトなし）</label>
+          </div>
+          <div class="form-actions">
+            <button type="button" id="start-btn">🚀 処理開始</button>
+            <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
+            <!-- REM: PDF表示モード選択 -->
+            <span style="margin-left:1em;">
+              PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked>
+                同一タブ内</label>
+              <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>
+            </span>
+          </div>
+        </form>
       </div>
       
-      <!-- OCR設定セクション -->
-      <div class="form-section">
-        <label for="ocr-engine">🔍 OCRエンジン：</label>
-        <select id="ocr-engine" name="ocr_engine_id">
-          <option value="">デフォルト</option>
-        </select>
-        <button type="button" id="ocr-settings-btn" style="margin-left: 0.5em;">設定</button>
-        <button type="button" id="ocr-presets-btn" style="margin-left: 0.5em;">プリセット</button>
+      <!-- 上ペイン右側（PDFプレビュー用） -->
+      <div id="pane-top-right">
+        <div id="pdf-preview-area">
+          <iframe id="pdf-preview-frame" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
       </div>
-      <!-- 省略：埋め込みモデル・上書き・ボタン群 -->
-      <div class="form-section">
-        <label style="min-width: 140px;">📝 埋め込みモデル：</label>
-        {% for key, opt in embedding_options.items() %}
-          <label style="margin-left:0.5em;">
-            <input type="checkbox" name="embed_models" value="{{ key }}" checked>
-            {{ loop.index }}. {{ opt.model_name }}
-          </label>
-        {% endfor %}
+    </div>
+
+    <!-- 下ペイン：ログ and 編集 -->
+    <div id="pane-bottom">
+      <div id="log-pane"></div>
+
+      <!-- REM: ログペインと編集ペインの間に可変スプリッター -->
+      <div id="splitter"></div>
+      <div id="editor-pane">
+        <textarea id="prompt-editor"></textarea>
       </div>
-      <div class="form-section">
-        <label for="overwrite_existing" style="margin-left: 1.5em;">既存レコード上書き：</label>
-        <input id="overwrite_existing" type="checkbox" name="overwrite_existing" value="true">
-        <label for="quality_threshold">（質スコア閾値</label>
-        <input id="quality_threshold" type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0" style="width:4em;">
-        <label>以上はSKIP）</label>
-      </div>
-      <div class="form-actions">
-        <button type="button" id="start-btn">🚀 処理開始</button>
-        <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
-        <!-- REM: PDF表示モード選択 -->
-        <span style="margin-left:1em;">
-          PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内</label>
-          <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>
-        </span>
-      </div>
-    </form>
+    </div>
   </div>
 
-  <!-- 下ペイン：ログ and 編集 -->
-  <div id="pane-bottom">
-    <div id="log-pane"></div>
-
-    <!-- REM: ログペインと編集ペインの間に可変スプリッター -->
-    <div id="splitter"></div>
-    <div id="editor-pane">
-      <textarea id="prompt-editor"></textarea>
-    </div>
-    
-
+  <!-- 拡張モード用PDFプレビューエリア（画面右半分全体） -->
+  <div id="pdf-preview-expanded">
+    <iframe id="pdf-preview-frame-expanded" style="width: 100%; height: 100%; border: none;"></iframe>
   </div>
 </div>
 
@@ -368,472 +582,519 @@
 
 <!-- REM: スクリプト読み込み（バージョン管理付き） -->
 <script src="{{ url_for('static', path='js/ingest.js') }}?v=20250718"></script>
-<script src="{{ url_for('static', path='js/ingest_sse.js') }}?v=20250718"></script>
+<script src="{{ url_for('static', path='js/ingest_sse.js') }}?v=20250722"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-  let processingInProgress = false;
-  const navWarning = document.getElementById('nav-warning');
-  
-  // 処理開始時の制御
-  function startProcessing() {
-    processingInProgress = true;
-    document.body.classList.add('processing-in-progress');
-    
-    // ページ離脱の警告
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    // ナビゲーションリンクのクリックを監視
-    document.querySelectorAll('nav a').forEach(link => {
-      link.addEventListener('click', handleNavClick);
-    });
-  }
-  
-  // 処理終了時の制御
-  function endProcessing() {
-    processingInProgress = false;
-    document.body.classList.remove('processing-in-progress');
-    
-    // イベントリスナーを削除
-    window.removeEventListener('beforeunload', handleBeforeUnload);
-    document.querySelectorAll('nav a').forEach(link => {
-      link.removeEventListener('click', handleNavClick);
-    });
-    
-    // 警告メッセージを隠す
-    navWarning.style.display = 'none';
-  }
-  
-  // ページ離脱時の警告
-  function handleBeforeUnload(e) {
-    if (processingInProgress) {
-      const message = 'データ処理中です。ページを離れると処理が中断されます。';
-      e.preventDefault();
-      e.returnValue = message;
-      return message;
+  document.addEventListener('DOMContentLoaded', function () {
+    let processingInProgress = false;
+    const navWarning = document.getElementById('nav-warning');
+
+    // 処理開始時の制御
+    function startProcessing() {
+      processingInProgress = true;
+      document.body.classList.add('processing-in-progress');
+
+      // ページ離脱の警告
+      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      // ナビゲーションリンクのクリックを監視
+      document.querySelectorAll('nav a').forEach(link => {
+        link.addEventListener('click', handleNavClick);
+      });
     }
-  }
-  
-  // ナビゲーションリンククリック時の処理
-  function handleNavClick(e) {
-    if (processingInProgress) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      // 警告メッセージを表示
-      navWarning.style.display = 'block';
-      
-      // 3秒後に自動で隠す
-      setTimeout(() => {
-        navWarning.style.display = 'none';
-      }, 3000);
-      
-      return false;
+
+    // 処理終了時の制御
+    function endProcessing() {
+      processingInProgress = false;
+      document.body.classList.remove('processing-in-progress');
+
+      // イベントリスナーを削除
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.querySelectorAll('nav a').forEach(link => {
+        link.removeEventListener('click', handleNavClick);
+      });
+
+      // 警告メッセージを隠す
+      navWarning.style.display = 'none';
     }
-  }
-  
-  // 処理開始ボタンのイベントリスナー（既存のJavaScriptと連携）
-  const startBtn = document.getElementById('start-btn');
-  const cancelBtn = document.getElementById('cancel-btn');
-  
-  if (startBtn) {
-    startBtn.addEventListener('click', function() {
-      // 処理開始の制御を追加
-      startProcessing();
-    });
-  }
-  
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', function() {
-      // キャンセル時の制御を追加
+
+    // ページ離脱時の警告
+    function handleBeforeUnload(e) {
+      if (processingInProgress) {
+        const message = 'データ処理中です。ページを離れると処理が中断されます。';
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      }
+    }
+
+    // ナビゲーションリンククリック時の処理
+    function handleNavClick(e) {
+      if (processingInProgress) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        // 警告メッセージを表示
+        navWarning.style.display = 'block';
+
+        // 3秒後に自動で隠す
+        setTimeout(() => {
+          navWarning.style.display = 'none';
+        }, 3000);
+
+        return false;
+      }
+    }
+
+    // 処理開始ボタンのイベントリスナー（既存のJavaScriptと連携）
+    const startBtn = document.getElementById('start-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+
+    if (startBtn) {
+      startBtn.addEventListener('click', function () {
+        // 処理開始の制御を追加
+        startProcessing();
+      });
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function () {
+        // キャンセル時の制御を追加
+        endProcessing();
+      });
+    }
+
+    // 処理完了時の制御（既存のJavaScriptから呼び出される想定）
+    window.onIngestComplete = function () {
       endProcessing();
+    };
+
+    // 処理エラー時の制御（既存のJavaScriptから呼び出される想定）
+    window.ingestProcessError = function () {
+      endProcessing();
+    };
+
+    // OCR機能の初期化
+    initOCRFeatures();
+    
+    // レイアウト切り替え機能の初期化
+    initLayoutToggle();
+  });
+
+  // レイアウト切り替え機能の初期化
+  function initLayoutToggle() {
+    const expandBtn = document.getElementById('expand-btn');
+    const collapseBtn = document.getElementById('collapse-btn');
+    const container = document.getElementById('ingest-container');
+    const pdfPreviewFrameExpanded = document.getElementById('pdf-preview-frame-expanded');
+    
+    let currentPdfUrl = null;
+
+    // 拡張ボタンのクリックイベント
+    expandBtn.addEventListener('click', function() {
+      container.classList.add('layout-expanded');
+      
+      // PDFが表示されている場合は、拡張プレビューエリアに表示
+      if (currentPdfUrl) {
+        pdfPreviewFrameExpanded.src = currentPdfUrl;
+      }
     });
+
+    // 縮小ボタンのクリックイベント
+    collapseBtn.addEventListener('click', function() {
+      container.classList.remove('layout-expanded');
+      
+      // 拡張プレビューエリアをクリア
+      pdfPreviewFrameExpanded.src = '';
+    });
+
+    // PDFプレビュー表示関数をグローバルに公開
+    window.showPdfPreview = function(pdfUrl) {
+      currentPdfUrl = pdfUrl;
+      
+      // 拡張モードの場合は拡張プレビューエリアに表示
+      if (container.classList.contains('layout-expanded')) {
+        pdfPreviewFrameExpanded.src = pdfUrl;
+      }
+    };
+
+    // PDFプレビュー非表示関数をグローバルに公開
+    window.hidePdfPreview = function() {
+      currentPdfUrl = null;
+      pdfPreviewFrameExpanded.src = '';
+    };
   }
-  
-  // 処理完了時の制御（既存のJavaScriptから呼び出される想定）
-  window.onIngestComplete = function() {
-    endProcessing();
-  };
-  
-  // 処理エラー時の制御（既存のJavaScriptから呼び出される想定）
-  window.ingestProcessError = function() {
-    endProcessing();
-  };
 
   // OCR機能の初期化
-  initOCRFeatures();
-});
+  function initOCRFeatures() {
+    let availableEngines = {};
+    let currentEngineSettings = {};
 
-// OCR機能の初期化
-function initOCRFeatures() {
-  let availableEngines = {};
-  let currentEngineSettings = {};
-  
-  // ページ読み込み時にOCRエンジン一覧を取得
-  loadOCREngines();
-  
-  // OCRエンジン選択の変更イベント
-  document.getElementById('ocr-engine').addEventListener('change', function() {
-    const engineId = this.value;
-    if (engineId) {
-      loadEngineSettings(engineId);
-    }
-  });
-  
-  // OCR設定ボタンのクリックイベント
-  document.getElementById('ocr-settings-btn').addEventListener('click', function() {
-    const engineId = document.getElementById('ocr-engine').value;
-    if (!engineId) {
-      alert('OCRエンジンを選択してください');
-      return;
-    }
-    showOCRSettingsModal(engineId);
-  });
-  
-  // OCRプリセットボタンのクリックイベント
-  document.getElementById('ocr-presets-btn').addEventListener('click', function() {
-    showOCRPresetsModal();
-  });
-  
-  // モーダルの閉じるボタンイベント
-  document.getElementById('ocr-settings-close').addEventListener('click', closeOCRSettingsModal);
-  document.getElementById('ocr-settings-cancel').addEventListener('click', closeOCRSettingsModal);
-  document.getElementById('ocr-presets-close').addEventListener('click', closeOCRPresetsModal);
-  document.getElementById('ocr-presets-cancel').addEventListener('click', closeOCRPresetsModal);
-  
-  // OCR設定保存ボタンイベント
-  document.getElementById('ocr-settings-save').addEventListener('click', saveOCRSettings);
-  
-  // プリセット保存ボタンイベント
-  document.getElementById('save-current-preset').addEventListener('click', saveCurrentPreset);
-  
-  // モーダル外クリックで閉じる
-  window.addEventListener('click', function(event) {
-    const settingsModal = document.getElementById('ocr-settings-modal');
-    const presetsModal = document.getElementById('ocr-presets-modal');
-    if (event.target === settingsModal) {
-      closeOCRSettingsModal();
-    }
-    if (event.target === presetsModal) {
-      closeOCRPresetsModal();
-    }
-  });
-  
-  // OCRエンジン一覧を読み込み
-  async function loadOCREngines() {
-    try {
-      const response = await fetch('/ingest/ocr/engines');
-      availableEngines = await response.json();
-      
-      const select = document.getElementById('ocr-engine');
-      select.innerHTML = '<option value="">デフォルト</option>';
-      
-      for (const [engineId, engineInfo] of Object.entries(availableEngines)) {
-        const option = document.createElement('option');
-        option.value = engineId;
-        option.textContent = `${engineInfo.name} ${engineInfo.available ? '✓' : '✗'}`;
-        option.disabled = !engineInfo.available;
-        select.appendChild(option);
-      }
-    } catch (error) {
-      console.error('OCRエンジン一覧の読み込みに失敗:', error);
-    }
-  }
-  
-  // エンジン設定を読み込み
-  async function loadEngineSettings(engineId) {
-    try {
-      const response = await fetch(`/ingest/ocr/settings/${engineId}`);
-      const data = await response.json();
-      currentEngineSettings = data.settings;
-    } catch (error) {
-      console.error('エンジン設定の読み込みに失敗:', error);
-      currentEngineSettings = {};
-    }
-  }
-  
-  // OCR設定モーダルを表示
-  function showOCRSettingsModal(engineId) {
-    const modal = document.getElementById('ocr-settings-modal');
-    const content = document.getElementById('ocr-settings-content');
-    
-    if (!availableEngines[engineId]) {
-      alert('エンジン情報が見つかりません');
-      return;
-    }
-    
-    const engineInfo = availableEngines[engineId];
-    const parameters = engineInfo.parameters || [];
-    
-    // 設定項目を動的生成
-    content.innerHTML = '';
-    
-    if (parameters.length === 0) {
-      content.innerHTML = '<p>このエンジンには設定可能なパラメータがありません。</p>';
-    } else {
-      parameters.forEach(param => {
-        const group = document.createElement('div');
-        group.className = 'ocr-setting-group';
-        
-        const label = document.createElement('label');
-        label.textContent = param.label;
-        group.appendChild(label);
-        
-        let input;
-        const currentValue = currentEngineSettings[param.name] !== undefined 
-          ? currentEngineSettings[param.name] 
-          : param.default;
-        
-        if (param.type === 'checkbox') {
-          input = document.createElement('input');
-          input.type = 'checkbox';
-          input.checked = currentValue;
-        } else if (param.type === 'number') {
-          input = document.createElement('input');
-          input.type = 'number';
-          input.value = currentValue;
-          if (param.min !== undefined) input.min = param.min;
-          if (param.max !== undefined) input.max = param.max;
-          if (param.step !== undefined) input.step = param.step;
-        } else if (param.type === 'select') {
-          input = document.createElement('select');
-          param.options.forEach(option => {
-            const opt = document.createElement('option');
-            opt.value = option.value;
-            opt.textContent = option.label;
-            opt.selected = option.value === currentValue;
-            input.appendChild(opt);
-          });
-        } else {
-          input = document.createElement('input');
-          input.type = 'text';
-          input.value = currentValue;
-        }
-        
-        input.dataset.paramName = param.name;
-        group.appendChild(input);
-        
-        if (param.description) {
-          const desc = document.createElement('div');
-          desc.className = 'ocr-setting-description';
-          desc.textContent = param.description;
-          group.appendChild(desc);
-        }
-        
-        content.appendChild(group);
-      });
-    }
-    
-    modal.style.display = 'block';
-  }
-  
-  // OCR設定モーダルを閉じる
-  function closeOCRSettingsModal() {
-    document.getElementById('ocr-settings-modal').style.display = 'none';
-  }
-  
-  // OCRプリセットモーダルを表示
-  async function showOCRPresetsModal() {
-    const modal = document.getElementById('ocr-presets-modal');
-    const list = document.getElementById('ocr-presets-list');
-    
-    try {
-      const response = await fetch('/ingest/ocr/presets');
-      const presets = await response.json();
-      
-      list.innerHTML = '';
-      
-      if (Object.keys(presets).length === 0) {
-        list.innerHTML = '<p>保存されたプリセットがありません。</p>';
-      } else {
-        for (const [presetName, presetData] of Object.entries(presets)) {
-          const item = document.createElement('div');
-          item.className = 'preset-item';
-          
-          const info = document.createElement('div');
-          info.className = 'preset-info';
-          
-          const name = document.createElement('div');
-          name.className = 'preset-name';
-          name.textContent = presetName;
-          info.appendChild(name);
-          
-          const details = document.createElement('div');
-          details.className = 'preset-details';
-          details.textContent = `エンジン: ${presetData.engine} | 作成日: ${new Date(presetData.created_at).toLocaleDateString()}`;
-          info.appendChild(details);
-          
-          item.appendChild(info);
-          
-          const actions = document.createElement('div');
-          
-          const loadBtn = document.createElement('button');
-          loadBtn.textContent = '読み込み';
-          loadBtn.className = 'btn-primary';
-          loadBtn.style.marginRight = '5px';
-          loadBtn.addEventListener('click', () => loadPreset(presetName, presetData));
-          actions.appendChild(loadBtn);
-          
-          const deleteBtn = document.createElement('button');
-          deleteBtn.textContent = '削除';
-          deleteBtn.className = 'btn-secondary';
-          deleteBtn.addEventListener('click', () => deletePreset(presetName));
-          actions.appendChild(deleteBtn);
-          
-          item.appendChild(actions);
-          list.appendChild(item);
-        }
-      }
-      
-      modal.style.display = 'block';
-    } catch (error) {
-      console.error('プリセット一覧の読み込みに失敗:', error);
-      alert('プリセット一覧の読み込みに失敗しました');
-    }
-  }
-  
-  // OCRプリセットモーダルを閉じる
-  function closeOCRPresetsModal() {
-    document.getElementById('ocr-presets-modal').style.display = 'none';
-  }
-  
-  // OCR設定を保存
-  async function saveOCRSettings() {
-    const engineId = document.getElementById('ocr-engine').value;
-    if (!engineId) return;
-    
-    const settings = {};
-    const inputs = document.querySelectorAll('#ocr-settings-content input, #ocr-settings-content select');
-    
-    inputs.forEach(input => {
-      const paramName = input.dataset.paramName;
-      if (paramName) {
-        if (input.type === 'checkbox') {
-          settings[paramName] = input.checked;
-        } else if (input.type === 'number') {
-          settings[paramName] = parseFloat(input.value);
-        } else {
-          settings[paramName] = input.value;
-        }
+    // ページ読み込み時にOCRエンジン一覧を取得
+    loadOCREngines();
+
+    // OCRエンジン選択の変更イベント
+    document.getElementById('ocr-engine').addEventListener('change', function () {
+      const engineId = this.value;
+      if (engineId) {
+        loadEngineSettings(engineId);
       }
     });
-    
-    try {
-      const response = await fetch(`/ingest/ocr/settings/${engineId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(settings)
-      });
-      
-      if (response.ok) {
-        currentEngineSettings = settings;
-        alert('設定を保存しました');
+
+    // OCR設定ボタンのクリックイベント
+    document.getElementById('ocr-settings-btn').addEventListener('click', function () {
+      const engineId = document.getElementById('ocr-engine').value;
+      if (!engineId) {
+        alert('OCRエンジンを選択してください');
+        return;
+      }
+      showOCRSettingsModal(engineId);
+    });
+
+    // OCRプリセットボタンのクリックイベント
+    document.getElementById('ocr-presets-btn').addEventListener('click', function () {
+      showOCRPresetsModal();
+    });
+
+    // モーダルの閉じるボタンイベント
+    document.getElementById('ocr-settings-close').addEventListener('click', closeOCRSettingsModal);
+    document.getElementById('ocr-settings-cancel').addEventListener('click', closeOCRSettingsModal);
+    document.getElementById('ocr-presets-close').addEventListener('click', closeOCRPresetsModal);
+    document.getElementById('ocr-presets-cancel').addEventListener('click', closeOCRPresetsModal);
+
+    // OCR設定保存ボタンイベント
+    document.getElementById('ocr-settings-save').addEventListener('click', saveOCRSettings);
+
+    // プリセット保存ボタンイベント
+    document.getElementById('save-current-preset').addEventListener('click', saveCurrentPreset);
+
+    // モーダル外クリックで閉じる
+    window.addEventListener('click', function (event) {
+      const settingsModal = document.getElementById('ocr-settings-modal');
+      const presetsModal = document.getElementById('ocr-presets-modal');
+      if (event.target === settingsModal) {
         closeOCRSettingsModal();
+      }
+      if (event.target === presetsModal) {
+        closeOCRPresetsModal();
+      }
+    });
+
+    // OCRエンジン一覧を読み込み
+    async function loadOCREngines() {
+      try {
+        const response = await fetch('/ingest/ocr/engines');
+        availableEngines = await response.json();
+
+        const select = document.getElementById('ocr-engine');
+        select.innerHTML = '<option value="">デフォルト</option>';
+
+        for (const [engineId, engineInfo] of Object.entries(availableEngines)) {
+          const option = document.createElement('option');
+          option.value = engineId;
+          option.textContent = `${engineInfo.name} ${engineInfo.available ? '✓' : '✗'}`;
+          option.disabled = !engineInfo.available;
+          select.appendChild(option);
+        }
+      } catch (error) {
+        console.error('OCRエンジン一覧の読み込みに失敗:', error);
+      }
+    }
+
+    // エンジン設定を読み込み
+    async function loadEngineSettings(engineId) {
+      try {
+        const response = await fetch(`/ingest/ocr/settings/${engineId}`);
+        const data = await response.json();
+        currentEngineSettings = data.settings;
+      } catch (error) {
+        console.error('エンジン設定の読み込みに失敗:', error);
+        currentEngineSettings = {};
+      }
+    }
+
+    // OCR設定モーダルを表示
+    function showOCRSettingsModal(engineId) {
+      const modal = document.getElementById('ocr-settings-modal');
+      const content = document.getElementById('ocr-settings-content');
+
+      if (!availableEngines[engineId]) {
+        alert('エンジン情報が見つかりません');
+        return;
+      }
+
+      const engineInfo = availableEngines[engineId];
+      const parameters = engineInfo.parameters || [];
+
+      // 設定項目を動的生成
+      content.innerHTML = '';
+
+      if (parameters.length === 0) {
+        content.innerHTML = '<p>このエンジンには設定可能なパラメータがありません。</p>';
       } else {
+        parameters.forEach(param => {
+          const group = document.createElement('div');
+          group.className = 'ocr-setting-group';
+
+          const label = document.createElement('label');
+          label.textContent = param.label;
+          group.appendChild(label);
+
+          let input;
+          const currentValue = currentEngineSettings[param.name] !== undefined
+            ? currentEngineSettings[param.name]
+            : param.default;
+
+          if (param.type === 'checkbox') {
+            input = document.createElement('input');
+            input.type = 'checkbox';
+            input.checked = currentValue;
+          } else if (param.type === 'number') {
+            input = document.createElement('input');
+            input.type = 'number';
+            input.value = currentValue;
+            if (param.min !== undefined) input.min = param.min;
+            if (param.max !== undefined) input.max = param.max;
+            if (param.step !== undefined) input.step = param.step;
+          } else if (param.type === 'select') {
+            input = document.createElement('select');
+            param.options.forEach(option => {
+              const opt = document.createElement('option');
+              opt.value = option.value;
+              opt.textContent = option.label;
+              opt.selected = option.value === currentValue;
+              input.appendChild(opt);
+            });
+          } else {
+            input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue;
+          }
+
+          input.dataset.paramName = param.name;
+          group.appendChild(input);
+
+          if (param.description) {
+            const desc = document.createElement('div');
+            desc.className = 'ocr-setting-description';
+            desc.textContent = param.description;
+            group.appendChild(desc);
+          }
+
+          content.appendChild(group);
+        });
+      }
+
+      modal.style.display = 'block';
+    }
+
+    // OCR設定モーダルを閉じる
+    function closeOCRSettingsModal() {
+      document.getElementById('ocr-settings-modal').style.display = 'none';
+    }
+
+    // OCRプリセットモーダルを表示
+    async function showOCRPresetsModal() {
+      const modal = document.getElementById('ocr-presets-modal');
+      const list = document.getElementById('ocr-presets-list');
+
+      try {
+        const response = await fetch('/ingest/ocr/presets');
+        const presets = await response.json();
+
+        list.innerHTML = '';
+
+        if (Object.keys(presets).length === 0) {
+          list.innerHTML = '<p>保存されたプリセットがありません。</p>';
+        } else {
+          for (const [presetName, presetData] of Object.entries(presets)) {
+            const item = document.createElement('div');
+            item.className = 'preset-item';
+
+            const info = document.createElement('div');
+            info.className = 'preset-info';
+
+            const name = document.createElement('div');
+            name.className = 'preset-name';
+            name.textContent = presetName;
+            info.appendChild(name);
+
+            const details = document.createElement('div');
+            details.className = 'preset-details';
+            details.textContent = `エンジン: ${presetData.engine} | 作成日: ${new Date(presetData.created_at).toLocaleDateString()}`;
+            info.appendChild(details);
+
+            item.appendChild(info);
+
+            const actions = document.createElement('div');
+
+            const loadBtn = document.createElement('button');
+            loadBtn.textContent = '読み込み';
+            loadBtn.className = 'btn-primary';
+            loadBtn.style.marginRight = '5px';
+            loadBtn.addEventListener('click', () => loadPreset(presetName, presetData));
+            actions.appendChild(loadBtn);
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '削除';
+            deleteBtn.className = 'btn-secondary';
+            deleteBtn.addEventListener('click', () => deletePreset(presetName));
+            actions.appendChild(deleteBtn);
+
+            item.appendChild(actions);
+            list.appendChild(item);
+          }
+        }
+
+        modal.style.display = 'block';
+      } catch (error) {
+        console.error('プリセット一覧の読み込みに失敗:', error);
+        alert('プリセット一覧の読み込みに失敗しました');
+      }
+    }
+
+    // OCRプリセットモーダルを閉じる
+    function closeOCRPresetsModal() {
+      document.getElementById('ocr-presets-modal').style.display = 'none';
+    }
+
+    // OCR設定を保存
+    async function saveOCRSettings() {
+      const engineId = document.getElementById('ocr-engine').value;
+      if (!engineId) return;
+
+      const settings = {};
+      const inputs = document.querySelectorAll('#ocr-settings-content input, #ocr-settings-content select');
+
+      inputs.forEach(input => {
+        const paramName = input.dataset.paramName;
+        if (paramName) {
+          if (input.type === 'checkbox') {
+            settings[paramName] = input.checked;
+          } else if (input.type === 'number') {
+            settings[paramName] = parseFloat(input.value);
+          } else {
+            settings[paramName] = input.value;
+          }
+        }
+      });
+
+      try {
+        const response = await fetch(`/ingest/ocr/settings/${engineId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(settings)
+        });
+
+        if (response.ok) {
+          currentEngineSettings = settings;
+          alert('設定を保存しました');
+          closeOCRSettingsModal();
+        } else {
+          alert('設定の保存に失敗しました');
+        }
+      } catch (error) {
+        console.error('設定保存エラー:', error);
         alert('設定の保存に失敗しました');
       }
-    } catch (error) {
-      console.error('設定保存エラー:', error);
-      alert('設定の保存に失敗しました');
     }
-  }
-  
-  // 現在の設定をプリセットとして保存
-  async function saveCurrentPreset() {
-    const presetName = document.getElementById('new-preset-name').value.trim();
-    const engineId = document.getElementById('ocr-engine').value;
-    
-    if (!presetName) {
-      alert('プリセット名を入力してください');
-      return;
-    }
-    
-    if (!engineId) {
-      alert('OCRエンジンを選択してください');
-      return;
-    }
-    
-    try {
-      const response = await fetch('/ingest/ocr/presets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          preset_name: presetName,
-          engine_id: engineId,
-          settings: currentEngineSettings
-        })
-      });
-      
-      if (response.ok) {
-        alert('プリセットを保存しました');
-        document.getElementById('new-preset-name').value = '';
-        showOCRPresetsModal(); // リストを更新
-      } else {
+
+    // 現在の設定をプリセットとして保存
+    async function saveCurrentPreset() {
+      const presetName = document.getElementById('new-preset-name').value.trim();
+      const engineId = document.getElementById('ocr-engine').value;
+
+      if (!presetName) {
+        alert('プリセット名を入力してください');
+        return;
+      }
+
+      if (!engineId) {
+        alert('OCRエンジンを選択してください');
+        return;
+      }
+
+      try {
+        const response = await fetch('/ingest/ocr/presets', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            preset_name: presetName,
+            engine_id: engineId,
+            settings: currentEngineSettings
+          })
+        });
+
+        if (response.ok) {
+          alert('プリセットを保存しました');
+          document.getElementById('new-preset-name').value = '';
+          showOCRPresetsModal(); // リストを更新
+        } else {
+          alert('プリセットの保存に失敗しました');
+        }
+      } catch (error) {
+        console.error('プリセット保存エラー:', error);
         alert('プリセットの保存に失敗しました');
       }
-    } catch (error) {
-      console.error('プリセット保存エラー:', error);
-      alert('プリセットの保存に失敗しました');
     }
-  }
-  
-  // プリセットを読み込み
-  function loadPreset(presetName, presetData) {
-    document.getElementById('ocr-engine').value = presetData.engine;
-    currentEngineSettings = presetData.settings;
-    alert(`プリセット "${presetName}" を読み込みました`);
-    closeOCRPresetsModal();
-  }
-  
-  // プリセットを削除
-  async function deletePreset(presetName) {
-    if (!confirm(`プリセット "${presetName}" を削除しますか？`)) {
-      return;
+
+    // プリセットを読み込み
+    function loadPreset(presetName, presetData) {
+      document.getElementById('ocr-engine').value = presetData.engine;
+      currentEngineSettings = presetData.settings;
+      alert(`プリセット "${presetName}" を読み込みました`);
+      closeOCRPresetsModal();
     }
-    
-    try {
-      const response = await fetch(`/ingest/ocr/presets/${encodeURIComponent(presetName)}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        alert('プリセットを削除しました');
-        showOCRPresetsModal(); // リストを更新
-      } else {
+
+    // プリセットを削除
+    async function deletePreset(presetName) {
+      if (!confirm(`プリセット "${presetName}" を削除しますか？`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/ingest/ocr/presets/${encodeURIComponent(presetName)}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          alert('プリセットを削除しました');
+          showOCRPresetsModal(); // リストを更新
+        } else {
+          alert('プリセットの削除に失敗しました');
+        }
+      } catch (error) {
+        console.error('プリセット削除エラー:', error);
         alert('プリセットの削除に失敗しました');
       }
-    } catch (error) {
-      console.error('プリセット削除エラー:', error);
-      alert('プリセットの削除に失敗しました');
+    }
+
+    // フォーム送信時にOCR設定を含める
+    const originalStartBtn = document.getElementById('start-btn');
+    if (originalStartBtn) {
+      originalStartBtn.addEventListener('click', function () {
+        // OCR設定をフォームに追加
+        const form = document.getElementById('ingest-form');
+
+        // 既存のOCR設定フィールドを削除
+        const existingOCRSettings = form.querySelector('input[name="ocr_settings"]');
+        if (existingOCRSettings) {
+          existingOCRSettings.remove();
+        }
+
+        // OCR設定を追加
+        const ocrSettingsInput = document.createElement('input');
+        ocrSettingsInput.type = 'hidden';
+        ocrSettingsInput.name = 'ocr_settings';
+        ocrSettingsInput.value = JSON.stringify(currentEngineSettings);
+        form.appendChild(ocrSettingsInput);
+      });
     }
   }
-  
-  // フォーム送信時にOCR設定を含める
-  const originalStartBtn = document.getElementById('start-btn');
-  if (originalStartBtn) {
-    originalStartBtn.addEventListener('click', function() {
-      // OCR設定をフォームに追加
-      const form = document.getElementById('ingest-form');
-      
-      // 既存のOCR設定フィールドを削除
-      const existingOCRSettings = form.querySelector('input[name="ocr_settings"]');
-      if (existingOCRSettings) {
-        existingOCRSettings.remove();
-      }
-      
-      // OCR設定を追加
-      const ocrSettingsInput = document.createElement('input');
-      ocrSettingsInput.type = 'hidden';
-      ocrSettingsInput.name = 'ocr_settings';
-      ocrSettingsInput.value = JSON.stringify(currentEngineSettings);
-      form.appendChild(ocrSettingsInput);
-    });
-  }
-}
 </script>
 
 {% endblock %}

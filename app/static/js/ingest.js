@@ -202,7 +202,7 @@
     // REM: SSE完了時のコールバック（UI再活性化）
     window.onIngestComplete = () => setFormDisabled(false);
 
-    // REM: ログ内のPDFリンクをクリックした際の埋め込みトグル表示
+    // REM: ログ内のPDFリンクをクリックした際のプレビュー表示
     logPane.addEventListener("click", e => {
       const a = e.target.closest("a");
       // REM: リンクテキストが.pdfで終わる場合にのみPDFリンクと判定
@@ -213,25 +213,23 @@
       for (const r of pdfModeRadios) {
         if (r.checked) { pdfMode = r.value; break; }
       }
-      // REM: 同一PDF再クリックで閉じる
-      if (currentPdf === a.href) {
-        editorPane.style.display = "none";
-        currentPdf = null;
-        return;
-      }
+      
       if (pdfMode === "embed") {
-        // REM: インライン埋め込み表示
-        const prev = editorPane.querySelector("iframe");
-        if (prev) prev.remove();
-        const iframe = document.createElement("iframe");
-        iframe.src    = a.href;
-        iframe.style.width  = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        editorPane.innerHTML = "";
-        editorPane.appendChild(iframe);
-        editorPane.style.display = "block";
-        currentPdf = a.href;
+        // REM: 同一PDF再クリックで閉じる
+        if (currentPdf === a.href) {
+          // 新しいPDFプレビューシステムで非表示
+          if (window.hidePdfPreview) {
+            window.hidePdfPreview();
+          }
+          currentPdf = null;
+          return;
+        }
+        
+        // REM: 新しいPDFプレビューシステムで表示
+        if (window.showPdfPreview) {
+          window.showPdfPreview(a.href);
+          currentPdf = a.href;
+        }
       } else {
         // REM: 従前の別タブ表示
         window.open(a.href, '_blank');

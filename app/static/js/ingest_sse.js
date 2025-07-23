@@ -69,7 +69,7 @@ function startIngestStream() {
       header.className = "file-header";
       const link = document.createElement("a");
       link.href       = `/viewer/${file_id}`;
-      link.target     = "_blank";  // REM: 別タブ表示
+      // REM: targetを削除してJavaScriptで制御
       link.textContent = file;
       header.appendChild(link);
       logPane.appendChild(header);

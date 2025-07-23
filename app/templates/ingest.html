@@ -2,538 +2,109 @@
 {% extends "base.html" %}
 {% block content %}
 
-<style>
-  /* ペイン上下分割 */
-  #ingest-container {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 2em);
-  }
-
-  /* 左側コンテナ（通常モードでは表示されない） */
-  #left-container {
-    display: contents; /* 通常モードでは子要素をそのまま表示 */
-  }
-
-  /* 上ペイン */
-  #pane-top {
-    flex: 0 0 auto;
-    padding: 1em;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    position: relative;
-    display: flex;
-    transition: all 0.3s ease;
-  }
-
-  /* 上ペイン左側（フォーム部分） */
-  #pane-top-left {
-    flex: 1 1 auto;
-    transition: all 0.3s ease;
-  }
-
-  /* 上ペイン右側（PDFプレビュー用） */
-  #pane-top-right {
-    flex: 0 0 0;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    border-left: 1px solid rgba(255, 255, 255, 0.4);
-  }
-
-  /* レイアウト切り替えボタン */
-  .layout-toggle-btn {
-    position: absolute;
-    top: 10px;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-    transition: all 0.2s ease;
-    z-index: 100;
-  }
-
-  .layout-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
-
-  #expand-btn {
-    right: 10px;
-  }
-
-  #collapse-btn {
-    right: 10px;
-    display: none;
-  }
-
-  /* 拡張モード時のボタン位置調整 */
-  .layout-expanded #collapse-btn {
-    right: 10px;
-    left: auto;
-  }
-
-  /* 第2パターン（拡張モード）のスタイル */
-  .layout-expanded #ingest-container {
-    display: flex;
-    flex-direction: row;
-    height: calc(100vh - 2em);
-  }
-
-  /* 拡張モード時: 中央エリア（設定+ログ） */
-  .layout-expanded #left-container {
-    flex: 1 1 50%;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-  }
-
-  /* 拡張モード時の上ペイン（設定画面） */
-  .layout-expanded #pane-top {
-    flex: 0 0 auto;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    border-right: none;
-  }
-
-  .layout-expanded #pane-top-left {
-    flex: 1 1 auto;
-  }
-
-  .layout-expanded #pane-top-right {
-    display: none;
-  }
-
-  /* 拡張モード時の下ペイン（ログのみ） */
-  .layout-expanded #pane-bottom {
-    flex: 1 1 auto;
-    display: block;
-  }
-
-  .layout-expanded #log-pane {
-    width: 100%;
-    height: 100%;
-  }
-
-  .layout-expanded #splitter,
-  .layout-expanded #editor-pane {
-    display: none;
-  }
-
-  .layout-expanded #expand-btn {
-    display: none;
-  }
-
-  .layout-expanded #collapse-btn {
-    display: block;
-  }
-
-  /* PDFプレビューエリア - 拡張モード用（画面右半分全体） */
-  #pdf-preview-expanded {
-    display: none;
-    background: white;
-    border-left: 1px solid #ccc;
-  }
-
-  .layout-expanded #pdf-preview-expanded {
-    display: flex;
-    flex: 0 0 50%;
-    height: 100%;
-  }
-
-  /* PDFプレビューエリア */
-  #pdf-preview-area {
-    width: 100%;
-    height: 100%;
-    display: none;
-    flex-direction: column;
-  }
-
-  .layout-expanded #pdf-preview-area {
-    display: flex;
-  }
-
-  /* 上ペインの背景オーバーレイ */
-  #pane-top::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
-    z-index: -1;
-  }
-
-  /* 下ペイン：ログと編集ペインを左右並びに */
-  #pane-bottom {
-    flex: 1 1 auto;
-    display: flex;
-    overflow: hidden;
-    position: relative;
-  }
-
-  /* 左カラム：ログ */
-  #log-pane {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 1em;
-    background: #fafafa;
-    box-sizing: border-box;
-  }
-
-  /* REM: ペイン間スプリッター */
-  #splitter {
-    flex: 0 0 5px;
-    cursor: col-resize;
-    background: #ccc;
-  }
-
-  /* 右カラム：編集エリア */
-  #editor-pane {
-    flex: 0 0 40%;
-    display: none;
-    border-left: 1px solid #ccc;
-    box-sizing: border-box;
-    overflow: hidden;
-  }
-
-  #editor-pane textarea {
-    width: 100%;
-    height: 100%;
-    border: none;
-    padding: 1em;
-    box-sizing: border-box;
-    resize: none;
-    overflow: auto;
-  }
-
-  /* フォーム */
-  #ingest-form {
-    display: block;
-    width: 100%;
-  }
-
-  .form-section {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.1em;
-    line-height: 1.2;
-    width: 100%;
-  }
-
-  .form-section label {
-    min-width: 120px;
-    flex-shrink: 0;
-  }
-
-  /* REM: 質スコア閾値入力を中央寄せ */
-  #quality_threshold {
-    text-align: center;
-  }
-
-  .form-actions {
-    margin-top: 1em;
-  }
-
-  .form-actions button {
-    margin-right: 1em;
-  }
-
-  /* ログ表示 */
-  .file-header {
-    background: #eef;
-    padding: 4px 8px;
-    font-weight: bold;
-    margin-top: 1em;
-  }
-
-  .file-progress {
-    font-size: 0.9em;
-    color: #555;
-    margin-left: 1ch;
-  }
-
-  .page-header {
-    margin-left: 1ch;
-    font-style: italic;
-  }
-
-  .file-section {
-    margin-left: 1em;
-    margin-bottom: 1em;
-  }
-
-  .file-section pre {
-    white-space: pre-wrap;
-    word-break: break-word;
-    background: #fff;
-    padding: 8px;
-    border: 1px solid #ddd;
-  }
-
-  /* 処理中のナビゲーション無効化 */
-  body.processing-in-progress nav a {
-    pointer-events: none;
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  body.processing-in-progress nav a::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.1);
-    z-index: 1;
-  }
-
-  /* 処理中の警告メッセージ */
-  #nav-warning {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 193, 7, 0.95);
-    color: #856404;
-    padding: 1em 1.5em;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    z-index: 10001;
-    font-weight: bold;
-    text-align: center;
-    border: 2px solid #ffc107;
-  }
-
-  /* OCR設定モーダル */
-  .modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-  }
-
-  .modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
-  .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-  }
-
-  .close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  .close:hover,
-  .close:focus {
-    color: black;
-  }
-
-  .ocr-setting-group {
-    margin-bottom: 15px;
-  }
-
-  .ocr-setting-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-  }
-
-  .ocr-setting-group input,
-  .ocr-setting-group select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-  }
-
-  .ocr-setting-group input[type="checkbox"] {
-    width: auto;
-    margin-right: 8px;
-  }
-
-  .ocr-setting-description {
-    font-size: 0.9em;
-    color: #666;
-    margin-top: 3px;
-  }
-
-  .modal-actions {
-    margin-top: 20px;
-    text-align: right;
-    border-top: 1px solid #ddd;
-    padding-top: 15px;
-  }
-
-  .modal-actions button {
-    margin-left: 10px;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-
-  .btn-primary {
-    background-color: #007bff;
-    color: white;
-  }
-
-  .btn-secondary {
-    background-color: #6c757d;
-    color: white;
-  }
-
-  .preset-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 8px;
-  }
-
-  .preset-info {
-    flex: 1;
-  }
-
-  .preset-name {
-    font-weight: bold;
-  }
-
-  .preset-details {
-    font-size: 0.9em;
-    color: #666;
-  }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', path='css/ingest.css') }}">
 
 <div id="ingest-container">
   <!-- レイアウト切り替えボタン -->
   <button id="expand-btn" class="layout-toggle-btn" title="PDFプレビューを拡張表示">&lt;&lt;</button>
   <button id="collapse-btn" class="layout-toggle-btn" title="通常表示に戻す">&gt;&gt;</button>
-  
-  <!-- 左側コンテナ（拡張モード時に使用） -->
-  <div id="left-container">
-    <!-- 上ペイン -->
-    <div id="pane-top">
-      <!-- 上ペイン左側（フォーム部分） -->
-      <div id="pane-top-left">
-        <h1 class="page-title">✏️ データ整形/登録</h1>
-        <form id="ingest-form">
-          <div class="form-section">
-            {% include "partials/ingest/ingest_header.html" %}
-          </div>
-          <div class="form-section">
-            <label for="refine-prompt">📝 整形プロンプト：</label>
-            <select id="refine-prompt" name="refine_prompt_key">
-              {% for key in prompt_keys %}
-              <option value="{{ key }}">{{ key }}</option>
-              {% endfor %}
-            </select>
-            <button type="button" id="prompt-edit-btn" style="margin-left: 0.5em;">確認</button>
-            <span style="margin-left: 1em; color: #666; font-size: 0.9em;">（LLM モデル：{{ llm_model }}）</span>
-          </div>
 
-          <!-- OCR設定セクション -->
-          <div class="form-section">
-            <label for="ocr-engine">🔍 OCRエンジン：</label>
-            <select id="ocr-engine" name="ocr_engine_id">
-              <option value="">デフォルト</option>
-            </select>
-            <button type="button" id="ocr-settings-btn" style="margin-left: 0.5em;">設定</button>
-            <button type="button" id="ocr-presets-btn" style="margin-left: 0.5em;">プリセット</button>
-          </div>
-          <!-- 省略：埋め込みモデル・上書き・ボタン群 -->
-          <div class="form-section">
-            <label style="min-width: 140px;">📝 埋め込みモデル：</label>
-            {% for key, opt in embedding_options.items() %}
-            <label style="margin-left:0.5em;">
-              <input type="checkbox" name="embed_models" value="{{ key }}" checked>
-              {{ loop.index }}. {{ opt.model_name }}
-            </label>
-            {% endfor %}
-          </div>
-          <div class="form-section">
-            <label for="overwrite_existing" style="margin-left: 1.5em;">既存レコード上書き：</label>
-            <input id="overwrite_existing" type="checkbox" name="overwrite_existing" value="true">
-            <label for="quality_threshold">（質スコア閾値</label>
-            <input id="quality_threshold" type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0"
-              style="width:4em;">
-            <label>以上はSKIP）</label>
-          </div>
-          <div class="form-section">
-            <label for="llm_timeout">⏱️ LLMタイムアウト：</label>
-            <input id="llm_timeout" type="number" name="llm_timeout" min="0" max="3600" step="10" value="300"
-              style="width:5em; text-align:center;">
-            <label>秒（0でタイムアウトなし）</label>
-          </div>
-          <div class="form-actions">
-            <button type="button" id="start-btn">🚀 処理開始</button>
-            <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
-            <!-- REM: PDF表示モード選択 -->
-            <span style="margin-left:1em;">
-              PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked>
-                同一タブ内</label>
-              <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>
-            </span>
-          </div>
-        </form>
-      </div>
-      
-      <!-- 上ペイン右側（PDFプレビュー用） -->
-      <div id="pane-top-right">
-        <div id="pdf-preview-area">
-          <iframe id="pdf-preview-frame" style="width: 100%; height: 100%; border: none;"></iframe>
+  <!-- 上ペイン -->
+  <div id="pane-top">
+    <!-- 上ペイン左側（フォーム部分） -->
+    <div id="pane-top-left">
+      <h1 class="page-title">✏️ データ整形/登録</h1>
+      <form id="ingest-form">
+        <div class="form-section">
+          {% include "partials/ingest/ingest_header.html" %}
         </div>
-      </div>
+        <div class="form-section">
+          <label for="refine-prompt">📝 整形プロンプト：</label>
+          <select id="refine-prompt" name="refine_prompt_key">
+            {% for key in prompt_keys %}
+            <option value="{{ key }}">{{ key }}</option>
+            {% endfor %}
+          </select>
+          <button type="button" id="prompt-edit-btn" style="margin-left: 0.5em;">確認</button>
+          <span style="margin-left: 1em; color: #666; font-size: 0.9em;">（LLM モデル：{{ llm_model }}）</span>
+        </div>
+
+        <!-- OCR設定セクション -->
+        <div class="form-section">
+          <label for="ocr-engine">🔍 OCRエンジン：</label>
+          <select id="ocr-engine" name="ocr_engine_id">
+            <option value="">デフォルト</option>
+          </select>
+          <button type="button" id="ocr-settings-btn" style="margin-left: 0.5em;">設定</button>
+          <button type="button" id="ocr-presets-btn" style="margin-left: 0.5em;">プリセット</button>
+        </div>
+        <!-- 省略：埋め込みモデル・上書き・ボタン群 -->
+        <div class="form-section">
+          <label style="min-width: 140px;">📝 埋め込みモデル：</label>
+          {% for key, opt in embedding_options.items() %}
+          <label style="margin-left:0.5em;">
+            <input type="checkbox" name="embed_models" value="{{ key }}" checked>
+            {{ loop.index }}. {{ opt.model_name }}
+          </label>
+          {% endfor %}
+        </div>
+        <div class="form-section">
+          <label for="overwrite_existing" style="margin-left: 1.5em;">既存レコード上書き：</label>
+          <input id="overwrite_existing" type="checkbox" name="overwrite_existing" value="true">
+          <label for="quality_threshold">（質スコア閾値</label>
+          <input id="quality_threshold" type="number" name="quality_threshold" min="0" max="1" step="0.05" value="0.0"
+            style="width:4em;">
+          <label>以上はSKIP）</label>
+        </div>
+        <div class="form-section">
+          <label for="llm_timeout">⏱️ LLMタイムアウト：</label>
+          <input id="llm_timeout" type="number" name="llm_timeout" min="0" max="3600" step="10" value="300"
+            style="width:5em; text-align:center;">
+          <label>秒（0でタイムアウトなし）</label>
+        </div>
+        <div class="form-actions">
+          <button type="button" id="start-btn">🚀 処理開始</button>
+          <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
+          <!-- PDF表示モード選択 -->
+          <span style="margin-left:1em;">
+            PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked>
+              同一タブ内</label>
+            <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>
+          </span>
+          <!-- テスト用ボタン -->
+          <div style="margin-top: 0.5em;">
+            <button type="button" id="test-pdf-btn" style="background: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer;">テスト用PDF表示</button>
+            <button type="button" id="debug-layout-btn" style="background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 3px; cursor: pointer; margin-left: 5px;">レイアウトデバッグ</button>
+          </div>
+        </div>
+      </form>
     </div>
 
-    <!-- 下ペイン：ログ and 編集 -->
-    <div id="pane-bottom">
-      <div id="log-pane"></div>
-
-      <!-- REM: ログペインと編集ペインの間に可変スプリッター -->
-      <div id="splitter"></div>
-      <div id="editor-pane">
-        <textarea id="prompt-editor"></textarea>
+    <!-- 上ペイン右側（PDFプレビュー用） -->
+    <div id="pane-top-right">
+      <div id="pdf-preview-area">
+        <iframe id="pdf-preview-frame" style="width: 100%; height: 100%; border: none;"></iframe>
       </div>
     </div>
   </div>
 
-  <!-- 拡張モード用PDFプレビューエリア（画面右半分全体） -->
-  <div id="pdf-preview-expanded">
-    <iframe id="pdf-preview-frame-expanded" style="width: 100%; height: 100%; border: none;"></iframe>
+  <!-- 下ペイン：ログ and 編集 -->
+  <div id="pane-bottom">
+    <div id="log-pane"></div>
+
+    <!-- ログペインと編集ペインの間に可変スプリッター -->
+    <div id="splitter"></div>
+    <div id="editor-pane">
+      <textarea id="prompt-editor"></textarea>
+    </div>
   </div>
+
+</div>
+
+<!-- 拡張モード用PDFプレビューエリア（画面右側全体） -->
+<div id="splitter-expanded"></div>
+<div id="pdf-preview-expanded">
+  <iframe id="pdf-preview-frame-expanded" style="width: 100%; height: 100%; border: none;"></iframe>
 </div>
 
 <!-- 処理中のナビゲーション警告 -->
@@ -676,9 +247,12 @@
 
     // OCR機能の初期化
     initOCRFeatures();
-    
+
     // レイアウト切り替え機能の初期化
     initLayoutToggle();
+
+    // リサイズ機能の初期化
+    initResizeHandlers();
   });
 
   // レイアウト切り替え機能の初期化
@@ -687,42 +261,164 @@
     const collapseBtn = document.getElementById('collapse-btn');
     const container = document.getElementById('ingest-container');
     const pdfPreviewFrameExpanded = document.getElementById('pdf-preview-frame-expanded');
-    
-    let currentPdfUrl = null;
 
-    // 拡張ボタンのクリックイベント
-    expandBtn.addEventListener('click', function() {
-      container.classList.add('layout-expanded');
+    let currentPdfUrl = null;
+    let layoutState = 'no-preview'; // 'no-preview', 'preview-normal', 'preview-expanded'
+
+    // レイアウト状態を更新する関数
+    function updateLayoutState(newState) {
+      console.log(`レイアウト状態変更: ${layoutState} → ${newState}`);
       
-      // PDFが表示されている場合は、拡張プレビューエリアに表示
-      if (currentPdfUrl) {
-        pdfPreviewFrameExpanded.src = currentPdfUrl;
+      // 既存のクラスを削除
+      document.body.classList.remove('layout-preview-normal', 'layout-expanded');
+      
+      // 新しい状態に応じてクラスを追加
+      switch (newState) {
+        case 'preview-normal':
+          document.body.classList.add('layout-preview-normal');
+          break;
+        case 'preview-expanded':
+          document.body.classList.add('layout-expanded');
+          break;
+        case 'no-preview':
+        default:
+          // クラスなし（デフォルト状態）
+          break;
+      }
+      
+      layoutState = newState;
+    }
+
+    // 拡張ボタンのクリックイベント（第1パターン → 第2パターン）
+    expandBtn.addEventListener('click', function () {
+      console.log('拡張ボタンクリック - 第2パターンに切り替え');
+      
+      if (layoutState === 'preview-normal') {
+        updateLayoutState('preview-expanded');
+        
+        // PDFが表示されている場合は、拡張プレビューエリアに表示
+        if (currentPdfUrl) {
+          console.log('PDFを拡張プレビューエリアに表示:', currentPdfUrl);
+          pdfPreviewFrameExpanded.src = currentPdfUrl;
+        }
       }
     });
 
-    // 縮小ボタンのクリックイベント
-    collapseBtn.addEventListener('click', function() {
-      container.classList.remove('layout-expanded');
+    // 縮小ボタンのクリックイベント（第2パターン → 第1パターン）
+    collapseBtn.addEventListener('click', function () {
+      console.log('縮小ボタンクリック - 第1パターンに切り替え');
       
-      // 拡張プレビューエリアをクリア
-      pdfPreviewFrameExpanded.src = '';
+      if (layoutState === 'preview-expanded') {
+        updateLayoutState('preview-normal');
+        
+        // 拡張プレビューエリアをクリア
+        pdfPreviewFrameExpanded.src = '';
+        
+        // 通常プレビューエリアに表示
+        if (currentPdfUrl) {
+          const pdfPreviewFrame = document.getElementById('pdf-preview-frame');
+          pdfPreviewFrame.src = currentPdfUrl;
+        }
+      }
     });
 
     // PDFプレビュー表示関数をグローバルに公開
-    window.showPdfPreview = function(pdfUrl) {
+    window.showPdfPreview = function (pdfUrl) {
+      console.log('showPdfPreview呼び出し:', pdfUrl);
       currentPdfUrl = pdfUrl;
-      
-      // 拡張モードの場合は拡張プレビューエリアに表示
-      if (container.classList.contains('layout-expanded')) {
+
+      // プレビューなし状態の場合は第1パターンに遷移
+      if (layoutState === 'no-preview') {
+        updateLayoutState('preview-normal');
+      }
+
+      if (layoutState === 'preview-expanded') {
+        // 第2パターン：拡張プレビューエリアに表示
+        console.log('第2パターンでPDF表示:', pdfUrl);
         pdfPreviewFrameExpanded.src = pdfUrl;
+      } else if (layoutState === 'preview-normal') {
+        // 第1パターン：editor-pane内にiframeを作成してPDF表示
+        console.log('第1パターンでPDF表示:', pdfUrl);
+        const editorPane = document.getElementById('editor-pane');
+        
+        // 既存のtextareaを隠す
+        const textarea = editorPane.querySelector('textarea');
+        if (textarea) {
+          textarea.style.display = 'none';
+        }
+        
+        // PDF用のiframeを作成または更新
+        let pdfIframe = editorPane.querySelector('#pdf-iframe-pattern1');
+        if (!pdfIframe) {
+          pdfIframe = document.createElement('iframe');
+          pdfIframe.id = 'pdf-iframe-pattern1';
+          pdfIframe.style.width = '100%';
+          pdfIframe.style.height = '100%';
+          pdfIframe.style.border = 'none';
+          editorPane.appendChild(pdfIframe);
+        }
+        
+        pdfIframe.src = pdfUrl;
       }
     };
 
     // PDFプレビュー非表示関数をグローバルに公開
-    window.hidePdfPreview = function() {
+    window.hidePdfPreview = function () {
+      console.log('PDFプレビュー非表示 - プレビューなし状態に遷移');
       currentPdfUrl = null;
+      
+      // プレビューなし状態に遷移
+      updateLayoutState('no-preview');
+
+      // 全てのプレビューエリアをクリア
       pdfPreviewFrameExpanded.src = '';
+      const pdfPreviewFrame = document.getElementById('pdf-preview-frame');
+      if (pdfPreviewFrame) {
+        pdfPreviewFrame.src = '';
+      }
     };
+
+    // ファイル番号リンクのクリックイベントを監視
+    function attachFileNumberClickHandlers() {
+      // ログペイン内のファイル番号リンクを監視
+      const logPane = document.getElementById('log-pane');
+      if (logPane) {
+        logPane.addEventListener('click', function(event) {
+          const target = event.target;
+          
+          // ファイル番号のリンクかどうかを判定
+          if (target.tagName === 'A' && target.textContent.match(/^\d+$/)) {
+            console.log('ファイル番号リンクがクリックされました:', target.textContent);
+            
+            // PDFプレビューを非表示にしてプレビューなし状態に戻す
+            window.hidePdfPreview();
+            
+            // デフォルトのリンク動作は継続
+          }
+        });
+      }
+    }
+
+    // ページ読み込み時とログ更新時にファイル番号リンクのハンドラーを設定
+    attachFileNumberClickHandlers();
+    
+    // MutationObserverでログペインの変更を監視
+    const logPane = document.getElementById('log-pane');
+    if (logPane) {
+      const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.type === 'childList') {
+            // 新しいファイル番号リンクが追加された可能性があるので再設定
+            attachFileNumberClickHandlers();
+          }
+        });
+      });
+      
+      observer.observe(logPane, {
+        childList: true,
+        subtree: true
+      });
+    }
   }
 
   // OCR機能の初期化
@@ -1094,6 +790,201 @@
         form.appendChild(ocrSettingsInput);
       });
     }
+
+    // テスト用ボタンとデバッグボタンのイベントリスナー
+    const testPdfBtn = document.getElementById('test-pdf-btn');
+    const debugLayoutBtn = document.getElementById('debug-layout-btn');
+
+    if (testPdfBtn) {
+      testPdfBtn.addEventListener('click', function () {
+        console.log('テスト用PDFボタンがクリックされました');
+        
+        // 簡単なテスト用PDF（最小限のPDFデータ）
+        const testPdfUrl = 'data:application/pdf;base64,JVBERi0xLjQKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwovUGFnZXMgMiAwIFIKPj4KZW5kb2JqCjIgMCBvYmoKPDwKL1R5cGUgL1BhZ2VzCi9LaWRzIFszIDAgUl0KL0NvdW50IDEKPD4KZW5kb2JqCjMgMCBvYmoKPDwKL1R5cGUgL1BhZ2UKL1BhcmVudCAyIDAgUgovTWVkaWFCb3ggWzAgMCA2MTIgNzkyXQovUmVzb3VyY2VzIDw8Ci9Gb250IDw8Ci9GMSA0IDAgUgo+Pgo+PgovQ29udGVudHMgNSAwIFIKPj4KZW5kb2JqCjQgMCBvYmoKPDwKL1R5cGUgL0ZvbnQKL1N1YnR5cGUgL1R5cGUxCi9CYXNlRm9udCAvSGVsdmV0aWNhCj4+CmVuZG9iago1IDAgb2JqCjw8Ci9MZW5ndGggNDQKPj4Kc3RyZWFtCkJUCi9GMSAxMiBUZgoxMDAgNzAwIFRkCihUZXN0IFBERikgVGoKRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMDkgMDAwMDAgbiAKMDAwMDAwMDA1OCAwMDAwMCBuIAowMDAwMDAwMTE1IDAwMDAwIG4gCjAwMDAwMDAyNDUgMDAwMDAgbiAKMDAwMDAwMDMxNCAwMDAwMCBuIAp0cmFpbGVyCjw8Ci9TaXplIDYKL1Jvb3QgMSAwIFIKPj4Kc3RhcnR4cmVmCjQwOAolJUVPRg==';
+        
+        console.log('PDFプレビュー表示を試行:', testPdfUrl.substring(0, 50) + '...');
+        
+        // PDFプレビュー表示関数を呼び出し
+        if (window.showPdfPreview) {
+          window.showPdfPreview(testPdfUrl);
+          console.log('showPdfPreview関数を呼び出しました');
+        } else {
+          console.error('showPdfPreview関数が見つかりません');
+          alert('showPdfPreview関数が見つかりません');
+        }
+      });
+    }
+
+    if (debugLayoutBtn) {
+      debugLayoutBtn.addEventListener('click', function () {
+        console.log('=== レイアウトデバッグ情報 ===');
+        
+        const main = document.querySelector('main');
+        const ingestContainer = document.getElementById('ingest-container');
+        const pdfExpanded = document.getElementById('pdf-preview-expanded');
+        
+        console.log('main要素:', main);
+        console.log('main要素のスタイル:', window.getComputedStyle(main));
+        console.log('main要素のdisplay:', window.getComputedStyle(main).display);
+        console.log('main要素のflex-direction:', window.getComputedStyle(main).flexDirection);
+        
+        console.log('ingest-container要素:', ingestContainer);
+        console.log('ingest-container要素のflex:', window.getComputedStyle(ingestContainer).flex);
+        
+        console.log('pdf-preview-expanded要素:', pdfExpanded);
+        console.log('pdf-preview-expanded要素のdisplay:', window.getComputedStyle(pdfExpanded).display);
+        console.log('pdf-preview-expanded要素のflex:', window.getComputedStyle(pdfExpanded).flex);
+        
+        console.log('body要素のクラス:', document.body.className);
+        console.log('layout-expandedクラスが適用されているか:', document.body.classList.contains('layout-expanded'));
+        
+        alert('デバッグ情報をコンソールに出力しました。F12キーでコンソールを確認してください。');
+      });
+    }
+  }
+
+  // リサイズ機能の初期化
+  function initResizeHandlers() {
+    let isResizing = false;
+    let currentSplitter = null;
+    let startX = 0;
+    let startLeftWidth = 0;
+    let startRightWidth = 0;
+
+    // 第1パターン用のリサイズ処理
+    const splitter = document.getElementById('splitter');
+    const logPane = document.getElementById('log-pane');
+    const editorPane = document.getElementById('editor-pane');
+
+    // 第2パターン用のリサイズ処理
+    const splitterExpanded = document.getElementById('splitter-expanded');
+    const ingestContainer = document.getElementById('ingest-container');
+    const pdfPreviewExpanded = document.getElementById('pdf-preview-expanded');
+
+    // 第1パターンのスプリッター
+    if (splitter) {
+      splitter.addEventListener('mousedown', function(e) {
+        console.log('第1パターンのスプリッターがクリックされました');
+        
+        // 現在のレイアウト状態を確認
+        if (!document.body.classList.contains('layout-preview-normal')) {
+          console.log('第1パターンではないため、リサイズを無効化');
+          return;
+        }
+
+        isResizing = true;
+        currentSplitter = 'normal';
+        startX = e.clientX;
+        
+        const paneBottom = document.getElementById('pane-bottom');
+        const containerRect = paneBottom.getBoundingClientRect();
+        const logRect = logPane.getBoundingClientRect();
+        const editorRect = editorPane.getBoundingClientRect();
+        
+        startLeftWidth = logRect.width;
+        startRightWidth = editorRect.width;
+        
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    }
+
+    // 第2パターンのスプリッター
+    if (splitterExpanded) {
+      splitterExpanded.addEventListener('mousedown', function(e) {
+        console.log('第2パターンのスプリッターがクリックされました');
+        
+        // 現在のレイアウト状態を確認
+        if (!document.body.classList.contains('layout-expanded')) {
+          console.log('第2パターンではないため、リサイズを無効化');
+          return;
+        }
+
+        isResizing = true;
+        currentSplitter = 'expanded';
+        startX = e.clientX;
+        
+        const mainRect = document.querySelector('main').getBoundingClientRect();
+        const containerRect = ingestContainer.getBoundingClientRect();
+        const pdfRect = pdfPreviewExpanded.getBoundingClientRect();
+        
+        startLeftWidth = containerRect.width;
+        startRightWidth = pdfRect.width;
+        
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+        e.stopPropagation();
+      });
+    }
+
+    // マウス移動時の処理
+    document.addEventListener('mousemove', function(e) {
+      if (!isResizing) return;
+
+      const deltaX = e.clientX - startX;
+
+      if (currentSplitter === 'normal') {
+        // 第1パターンのリサイズ処理
+        const paneBottom = document.getElementById('pane-bottom');
+        const containerRect = paneBottom.getBoundingClientRect();
+        const containerWidth = containerRect.width - 5; // スプリッター幅を除く
+        
+        const newLeftWidth = startLeftWidth + deltaX;
+        const newRightWidth = startRightWidth - deltaX;
+        
+        // 最小幅の制限（20%）
+        const minWidth = containerWidth * 0.2;
+        if (newLeftWidth >= minWidth && newRightWidth >= minWidth) {
+          const leftPercentage = (newLeftWidth / containerWidth) * 100;
+          const rightPercentage = (newRightWidth / containerWidth) * 100;
+          
+          logPane.style.flex = `0 0 ${leftPercentage}%`;
+          editorPane.style.flex = `0 0 ${rightPercentage}%`;
+        }
+      } else if (currentSplitter === 'expanded') {
+        // 第2パターンのリサイズ処理
+        const mainRect = document.querySelector('main').getBoundingClientRect();
+        const mainWidth = mainRect.width - 5; // スプリッター幅を除く
+        
+        const newLeftWidth = startLeftWidth + deltaX;
+        const newRightWidth = startRightWidth - deltaX;
+        
+        // 最小幅の制限（20%）
+        const minWidth = mainWidth * 0.2;
+        if (newLeftWidth >= minWidth && newRightWidth >= minWidth) {
+          const leftPercentage = (newLeftWidth / mainWidth) * 100;
+          const rightPercentage = (newRightWidth / mainWidth) * 100;
+          
+          ingestContainer.style.flex = `0 0 ${leftPercentage}%`;
+          pdfPreviewExpanded.style.flex = `0 0 ${rightPercentage}%`;
+        }
+      }
+    });
+
+    // マウスアップ時の処理
+    document.addEventListener('mouseup', function() {
+      if (isResizing) {
+        console.log('リサイズ終了');
+        isResizing = false;
+        currentSplitter = null;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    });
+
+    // ウィンドウからマウスが出た時の処理
+    document.addEventListener('mouseleave', function() {
+      if (isResizing) {
+        console.log('マウスがウィンドウから出たため、リサイズ終了');
+        isResizing = false;
+        currentSplitter = null;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+    });
   }
 </script>
 

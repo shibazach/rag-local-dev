@@ -1,0 +1,94 @@
+<!-- OCR設定モーダル -->
+<div id="ocr-settings-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>🔍 OCR設定</h3>
+      <span class="close" id="ocr-settings-close">&times;</span>
+    </div>
+    <div id="ocr-settings-content">
+      <!-- 動的に生成される設定項目 -->
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="ocr-settings-cancel">キャンセル</button>
+      <button type="button" class="btn-primary" id="ocr-settings-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- OCRプリセットモーダル -->
+<div id="ocr-presets-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>📋 OCRプリセット</h3>
+      <span class="close" id="ocr-presets-close">&times;</span>
+    </div>
+    <div style="margin-bottom: 15px;">
+      <input type="text" id="new-preset-name" placeholder="新しいプリセット名" style="width: 70%; margin-right: 10px;">
+      <button type="button" class="btn-primary" id="save-current-preset">現在の設定を保存</button>
+    </div>
+    <div id="ocr-presets-list">
+      <!-- 動的に生成されるプリセット一覧 -->
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="ocr-presets-cancel">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* モーダルスタイル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.close {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+}
+
+.modal-actions {
+  margin-top: 20px;
+  text-align: right;
+  border-top: 1px solid #ddd;
+  padding-top: 15px;
+}
+
+.modal-actions button {
+  margin-left: 10px;
+}
+</style>

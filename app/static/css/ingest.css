@@ -139,17 +139,31 @@
 }
 
 .layout-preview-normal #log-pane {
-    flex: 1 1 50% !important;
+    flex: 1 1 50%;
+    min-width: 20%;
 }
 
 .layout-preview-normal #splitter {
-    display: block !important;
+    display: flex !important;
+    flex: 0 0 5px;
 }
 
 .layout-preview-normal #editor-pane {
-    display: block !important;
-    flex: 0 0 50% !important;
+    display: flex !important;
+    flex: 1 1 50%;
+    min-width: 20%;
 }
+
+/* リサイズ時の動的スタイル用（!importantで強制適用） */
+.layout-preview-normal #log-pane.resizing {
+    flex: none !important;
+}
+
+.layout-preview-normal #editor-pane.resizing {
+    flex: none !important;
+}
+
+
 
 /* ===== 第2パターン（拡張モード：設定縮小、PDFプレビュー拡大）===== */
 .layout-expanded main {
@@ -164,7 +178,16 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    min-width: 300px;
+    min-width: 20%;
+}
+
+/* 第2パターンのリサイズ時の動的スタイル用 */
+.layout-expanded #ingest-container.resizing {
+    flex: none !important;
+}
+
+.layout-expanded #pdf-preview-expanded.resizing {
+    flex: none !important;
 }
 
 .layout-expanded #pane-top {
@@ -205,10 +228,11 @@
 
 .layout-expanded #pdf-preview-expanded {
     display: flex;
-    flex: 0 0 50%;
+    flex: 1 1 50%;
     height: 100%;
     background: white;
     border-left: 1px solid #ccc;
+    min-width: 20%;
 }
 
 .layout-expanded #pdf-preview-expanded iframe {
@@ -263,11 +287,23 @@
     margin-bottom: 0.1em;
     line-height: 1.2;
     width: 100%;
+    flex-wrap: wrap;
 }
 
 .form-section label {
     min-width: 120px;
     flex-shrink: 0;
+}
+
+/* 第2パターンでのフォーム要素の折り返し対応 */
+.layout-expanded .form-section {
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.layout-expanded .form-section label {
+    min-width: 80px;
+    margin-right: 0.5em;
 }
 
 #quality_threshold {

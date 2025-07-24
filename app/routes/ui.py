@@ -55,6 +55,15 @@ def ingest(request: Request):
         "llm_model": OLLAMA_MODEL,
     })
 
+@router.get("/ingest2", response_class=HTMLResponse)
+def ingest2(request: Request):
+    return templates.TemplateResponse("ingest2.html", {
+        "request": request,
+        "embedding_options": EMBEDDING_OPTIONS,
+        "prompt_keys": list_prompt_keys(),
+        "llm_model": OLLAMA_MODEL,
+    })
+
 
 # ══════════════════════ ビューア ════════════════════════
 @router.get("/viewer/{file_id}", response_class=HTMLResponse)

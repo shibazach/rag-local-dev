@@ -24,5 +24,12 @@
 "python.testing.pytestArgs": [
     "tests"
 ],
-"html.autoClosingTags": false
+"html.autoClosingTags": false,
+
+"editor.formatOnSave": false,
+"editor.formatOnSaveMode": "modifications",
+"html.format.enable": false,
+"css.format.enable": false,
+"javascript.format.enable": false
+
 }

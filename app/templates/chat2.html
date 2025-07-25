@@ -1,0 +1,223 @@
+<!-- app/templates/chat2.html @作成日時: 2025-07-25 -->
+<!-- REM: ingestと同様のレイアウトシステムを適用したchatページ -->
+{% extends "base.html" %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/chat.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="chat-container" class="layout-no-preview">
+  <!-- 上部検索エリア（検索パネルを最初から配置） -->
+  <div id="top-container" class="search-container">
+    <!-- 検索パネル -->
+    <div id="search-panel" class="panel">
+      <!-- レイアウト切り替えボタン -->
+      <div id="layout-controls">
+        <button id="pattern1-btn" class="layout-btn">&lt;&lt;</button>
+        <button id="pattern2-btn" class="layout-btn">&gt;&gt;</button>
+      </div>
+      <div class="panel-content">
+        <h1 class="page-title">🔍 チャット検索</h1>
+        
+        <div class="form-section">
+          <textarea id="query" rows="4" placeholder="質問を入力してください…" style="width: 100%; box-sizing: border-box; resize: vertical;"></textarea>
+        </div>
+        
+        <div class="form-section">
+          <label for="mode" style="min-width: 120px;">検索モード：</label>
+          <select id="mode">
+            <option value="チャンク統合">チャンク統合</option>
+            <option value="ファイル別（要約+一致度）" selected>ファイル別（要約+一致度）</option>
+          </select>
+          <label for="model_key" style="margin-left:1em;">埋め込みモデル：</label>
+          <select id="model_key">
+            {% for key, config in embedding_options.items() %}
+            <option value="{{ key }}">{{ config["model_name"] }} ({{ config["embedder"] }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <div class="form-section">
+          <label for="search_limit" style="min-width: 120px;">検索件数：</label>
+          <input type="number" id="search_limit" min="1" max="50" value="10" style="width:4em;">
+          <span style="margin-left:0.5em; color:#666; font-size:0.9em;">件</span>
+
+          <label for="min_score" style="margin-left:1em;">最小一致度：</label>
+          <input type="number" id="min_score" min="0" max="1" step="0.1" value="0.0" style="width:4em;">
+          <span style="margin-left:0.5em; color:#666; font-size:0.9em;">以上</span>
+        </div>
+        
+        <div class="form-actions">
+          <button id="search-btn">🔍 検索実行</button>
+          <button id="cancel-btn" disabled>✖️ キャンセル</button>
+          <button id="history-btn">📜 履歴</button>
+          <span id="loading" style="display: none; color: #555; margin-left: 8px;">検索中…お待ちください</span>
+          
+          <span style="margin-left:1em;">
+            PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内</label>
+            <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 上下リサイザー（第1パターンで表示） -->
+  <div id="top-resizer" class="resizer horizontal-resizer"></div>
+
+  <!-- 下部コンテナ -->
+  <div id="bottom-container">
+    <!-- 左側：検索+結果 -->
+    <div id="left-pane">
+      <!-- 左側検索エリア（第2パターン用コンテナ） -->
+      <div id="left-container" class="search-container">
+        <!-- 検索パネルがここに移動される -->
+      </div>
+
+      <!-- 左右リサイザー（第2パターンで表示） -->
+      <div id="left-resizer" class="resizer horizontal-resizer"></div>
+
+      <!-- 結果パネル -->
+      <div id="results-panel" class="panel">
+        <div class="panel-content">
+          <div id="results-content">
+            <div id="answer" style="display: none; margin: 12px 0; padding: 8px 12px; border: 1px solid #888; border-radius: 4px; background: #eef;">
+              <h2 style="margin: 0 0 8px; font-size: 1.2em;">統合回答</h2>
+              <pre style="margin: 0; white-space: pre-wrap;"></pre>
+            </div>
+            <div id="results"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 左右リサイザー -->
+    <div id="vertical-resizer" class="resizer vertical-resizer"></div>
+
+    <!-- 右側：PDFパネル -->
+    <div id="pdf-panel" class="panel">
+      <div class="panel-content" style="padding: 0;">
+        <iframe id="pdf-frame" src=""></iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 検索中オーバーレイ -->
+<div id="search-overlay" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); color: #fff; z-index: 9999; font-size: 1.2em; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+  <div class="spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 1em;"></div>
+  <div id="search-message">検索準備中…</div>
+  <div id="search-details" style="font-size: 0.9em; margin-top: 0.5em; opacity: 0.8;"></div>
+</div>
+
+<!-- 処理中のナビゲーション警告 -->
+<div id="nav-warning" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(255, 193, 7, 0.95); color: #856404; padding: 1em 1.5em; border-radius: 8px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); z-index: 10001; font-weight: bold; text-align: center; border: 2px solid #ffc107;">
+  ⚠️ 検索処理中です<br>
+  他のページへの移動はできません<br>
+  <small>キャンセルボタンで処理を中止できます</small>
+</div>
+
+<!-- 履歴ダイアログ -->
+<div id="history-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10002;">
+  <div id="history-modal-overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);"></div>
+  <div id="history-modal-content" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 800px; height: 70%; background: white; border-radius: 8px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); display: flex; flex-direction: column;">
+    <div id="history-modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1em; border-bottom: 1px solid #ddd; background: #f8f9fa; border-radius: 8px 8px 0 0;">
+      <h3 style="margin: 0; color: #333;">📜 検索履歴</h3>
+      <button id="history-modal-close" style="background: none; border: none; font-size: 1.2em; cursor: pointer; padding: 0.5em; border-radius: 4px;">✖️</button>
+    </div>
+    <div id="history-modal-body" style="flex: 1; overflow-y: auto; padding: 1em;">
+      <div id="history-list"></div>
+    </div>
+    <div id="history-modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 1em; border-top: 1px solid #ddd; background: #f8f9fa; border-radius: 0 0 8px 8px; gap: 0.5em;">
+      <button id="history-expand-btn" disabled style="padding: 0.5em 1em; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">📖 展開</button>
+      <button id="history-restore-btn" disabled style="padding: 0.5em 1em; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">🔄 復元</button>
+      <button id="history-delete-btn" disabled style="padding: 0.5em 1em; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">🗑️ 削除</button>
+      <select id="history-download-format" style="padding: 0.5em 1em; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">
+        <option value="txt">TXT</option>
+        <option value="json">JSON</option>
+        <option value="rtf">RTF</option>
+        <option value="docx">DOCX</option>
+      </select>
+      <button id="history-download-btn" style="padding: 0.5em 1em; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">💾 ダウンロード</button>
+      <button id="history-clear-btn" style="padding: 0.5em 1em; border: 1px solid #ddd; border-radius: 4px; background: white; cursor: pointer;">🗑️ 全削除</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 結果カード */
+.card {
+    border: 1px solid #ddd;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 4px;
+    background: #fafafa;
+}
+
+.card h3 {
+    margin: 0 0 6px;
+    font-size: 1.1em;
+}
+
+.card pre {
+    white-space: pre-wrap;
+    background: #f5f5f5;
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.card button {
+    margin-top: 6px;
+    padding: 4px 8px;
+}
+
+/* フォーム */
+.form-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.1em;
+    line-height: 1.2;
+    width: 100%;
+}
+
+.form-section label {
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.form-actions {
+    margin-top: 1em;
+}
+
+.form-actions button {
+    margin-right: 1em;
+}
+
+.page-title {
+    margin: 0 0 8px;
+    font-size: 1.2em;
+    line-height: 1.5em;
+}
+
+.search-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+</style>
+
+<!-- 機能別に分割されたJavaScriptファイル -->
+<script src="{{ url_for('static', path='js/chat_layout.js') }}"></script>
+<script src="{{ url_for('static', path='js/chat_resize.js') }}"></script>
+<script src="{{ url_for('static', path='js/chat_search.js') }}"></script>
+<script src="{{ url_for('static', path='js/chat_main.js') }}"></script>
+
+{% endblock %}
+</content>

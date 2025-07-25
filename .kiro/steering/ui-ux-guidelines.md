@@ -20,26 +20,44 @@ inclusion: always
 
 ## レイアウト設計
 
-### ペイン分割構造
+### ペイン分割構造（3パターン対応）
 ```css
-/* 上下分割レイアウト */
-#ingest-container {
+/* 基本コンテナ構造 */
+#app-container {
+  height: calc(100vh - 2em);
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 2em);
 }
 
-/* 上ペイン: 設定・操作 */
-#pane-top {
-  flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(15px);
-}
-
-/* 下ペイン: ログ・編集 */
-#pane-bottom {
-  flex: 1 1 auto;
+/* パターン1: 上部設定、下部に処理ログとPDFの横分割 */
+.layout-pattern1 #top-container {
+  flex: 0 0 200px;
   display: flex;
+}
+
+.layout-pattern1 #bottom-container {
+  flex: 1;
+  display: flex;
+}
+
+/* パターン2: 左側に設定と処理ログの縦分割、右側にPDF */
+.layout-pattern2 #left-container {
+  flex: 0 0 200px;
+  display: flex;
+}
+
+.layout-pattern2 #pdf-panel {
+  flex: 1;
+  display: flex;
+}
+
+/* PDFプレビューなし: 縦2分割（設定+ログ） */
+.layout-no-preview #top-container {
+  flex: 0 0 220px;
+}
+
+.layout-no-preview #pdf-panel {
+  display: none;
 }
 ```
 
@@ -77,19 +95,34 @@ function endProcessing() {
 
 ## リアルタイム更新
 
+### JavaScript モジュール構成
+現在のIngestシステムは以下の機能別モジュールで構成されています：
+
+- **ingest_main.js**: メイン統合・初期化処理
+- **ingest_layout.js**: レイアウト切り替え機能（3パターン対応）
+- **ingest_resize.js**: パネルリサイズ機能
+- **ingest_sse.js**: SSE（Server-Sent Events）処理
+- **ingest_processing.js**: 処理実行・フォーム制御
+- **ingest_ocr.js**: OCR設定・プリセット管理
+
 ### SSE（Server-Sent Events）活用
 ```javascript
-// 進捗更新の効率的処理
-if (d.is_progress_update && d.page_id) {
-  const existingProgress = section.querySelector(`[data-page-id="${d.page_id}"]`);
-  if (existingProgress) {
-    // 既存行を更新（新規作成を避ける）
-    existingProgress.textContent = step;
-  } else {
-    // 新規進捗行作成
-    const progressLine = createLine(step);
-    progressLine.setAttribute('data-page-id', d.page_id);
-    section.appendChild(progressLine);
+// IngestSSE クラスによる進捗更新の効率的処理
+class IngestSSE {
+  handleMessage(evt) {
+    const d = JSON.parse(evt.data);
+    
+    // 進捗更新の場合は既存行を上書き
+    if (d.is_progress_update && d.page_id) {
+      const existingProgress = section.querySelector(`[data-page-id="${d.page_id}"]`);
+      if (existingProgress) {
+        existingProgress.textContent = step;
+      } else {
+        const progressLine = this.createLine(step);
+        progressLine.setAttribute('data-page-id', d.page_id);
+        section.appendChild(progressLine);
+      }
+    }
   }
 }
 ```

@@ -124,17 +124,28 @@ class IngestProcessing {
   async cancelProcessing() {
     if (!this.processingInProgress) return;
     
-    if (!confirm('処理をキャンセルしますか？')) return;
+    if (!confirm('処理をキャンセルしますか？\n\n注意: OCR処理中の場合、完全に停止するまで時間がかかる場合があります。')) return;
 
     try {
+      // キャンセル要求を送信
       await fetch('/ingest/cancel', { method: 'POST' });
-      this.sseManager.addLogMessage('処理をキャンセルしました');
+      
+      // UI状態を即座に更新
+      this.sseManager.addLogMessage('⏹️ キャンセル要求を送信しました...');
+      this.sseManager.addLogMessage('⚠️ OCR処理中の場合、完全停止まで時間がかかります');
+      
+      // ボタン状態を更新
+      if (this.startBtn) this.startBtn.textContent = 'キャンセル中...';
+      if (this.cancelBtn) {
+        this.cancelBtn.textContent = 'キャンセル中...';
+        this.cancelBtn.disabled = true;
+      }
+      
     } catch (error) {
       console.error('キャンセルエラー:', error);
-      this.sseManager.addLogMessage('キャンセルエラー: ' + error.message);
+      this.sseManager.addLogMessage('❌ キャンセルエラー: ' + error.message);
+      this.onProcessingComplete();
     }
-
-    this.onProcessingComplete();
   }
 
   onProcessingComplete() {

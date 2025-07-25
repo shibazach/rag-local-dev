@@ -1,4 +1,5 @@
-/* app/static/css/ingest2.css @作成日時: 2025-07-24 */
+/* app/static/css/chat.css @作成日時: 2025-07-25 */
+/* REM: chatページ用レイアウト - ingestと同様の3パターン対応 */
 
 /* ===== レイアウト切り替えボタン ===== */
 #layout-controls {
@@ -10,8 +11,8 @@
     gap: 5px;
 }
 
-/* 設定パネルを相対位置指定にしてボタンの基準点とする */
-#settings-panel {
+/* 検索パネルを相対位置指定にしてボタンの基準点とする */
+#search-panel {
     position: relative;
 }
 
@@ -64,7 +65,7 @@
 }
 
 /* ===== 基本レイアウト ===== */
-#app-container {
+#chat-container {
     height: calc(100vh - 2em);
     display: flex;
     flex-direction: column;
@@ -73,8 +74,8 @@
     position: relative;
 }
 
-/* アプリコンテナの背景オーバーレイ */
-#app-container::before {
+/* チャットコンテナの背景オーバーレイ */
+#chat-container::before {
     content: '';
     position: absolute;
     top: 0;
@@ -106,14 +107,14 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
-/* 設定パネル - base.htmlと同じグラスモーフィズム効果 */
-#settings-panel {
+/* 検索パネル - base.htmlと同じグラスモーフィズム効果 */
+#search-panel {
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(15px);
     position: relative;
 }
 
-#settings-panel::before {
+#search-panel::before {
     content: '';
     position: absolute;
     top: 0;
@@ -125,14 +126,14 @@
     z-index: -1;
 }
 
-/* 処理ログパネル - グラスモーフィズム効果 */
-#log-panel {
+/* 結果パネル - グラスモーフィズム効果 */
+#results-panel {
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(15px);
     position: relative;
 }
 
-#log-panel::before {
+#results-panel::before {
     content: '';
     position: absolute;
     top: 0;
@@ -178,23 +179,23 @@
     height: 100%;
 }
 
-/* 設定パネルのコンテンツは透明背景 */
-#settings-panel .panel-content {
+/* 検索パネルのコンテンツは透明背景 */
+#search-panel .panel-content {
     background: transparent;
 }
 
-/* ログパネルのコンテンツは白背景 */
-#log-panel .panel-content {
+/* 結果パネルのコンテンツは白背景 */
+#results-panel .panel-content {
     background: white;
     margin: 0;
     padding: 0;
 }
 
-/* ログコンテンツエリアを完全に白背景で覆う */
-#log-content {
+/* 結果コンテンツエリアを完全に白背景で覆う */
+#results-content {
     background: white !important;
     margin: 0;
-    padding: 8px;
+    padding: 12px;
     height: 100%;
     box-sizing: border-box;
 }
@@ -225,77 +226,6 @@
     cursor: col-resize;
 }
 
-/* ===== フォーム要素（既存ingest系を踏襲） ===== */
-.page-title {
-    margin: 0 0 8px;
-    font-size: 1.2em;
-    line-height: 1.5em;
-}
-
-.form-section {
-    display: flex;
-    align-items: center;
-    margin-bottom: 0.1em;
-    line-height: 1.2;
-    width: 100%;
-}
-
-.form-section label {
-    min-width: 120px;
-    flex-shrink: 0;
-}
-
-#quality_threshold, #quality_threshold2 {
-    text-align: center;
-}
-
-.form-actions {
-    margin-top: 1em;
-}
-
-.form-actions button {
-    margin-right: 1em;
-}
-
-/* ===== ボタンスタイル ===== */
-.btn-test {
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.btn-test:hover {
-    background: #218838;
-}
-
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* ===== ログ表示 ===== */
-#log-content {
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    line-height: 1.4;
-    max-height: 100%;
-    overflow-y: auto;
-    padding: 8px;
-    background: transparent;
-    border: none;
-}
-
-/* ===== 設定パネルコンテナ ===== */
-.settings-container {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
 /* ===== レイアウトパターン ===== */
 
 /* PDFプレビューなし（デフォルト）- 縦2分割 */
@@ -303,24 +233,6 @@ button:disabled {
     flex: 0 0 220px;
     display: flex;
     flex-direction: column;
-}
-
-#settings-panel {
-    display: flex !important;
-    flex-direction: column;
-    flex: 1;
-    overflow-y: auto;
-    visibility: visible !important;
-    opacity: 1 !important;
-    height: auto !important;
-    min-height: 100px !important;
-}
-
-.layout-no-preview #settings-panel {
-    display: flex !important;
-    flex-direction: column;
-    flex: 1;
-    overflow-y: auto;
 }
 
 .layout-no-preview #top-resizer {
@@ -338,7 +250,7 @@ button:disabled {
     display: none;
 }
 
-.layout-no-preview #log-panel {
+.layout-no-preview #results-panel {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -353,7 +265,7 @@ button:disabled {
     display: none;
 }
 
-/* 第1パターン：上部設定、下部に処理ログとPDFの横分割 */
+/* 第1パターン：上部検索、下部に結果とPDFの横分割 */
 .layout-pattern1 #top-container {
     flex: 0 0 200px;
     display: flex;
@@ -372,7 +284,7 @@ button:disabled {
     display: none;
 }
 
-.layout-pattern1 #log-panel {
+.layout-pattern1 #results-panel {
     flex: 1;
 }
 
@@ -390,7 +302,7 @@ button:disabled {
     display: flex;
 }
 
-/* 第2パターン：左側に設定と処理ログの縦分割、右側にPDF */
+/* 第2パターン：左側に検索と結果の縦分割、右側にPDF */
 .layout-pattern2 #top-container {
     display: none;
 }
@@ -409,7 +321,7 @@ button:disabled {
     display: block;
 }
 
-.layout-pattern2 #log-panel {
+.layout-pattern2 #results-panel {
     flex: 1;
 }
 
@@ -425,92 +337,4 @@ button:disabled {
 .layout-pattern2 #pdf-panel {
     flex: 1;
     display: flex;
-}
-
-/* ===== モーダル（OCR設定用） ===== */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 10000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 5% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    border-radius: 8px;
-    width: 80%;
-    max-width: 600px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 10px;
-}
-
-.close {
-    color: #aaa;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-.close:hover,
-.close:focus {
-    color: black;
-}
-
-.modal-actions {
-    margin-top: 20px;
-    text-align: right;
-    border-top: 1px solid #ddd;
-    padding-top: 15px;
-}
-
-.modal-actions button {
-    margin-left: 10px;
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: white;
-}
-
-.btn-secondary {
-    background-color: #6c757d;
-    color: white;
-}
-
-/* ===== 処理中のナビゲーション警告 ===== */
-#nav-warning {
-    display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 193, 7, 0.95);
-    color: #856404;
-    padding: 1em 1.5em;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    z-index: 10001;
-    font-weight: bold;
-    text-align: center;
-    border: 2px solid #ffc107;
 }

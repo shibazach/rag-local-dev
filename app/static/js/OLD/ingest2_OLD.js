@@ -237,15 +237,66 @@
 
     // SSE処理を含む本格的な処理開始機能
     async function startProcessing() {
+      console.log('🚀 処理開始関数が呼び出されました');
+      
       if (processingInProgress) {
+        console.log('❌ 既に処理が実行中です');
         alert('既に処理が実行中です');
         return;
       }
 
       const form = document.getElementById('ingest-form');
-      if (!form) return;
+      if (!form) {
+        console.log('❌ フォーム要素が見つかりません');
+        return;
+      }
+
+      console.log('📝 フォームデータを準備中...');
+
+      // フォームデータの内容をデバッグ出力
+      const inputMode = document.querySelector('input[name="input_mode"]:checked');
+      console.log('入力モード:', inputMode ? inputMode.value : 'なし');
+      
+      const inputFolder = document.getElementById('input-folder');
+      console.log('入力フォルダ:', inputFolder ? inputFolder.value : 'なし');
+      
+      const inputFiles = document.getElementById('input-files');
+      console.log('入力ファイル:', inputFiles ? inputFiles.files.length : 'なし');
+
+      // OCR設定をフォームに追加（ingest系と同じ処理）
+      const engineId = document.getElementById('ocr-engine').value;
+      console.log('OCRエンジン:', engineId);
+      
+      // 既存のOCR設定フィールドを削除
+      const existingOCRSettings = form.querySelector('input[name="ocr_settings"]');
+      const existingOCREngine = form.querySelector('input[name="ocr_engine_id"]');
+      if (existingOCRSettings) existingOCRSettings.remove();
+      if (existingOCREngine) existingOCREngine.remove();
+      
+      // OCR設定を追加
+      if (engineId) {
+        const ocrEngineInput = document.createElement('input');
+        ocrEngineInput.type = 'hidden';
+        ocrEngineInput.name = 'ocr_engine_id';
+        ocrEngineInput.value = engineId;
+        form.appendChild(ocrEngineInput);
+        
+        const ocrSettingsInput = document.createElement('input');
+        ocrSettingsInput.type = 'hidden';
+        ocrSettingsInput.name = 'ocr_settings';
+        ocrSettingsInput.value = JSON.stringify(currentEngineSettings);
+        form.appendChild(ocrSettingsInput);
+        
+        console.log('OCR設定を追加:', currentEngineSettings);
+      }
 
       const formData = new FormData(form);
+      
+      // FormDataの内容をデバッグ出力
+      console.log('📤 送信するフォームデータ:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}:`, value);
+      }
       
       try {
         processingInProgress = true;
@@ -256,56 +307,279 @@
         if (logContent) logContent.innerHTML = '';
         addLogMessage('処理を開始しています...');
 
-        // SSEストリーミング処理
+        console.log('📡 POST送信開始...');
+
+        // ingest系と同じ処理方式：POST送信後にSSE開始
         const response = await fetch('/ingest', {
           method: 'POST',
           body: formData
         });
 
+        console.log('📡 POST送信完了:', response.status, response.statusText);
+
         if (!response.ok) {
+          const errorText = await response.text();
+          console.error('POST /ingest error', response.status, errorText);
           throw new Error('HTTP ' + response.status + ': ' + response.statusText);
         }
 
-        // レスポンスがSSEの場合の処理
-        if (response.headers.get('content-type')?.includes('text/event-stream')) {
-          const reader = response.body.getReader();
-          const decoder = new TextDecoder();
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
-
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                try {
-                  const data = JSON.parse(line.substring(6));
-                  if (data.file && data.step) {
-                    addLogMessage(data.file + ': ' + data.step);
-                  } else if (data.done) {
-                    addLogMessage('全ての処理が完了しました');
-                  }
-                } catch (e) {
-                  // JSONパースエラーは無視
-                }
-              }
-            }
-          }
-        } else {
-          addLogMessage('処理が完了しました');
-        }
+        console.log('🔄 SSE処理を開始...');
+        // ingest系と同じSSE処理を開始
+        startIngestStream2();
 
       } catch (error) {
-        console.error('処理エラー:', error);
+        console.error('❌ 処理エラー:', error);
         addLogMessage('エラー: ' + error.message);
-      } finally {
         processingInProgress = false;
         setFormDisabled(false);
-        
         if (startBtn) startBtn.textContent = '🚀 処理開始';
       }
+    }
+
+    // ===== SSE処理機能（ingest_sse.jsと同じ実装） =====
+    let eventSource = null;
+    let fileContainers = {};
+
+    // ファイルコンテナを作成（元のingest_sse.jsと同じ形式）
+    function createFileContainer(fileName) {
+      if (fileContainers[fileName]) return;
+
+      const container = document.createElement('div');
+      container.className = 'file-container';
+      
+      // ファイルヘッダー（クリック可能）
+      const header = document.createElement('div');
+      header.className = 'file-header';
+      header.style.cursor = 'pointer';
+      header.style.userSelect = 'none';
+      header.innerHTML = `📄 ${fileName}`;
+      
+      // PDFプレビュー機能
+      header.addEventListener('click', () => {
+        showPDFPreview(fileName);
+      });
+      
+      // 進捗表示エリア
+      const progress = document.createElement('div');
+      progress.className = 'file-progress';
+      progress.innerHTML = '処理中...';
+      
+      container.appendChild(header);
+      container.appendChild(progress);
+      
+      logContent.appendChild(container);
+      fileContainers[fileName] = { container, progress };
+      
+      logContent.scrollTop = logContent.scrollHeight;
+    }
+
+    // ファイル進捗を更新
+    function updateFileProgress(fileName, message) {
+      if (!fileContainers[fileName]) {
+        createFileContainer(fileName);
+      }
+      
+      const { progress } = fileContainers[fileName];
+      progress.innerHTML = message;
+      
+      logContent.scrollTop = logContent.scrollHeight;
+    }
+
+    // PDFプレビュー表示（file_idとfileNameの両方に対応）
+    function showPDFPreview(fileIdOrName, fileName) {
+      console.log('PDFプレビュー:', fileIdOrName, fileName);
+      
+      // PDFのURLを構築（file_idがある場合はそれを使用、なければファイル名）
+      const pdfUrl = `/api/pdf/${encodeURIComponent(fileIdOrName)}`;
+      
+      // 現在のレイアウトに応じてPDF表示
+      if (currentLayout === 'no-preview') {
+        // PDFプレビューなしモードの場合、第1パターンに切り替え
+        switchLayout('pattern1');
+      }
+      
+      // PDFフレームにURLを設定
+      if (pdfFrame) {
+        pdfFrame.src = pdfUrl;
+        currentPdfUrl = pdfUrl;
+      }
+    }
+
+    // 単純なテキスト行を生成（元のingest_sse.jsと同じ）
+    function createLine(text, cls) {
+      const div = document.createElement("div");
+      if (cls) div.className = cls;
+      div.textContent = text;
+      return div;
+    }
+
+    // 自動スクロール（元のingest_sse.jsと同じ）
+    function scrollBottom(el) {
+      const threshold = 32;
+      const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+      if (distance <= threshold) el.scrollTop = el.scrollHeight;
+    }
+
+    function startIngestStream2() {
+      console.log('🔄 SSE接続を開始...');
+      
+      // 既存の接続があればクローズ
+      if (eventSource) {
+        console.log('🔄 既存のSSE接続をクローズ');
+        eventSource.close();
+        eventSource = null;
+      }
+      // ファイルコンテナを初期化
+      fileContainers = {};
+
+      console.log('🔄 EventSourceを作成: /ingest/stream');
+      eventSource = new EventSource('/ingest/stream');
+
+      eventSource.onopen = evt => {
+        console.log('✅ SSE接続が開かれました');
+      };
+
+      eventSource.onmessage = evt => {
+        console.log('📨 SSEメッセージ受信:', evt.data);
+        const d = JSON.parse(evt.data);
+        console.log('📨 パース済みデータ:', d);
+
+        // cancelling イベントはログ化しない（即時フィードバックのみ）
+        if (d.cancelling) {
+          return;
+        }
+
+        // 全体開始イベント
+        if (d.start) {
+          addLogMessage(`▶ 全 ${d.total_files} 件の処理を開始`);
+          return;
+        }
+
+        // 停止完了通知
+        if (d.stopped) {
+          addLogMessage('⏹️ 処理が停止しました');
+          eventSource.close();
+          processingInProgress = false;
+          setFormDisabled(false);
+          if (startBtn) startBtn.textContent = '🚀 処理開始';
+          return;
+        }
+
+        // 全完了イベント
+        if (d.done) {
+          addLogMessage('✅ 全処理完了');
+          eventSource.close();
+          processingInProgress = false;
+          setFormDisabled(false);
+          if (startBtn) startBtn.textContent = '🚀 処理開始';
+          return;
+        }
+
+        // 各ファイル・ステップイベント（元のingest_sse.jsと同じ詳細処理）
+        const { file, step, file_id, index, total, part, content, duration } = d;
+
+        // ファイルセクション準備
+        let section = fileContainers[file];
+        if (!section) {
+          if (logContent) {
+            logContent.appendChild(document.createElement("br"));
+            logContent.appendChild(createLine(`${index}/${total} ${file} の処理中…`, "file-progress"));
+            scrollBottom(logContent);
+
+            const header = document.createElement("div");
+            header.className = "file-header";
+            const link = document.createElement("a");
+            link.href = file_id ? `/api/pdf/${file_id}` : '#';
+            link.textContent = file;
+            // PDFプレビュー機能
+            link.addEventListener('click', (e) => {
+              e.preventDefault();
+              if (file_id) {
+                showPDFPreview(file_id, file);
+              }
+            });
+            header.appendChild(link);
+            logContent.appendChild(header);
+            scrollBottom(logContent);
+
+            section = document.createElement("div");
+            section.className = "file-section";
+            logContent.appendChild(section);
+            scrollBottom(logContent);
+
+            fileContainers[file] = section;
+          }
+        }
+
+        // ページ単位の見出し
+        if (step && step.startsWith("Page ")) {
+          section.appendChild(createLine(step, "page-header"));
+          scrollBottom(logContent);
+          return;
+        }
+
+        // プロンプト全文／整形結果全文の details 初期化
+        if (step.startsWith("使用プロンプト全文") || step.startsWith("LLM整形結果全文")) {
+          const [title, raw] = step.split(" part:");
+          const key = `${file}__${title}__${raw||"all"}`;
+          if (!section.querySelector(`details[data-key="${key}"]`)) {
+            const det = document.createElement("details");
+            det.setAttribute("data-key", key);
+            const sum = document.createElement("summary");
+            sum.textContent = step;
+            det.appendChild(sum);
+            section.appendChild(det);
+            scrollBottom(logContent);
+          }
+          return;
+        }
+
+        // プロンプト／整形結果のテキスト挿入
+        if (step === "prompt_text" || step === "refined_text") {
+          const title = step === "prompt_text" ? "使用プロンプト全文" : "LLM整形結果全文";
+          const key = `${file}__${title}__${part||"all"}`;
+          const det = section.querySelector(`details[data-key="${key}"]`);
+          if (det) {
+            let pre = det.querySelector("pre");
+            if (!pre) {
+              pre = document.createElement("pre");
+              det.appendChild(pre);
+            }
+            pre.textContent = (content || "").replace(/\n{3,}/g, "\n\n");
+            scrollBottom(logContent);
+          }
+          return;
+        }
+
+        // 進捗更新の場合は同じ行を上書き
+        if (d.is_progress_update && d.page_id) {
+          // 既存の進捗行を検索
+          const existingProgress = section.querySelector(`[data-page-id="${d.page_id}"]`);
+          if (existingProgress) {
+            // 既存の行を更新
+            existingProgress.textContent = step;
+          } else {
+            // 新しい進捗行を作成
+            const progressLine = createLine(step);
+            progressLine.setAttribute('data-page-id', d.page_id);
+            section.appendChild(progressLine);
+          }
+        } else if (step) {
+          // 通常ログ行
+          const label = duration ? `${step} (${duration}s)` : step;
+          section.appendChild(createLine(label));
+        }
+        scrollBottom(logContent);
+      };
+
+      eventSource.onerror = evt => {
+        console.error('SSE接続エラー:', evt);
+        addLogMessage('❌ 接続エラーが発生しました');
+        eventSource.close();
+        processingInProgress = false;
+        setFormDisabled(false);
+        if (startBtn) startBtn.textContent = '🚀 処理開始';
+      };
     }
 
     async function cancelProcessing() {
@@ -747,5 +1021,24 @@
     if (cancelBtn) cancelBtn.disabled = true;
     
     console.log('ingest2.js 初期化完了');
+    
+    // 初期化完了をページに表示
+    if (logContent) {
+      logContent.innerHTML = '<div style="color: green; font-weight: bold;">✅ ingest2.js 初期化完了</div>';
+    }
+    
+    // 処理開始ボタンにテスト用のクリックイベントを追加
+    if (startBtn) {
+      console.log('✅ 処理開始ボタンが見つかりました');
+      // ボタンクリック時の基本動作確認
+      startBtn.addEventListener('click', () => {
+        console.log('🔥 処理開始ボタンがクリックされました！');
+        if (logContent) {
+          logContent.innerHTML += '<div style="color: blue;">🔥 処理開始ボタンがクリックされました</div>';
+        }
+      });
+    } else {
+      console.log('❌ 処理開始ボタンが見つかりません');
+    }
   });
 })();

@@ -27,7 +27,7 @@
 "html.autoClosingTags": false,
 
 "editor.formatOnSave": false,
-"editor.formatOnSaveMode": "modifications",
+"editor.formatOnSaveMode": "file",
 "html.format.enable": false,
 "css.format.enable": false,
 "javascript.format.enable": false

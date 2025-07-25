@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 # REM: ── プロジェクト共通 ───────────────────────────────
-from src.config import EMBEDDING_OPTIONS, DEVELOPMENT_MODE, OLLAMA_MODEL
+from src.config import EMBEDDING_OPTIONS, DEVELOPMENT_MODE, OLLAMA_MODEL, DEBUG_MODE
 from db.handler import reset_dev_database
 import logging
 
@@ -153,6 +153,19 @@ async def run_ingest_folder(
 ) -> JSONResponse:
     """ジョブ情報を保持し即時返却"""
     global last_ingest, cancel_event
+    
+    # デバッグ出力
+    if DEBUG_MODE:
+        LOGGER.debug("🚀 POST /ingest エンドポイントが呼び出されました")
+        LOGGER.debug(f"📝 input_mode: {input_mode}")
+        LOGGER.debug(f"📁 input_folder: {input_folder}")
+        LOGGER.debug(f"📄 input_files: {len(input_files) if input_files else 0} files")
+        LOGGER.debug(f"🔍 ocr_engine_id: {ocr_engine_id}")
+        LOGGER.debug(f"⚙️ ocr_settings: {ocr_settings}")
+        LOGGER.debug(f"📝 refine_prompt_key: {refine_prompt_key}")
+        LOGGER.debug(f"🔧 embed_models: {embed_models}")
+        LOGGER.debug(f"🔄 overwrite_existing: {overwrite_existing}")
+        LOGGER.debug(f"📊 quality_threshold: {quality_threshold}")
 
     # REM: キャンセルフラグ初期化
     cancel_event = asyncio.Event()

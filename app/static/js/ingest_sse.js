@@ -1,96 +1,120 @@
-// REM: app/static/js/ingest_sse.js @2025-07-18 00:00 UTC +9
-// REM: SSE で /ingest/stream を受信し、ログを #log-pane に追加していくロジック
+// app/static/js/ingest_sse.js @作成日時: 2025-07-25
+// REM: SSE処理機能
 
-"use strict";
-
-let es = null;
-// REM: ファイルごとのログセクション管理
-let fileContainers = {};
-
-/**
- * REM: SSE を開始し、ログを #log-pane に追記
- */
-function startIngestStream() {
-  // REM: 既存の接続があればクローズ
-  if (es) {
-    es.close();
-    es = null;
+class IngestSSE {
+  constructor(layoutManager) {
+    this.layoutManager = layoutManager;
+    this.logContent = document.getElementById('log-content');
+    this.eventSource = null;
+    this.fileContainers = {};
   }
-  // REM: ファイルコンテナを初期化
-  fileContainers = {};
 
-  const logPane = document.getElementById("log-pane");
-  es = new EventSource("/ingest/stream");
+  startIngestStream() {
+    console.log('🔄 SSE接続を開始...');
+    
+    // 既存の接続があればクローズ
+    if (this.eventSource) {
+      console.log('🔄 既存のSSE接続をクローズ');
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+    // ファイルコンテナを初期化
+    this.fileContainers = {};
 
-  es.onmessage = evt => {
+    console.log('🔄 EventSourceを作成: /ingest/stream');
+    this.eventSource = new EventSource('/ingest/stream');
+
+    this.eventSource.onopen = evt => {
+      console.log('✅ SSE接続が開かれました');
+    };
+
+    this.eventSource.onmessage = evt => this.handleMessage(evt);
+
+    this.eventSource.onerror = evt => {
+      console.error('SSE接続エラー:', evt);
+      this.addLogMessage('❌ 接続エラーが発生しました');
+      this.eventSource.close();
+      // 処理完了コールバックを呼び出し
+      if (this.onComplete) this.onComplete();
+    };
+  }
+
+  handleMessage(evt) {
+    console.log('📨 SSEメッセージ受信:', evt.data);
     const d = JSON.parse(evt.data);
+    console.log('📨 パース済みデータ:', d);
 
-    // REM: cancelling イベントはログ化しない（即時フィードバックのみ）
+    // cancelling イベントはログ化しない（即時フィードバックのみ）
     if (d.cancelling) {
       return;
     }
 
-    // REM: 全体開始イベント
+    // 全体開始イベント
     if (d.start) {
-      logPane.appendChild(createLine(`▶ 全 ${d.total_files} 件の処理を開始`));
-      scrollBottom(logPane);
+      this.addLogMessage(`▶ 全 ${d.total_files} 件の処理を開始`);
       return;
     }
 
-    // REM: 停止完了通知
+    // 停止完了通知
     if (d.stopped) {
-      logPane.appendChild(createLine("⏹️ 処理が停止しました"));
-      scrollBottom(logPane);
-      es.close();
-      if (window.onIngestComplete) window.onIngestComplete();
+      this.addLogMessage('⏹️ 処理が停止しました');
+      this.eventSource.close();
+      if (this.onComplete) this.onComplete();
       return;
     }
 
-    // REM: 全完了イベント
+    // 全完了イベント
     if (d.done) {
-      logPane.appendChild(createLine("✅ 全処理完了"));
-      scrollBottom(logPane);
-      es.close();
-      if (window.onIngestComplete) window.onIngestComplete();
+      this.addLogMessage('✅ 全処理完了');
+      this.eventSource.close();
+      if (this.onComplete) this.onComplete();
       return;
     }
 
-    // REM: 各ファイル・ステップイベント
+    // 各ファイル・ステップイベント（元のingest_sse.jsと同じ詳細処理）
     const { file, step, file_id, index, total, part, content, duration } = d;
 
-    // REM: ファイルセクション準備
-    let section = fileContainers[file];
+    // ファイルセクション準備
+    let section = this.fileContainers[file];
     if (!section) {
-      logPane.appendChild(document.createElement("br"));
-      logPane.appendChild(createLine(`${index}/${total} ${file} の処理中…`, "file-progress"));
-      scrollBottom(logPane);
+      if (this.logContent) {
+        this.logContent.appendChild(document.createElement("br"));
+        this.logContent.appendChild(this.createLine(`${index}/${total} ${file} の処理中…`, "file-progress"));
+        this.scrollBottom(this.logContent);
 
-      const header = document.createElement("div");
-      header.className = "file-header";
-      const link = document.createElement("a");
-      link.href       = `/viewer/${file_id}`;
-      // REM: targetを削除してJavaScriptで制御
-      link.textContent = file;
-      header.appendChild(link);
-      logPane.appendChild(header);
-      scrollBottom(logPane);
+        const header = document.createElement("div");
+        header.className = "file-header";
+        const link = document.createElement("a");
+        link.href = file_id ? `/api/pdf/${file_id}` : '#';
+        link.textContent = file;
+        // PDFプレビュー機能（オルタネートスイッチ）
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          if (file_id && this.layoutManager) {
+            this.layoutManager.togglePDFPreview(file_id, file);
+          }
+        });
+        header.appendChild(link);
+        this.logContent.appendChild(header);
+        this.scrollBottom(this.logContent);
 
-      section = document.createElement("div");
-      section.className = "file-section";
-      logPane.appendChild(section);
-      scrollBottom(logPane);
+        section = document.createElement("div");
+        section.className = "file-section";
+        this.logContent.appendChild(section);
+        this.scrollBottom(this.logContent);
 
-      fileContainers[file] = section;
+        this.fileContainers[file] = section;
+      }
     }
 
-    // REM: ページ単位の見出し
+    // ページ単位の見出し
     if (step && step.startsWith("Page ")) {
-      section.appendChild(createLine(step, "page-header"));
-      scrollBottom(logPane);
+      section.appendChild(this.createLine(step, "page-header"));
+      this.scrollBottom(this.logContent);
       return;
     }
 
-    // REM: プロンプト全文／整形結果全文の details 初期化
+    // プロンプト全文／整形結果全文の details 初期化
     if (step.startsWith("使用プロンプト全文") || step.startsWith("LLM整形結果全文")) {
       const [title, raw] = step.split(" part:");
       const key = `${file}__${title}__${raw||"all"}`;
@@ -101,12 +125,12 @@ function startIngestStream() {
         sum.textContent = step;
         det.appendChild(sum);
         section.appendChild(det);
-        scrollBottom(logPane);
+        this.scrollBottom(this.logContent);
       }
       return;
     }
 
-    // REM: プロンプト／整形結果のテキスト挿入
+    // プロンプト／整形結果のテキスト挿入
     if (step === "prompt_text" || step === "refined_text") {
       const title = step === "prompt_text" ? "使用プロンプト全文" : "LLM整形結果全文";
       const key = `${file}__${title}__${part||"all"}`;
@@ -118,12 +142,12 @@ function startIngestStream() {
           det.appendChild(pre);
         }
         pre.textContent = (content || "").replace(/\n{3,}/g, "\n\n");
-        scrollBottom(logPane);
+        this.scrollBottom(this.logContent);
       }
       return;
     }
 
-    // REM: 進捗更新の場合は同じ行を上書き
+    // 進捗更新の場合は同じ行を上書き
     if (d.is_progress_update && d.page_id) {
       // 既存の進捗行を検索
       const existingProgress = section.querySelector(`[data-page-id="${d.page_id}"]`);
@@ -132,52 +156,58 @@ function startIngestStream() {
         existingProgress.textContent = step;
       } else {
         // 新しい進捗行を作成
-        const progressLine = createLine(step);
+        const progressLine = this.createLine(step);
         progressLine.setAttribute('data-page-id', d.page_id);
         section.appendChild(progressLine);
       }
-    } else {
-      // REM: 通常ログ行
+    } else if (step) {
+      // 通常ログ行
       const label = duration ? `${step} (${duration}s)` : step;
-      section.appendChild(createLine(label));
+      section.appendChild(this.createLine(label));
     }
-    scrollBottom(logPane);
-  };
+    this.scrollBottom(this.logContent);
+  }
 
-  es.onerror = () => {
-    if (es) {
-      es.close();
-      es = null;
+  addLogMessage(message) {
+    if (!this.logContent) return;
+    const timestamp = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    line.innerHTML = '<span style="color: #666; font-size: 11px;">[' + timestamp + ']</span> ' + message;
+    this.logContent.appendChild(line);
+    this.logContent.scrollTop = this.logContent.scrollHeight;
+  }
+
+  createLine(text, cls) {
+    const div = document.createElement("div");
+    if (cls) div.className = cls;
+    div.textContent = text;
+    return div;
+  }
+
+  scrollBottom(el) {
+    const threshold = 32;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    if (distance <= threshold) el.scrollTop = el.scrollHeight;
+  }
+
+  clearLog() {
+    if (this.logContent) {
+      this.logContent.innerHTML = '';
     }
-  };
+    this.fileContainers = {};
+  }
+
+  setOnCompleteCallback(callback) {
+    this.onComplete = callback;
+  }
+
+  close() {
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+  }
 }
 
-/**
- * REM: SSE をキャンセル（何もしない）
- */
-function cancelIngestStream() {
-  // noop
-}
-
-/**
- * REM: 単純なテキスト行を生成
- */
-function createLine(text, cls) {
-  const div = document.createElement("div");
-  if (cls) div.className = cls;
-  div.textContent = text;
-  return div;
-}
-
-/**
- * REM: 自動スクロール
- */
-function scrollBottom(el) {
-  const threshold = 32;
-  const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
-  if (distance <= threshold) el.scrollTop = el.scrollHeight;
-}
-
-// REM: グローバル公開
-window.startIngestStream  = startIngestStream;
-window.cancelIngestStream = cancelIngestStream;
+// グローバルに公開
+window.IngestSSE = IngestSSE;

@@ -1,284 +1,129 @@
-/* ===== 基本レイアウト ===== */
-#ingest-container {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 2em);
-}
-
-/* 上ペイン */
-#pane-top {
-    flex: 0 0 auto;
-    padding: 1em;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    position: relative;
-    display: flex;
-    transition: all 0.3s ease;
-}
-
-#pane-top::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
-    z-index: -1;
-}
-
-#pane-top-left {
-    flex: 1 1 auto;
-    transition: all 0.3s ease;
-}
-
-#pane-top-right {
-    flex: 0 0 0;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    border-left: 1px solid rgba(255, 255, 255, 0.4);
-}
-
-/* 下ペイン */
-#pane-bottom {
-    flex: 1 1 auto;
-    display: flex;
-    overflow: hidden;
-    position: relative;
-}
-
-#log-pane {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 1em;
-    background: #fafafa;
-    box-sizing: border-box;
-}
-
-#splitter {
-    flex: 0 0 5px;
-    cursor: col-resize;
-    background: #ccc;
-}
-
-#splitter-expanded {
-    display: none;
-    flex: 0 0 5px;
-    cursor: col-resize;
-    background: #ccc;
-    height: 100vh;
-}
-
-#editor-pane {
-    flex: 0 0 40%;
-    display: none;
-    border-left: 1px solid #ccc;
-    box-sizing: border-box;
-    overflow: hidden;
-}
-
-#editor-pane textarea {
-    width: 100%;
-    height: 100%;
-    border: none;
-    padding: 1em;
-    box-sizing: border-box;
-    resize: none;
-    overflow: auto;
-}
-
-/* ===== PDFプレビューエリア ===== */
-#pdf-preview-area {
-    width: 100%;
-    height: 100%;
-    display: none;
-    flex-direction: column;
-}
-
-#pdf-preview-expanded {
-    display: none;
-}
+/* app/static/css/ingest2.css @作成日時: 2025-07-24 */
 
 /* ===== レイアウト切り替えボタン ===== */
-.layout-toggle-btn {
+#layout-controls {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    padding: 4px 8px;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-    transition: all 0.2s ease;
-    z-index: 100;
+    top: 8px;
+    right: 8px;
+    z-index: 1000;
+    display: flex;
+    gap: 5px;
 }
 
-.layout-toggle-btn:hover {
-    background: rgba(255, 255, 255, 0.95);
+/* PDFプレビューなしの時はボタンを非表示 */
+.layout-no-preview #layout-controls {
+    display: none;
+}
+
+/* 第1パターンの時は>>ボタンのみ表示 */
+.layout-pattern1 #layout-controls {
+    display: flex;
+}
+.layout-pattern1 #pattern1-btn {
+    display: none;
+}
+
+/* 第2パターンの時は<<ボタンのみ表示 */
+.layout-pattern2 #layout-controls {
+    display: flex;
+}
+.layout-pattern2 #pattern2-btn {
+    display: none;
+}
+
+.layout-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.layout-btn:hover {
+    background: rgba(255, 255, 255, 1);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-#collapse-btn {
-    display: none;
+.layout-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
 }
 
-/* ===== 第1パターン（通常のPDFプレビュー）===== */
-.layout-preview-normal #pane-top-right {
-    display: none !important;
-}
-
-.layout-preview-normal #pane-bottom {
-    display: flex !important;
-    flex-direction: row !important;
-}
-
-.layout-preview-normal #log-pane {
-    flex: 1 1 50%;
-    min-width: 20%;
-}
-
-.layout-preview-normal #splitter {
-    display: flex !important;
-    flex: 0 0 5px;
-}
-
-.layout-preview-normal #editor-pane {
-    display: flex !important;
-    flex: 1 1 50%;
-    min-width: 20%;
-}
-
-/* リサイズ時の動的スタイル用（!importantで強制適用） */
-.layout-preview-normal #log-pane.resizing {
-    flex: none !important;
-}
-
-.layout-preview-normal #editor-pane.resizing {
-    flex: none !important;
-}
-
-
-
-/* ===== 第2パターン（拡張モード：設定縮小、PDFプレビュー拡大）===== */
-.layout-expanded main {
-    display: flex;
-    flex-direction: row;
-    height: 100vh;
-    padding: 0;
-}
-
-.layout-expanded #ingest-container {
-    flex: 1 1 30%;
-    height: 100%;
+/* ===== 基本レイアウト ===== */
+#app-container {
+    height: calc(100vh - 2em);
     display: flex;
     flex-direction: column;
-    min-width: 20%;
 }
 
-/* 第2パターンのリサイズ時の動的スタイル用 */
-.layout-expanded #ingest-container.resizing {
-    flex: none !important;
-}
-
-.layout-expanded #pdf-preview-expanded.resizing {
-    flex: none !important;
-}
-
-.layout-expanded #pane-top {
-    flex: 0 0 auto;
+#bottom-container {
     display: flex;
-    padding: 0.5em;
+    flex: 1;
 }
 
-.layout-expanded #pane-top-left {
-    width: 100%;
-}
-
-.layout-expanded #pane-top-right {
-    display: none;
-}
-
-.layout-expanded #pane-bottom {
-    flex: 1 1 auto;
+#left-pane {
     display: flex;
-    overflow: hidden;
+    flex-direction: column;
+    flex: 1;
 }
 
-.layout-expanded #log-pane {
-    width: 100%;
-    height: 100%;
-    flex: 1 1 auto;
-    font-size: 0.85em;
-}
-
-.layout-expanded #splitter,
-.layout-expanded #editor-pane {
-    display: none;
-}
-
-.layout-expanded #splitter-expanded {
-    display: block;
-}
-
-.layout-expanded #pdf-preview-expanded {
-    display: flex;
-    flex: 1 1 50%;
-    height: 100%;
+/* ===== パネル共通スタイル ===== */
+.panel {
     background: white;
-    border-left: 1px solid #ccc;
-    min-width: 20%;
+    border: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
 }
 
-.layout-expanded #pdf-preview-expanded iframe {
+.panel-header {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-bottom: 1px solid #dee2e6;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.panel-content {
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
+    background: white;
+}
+
+#pdf-frame {
     width: 100%;
     height: 100%;
     border: none;
 }
 
-.layout-expanded #expand-btn {
-    display: none;
+/* ===== リサイザー ===== */
+.resizer {
+    background: #dee2e6;
+    transition: background-color 0.2s;
 }
 
-.layout-expanded #collapse-btn {
-    display: block;
+.resizer:hover {
+    background: #adb5bd;
 }
 
-/* 第2パターンでのフォーム要素の縮小 */
-.layout-expanded .form-section {
-    margin-bottom: 0.05em;
-    font-size: 0.9em;
+.horizontal-resizer {
+    height: 5px;
+    cursor: row-resize;
 }
 
-.layout-expanded .form-section label {
-    min-width: 100px;
-    font-size: 0.85em;
+.vertical-resizer {
+    width: 5px;
+    cursor: col-resize;
 }
 
-.layout-expanded .page-title {
+/* ===== フォーム要素（既存ingest系を踏襲） ===== */
+.page-title {
+    margin: 0 0 8px;
     font-size: 1.2em;
-    margin-bottom: 0.5em;
-}
-
-.layout-expanded .form-actions {
-    margin-top: 0.5em;
-}
-
-.layout-expanded .form-actions button {
-    padding: 4px 8px;
-    font-size: 0.9em;
-    margin-right: 0.5em;
-}
-
-/* フォーム */
-#ingest-form {
-    display: block;
-    width: 100%;
+    line-height: 1.5em;
 }
 
 .form-section {
@@ -287,7 +132,6 @@
     margin-bottom: 0.1em;
     line-height: 1.2;
     width: 100%;
-    flex-wrap: wrap;
 }
 
 .form-section label {
@@ -295,18 +139,7 @@
     flex-shrink: 0;
 }
 
-/* 第2パターンでのフォーム要素の折り返し対応 */
-.layout-expanded .form-section {
-    flex-wrap: wrap;
-    align-items: flex-start;
-}
-
-.layout-expanded .form-section label {
-    min-width: 80px;
-    margin-right: 0.5em;
-}
-
-#quality_threshold {
+#quality_threshold, #quality_threshold2 {
     text-align: center;
 }
 
@@ -318,75 +151,154 @@
     margin-right: 1em;
 }
 
-/* ログ表示 */
-.file-header {
-    background: #eef;
-    padding: 4px 8px;
-    font-weight: bold;
-    margin-top: 1em;
+/* ===== ボタンスタイル ===== */
+.btn-test {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
 }
 
-.file-progress {
-    font-size: 0.9em;
-    color: #555;
-    margin-left: 1ch;
+.btn-test:hover {
+    background: #218838;
 }
 
-.page-header {
-    margin-left: 1ch;
-    font-style: italic;
-}
-
-.file-section {
-    margin-left: 1em;
-    margin-bottom: 1em;
-}
-
-.file-section pre {
-    white-space: pre-wrap;
-    word-break: break-word;
-    background: #fff;
-    padding: 8px;
-    border: 1px solid #ddd;
-}
-
-/* 処理中のナビゲーション無効化 */
-body.processing-in-progress nav a {
-    pointer-events: none;
-    opacity: 0.5;
+button:disabled {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
-body.processing-in-progress nav a::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.1);
-    z-index: 1;
+/* ===== ログ表示 ===== */
+#log-content {
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+    max-height: 100%;
+    overflow-y: auto;
+    padding: 8px;
+    background: white;
+    border: none;
 }
 
-/* 処理中の警告メッセージ */
-#nav-warning {
+/* ===== 設定パネルコンテナ ===== */
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* ===== レイアウトパターン ===== */
+
+/* PDFプレビューなし（デフォルト）- 縦2分割 */
+.layout-no-preview #top-container {
+    flex: 0 0 160px;
+    display: flex;
+}
+
+.layout-no-preview #top-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-no-preview #left-container {
     display: none;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(255, 193, 7, 0.95);
-    color: #856404;
-    padding: 1em 1.5em;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    z-index: 10001;
-    font-weight: bold;
-    text-align: center;
-    border: 2px solid #ffc107;
 }
 
-/* OCR設定モーダル */
+.layout-no-preview #left-resizer {
+    display: none;
+}
+
+.layout-no-preview #log-panel {
+    flex: 1;
+}
+
+.layout-no-preview #left-pane {
+    flex: 1;
+}
+
+.layout-no-preview #vertical-resizer,
+.layout-no-preview #pdf-panel {
+    display: none;
+}
+
+/* 第1パターン：上部設定、下部に処理ログとPDFの横分割 */
+.layout-pattern1 #top-container {
+    flex: 0 0 200px;
+    display: flex;
+}
+
+.layout-pattern1 #top-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern1 #left-container {
+    display: none;
+}
+
+.layout-pattern1 #left-resizer {
+    display: none;
+}
+
+.layout-pattern1 #log-panel {
+    flex: 1;
+}
+
+.layout-pattern1 #left-pane {
+    flex: 1;
+}
+
+.layout-pattern1 #vertical-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern1 #pdf-panel {
+    flex: 1;
+    display: flex;
+}
+
+/* 第2パターン：左側に設定と処理ログの縦分割、右側にPDF */
+.layout-pattern2 #top-container {
+    display: none;
+}
+
+.layout-pattern2 #top-resizer {
+    display: none;
+}
+
+.layout-pattern2 #left-container {
+    flex: 0 0 200px;
+    display: flex;
+}
+
+.layout-pattern2 #left-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern2 #log-panel {
+    flex: 1;
+}
+
+.layout-pattern2 #left-pane {
+    flex: 1;
+}
+
+.layout-pattern2 #vertical-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern2 #pdf-panel {
+    flex: 1;
+    display: flex;
+}
+
+/* ===== モーダル（OCR設定用） ===== */
 .modal {
     display: none;
     position: fixed;
@@ -431,36 +343,6 @@ body.processing-in-progress nav a::after {
     color: black;
 }
 
-.ocr-setting-group {
-    margin-bottom: 15px;
-}
-
-.ocr-setting-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.ocr-setting-group input,
-.ocr-setting-group select {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.ocr-setting-group input[type="checkbox"] {
-    width: auto;
-    margin-right: 8px;
-}
-
-.ocr-setting-description {
-    font-size: 0.9em;
-    color: #666;
-    margin-top: 3px;
-}
-
 .modal-actions {
     margin-top: 20px;
     text-align: right;
@@ -486,25 +368,20 @@ body.processing-in-progress nav a::after {
     color: white;
 }
 
-.preset-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 8px;
-}
-
-.preset-info {
-    flex: 1;
-}
-
-.preset-name {
+/* ===== 処理中のナビゲーション警告 ===== */
+#nav-warning {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 193, 7, 0.95);
+    color: #856404;
+    padding: 1em 1.5em;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
     font-weight: bold;
-}
-
-.preset-details {
-    font-size: 0.9em;
-    color: #666;
+    text-align: center;
+    border: 2px solid #ffc107;
 }

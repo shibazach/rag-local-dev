@@ -1,0 +1,510 @@
+/* ===== 基本レイアウト ===== */
+#ingest-container {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 2em);
+}
+
+/* 上ペイン */
+#pane-top {
+    flex: 0 0 auto;
+    padding: 1em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    position: relative;
+    display: flex;
+    transition: all 0.3s ease;
+}
+
+#pane-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
+    z-index: -1;
+}
+
+#pane-top-left {
+    flex: 1 1 auto;
+    transition: all 0.3s ease;
+}
+
+#pane-top-right {
+    flex: 0 0 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* 下ペイン */
+#pane-bottom {
+    flex: 1 1 auto;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+#log-pane {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 1em;
+    background: #fafafa;
+    box-sizing: border-box;
+}
+
+#splitter {
+    flex: 0 0 5px;
+    cursor: col-resize;
+    background: #ccc;
+}
+
+#splitter-expanded {
+    display: none;
+    flex: 0 0 5px;
+    cursor: col-resize;
+    background: #ccc;
+    height: 100vh;
+}
+
+#editor-pane {
+    flex: 0 0 40%;
+    display: none;
+    border-left: 1px solid #ccc;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+#editor-pane textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 1em;
+    box-sizing: border-box;
+    resize: none;
+    overflow: auto;
+}
+
+/* ===== PDFプレビューエリア ===== */
+#pdf-preview-area {
+    width: 100%;
+    height: 100%;
+    display: none;
+    flex-direction: column;
+}
+
+#pdf-preview-expanded {
+    display: none;
+}
+
+/* ===== レイアウト切り替えボタン ===== */
+.layout-toggle-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    transition: all 0.2s ease;
+    z-index: 100;
+}
+
+.layout-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#collapse-btn {
+    display: none;
+}
+
+/* ===== 第1パターン（通常のPDFプレビュー）===== */
+.layout-preview-normal #pane-top-right {
+    display: none !important;
+}
+
+.layout-preview-normal #pane-bottom {
+    display: flex !important;
+    flex-direction: row !important;
+}
+
+.layout-preview-normal #log-pane {
+    flex: 1 1 50%;
+    min-width: 20%;
+}
+
+.layout-preview-normal #splitter {
+    display: flex !important;
+    flex: 0 0 5px;
+}
+
+.layout-preview-normal #editor-pane {
+    display: flex !important;
+    flex: 1 1 50%;
+    min-width: 20%;
+}
+
+/* リサイズ時の動的スタイル用（!importantで強制適用） */
+.layout-preview-normal #log-pane.resizing {
+    flex: none !important;
+}
+
+.layout-preview-normal #editor-pane.resizing {
+    flex: none !important;
+}
+
+
+
+/* ===== 第2パターン（拡張モード：設定縮小、PDFプレビュー拡大）===== */
+.layout-expanded main {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+    padding: 0;
+}
+
+.layout-expanded #ingest-container {
+    flex: 1 1 30%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 20%;
+}
+
+/* 第2パターンのリサイズ時の動的スタイル用 */
+.layout-expanded #ingest-container.resizing {
+    flex: none !important;
+}
+
+.layout-expanded #pdf-preview-expanded.resizing {
+    flex: none !important;
+}
+
+.layout-expanded #pane-top {
+    flex: 0 0 auto;
+    display: flex;
+    padding: 0.5em;
+}
+
+.layout-expanded #pane-top-left {
+    width: 100%;
+}
+
+.layout-expanded #pane-top-right {
+    display: none;
+}
+
+.layout-expanded #pane-bottom {
+    flex: 1 1 auto;
+    display: flex;
+    overflow: hidden;
+}
+
+.layout-expanded #log-pane {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    font-size: 0.85em;
+}
+
+.layout-expanded #splitter,
+.layout-expanded #editor-pane {
+    display: none;
+}
+
+.layout-expanded #splitter-expanded {
+    display: block;
+}
+
+.layout-expanded #pdf-preview-expanded {
+    display: flex;
+    flex: 1 1 50%;
+    height: 100%;
+    background: white;
+    border-left: 1px solid #ccc;
+    min-width: 20%;
+}
+
+.layout-expanded #pdf-preview-expanded iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.layout-expanded #expand-btn {
+    display: none;
+}
+
+.layout-expanded #collapse-btn {
+    display: block;
+}
+
+/* 第2パターンでのフォーム要素の縮小 */
+.layout-expanded .form-section {
+    margin-bottom: 0.05em;
+    font-size: 0.9em;
+}
+
+.layout-expanded .form-section label {
+    min-width: 100px;
+    font-size: 0.85em;
+}
+
+.layout-expanded .page-title {
+    font-size: 1.2em;
+    margin-bottom: 0.5em;
+}
+
+.layout-expanded .form-actions {
+    margin-top: 0.5em;
+}
+
+.layout-expanded .form-actions button {
+    padding: 4px 8px;
+    font-size: 0.9em;
+    margin-right: 0.5em;
+}
+
+/* フォーム */
+#ingest-form {
+    display: block;
+    width: 100%;
+}
+
+.form-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.1em;
+    line-height: 1.2;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.form-section label {
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+/* 第2パターンでのフォーム要素の折り返し対応 */
+.layout-expanded .form-section {
+    flex-wrap: wrap;
+    align-items: flex-start;
+}
+
+.layout-expanded .form-section label {
+    min-width: 80px;
+    margin-right: 0.5em;
+}
+
+#quality_threshold {
+    text-align: center;
+}
+
+.form-actions {
+    margin-top: 1em;
+}
+
+.form-actions button {
+    margin-right: 1em;
+}
+
+/* ログ表示 */
+.file-header {
+    background: #eef;
+    padding: 4px 8px;
+    font-weight: bold;
+    margin-top: 1em;
+}
+
+.file-progress {
+    font-size: 0.9em;
+    color: #555;
+    margin-left: 1ch;
+}
+
+.page-header {
+    margin-left: 1ch;
+    font-style: italic;
+}
+
+.file-section {
+    margin-left: 1em;
+    margin-bottom: 1em;
+}
+
+.file-section pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: #fff;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+/* 処理中のナビゲーション無効化 */
+body.processing-in-progress nav a {
+    pointer-events: none;
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+body.processing-in-progress nav a::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1);
+    z-index: 1;
+}
+
+/* 処理中の警告メッセージ */
+#nav-warning {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 193, 7, 0.95);
+    color: #856404;
+    padding: 1em 1.5em;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
+    font-weight: bold;
+    text-align: center;
+    border: 2px solid #ffc107;
+}
+
+/* OCR設定モーダル */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+}
+
+.ocr-setting-group {
+    margin-bottom: 15px;
+}
+
+.ocr-setting-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.ocr-setting-group input,
+.ocr-setting-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.ocr-setting-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 8px;
+}
+
+.ocr-setting-description {
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 3px;
+}
+
+.modal-actions {
+    margin-top: 20px;
+    text-align: right;
+    border-top: 1px solid #ddd;
+    padding-top: 15px;
+}
+
+.modal-actions button {
+    margin-left: 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.preset-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.preset-info {
+    flex: 1;
+}
+
+.preset-name {
+    font-weight: bold;
+}
+
+.preset-details {
+    font-size: 0.9em;
+    color: #666;
+}

@@ -59,7 +59,9 @@ class TryOcrMain {
     window.addEventListener('beforeunload', (e) => {
       if (this.processingInProgress) {
         e.preventDefault();
-        e.returnValue = 'OCR処理中です。ページを離れますか？';
+        // 現代的なブラウザでは、カスタムメッセージは表示されないが、
+        // preventDefault()により離脱確認ダイアログが表示される
+        return 'OCR処理中です。ページを離れますか？';
       }
     });
 
@@ -135,6 +137,7 @@ class TryOcrMain {
     this.processingInProgress = true;
     this.setFormDisabled(true);
     this.uiManager.showProcessing();
+    this.uiManager.showProcessingStatus();
 
     try {
       this.controller = new AbortController();
@@ -143,6 +146,10 @@ class TryOcrMain {
       formData.append("file", selectedFile);
       formData.append("engine_name", engineName);
       formData.append("page_num", pageNum);
+
+      // 誤字修正チェックボックスの値を追加
+      const useCorrectionCheckbox = document.getElementById("use-correction-dict");
+      formData.append("use_correction", useCorrectionCheckbox ? useCorrectionCheckbox.checked : false);
 
       // エンジンパラメータを追加
       const engineParams = this.engineManager.getCurrentEngineParameters();
@@ -197,6 +204,7 @@ class TryOcrMain {
     this.controller = null;
     this.setFormDisabled(false);
     this.uiManager.hideProcessing();
+    this.uiManager.hideProcessingStatus();
   }
 
   // フォーム要素の有効/無効切り替え
@@ -243,6 +251,7 @@ class TryOcrMain {
     this.processingInProgress = true;
     this.setFormDisabled(true);
     this.uiManager.showProcessing();
+    this.uiManager.showProcessingStatus();
 
     try {
       this.controller = new AbortController();
@@ -260,6 +269,10 @@ class TryOcrMain {
         formData.append("file", selectedFile);
         formData.append("engine_name", engineName);
         formData.append("page_num", pageNum);
+
+        // 誤字修正チェックボックスの値を追加
+        const useCorrectionCheckbox = document.getElementById("use-correction-dict");
+        formData.append("use_correction", useCorrectionCheckbox ? useCorrectionCheckbox.checked : false);
 
         try {
           const response = await fetch("/api/try_ocr/process", {

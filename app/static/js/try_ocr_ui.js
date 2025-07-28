@@ -3,15 +3,29 @@
 class TryOcrUI {
   constructor() {
     this.isResizing = false;
-    this.processingStartTime = null;
-    this.processingTimerInterval = null;
     
-    // 新規追加: ログ関連要素
-    this.processingStatus = document.getElementById('processing-status');
-    this.statusMessage = document.querySelector('.status-message');
-    this.statusTimer = document.querySelector('.status-timer');
-    this.logContent = document.getElementById('log-content');
-    this.startTime = null;
+    // タイマー管理の統一
+    this.processingStartTime = null;
+    this.overlayTimerInterval = null;  // オーバーレイ用タイマー
+    this.statusTimerInterval = null;   // ステータス表示用タイマー
+    
+    // DOM要素は初期化時に取得（遅延初期化）
+    this.processingStatus = null;
+    this.statusMessage = null;
+    this.statusTimer = null;
+  }
+
+  // DOM要素の遅延初期化
+  initializeDOMElements() {
+    if (!this.processingStatus) {
+      this.processingStatus = document.getElementById('processing-status');
+    }
+    if (!this.statusMessage) {
+      this.statusMessage = document.querySelector('.status-message');
+    }
+    if (!this.statusTimer) {
+      this.statusTimer = document.querySelector('.status-timer');
+    }
   }
 
   // 処理中オーバーレイの表示/非表示
@@ -42,6 +56,9 @@ class TryOcrUI {
   updateProcessingProgress(message) {
     console.log('🔄 進捗更新:', message);
     
+    // DOM要素の初期化を確実に行う
+    this.initializeDOMElements();
+    
     // 既存のオーバーレイ更新
     const processingMessage = document.getElementById('processing-message');
     if (processingMessage) {
@@ -53,58 +70,48 @@ class TryOcrUI {
       }
     }
     
-    // 新規追加: ステータス表示とログ更新
+    // ステータス表示の更新
     if (this.statusMessage) {
       this.statusMessage.textContent = message;
     }
-    this.addLogMessage(`🔄 ${message}`, 'progress');
   }
 
-  // 処理ログにメッセージを追加
-  addLogMessage(message, type = 'info') {
-    if (!this.logContent) return;
-    
-    const timestamp = new Date().toLocaleTimeString();
-    const logEntry = document.createElement('div');
-    logEntry.className = `log-entry log-${type}`;
-    logEntry.innerHTML = `<span class="log-time">[${timestamp}]</span> ${message}`;
-    
-    this.logContent.appendChild(logEntry);
-    this.logContent.scrollTop = this.logContent.scrollHeight;
-  }
+
 
   // 処理開始時の表示
   showProcessingStatus() {
-    this.startTime = Date.now();
+    // DOM要素の初期化を確実に行う
+    this.initializeDOMElements();
+    
+    this.processingStartTime = Date.now();
     if (this.processingStatus) {
       this.processingStatus.style.display = 'flex';
     }
-    this.addLogMessage('🚀 OCR処理を開始しました', 'info');
     this.startStatusTimer();
   }
 
   // 処理完了時の非表示
   hideProcessingStatus() {
-    if (this.processingTimerInterval) {
-      clearInterval(this.processingTimerInterval);
-      this.processingTimerInterval = null;
-    }
+    // DOM要素の初期化を確実に行う
+    this.initializeDOMElements();
     
-    const totalTime = this.startTime ? Math.floor((Date.now() - this.startTime) / 1000) : 0;
-    const timeStr = totalTime >= 60 ? `${Math.floor(totalTime/60)}分${totalTime%60}秒` : `${totalTime}秒`;
-    this.addLogMessage(`🏁 全処理完了 (総処理時間: ${timeStr})`, 'complete');
+    // ステータス用タイマーを停止
+    if (this.statusTimerInterval) {
+      clearInterval(this.statusTimerInterval);
+      this.statusTimerInterval = null;
+    }
     
     if (this.processingStatus) {
       this.processingStatus.style.display = 'none';
     }
-    this.startTime = null;
+    this.processingStartTime = null;
   }
 
   // ステータスタイマー開始
   startStatusTimer() {
-    this.processingTimerInterval = setInterval(() => {
-      if (this.startTime && this.statusTimer) {
-        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+    this.statusTimerInterval = setInterval(() => {
+      if (this.processingStartTime && this.statusTimer) {
+        const elapsed = Math.floor((Date.now() - this.processingStartTime) / 1000);
         const timeStr = elapsed >= 60 ? `${Math.floor(elapsed/60)}分${elapsed%60}秒` : `${elapsed}秒`;
         this.statusTimer.textContent = `処理時間: ${timeStr}`;
       }
@@ -117,17 +124,16 @@ class TryOcrUI {
     this.updateProcessingProgress('OCR処理中…');
     
     // 1秒間隔で経過時間を更新
-    this.processingTimerInterval = setInterval(() => {
+    this.overlayTimerInterval = setInterval(() => {
       this.updateProcessingProgress('OCR処理中…');
     }, 1000);
   }
 
   // 処理タイマーの停止
   stopProcessingTimer() {
-    this.processingStartTime = null;
-    if (this.processingTimerInterval) {
-      clearInterval(this.processingTimerInterval);
-      this.processingTimerInterval = null;
+    if (this.overlayTimerInterval) {
+      clearInterval(this.overlayTimerInterval);
+      this.overlayTimerInterval = null;
     }
   }
 
@@ -265,57 +271,11 @@ class TryOcrUI {
   displayResult(result) {
     console.log('📊 OCR結果を表示:', result);
     
-    // 処理時間の表示用文字列を作成
-    const processingTime = result.processing_time ? `${Math.floor(result.processing_time)}秒` : '不明';
-    const engineName = result.engine_name || 'Unknown';
-    
-    // ログに成功メッセージを追加
-    this.addLogMessage(`✅ ${engineName}: 処理完了 (${processingTime})`, 'success');
-    
-    // 展開可能な詳細結果をログに追加
-    const details = this.createExpandableResult(result);
-    this.logContent.appendChild(details);
-    this.logContent.scrollTop = this.logContent.scrollHeight;
-    
-    // 既存の結果表示処理
+    // 結果表示処理
     this.showResults(result);
   }
 
-  // 展開可能な結果詳細を作成
-  createExpandableResult(result) {
-    const details = document.createElement('details');
-    details.className = 'result-details';
-    
-    const summary = document.createElement('summary');
-    summary.innerHTML = `▶ ${result.engine_name || 'Unknown'} 詳細結果`;
-    details.appendChild(summary);
-    
-    const content = document.createElement('div');
-    content.className = 'result-content';
-    
-    // 信頼度の表示（存在する場合）
-    const confidenceStr = result.confidence ? `${result.confidence}%` : '不明';
-    const processingTimeStr = result.processing_time ? `${result.processing_time.toFixed(2)}秒` : '不明';
-    const textLength = (result.text || '').length;
-    
-    content.innerHTML = `
-      <div><strong>信頼度:</strong> ${confidenceStr}</div>
-      <div><strong>処理時間:</strong> ${processingTimeStr}</div>
-      <div><strong>文字数:</strong> ${textLength}文字</div>
-      <div><strong>認識テキスト:</strong></div>
-      <pre class="ocr-text">${result.text || 'テキストが抽出されませんでした'}</pre>
-    `;
-    details.appendChild(content);
-    
-    // 展開状態の切り替えアイコン更新
-    details.addEventListener('toggle', () => {
-      summary.innerHTML = details.open ? 
-        `▼ ${result.engine_name || 'Unknown'} 詳細結果` : 
-        `▶ ${result.engine_name || 'Unknown'} 詳細結果`;
-    });
-    
-    return details;
-  }
+
 
   // 既存の結果表示処理（結果セクション用）
   showResults(result) {
@@ -342,9 +302,16 @@ class TryOcrUI {
 
     const statsDiv = document.createElement("div");
     statsDiv.className = "result-stats";
+    
+    // 修正箇所数の表示を追加
+    let correctionStats = '';
+    if (result.correction_count && result.correction_count > 0) {
+      correctionStats = ` | 修正箇所: ${result.correction_count}箇所`;
+    }
+    
     statsDiv.innerHTML = `
       処理時間: ${result.processing_time?.toFixed(2) || 'N/A'}秒 | 
-      文字数: ${(result.text || '').length}文字
+      文字数: ${(result.text || '').length}文字${correctionStats}
     `;
 
     content.appendChild(textDiv);
@@ -360,10 +327,7 @@ class TryOcrUI {
   displayError(message) {
     console.log('❌ エラーを表示:', message);
     
-    // ログにエラーメッセージを追加
-    this.addLogMessage(`❌ ${message}`, 'error');
-    
-    // 既存のエラー表示処理
+    // エラー表示処理
     this.showResults({
       engine_name: "エラー",
       text: message,
@@ -374,8 +338,27 @@ class TryOcrUI {
 
   // 結果クリア
   clearResults() {
+    // DOM要素の初期化を確実に行う
+    this.initializeDOMElements();
+    
     const resultsContainer = document.getElementById("results-container");
     resultsContainer.innerHTML = '<p style="color:#888; text-align:center; margin-top:2em;">OCRエンジンとファイルを選択して「OCR実行」ボタンを押してください</p>';
+    
+    // 処理ステータスを隠す
+    if (this.processingStatus) {
+      this.processingStatus.style.display = 'none';
+    }
+    
+    // 全てのタイマーをクリア
+    if (this.overlayTimerInterval) {
+      clearInterval(this.overlayTimerInterval);
+      this.overlayTimerInterval = null;
+    }
+    if (this.statusTimerInterval) {
+      clearInterval(this.statusTimerInterval);
+      this.statusTimerInterval = null;
+    }
+    this.processingStartTime = null;
   }
 
   // 初期化処理

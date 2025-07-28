@@ -91,30 +91,17 @@
   <!-- 下ペイン：結果とPDF -->
   <div id="pane-bottom">
     <div id="results-pane">
-      <!-- 処理ログセクション -->
-      <div class="processing-section">
-        <div id="processing-status" style="display: none;">
-          <div class="status-message">待機中</div>
-          <div class="status-timer"></div>
-        </div>
-        <div class="log-section">
-          <h3>📋 処理ログ</h3>
-          <div id="log-content" class="log-content">
-            <div class="log-entry log-info">
-              <span class="log-time">[待機中]</span> OCRエンジンとファイルを選択して「OCR実行」ボタンを押してください
-            </div>
-          </div>
-        </div>
+      <!-- 処理ステータス（最上位のみ） -->
+      <div id="processing-status" style="display: none;">
+        <div class="status-message">待機中</div>
+        <div class="status-timer"></div>
       </div>
       
-      <!-- 結果表示セクション -->
-      <div class="results-section">
-        <h3>📊 OCR結果</h3>
-        <div id="results-container">
-          <p style="color:#888; text-align:center; margin-top:1em;">
-            処理完了後、ここに結果が表示されます
-          </p>
-        </div>
+      <!-- OCR結果表示エリア -->
+      <div id="results-container">
+        <p style="color:#888; text-align:center; margin-top:2em;">
+          OCRエンジンとファイルを選択して「OCR実行」ボタンを押してください
+        </p>
       </div>
     </div>
 

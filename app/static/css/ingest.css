@@ -269,23 +269,45 @@
 }
 
 .form-actions {
-    margin-top: 0.8em;
+    margin-top: 0.6em;
 }
 
 .form-actions button {
-    margin-right: 0.8em;
-    padding: 2px 8px; /* パディングを小さく */
+    margin-right: 0.75em;
+    padding: 2px 8px;
     font-size: 0.9em;
-    height: 24px; /* テキストボックスと同じ高さ */
+    height: 1.8em;
     border: 1px solid #ccc;
     border-radius: 3px;
     background: #f8f9fa;
     cursor: pointer;
-    box-sizing: border-box; /* パディングを含めた高さ計算 */
+    box-sizing: border-box;
 }
 
 .form-actions button:hover {
     background: #e9ecef;
+}
+
+.form-actions button:disabled {
+    background: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* キャンセルボタンの統一スタイル */
+#cancel-btn {
+    background: #f1f3f4 !important;
+    color: #5f6368 !important;
+    border: 1px solid #dadce0 !important;
+}
+
+#cancel-btn:hover:not(:disabled) {
+    background: #e8eaed !important;
+}
+
+#cancel-btn:disabled {
+    background: #f8f9fa !important;
+    color: #9aa0a6 !important;
 }
 
 /* ===== ボタンスタイル ===== */

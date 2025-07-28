@@ -115,42 +115,7 @@
   </div>
 </div>
 
-<!-- OCR設定モーダル -->
-<div id="ocr-settings-modal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>🔍 OCR設定</h3>
-      <span class="close" id="ocr-settings-close">&times;</span>
-    </div>
-    <div id="ocr-settings-content">
-      <!-- 動的に生成される設定項目 -->
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" id="ocr-settings-cancel">キャンセル</button>
-      <button type="button" class="btn-primary" id="ocr-settings-save">保存</button>
-    </div>
-  </div>
-</div>
-
-<!-- OCRプリセットモーダル -->
-<div id="ocr-presets-modal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>📋 OCRプリセット</h3>
-      <span class="close" id="ocr-presets-close">&times;</span>
-    </div>
-    <div style="margin-bottom: 15px;">
-      <input type="text" id="new-preset-name" placeholder="新しいプリセット名" style="width: 70%; margin-right: 10px;">
-      <button type="button" class="btn-primary" id="save-current-preset">現在の設定を保存</button>
-    </div>
-    <div id="ocr-presets-list">
-      <!-- 動的に生成されるプリセット一覧 -->
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn-secondary" id="ocr-presets-cancel">閉じる</button>
-    </div>
-  </div>
-</div>
+<!-- OCR設定・プリセットモーダルはJavaScriptで動的生成されます -->
 
 <!-- 処理中のナビゲーション警告 -->
 <div id="nav-warning">
@@ -160,6 +125,7 @@
 </div>
 
 <!-- 機能別に分割されたJavaScriptファイル -->
+<script src="{{ url_for('static', path='js/ocr_settings_dialog.js') }}"></script>
 <script src="{{ url_for('static', path='js/ingest_layout.js') }}"></script>
 <script src="{{ url_for('static', path='js/ingest_resize.js') }}"></script>
 <script src="{{ url_for('static', path='js/ingest_sse.js') }}"></script>

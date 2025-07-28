@@ -23,3 +23,14 @@ git symbolic-ref --short -q HEAD   # => main なら OK
 
 # ローカル main を GitHub の main に強制プッシュ
 git push --force-with-lease origin main
+
+
+
+
+
+
+
+# 1. ローカルの変更をすべて破棄して、リモートの最新状態に強制的に合わせる
+git fetch origin
+git reset --hard origin/main  # ブランチ名がmainの場合。他のブランチなら適宜変更
+git clean -fd

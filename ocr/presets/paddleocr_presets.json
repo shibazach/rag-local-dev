@@ -1,0 +1,22 @@
+{
+  "標準設定": {
+    "lang": "japan",
+    "use_gpu": false,
+    "zoom_factor": 2.0,
+    "use_angle_cls": true,
+    "use_detection": true,
+    "use_recognition": true,
+    "use_classification": true,
+    "show_log": false
+  },
+  "高精度設定": {
+    "lang": "japan",
+    "use_gpu": false,
+    "zoom_factor": 3.0,
+    "use_angle_cls": true,
+    "use_detection": true,
+    "use_recognition": true,
+    "use_classification": true,
+    "show_log": false
+  }
+}

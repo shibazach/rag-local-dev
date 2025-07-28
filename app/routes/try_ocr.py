@@ -42,50 +42,78 @@ async def try_ocr_page(request: Request):
 
 @router.post("/api/try_ocr/process")
 async def process_ocr(
-    file_id: str = Form(...),
+    file: UploadFile = File(...),
     engine_name: str = Form(...),
-    page_num: int = Form(0)
+    page_num: int = Form(0),
+    use_correction: bool = Form(False)
 ):
-    """指定されたファイルとエンジンでOCR処理を実行"""
+    """アップロードされたファイルでOCR処理を実行"""
     try:
-        # ファイル情報を取得
-        from db.handler import get_file_path
-        file_path = get_file_path(file_id)
+        # 一時ファイルに保存
+        with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as temp_file:
+            content = await file.read()
+            temp_file.write(content)
+            temp_path = temp_file.name
         
-        if not file_path or not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail="ファイルが見つかりません")
-        
-        # OCRファクトリを初期化
-        ocr_factory = OCREngineFactory()
-        available_engines_dict = ocr_factory.get_available_engines()
-        
-        # エンジン名からIDを特定
-        engine_id = None
-        for eid, engine_info in available_engines_dict.items():
-            if engine_info['name'] == engine_name and engine_info['available']:
-                engine_id = eid
-                break
-        
-        if not engine_id:
-            raise HTTPException(status_code=404, detail=f"OCRエンジン '{engine_name}' が見つかりません")
-        
-        # 処理時間を測定
-        start_time = time.time()
-        
-        # ページ番号の処理
-        if page_num == -1:  # 全ページ処理
-            result = process_all_pages_with_factory(engine_id, file_path, ocr_factory)
-        else:
-            result = ocr_factory.process_with_settings(engine_id, file_path, page_num)
-        
-        processing_time = time.time() - start_time
-        
-        # 処理時間を結果に追加
-        result["processing_time"] = round(processing_time, 2)
-        result["engine_name"] = engine_name
-        result["page_num"] = page_num
-        
-        return result
+        try:
+            # OCRファクトリを初期化
+            ocr_factory = OCREngineFactory()
+            available_engines_dict = ocr_factory.get_available_engines()
+            
+            # エンジン名からIDを特定
+            engine_id = None
+            for eid, engine_info in available_engines_dict.items():
+                if engine_info['name'] == engine_name and engine_info['available']:
+                    engine_id = eid
+                    break
+            
+            if not engine_id:
+                raise HTTPException(status_code=404, detail=f"OCRエンジン '{engine_name}' が見つかりません")
+            
+            # 処理時間を測定
+            start_time = time.time()
+            
+            # ページ番号の処理
+            if page_num == -1:  # 全ページ処理
+                result = process_all_pages_with_factory(engine_id, temp_path, ocr_factory)
+            else:
+                result = ocr_factory.process_with_settings(engine_id, temp_path, page_num)
+            
+            # 誤字修正辞書による置換処理
+            if use_correction and result["success"]:
+                correction_dict = load_correction_dict()
+                original_text = result["text"]  # 元のテキストを保存
+                
+                # 統合された修正処理を実行（誤字修正 + 全角→半角変換）
+                final_text, all_corrections = apply_all_corrections(original_text, correction_dict)
+                
+                # 置換が行われた場合
+                if all_corrections:
+                    # 元のテキストを保存
+                    result["original_text"] = original_text
+                    # 修正後のテキストを設定
+                    result["text"] = final_text
+                    # 置換情報を追加
+                    result["corrections"] = all_corrections
+                    # HTMLマークアップを追加（元のテキストを使用）
+                    result["html_text"] = highlight_corrections(original_text, all_corrections)
+                    # 置換数を追加
+                    result["correction_count"] = len(all_corrections)
+            
+            processing_time = time.time() - start_time
+            
+            # 処理時間を結果に追加
+            result["processing_time"] = round(processing_time, 2)
+            result["engine_name"] = engine_name
+            result["page_num"] = page_num
+            result["file_name"] = file.filename
+            
+            return result
+            
+        finally:
+            # 一時ファイルを削除
+            if os.path.exists(temp_path):
+                os.unlink(temp_path)
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

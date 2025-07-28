@@ -1,5 +1,4 @@
-// app/static/js/ingest_main.js @作成日時: 2025-07-25
-// REM: メイン統合ファイル - 各機能モジュールを統合
+// app/static/js/ingest_main.js
 
 (function() {
   document.addEventListener("DOMContentLoaded", () => {

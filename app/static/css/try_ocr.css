@@ -1,0 +1,595 @@
+/* app/static/css/try_ocr.css */
+
+/* ペイン上下分割（ingest/chatと同様） */
+#try-ocr-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 2em);
+}
+
+/* 上ペイン：2分割（リサイズ可能） */
+#pane-top {
+  flex: 0 0 50%;
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  position: relative;
+  min-height: 200px;
+}
+
+/* 上ペインの背景オーバーレイ */
+#pane-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
+  z-index: -1;
+}
+
+/* 左上ペイン：基本設定（ファイル選択含む） */
+#top-left {
+  flex: 0 0 50%;
+  padding: 1em;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 上ペイン用スプリッター */
+#top-splitter {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: rgba(255, 255, 255, 0.4);
+  border-left: 1px solid rgba(255, 255, 255, 0.6);
+  border-right: 1px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  z-index: 2;
+}
+
+#top-splitter:hover {
+  background: rgba(0, 123, 255, 0.3);
+}
+
+/* 右上ペイン：エンジン調整 */
+#top-right {
+  flex: 1 1 auto;
+  padding: 1em;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* エンジンパラメータ表示エリア */
+#engine-parameters {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-height: 400px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  background: white;
+}
+
+/* パラメータカテゴリ */
+.parameter-category {
+  margin-bottom: 4px;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+  padding: 3px 8px;
+  border-radius: 3px;
+  font-weight: bold;
+  margin-bottom: 2px;
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid #007bff;
+  font-size: 12px;
+}
+
+.category-header:hover {
+  background: #e9ecef;
+}
+
+.category-header .toggle-icon {
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.category-header.collapsed .toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.category-content {
+  display: block;
+  padding-left: 6px;
+}
+
+.category-content.collapsed {
+  display: none;
+}
+
+/* パラメータ項目 */
+.parameter-item {
+  margin-bottom: 1px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+/* パラメータの横並びレイアウト */
+.parameter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.parameter-label {
+  font-weight: normal;
+  min-width: 90px;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.parameter-control {
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.parameter-description {
+  flex: 1;
+  font-size: 11px;
+  color: #6c757d;
+  line-height: 1.2;
+}
+
+.parameter-input {
+  width: 100%;
+  padding: 2px 4px;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  font-size: 12px;
+}
+
+.parameter-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* チェックボックス用スタイル */
+.parameter-input[type="checkbox"] {
+  width: auto;
+  transform: scale(1.2);
+  margin: 0;
+}
+
+.parameter-input[type="checkbox"] + .parameter-description {
+  margin-left: 8px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-container .parameter-input[type="checkbox"] {
+  margin: 0;
+}
+
+/* チェックボックスタイトル用スタイル */
+.checkbox-title {
+  font-weight: normal;
+  margin-right: 6px;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+/* セレクトボックス用スタイル */
+.parameter-input[type="select"],
+.parameter-input select {
+  width: 100px;
+}
+
+/* 数値入力用スタイル */
+.parameter-input[type="number"] {
+  width: 50px;
+  text-align: right;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+/* 大きな数値（キャンバスサイズなど）用スタイル */
+.parameter-input[type="number"].large-number {
+  width: 70px;
+  text-align: right;
+  font-family: monospace;
+}
+
+/* テキスト入力用スタイル */
+.parameter-input[type="text"] {
+  font-family: monospace;
+  font-size: 12px;
+  width: 120px;
+}
+
+/* 上下分割用スプリッター */
+#vertical-splitter {
+  flex: 0 0 5px;
+  cursor: row-resize;
+  background: rgba(255, 255, 255, 0.4);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+#vertical-splitter:hover {
+  background: rgba(0, 123, 255, 0.3);
+}
+
+/* 下ペイン：結果表示エリア */
+#pane-bottom {
+  flex: 1 1 auto;
+  display: flex;
+  overflow: hidden;
+}
+
+/* 左ペイン：OCR結果テキスト */
+#results-pane {
+  flex: 1 1 auto;
+  padding: 1em;
+  overflow-y: auto;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+/* 処理ログセクション */
+.processing-section {
+  flex: 0 0 auto;
+}
+
+.log-section {
+  margin-top: 0.5em;
+}
+
+.log-section h3 {
+  margin: 0 0 0.5em 0;
+  font-size: 1em;
+  color: #495057;
+}
+
+.log-content {
+  height: 150px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 0.5em;
+  background: #ffffff;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.85em;
+  border-radius: 4px;
+}
+
+.log-entry {
+  margin-bottom: 0.25em;
+  padding: 0.25em 0.5em;
+  border-radius: 3px;
+  line-height: 1.3;
+}
+
+.log-info { 
+  background: #e3f2fd; 
+  border-left: 3px solid #2196f3;
+}
+
+.log-progress { 
+  background: #fff3e0; 
+  border-left: 3px solid #ff9800;
+}
+
+.log-success { 
+  background: #e8f5e8; 
+  border-left: 3px solid #4caf50;
+}
+
+.log-error { 
+  background: #ffebee; 
+  border-left: 3px solid #f44336;
+}
+
+.log-complete { 
+  background: #f3e5f5; 
+  border-left: 3px solid #9c27b0;
+  font-weight: bold; 
+}
+
+.log-time {
+  color: #666;
+  font-size: 0.9em;
+  margin-right: 0.5em;
+}
+
+/* 処理ステータス表示 */
+#processing-status {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  padding: 0.5em;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  margin-bottom: 0.5em;
+}
+
+.status-message {
+  font-weight: bold;
+  color: #856404;
+}
+
+.status-timer {
+  color: #6c757d;
+  font-size: 0.9em;
+}
+
+/* 結果表示セクション */
+.results-section {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.results-section h3 {
+  margin: 0 0 0.5em 0;
+  font-size: 1em;
+  color: #495057;
+}
+
+#results-container {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* 展開可能な結果詳細 */
+.result-details {
+  margin: 0.5em 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #ffffff;
+}
+
+.result-details summary {
+  padding: 0.5em;
+  background: #f8f9fa;
+  cursor: pointer;
+  font-weight: bold;
+  border-bottom: 1px solid #ddd;
+  user-select: none;
+}
+
+.result-details summary:hover {
+  background: #e9ecef;
+}
+
+.result-details[open] summary {
+  border-bottom: 1px solid #ddd;
+}
+
+.result-details .result-content {
+  padding: 0.75em;
+}
+
+.result-details .result-content > div {
+  margin-bottom: 0.5em;
+}
+
+.result-details .result-content > div:last-child {
+  margin-bottom: 0;
+}
+
+.ocr-text {
+  background: #f8f9fa;
+  padding: 0.5em;
+  border-radius: 3px;
+  white-space: pre-wrap;
+  max-height: 150px;
+  overflow-y: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.85em;
+  border: 1px solid #e9ecef;
+  margin-top: 0.25em;
+}
+
+/* スプリッター */
+#splitter {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: rgba(255, 255, 255, 0.4);
+  border-left: 1px solid rgba(255, 255, 255, 0.6);
+  border-right: 1px solid rgba(255, 255, 255, 0.6);
+  position: relative;
+  z-index: 2;
+}
+
+#splitter:hover {
+  background: rgba(0, 123, 255, 0.3);
+}
+
+/* 右ペイン：PDF表示 */
+#pdf-pane {
+  flex: 0 0 40%;
+  background: white;
+  border-left: 1px solid #ddd;
+  overflow: hidden;
+}
+
+/* ページタイトル - ingest/chatと同じ高さに揃える */
+.page-title {
+  margin: 0 0 8px;
+  font-size: 1.2em;
+  line-height: 1.5em;
+}
+
+/* フォーム */
+.form-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.1em;
+  line-height: 1.2;
+  width: 100%;
+}
+
+.form-section label {
+  min-width: 120px;
+  flex-shrink: 0;
+  font-weight: normal;
+}
+
+.form-section input,
+.form-section select {
+  padding: 3px 6px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+
+.form-actions button {
+  padding: 4px 8px;
+  font-size: 0.9em;
+  height: auto;
+  margin-right: 1em;
+}
+
+/* パラメータ調整用スタイル */
+.parameter-group {
+  margin-bottom: 0.3em;
+  padding: 0.3em 0.5em;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  background: #fafafa;
+}
+
+.parameter-group label {
+  display: inline-block;
+  min-width: 120px;
+  font-weight: bold;
+  font-size: 0.85em;
+}
+
+.parameter-group input,
+.parameter-group select {
+  width: 120px;
+  padding: 2px 4px;
+  font-size: 0.85em;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+}
+
+.parameter-group .description {
+  font-size: 0.75em;
+  color: #666;
+  margin-left: 0.5em;
+}
+
+.parameter-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.3em;
+}
+
+.parameter-group input[type="number"] {
+  text-align: right;
+  font-family: monospace;
+}
+
+/* 結果表示 */
+.result-card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1em;
+  background: white;
+}
+
+.result-header {
+  background: #f8f9fa;
+  padding: 0.5em 1em;
+  border-bottom: 1px solid #ddd;
+  font-weight: bold;
+}
+
+.result-content {
+  padding: 1em;
+}
+
+.result-text {
+  white-space: pre-wrap;
+  font-family: monospace;
+  font-size: 0.9em;
+  line-height: 1.4;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #eee;
+  padding: 0.5em;
+  background: #f9f9f9;
+}
+
+.result-stats {
+  margin-top: 0.5em;
+  font-size: 0.8em;
+  color: #666;
+}
+
+/* 処理中オーバーレイ */
+#processing-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  z-index: 9999;
+  font-size: 1.2em;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+#processing-overlay.show {
+  display: flex;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1em;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#processing-message {
+  text-align: center;
+}

@@ -1,0 +1,23 @@
+{
+  "標準処理": {
+    "deskew": false,
+    "rotate_pages": false,
+    "remove_background": false,
+    "clean": false,
+    "oversample": 300
+  },
+  "高品質処理": {
+    "deskew": true,
+    "rotate_pages": true,
+    "remove_background": true,
+    "clean": true,
+    "oversample": 600
+  },
+  "高速処理": {
+    "deskew": false,
+    "rotate_pages": false,
+    "remove_background": false,
+    "clean": false,
+    "oversample": 150
+  }
+}

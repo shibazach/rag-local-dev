@@ -360,7 +360,7 @@ class IngestProcessor:
                 if progress_yield:
                     progress_yield({
                         "file": file_name, 
-                        "step": f"ページ {page_number + 1} OCR完了 (処理時間: {ocr_result['processing_time']:.2f}秒)"
+                        "step": f"ページ {page_number + 1} OCR完了 (処理時間: {int(ocr_result['processing_time'])}秒)"
                     })
             else:
                 ocr_text = f"OCRエラー: {ocr_result['error']}"
@@ -426,10 +426,12 @@ class IngestProcessor:
                 raise FileNotFoundError(f"PDF変換後ファイルが見つかりません: {pdf_path}")
 
         # 統合：タグを付けて LLM 整形に渡す
-        return [
-            "【構造抽出】\n" + "\n".join(structured_text),
-            "【OCR抽出】\n" + "\n".join(ocr_text)
-        ]
+        structured_content = "\n".join(structured_text)
+        ocr_content = "\n".join(ocr_text)
+        
+        # 両内容を統合して1つのテキストとして返す
+        combined_text = f"<structured_text>\n{structured_content}\n</structured_text>\n\n<ocr_text>\n{ocr_content}\n</ocr_text>"
+        return [combined_text]
 
     def _extract_text_from_txt(self, txt_path: str) -> List[str]:
         """TXTファイルからテキスト抽出"""
@@ -704,11 +706,12 @@ class IngestProcessor:
                 raise FileNotFoundError(f"PDF変換後ファイルが見つかりません: {pdf_path}")
 
         # 統合：タグを付けて LLM 整形に渡す
-        result = [
-            "【構造抽出】\n" + "\n".join(structured_text),
-            "【OCR抽出】\n" + "\n".join(ocr_text)
-        ]
-        yield result
+        structured_content = "\n".join(structured_text)
+        ocr_content = "\n".join(ocr_text)
+        
+        # 両内容を統合して1つのテキストとして返す
+        combined_text = f"<structured_text>\n{structured_content}\n</structured_text>\n\n<ocr_text>\n{ocr_content}\n</ocr_text>"
+        yield [combined_text]
 
     def _run_with_timeout(self, func, timeout_sec: int):
         """タイムアウト付きで関数を実行"""

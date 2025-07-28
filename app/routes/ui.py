@@ -44,6 +44,8 @@ def chat(request: Request):
         "embedding_options": EMBEDDING_OPTIONS,
     })
 
+# chat2は廃止され、chatに統合されました
+
 
 # ══════════════════════ Ingest 画面 ══════════════════════
 @router.get("/ingest", response_class=HTMLResponse)

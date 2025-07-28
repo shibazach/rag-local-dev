@@ -1,0 +1,370 @@
+/* app/static/css/base.css */
+
+/* 個別ページ用の全体レイアウト（chat, try_ocr等） */
+.page-body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 1em;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #333;
+}
+
+/* ページタイトル */
+.page-title {
+  color: #333;
+  margin-bottom: 1em;
+  font-size: 1.5em;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+/* パネル共通スタイル */
+.panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.panel-content {
+  padding: 1em;
+}
+
+/* フォーム要素 */
+.form-section {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75em;
+  gap: 0.5em;
+}
+
+.form-section label {
+  font-weight: bold;
+  color: #333;
+}
+
+.form-section input,
+.form-section select,
+.form-section textarea {
+  padding: 0.5em;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-top: 1em;
+}
+
+/* ボタン（デフォルトスタイルのみ、個別ページで上書き可能） */
+button {
+  padding: 0.6em 1.2em;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: normal;
+  transition: all 0.2s;
+  background: #f8f9fa;
+  color: #333;
+}
+
+button:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  background: #6c757d;
+  color: white;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: #6c757d;
+}
+
+.btn-secondary:hover {
+  background: #545b62;
+}
+
+.btn-danger {
+  background: #dc3545;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+}
+
+/* リサイザー */
+.resizer {
+  background: rgba(255, 255, 255, 0.4);
+  transition: background-color 0.2s;
+}
+
+.resizer:hover {
+  background: rgba(0, 123, 255, 0.3);
+}
+
+.horizontal-resizer {
+  cursor: row-resize;
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.vertical-resizer {
+  cursor: col-resize;
+  border-left: 1px solid rgba(255, 255, 255, 0.6);
+  border-right: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* モーダル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 600px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  background: #f8f9fa;
+  padding: 1em 1.5em;
+  border-bottom: 1px solid #dee2e6;
+  border-radius: 8px 8px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close:hover,
+.close:focus {
+  color: #000;
+}
+
+.modal-actions {
+  padding: 1em 1.5em;
+  border-top: 1px solid #dee2e6;
+  background: #f8f9fa;
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5em;
+}
+
+/* 全体レイアウト（base.html用） */
+body {
+  margin: 0;
+  display: flex;
+  height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #2c3e50;
+  line-height: 1.5;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  position: relative;
+}
+
+/* 背景装飾 - 放射状アクセント */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(74, 144, 226, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -2;
+}
+
+/* 背景装飾 - 幾何学的パターン */
+body::after {
+  content: '';
+  position: fixed;
+  top: 10%;
+  left: 10%;
+  right: 10%;
+  bottom: 10%;
+  background-image:
+    linear-gradient(45deg, transparent 48%, rgba(74, 144, 226, 0.03) 49%, rgba(74, 144, 226, 0.03) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(99, 102, 241, 0.02) 49%, rgba(99, 102, 241, 0.02) 51%, transparent 52%);
+  background-size: 60px 60px, 40px 40px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ナビゲーション */
+nav {
+  width: 200px;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(15px);
+  border-right: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 1em;
+  box-sizing: border-box;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ナビゲーション上部コンテンツ */
+.nav-top {
+  flex: 1;
+}
+
+/* ナビゲーションの背景オーバーレイ */
+nav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
+  border-radius: inherit;
+  z-index: -1;
+}
+
+nav h2 {
+  margin-top: 0;
+  margin-bottom: 1em;
+  font-size: 1.2em;
+  text-align: center;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+nav li + li {
+  margin-top: 0.5em;
+}
+
+nav a {
+  text-decoration: none;
+  color: #333;
+}
+
+nav a:hover {
+  text-decoration: underline;
+}
+
+/* メインコンテンツ */
+main {
+  flex: 1;
+  padding: 0;
+  overflow: auto;
+}
+
+/* システムモニタリング下揃え */
+#system-monitor {
+  margin-top: auto;
+  padding-top: 1em;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.8em;
+}
+
+
+
+/* システム情報 */
+#system-info {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  font-size: 0.8em;
+  color: #666;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  body {
+    padding: 0.5em;
+  }
+  
+  nav {
+    position: static;
+    margin-bottom: 1em;
+  }
+  
+  nav ul {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  
+  nav li {
+    border-bottom: none;
+    border-right: 1px solid rgba(0, 0, 0, 0.1);
+  }
+  
+  nav li:last-child {
+    border-right: none;
+  }
+  
+  .dict-buttons {
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 1em;
+  }
+  
+  #system-info {
+    position: static;
+    margin-bottom: 1em;
+  }
+}

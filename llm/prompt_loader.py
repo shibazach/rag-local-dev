@@ -11,6 +11,9 @@ from typing import List
 # REM: 設定
 from src.config import PROMPT_FILE_PATH
 
+# REM: チャット用プロンプトファイルのパス
+CHAT_PROMPT_FILE = os.path.join(os.path.dirname(__file__), "prompts", "chat_prompts.txt")
+
 # REM: プロンプトファイル存在チェック
 if not os.path.exists(PROMPT_FILE_PATH):
     raise FileNotFoundError(f"プロンプトファイルが見つかりません: {PROMPT_FILE_PATH}")
@@ -71,3 +74,41 @@ def list_prompt_keys() -> List[str]:
             if line.startswith("#lang="):
                 keys.append(line[len("#lang="):].strip())
     return keys
+
+
+def get_chat_prompt(section: str) -> str:
+    """
+    chat_prompts.txt から指定セクションのプロンプトを取得する。
+    セクションは <section_name>...</section_name> 形式で定義される。
+    """
+    if not os.path.exists(CHAT_PROMPT_FILE):
+        return ""
+    
+    with open(CHAT_PROMPT_FILE, encoding="utf-8") as f:
+        content = f.read()
+    
+    # <section>...</section> 形式のセクションを抽出
+    import re
+    pattern = f"<{section}>(.*?)</{section}>"
+    match = re.search(pattern, content, re.DOTALL)
+    
+    if match:
+        return match.group(1).strip()
+    else:
+        return ""
+
+
+def list_chat_prompt_keys() -> List[str]:
+    """
+    chat_prompts.txt 内の利用可能なセクション名一覧を返却する。
+    """
+    if not os.path.exists(CHAT_PROMPT_FILE):
+        return []
+    
+    with open(CHAT_PROMPT_FILE, encoding="utf-8") as f:
+        content = f.read()
+    
+    # <section_name> タグを抽出
+    import re
+    sections = re.findall(r'<(\w+)>', content)
+    return list(set(sections))  # 重複を除去

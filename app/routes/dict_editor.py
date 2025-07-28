@@ -1,8 +1,9 @@
 # app/routes/dict_editor.py
 # OCR辞書編集用API
 
-from fastapi import APIRouter, HTTPException, Form
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, HTTPException, Form, Request
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.templating import Jinja2Templates
 import os
 import csv
 from typing import List, Dict, Any
@@ -10,6 +11,14 @@ import shutil
 from datetime import datetime
 
 router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
+
+@router.get("/edit", response_class=HTMLResponse)
+async def dict_editor_page(request: Request):
+    """OCR辞書編集ページを表示"""
+    return templates.TemplateResponse("dict_editor.html", {
+        "request": request
+    })
 
 # 辞書ファイルの定義
 DICT_FILES = {

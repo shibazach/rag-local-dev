@@ -229,20 +229,39 @@
 .page-title {
     margin: 0 0 8px;
     font-size: 1.2em;
-    line-height: 1.5em;
+    font-weight: bold; /* タイトルのみ太字 */
+    line-height: 1.3em;
 }
 
 .form-section {
     display: flex;
     align-items: center;
-    margin-bottom: 0.1em;
-    line-height: 1.2;
+    margin-bottom: 0.3em; /* 行間を狭く */
+    line-height: 1.1;
     width: 100%;
 }
 
 .form-section label {
     min-width: 120px;
     flex-shrink: 0;
+    font-weight: normal; /* 太字を削除 */
+    font-size: 0.9em;
+    display: flex;
+    align-items: center; /* ラベルとコントロールの高さを揃える */
+}
+
+.form-section input,
+.form-section select {
+    padding: 2px 4px; /* パディングを小さく */
+    font-size: 0.9em;
+    height: 24px; /* 高さを統一 */
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box; /* パディングを含めた高さ計算 */
+}
+
+.form-section select {
+    height: 24px; /* selectもinputと同じ高さに統一 */
 }
 
 #quality_threshold, #quality_threshold2 {
@@ -250,11 +269,23 @@
 }
 
 .form-actions {
-    margin-top: 1em;
+    margin-top: 0.8em;
 }
 
 .form-actions button {
-    margin-right: 1em;
+    margin-right: 0.8em;
+    padding: 2px 8px; /* パディングを小さく */
+    font-size: 0.9em;
+    height: 24px; /* テキストボックスと同じ高さ */
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    background: #f8f9fa;
+    cursor: pointer;
+    box-sizing: border-box; /* パディングを含めた高さ計算 */
+}
+
+.form-actions button:hover {
+    background: #e9ecef;
 }
 
 /* ===== ボタンスタイル ===== */

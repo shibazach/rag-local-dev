@@ -111,10 +111,12 @@ def extract_text_from_docx_combined(docx_path: str) -> List[str]:
             raise FileNotFoundError(f"PDF変換後ファイルが見つかりません: {pdf_path}")
 
     # 🔹 統合：タグを付けて LLM 整形に渡す
-    return [
-        "【構造抽出】\n" + "\n".join(structured_text),
-        "【OCR抽出】\n" + "\n".join(ocr_text)
-    ]
+    structured_content = "\n".join(structured_text)
+    ocr_content = "\n".join(ocr_text)
+    
+    # 両内容を統合して1つのテキストとして返す
+    combined_text = f"<structured_text>\n{structured_content}\n</structured_text>\n\n<ocr_text>\n{ocr_content}\n</ocr_text>"
+    return [combined_text]
 
 # TXT
 def extract_text_from_txt(txt_path: str) -> List[str]:

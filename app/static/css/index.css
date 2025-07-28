@@ -1,0 +1,153 @@
+/* app/static/css/index.css */
+
+/* index.htmlでは左メニューを非表示 */
+nav {
+  display: none;
+}
+
+/* メインコンテンツを全幅に */
+main {
+  width: 100%;
+  padding: 2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* ヘッダー */
+.header {
+  text-align: center;
+  margin-bottom: 3em;
+}
+
+.main-title {
+  font-size: 3em;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 0.5em;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.subtitle {
+  font-size: 1.2em;
+  color: #7f8c8d;
+  margin-bottom: 2em;
+}
+
+/* 機能カード */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2em;
+  max-width: 1200px;
+  width: 100%;
+}
+
+.feature-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 2em;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(248, 249, 250, 0.05) 100%);
+  border-radius: inherit;
+  z-index: -1;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.feature-icon {
+  font-size: 3em;
+  margin-bottom: 0.5em;
+  display: block;
+}
+
+.feature-title {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #2c3e50;
+  margin-bottom: 0.5em;
+}
+
+.feature-desc {
+  color: #7f8c8d;
+  line-height: 1.6;
+  font-size: 0.95em;
+}
+
+/* システム情報 */
+.system-info {
+  margin-top: 3em;
+  text-align: center;
+  color: #95a5a6;
+  font-size: 0.9em;
+}
+
+.system-info div {
+  margin-bottom: 0.5em;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  main {
+    padding: 1em;
+  }
+  
+  .main-title {
+    font-size: 2em;
+  }
+  
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5em;
+  }
+  
+  .feature-card {
+    padding: 1.5em;
+  }
+}
+
+@media (max-width: 480px) {
+  .main-title {
+    font-size: 1.8em;
+  }
+  
+  .subtitle {
+    font-size: 1em;
+  }
+  
+  .feature-card {
+    padding: 1.2em;
+  }
+  
+  .feature-icon {
+    font-size: 2.5em;
+  }
+  
+  .feature-title {
+    font-size: 1.1em;
+  }
+}

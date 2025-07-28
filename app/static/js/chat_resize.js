@@ -1,9 +1,8 @@
-// app/static/js/chat_resize.js @作成日時: 2025-07-25
-// REM: chatページのリサイズ機能（ingestベース）
+// app/static/js/chat_resize.js
 
 class ChatResize {
   constructor() {
-    this.chatContainer = document.getElementById('chat-container');
+    this.appContainer = document.getElementById('app-container');
     this.isResizing = false;
     this.currentResizer = null;
     
@@ -67,8 +66,8 @@ class ChatResize {
     if (!this.isResizing) return;
 
     if (this.currentResizer === 'top') {
-      // 第1パターン：上部検索の高さ調整
-      const container = this.chatContainer.getBoundingClientRect();
+      // 第1パターン：上部設定の高さ調整
+      const container = this.appContainer.getBoundingClientRect();
       const relativeY = e.clientY - container.top;
       const minHeight = 150; // 最小150px（固定値）
       const maxHeight = container.height * 0.7; // 最大70%に拡大

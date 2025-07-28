@@ -1,5 +1,4 @@
-// app/static/js/ingest_processing.js @作成日時: 2025-07-25
-// REM: 処理実行機能
+// app/static/js/ingest_processing.js
 
 class IngestProcessing {
   constructor(sseManager) {

@@ -1,0 +1,38 @@
+{
+  "高精度日本語": {
+    "psm": 6,
+    "oem": 1,
+    "lang": "jpn+eng",
+    "dpi": 600,
+    "preserve_interword_spaces": true,
+    "tessedit_char_whitelist": "",
+    "tessedit_char_blacklist": "",
+    "classify_bln_numeric_mode": false,
+    "textord_really_old_xheight": false,
+    "textord_min_linesize": 1.0,
+    "tosp_threshold_bias1": 1.2,
+    "tosp_threshold_bias2": 0.0,
+    "edges_max_children_per_outline": 15,
+    "edges_children_per_grandchild": 3,
+    "language_model_penalty_non_freq_dict_word": 0.05,
+    "language_model_penalty_case": 0.05
+  },
+  "高速処理": {
+    "psm": 3,
+    "oem": 3,
+    "lang": "jpn+eng",
+    "dpi": 300,
+    "preserve_interword_spaces": true,
+    "tessedit_char_whitelist": "",
+    "tessedit_char_blacklist": "",
+    "classify_bln_numeric_mode": false,
+    "textord_really_old_xheight": true,
+    "textord_min_linesize": 1.5,
+    "tosp_threshold_bias1": 1.8,
+    "tosp_threshold_bias2": 0.2,
+    "edges_max_children_per_outline": 8,
+    "edges_children_per_grandchild": 2,
+    "language_model_penalty_non_freq_dict_word": 0.15,
+    "language_model_penalty_case": 0.15
+  }
+}

@@ -1,13 +1,77 @@
 [
   {
-    "id": 1,
-    "timestamp": "2025-07-22T04:37:41.618817",
+    "id": 5,
+    "timestamp": "2025-07-27T16:47:56.207379",
+    "query": "まとめて",
+    "model_key": "2",
+    "mode": "ファイル別（要約+一致度）",
+    "processing_time": 622.48,
+    "result": {
+      "mode": "ファイル別（要約+一致度）",
+      "results": [],
+      "total_found": 4,
+      "filtered_count": 0,
+      "min_score_threshold": 0.0
+    }
+  },
+  {
+    "id": 4,
+    "timestamp": "2025-07-27T16:47:56.143413",
+    "query": "観察結果をまとめて",
+    "model_key": "2",
+    "mode": "ファイル別（要約+一致度）",
+    "processing_time": 821.42,
+    "result": {
+      "mode": "ファイル別（要約+一致度）",
+      "results": [],
+      "total_found": 4,
+      "filtered_count": 0,
+      "min_score_threshold": 0.0
+    }
+  },
+  {
+    "id": 3,
+    "timestamp": "2025-07-27T16:47:56.127332",
+    "query": "観察結果をまとめて",
+    "model_key": "2",
+    "mode": "ファイル別（要約+一致度）",
+    "processing_time": 657.75,
+    "result": {
+      "mode": "ファイル別（要約+一致度）",
+      "results": [],
+      "total_found": 4,
+      "filtered_count": 0,
+      "min_score_threshold": 0.0
+    }
+  },
+  {
+    "id": 2,
+    "timestamp": "2025-07-27T15:45:49.666507",
     "query": "SEM観察結果をまとめて",
     "model_key": "2",
     "mode": "ファイル別（要約+一致度）",
-    "processing_time": 1449.19,
+    "processing_time": 247.98,
     "result": {
       "mode": "ファイル別（要約+一致度）",
-      "results": [
-        {
-          "file_id": 
+      "results": [],
+      "total_found": 4,
+      "filtered_count": 0,
+      "min_score_threshold": 0.0
+    }
+  },
+  {
+    "id": 1,
+    "timestamp": "2025-07-27T15:33:15.226242",
+    "query": "観察結果をまとめて",
+    "model_key": "2",
+    "mode": "ファイル別（要約+一致度）",
+    "processing_time": 178.62,
+    "result": {
+      "mode": "ファイル別（要約+一致度）",
+      "results": [],
+      "total_found": 4,
+      "filtered_count": 0,
+      "min_score_threshold": 0.0
+    }
+  }
+]

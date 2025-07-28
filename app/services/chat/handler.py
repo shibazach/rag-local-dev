@@ -23,6 +23,7 @@ from db.handler import (
     fetch_top_files,
     get_file_text
 )
+from llm.prompt_loader import get_chat_prompt
 
 # ═════════════════════════════════════════════
 
@@ -54,11 +55,13 @@ async def handle_query(query: str, model_key: str, mode: str = "チャンク統�
 
          # 3) 統合回答用にスニペットを抽出＋LLM呼び出し
         snippets = [r["snippet"] for r in rows]
-        prompt = (
-            f"質問：{query}\n"
-            "以下の文書スニペットを参照し、一つの回答を出力してください：\n\n"
-            + "\n---\n".join(snippets)
-        )
+        prompt_template = get_chat_prompt("chunk_integration")
+        prompt = prompt_template.replace("{QUERY}", query).replace("{SNIPPETS}", "\n---\n".join(snippets))
+        # キャンセルチェック
+        from app.routes.chat import _search_cancelled
+        if _search_cancelled:
+            raise asyncio.CancelledError("検索処理がキャンセルされました")
+            
         # 非同期でLLM呼び出し
         loop = asyncio.get_event_loop()
         answer = await loop.run_in_executor(None, lambda: LLM_ENGINE.invoke(prompt).strip())
@@ -116,20 +119,8 @@ def get_file_content(file_id: str) -> str:
 
 # ═════════════════════════════════════════════
 def llm_summarize_with_score(query: str, content: str):
-    prompt = f"""
-以下はユーザーの質問と文書の内容です。
-
-【質問】
-{query}
-
-【文書】
-{content[:3000]}
-
-この文書が質問にどの程度一致しているか（0.0〜1.0）で評価し、次の形式で出力してください：
-
-一致度: <score>
-要約: <summary>
-"""
+    prompt_template = get_chat_prompt("file_summary_score")
+    prompt = prompt_template.replace("{QUERY}", query).replace("{CONTENT}", content[:3000])
     result = LLM_ENGINE.invoke(prompt)
     m = re.search(
         r"一致度[:：]\s*([0-9.]+).*?要約[:：]\s*(.+)", result, re.DOTALL
@@ -141,20 +132,13 @@ def llm_summarize_with_score(query: str, content: str):
 # ═════════════════════════════════════════════
 async def llm_summarize_with_score_async(query: str, content: str, file_id: str, file_name: str):
     """非同期版のLLM要約・評価関数"""
-    prompt = f"""
-以下はユーザーの質問と文書の内容です。
-
-【質問】
-{query}
-
-【文書】
-{content[:3000]}
-
-この文書が質問にどの程度一致しているか（0.0〜1.0）で評価し、次の形式で出力してください：
-
-一致度: <score>
-要約: <summary>
-"""
+    # キャンセルチェック
+    from app.routes.chat import _search_cancelled
+    if _search_cancelled:
+        raise asyncio.CancelledError("検索処理がキャンセルされました")
+        
+    prompt_template = get_chat_prompt("file_summary_score")
+    prompt = prompt_template.replace("{QUERY}", query).replace("{CONTENT}", content[:3000])
     # 非同期でLLM呼び出し
     loop = asyncio.get_event_loop()
     result = await loop.run_in_executor(None, lambda: LLM_ENGINE.invoke(prompt))

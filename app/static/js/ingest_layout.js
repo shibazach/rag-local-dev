@@ -1,5 +1,4 @@
-// app/static/js/ingest_layout.js @作成日時: 2025-07-25
-// REM: レイアウト切り替え機能
+// app/static/js/ingest_layout.js
 
 class IngestLayout {
   constructor() {

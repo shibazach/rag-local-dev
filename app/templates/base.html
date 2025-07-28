@@ -1,404 +1,50 @@
-<!-- app/templates/base.html @2025-07-18 00:00 UTC +9 -->
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>研究部RAG</title>
   <link rel="stylesheet" href="/static/styles.css">
-  <style>
-    /* REM: 全体レイアウト */
-    body {
-      margin: 0;
-      display: flex;
-      height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #2c3e50;
-      line-height: 1.5;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      position: relative;
-    }
-
-    /* 背景装飾 - 放射状アクセント */
-    body::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-image:
-        radial-gradient(circle at 20% 30%, rgba(74, 144, 226, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
-        radial-gradient(circle at 40% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
-      pointer-events: none;
-      z-index: -2;
-    }
-
-    /* 背景装飾 - 幾何学的パターン */
-    body::after {
-      content: '';
-      position: fixed;
-      top: 10%;
-      left: 10%;
-      right: 10%;
-      bottom: 10%;
-      background-image:
-        linear-gradient(45deg, transparent 48%, rgba(74, 144, 226, 0.03) 49%, rgba(74, 144, 226, 0.03) 51%, transparent 52%),
-        linear-gradient(-45deg, transparent 48%, rgba(99, 102, 241, 0.02) 49%, rgba(99, 102, 241, 0.02) 51%, transparent 52%);
-      background-size: 60px 60px, 40px 40px;
-      pointer-events: none;
-      z-index: -1;
-    }
-
-    /* REM: ナビゲーション */
-    nav {
-      width: 200px;
-      background: rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(15px);
-      border-right: 1px solid rgba(255, 255, 255, 0.4);
-      padding: 1em;
-      box-sizing: border-box;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      position: relative;
-    }
-
-    /* ナビゲーションの背景オーバーレイ */
-    nav::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
-      border-radius: inherit;
-      z-index: -1;
-    }
-
-    nav h2 {
-      margin-top: 0;
-      margin-bottom: 1em;
-      font-size: 1.2em;
-      text-align: center;
-    }
-
-    nav ul {
-      list-style: none;
-      padding: 0;
-    }
-
-    nav li+li {
-      margin-top: 0.5em;
-    }
-
-    nav a {
-      text-decoration: none;
-      color: #333;
-    }
-
-    nav a:hover {
-      text-decoration: underline;
-    }
-
-    /* REM: メインコンテンツ */
-    main {
-      flex: 1;
-      padding: 0;
-      overflow: auto;
-    }
-
-    /* REM: ページごとのタイトルスタイル */
-    .page-title {
-      margin: 0 0 8px;
-      font-size: 1.2em;
-      line-height: 1.5em;
-    }
-
-    .index-title {
-      margin: 0 0 8px;
-      line-height: 1.5em;
-    }
-  </style>
-  <!-- REM: ページ固有の head 要素をここに追加 -->
+  <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}">
   {% block head %}{% endblock %}
 </head>
-
 <body>
+  <!-- ナビゲーション -->
   <nav>
-    <!-- REM: サイドバータイトル -->
-    <h2><a href="/" style="text-decoration:none; color:inherit;">研究部 RAG</a></h2>
-    <ul>
-      <li><a href="/ingest">📚 データ整形/登録</a></li>
-      <li><a href="/chat">🔍 チャット検索</a></li>
-      <li><a href="/try_ocr">🔬 OCR機能比較</a></li>
-    </ul>
-    <hr>
-    <!-- 辞書編集ボタン群 -->
-    <div id="dict-buttons" style="padding:0.5em 0;">
-      <div style="font-weight:bold; margin-bottom:0.5em; font-size:0.9em;">📝 OCR辞書編集</div>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:0.3em;">
-        <div class="dict-btn-container" onclick="loadDictDirect('一般用語')"
-          style="cursor:pointer; padding:0.3em 0.6em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center; width:120px;">
-          <div style="font-size:0.8em; font-weight:bold;">📄 一般用語</div>
-          <div style="font-size:0.65em; color:#888;" id="dict-count-一般用語">--件</div>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:0.3em;">
-        <div class="dict-btn-container" onclick="loadDictDirect('専門用語')"
-          style="cursor:pointer; padding:0.3em 0.6em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center; width:120px;">
-          <div style="font-size:0.8em; font-weight:bold;">🔬 専門用語</div>
-          <div style="font-size:0.65em; color:#888;" id="dict-count-専門用語">--件</div>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:0.3em;">
-        <div class="dict-btn-container" onclick="loadDictDirect('誤字修正')"
-          style="cursor:pointer; padding:0.3em 0.6em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center; width:120px;">
-          <div style="font-size:0.8em; font-weight:bold;">🔧 誤字修正</div>
-          <div style="font-size:0.65em; color:#888;" id="dict-count-誤字修正">--件</div>
-        </div>
-      </div>
-
-      <div style="display:flex; justify-content:flex-end; margin-bottom:0.3em;">
-        <div class="dict-btn-container" onclick="loadDictDirect('形態素辞書')"
-          style="cursor:pointer; padding:0.3em 0.6em; border:1px solid #ddd; border-radius:3px; background:#f9f9f9; text-align:center; width:120px;">
-          <div style="font-size:0.8em; font-weight:bold;">⚙️ 形態素辞書</div>
-          <div style="font-size:0.65em; color:#888;" id="dict-count-形態素辞書">--件</div>
-        </div>
-      </div>
+    <div class="nav-top">
+      <h2><a href="/" style="text-decoration: none; color: inherit;">研究部 RAG</a></h2>
+      <ul>
+        <li><a href="/ingest">📚 データ整形/登録</a></li>
+        <li><a href="/chat">🔍 チャット検索</a></li>
+        <li><a href="/try_ocr">🔬 OCR機能比較</a></li>
+        <li><a href="/edit">📝 OCR辞書編集</a></li>
+        <li style="margin-left: 1em; margin-top: 0.5em;">
+          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('一般用語')" style="text-decoration: none; color: #333;">📄 一般用語 <span id="dict-count-一般用語" style="color: #666;">-件</span></a></div>
+          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('専門用語')" style="text-decoration: none; color: #333;">🔬 専門用語 <span id="dict-count-専門用語" style="color: #666;">-件</span></a></div>
+          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('誤字修正')" style="text-decoration: none; color: #333;">🔧 誤字修正 <span id="dict-count-誤字修正" style="color: #666;">-件</span></a></div>
+          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('形態素辞書')" style="text-decoration: none; color: #333;">⚙️ 形態素辞書 <span id="dict-count-形態素辞書" style="color: #666;">-件</span></a></div>
+        </li>
+      </ul>
     </div>
-    <hr>
-    <!-- REM: システムモニタリング表示用 -->
+    
+    <!-- システムモニタリング -->
     <div id="system-monitor">
-      <p>CPU 使用率：<span id="cpu-usage">--</span>%</p>
-      <p id="gpu-info" style="display:none">
-        GPU 使用率：<span id="gpu-util">--</span>%<br>
-        消費電力：<span id="gpu-power">--</span>W
-      </p>
+      <div style="font-weight: bold; margin-bottom: 0.5em;">システム状況</div>
+      <div>CPU: <span id="cpu-usage">-</span>%</div>
+      <div id="gpu-info" style="display: none;">
+        GPU: <span id="gpu-util">-</span>% | <span id="gpu-power">-</span>W
+      </div>
     </div>
   </nav>
 
-  <!-- 辞書編集モーダル -->
-  <div id="dict-modal"
-    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000;">
-    <div
-      style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:white; border-radius:8px; width:80%; max-width:800px; max-height:80%; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
-      <div
-        style="padding:1em; border-bottom:1px solid #ddd; display:flex; justify-content:space-between; align-items:center;">
-        <h3 style="margin:0;" id="dict-modal-title">📝 OCR辞書編集</h3>
-        <button id="dict-modal-close"
-          style="background:none; border:none; font-size:1.5em; cursor:pointer;">&times;</button>
-      </div>
-      <div style="display:flex; flex-direction:column; height:60vh;">
-        <div id="dict-editor" style="display:flex; flex-direction:column; height:100%;">
-          <div
-            style="margin-bottom:1em; display:flex; justify-content:flex-end; align-items:center; flex-shrink:0; padding:0 1em;">
-            <div>
-              <button id="dict-save-btn"
-                style="background:#4CAF50; color:white; border:none; padding:0.5em 1em; border-radius:4px; cursor:pointer;">💾
-                保存</button>
-              <button id="dict-add-btn"
-                style="background:#2196F3; color:white; border:none; padding:0.5em 1em; border-radius:4px; cursor:pointer; margin-left:0.5em;">➕
-                追加</button>
-            </div>
-          </div>
-          <div id="dict-content" style="flex:1; padding:0 1em 1em 1em; overflow:hidden;">
-            <textarea id="dict-textarea"
-              style="width:100%; height:100%; font-family:monospace; font-size:0.9em; border:1px solid #ddd; border-radius:4px; padding:0.5em; box-sizing:border-box; resize:none;"></textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- REM: システムモニタリング用スクリプト -->
-  <script>
-    // システムメトリクス監視（タイムアウト付き）
-    setInterval(async () => {
-      try {
-        // 5秒タイムアウトを設定
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        const res = await fetch('/metrics', { 
-          signal: controller.signal 
-        });
-        clearTimeout(timeoutId);
-        
-        if (!res.ok) return;
-        const j = await res.json();
-        // REM: j.cpu が未定義の場合はスキップ
-        if (!j || typeof j.cpu !== 'number') return;
-        document.getElementById('cpu-usage').textContent = j.cpu.toFixed(1);
-        // REM: GPU 情報がある場合のみ表示
-        if (j.gpu && typeof j.gpu.util === 'number') {
-          document.getElementById('gpu-info').style.display = 'block';
-          document.getElementById('gpu-util').textContent = j.gpu.util.toFixed(1);
-          // REM: GPU power が数値なら表示
-          if (typeof j.gpu.power === 'number') {
-            document.getElementById('gpu-power').textContent = j.gpu.power.toFixed(1);
-          }
-        }
-      } catch (e) {
-        if (e.name === 'AbortError') {
-          console.warn('metrics fetch timeout (5s)');
-        } else {
-          console.error('metrics fetch error:', e);
-        }
-        // エラー時も表示を更新（サーバーが重い状態を示す）
-        document.getElementById('cpu-usage').textContent = '高負荷';
-      }
-    }, 3000);
-
-    // 辞書編集モーダル機能
-    document.addEventListener('DOMContentLoaded', () => {
-      const dictModal = document.getElementById('dict-modal');
-      const dictModalClose = document.getElementById('dict-modal-close');
-      const dictSaveBtn = document.getElementById('dict-save-btn');
-      const dictAddBtn = document.getElementById('dict-add-btn');
-      const dictTextarea = document.getElementById('dict-textarea');
-
-      let currentDict = null;
-
-      // 直接辞書編集を開く
-      window.loadDictDirect = async function (dictName) {
-        dictModal.style.display = 'block';
-
-        try {
-          // 辞書情報を取得してタイトルを更新
-          const [contentResponse, listResponse] = await Promise.all([
-            fetch(`/api/dict/content/${encodeURIComponent(dictName)}`),
-            fetch('/api/dict/list')
-          ]);
-
-          const dictData = await contentResponse.json();
-          const dictList = await listResponse.json();
-
-          currentDict = dictData;
-
-          // タイトルに詳細情報を表示
-          const dictInfo = dictList.find(d => d.name === dictName);
-          if (dictInfo) {
-            const titleElement = document.getElementById('dict-modal-title');
-            const icon = dictName === '一般用語' ? '📄' :
-              dictName === '専門用語' ? '🔬' :
-                dictName === '誤字修正' ? '🔧' : '⚙️';
-            titleElement.innerHTML = `
-              <div style="font-size:1.2em; font-weight:bold; line-height:1.5em;">${icon} ${dictName}</div>
-              <div style="font-size:0.75em; color:#666; font-weight:normal; margin-top:0.2em;">${dictInfo.description} | ${dictInfo.entry_count}件 | ${dictInfo.modified}</div>
-            `;
-          }
-
-          // CSVデータをテキストエリアに表示
-          let content = '';
-          if (dictData.headers && dictData.headers.length > 0) {
-            content += dictData.headers.join(',') + '\n';
-          }
-          if (dictData.data && dictData.data.length > 0) {
-            dictData.data.forEach(row => {
-              content += row.join(',') + '\n';
-            });
-          }
-
-          dictTextarea.value = content;
-
-        } catch (error) {
-          alert('辞書の読み込みに失敗しました: ' + error.message);
-          console.error('辞書読み込みエラー:', error);
-          dictModal.style.display = 'none';
-        }
-      };
-
-      // ページ読み込み時に辞書ボタンの件数を更新
-      loadDictButtonCounts();
-
-      // 辞書ボタンの件数を読み込み
-      async function loadDictButtonCounts() {
-        try {
-          const response = await fetch('/api/dict/list');
-          const dicts = await response.json();
-
-          dicts.forEach(dict => {
-            const countElement = document.getElementById(`dict-count-${dict.name}`);
-            if (countElement) {
-              countElement.textContent = `${dict.entry_count}件`;
-            }
-          });
-
-        } catch (error) {
-          console.error('辞書件数読み込みエラー:', error);
-        }
-      }
-
-      // モーダル閉じる
-      dictModalClose.addEventListener('click', () => {
-        dictModal.style.display = 'none';
-      });
-
-      // モーダル外クリックで閉じる
-      dictModal.addEventListener('click', (e) => {
-        if (e.target === dictModal) {
-          dictModal.style.display = 'none';
-        }
-      });
-
-      // 辞書を保存
-      dictSaveBtn.addEventListener('click', async () => {
-        if (!currentDict) return;
-
-        try {
-          const formData = new FormData();
-          formData.append('content', dictTextarea.value);
-
-          const response = await fetch(`/api/dict/save/${encodeURIComponent(currentDict.name)}`, {
-            method: 'POST',
-            body: formData
-          });
-
-          const result = await response.json();
-
-          if (result.success) {
-            alert('保存しました');
-          } else {
-            alert('保存に失敗しました: ' + result.message);
-          }
-
-        } catch (error) {
-          alert('保存エラー: ' + error.message);
-          console.error('保存エラー:', error);
-        }
-      });
-
-      // エントリ追加
-      dictAddBtn.addEventListener('click', () => {
-        if (!currentDict) return;
-
-        let newEntry = '';
-        if (currentDict.type === 'single_column') {
-          newEntry = prompt('追加する用語を入力してください:');
-          if (newEntry) {
-            dictTextarea.value += newEntry + '\n';
-          }
-        } else if (currentDict.type === 'two_column') {
-          newEntry = prompt('誤字,正字 の形式で入力してください:');
-          if (newEntry && newEntry.includes(',')) {
-            dictTextarea.value += newEntry + '\n';
-          } else if (newEntry) {
-            alert('カンマ区切りで入力してください（例: 契約所,契約書）');
-          }
-        } else {
-          alert('この辞書タイプの追加機能は未実装です');
-        }
-      });
-    });
-  </script>
-
+  <!-- メインコンテンツ -->
   <main>
     {% block content %}{% endblock %}
   </main>
-</body>
 
+
+
+  <!-- 機能別JavaScriptファイル -->
+  <script src="{{ url_for('static', path='js/base.js') }}"></script>
+</body>
 </html>

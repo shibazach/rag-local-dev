@@ -1,5 +1,4 @@
-// app/static/js/ingest_resize.js @作成日時: 2025-07-25
-// REM: リサイズ機能
+// app/static/js/ingest_resize.js
 
 class IngestResize {
   constructor() {

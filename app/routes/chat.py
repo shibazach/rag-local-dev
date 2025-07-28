@@ -17,6 +17,10 @@ router = APIRouter()
 # 履歴ファイルのパス
 HISTORY_FILE = "logs/search_history.json"
 
+# 処理停止用のグローバル変数
+_current_search_task = None
+_search_cancelled = False
+
 async def save_search_history(query: str, model_key: str, mode: str, result: Dict, processing_time: float):
     """検索履歴を保存"""
     try:
@@ -26,8 +30,16 @@ async def save_search_history(query: str, model_key: str, mode: str, result: Dic
         # 既存の履歴を読み込み
         history = []
         if os.path.exists(HISTORY_FILE):
-            with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
-                history = json.load(f)
+            try:
+                with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+                    content = f.read().strip()
+                    if content:
+                        history = json.loads(content)
+                    else:
+                        history = []
+            except (json.JSONDecodeError, UnicodeDecodeError) as e:
+                print(f"履歴ファイル読み込みエラー（破損ファイルを初期化）: {e}")
+                history = []
         
         # 新しい履歴エントリを作成
         history_entry = {
@@ -47,9 +59,19 @@ async def save_search_history(query: str, model_key: str, mode: str, result: Dic
         if len(history) > 100:
             history = history[:100]
         
-        # ファイルに保存
-        with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
-            json.dump(history, f, ensure_ascii=False, indent=2)
+        # ファイルに保存（原子的書き込みで破損を防止）
+        import tempfile
+        temp_file = HISTORY_FILE + '.tmp'
+        try:
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump(history, f, ensure_ascii=False, indent=2)
+            # 原子的にファイルを置き換え
+            os.replace(temp_file, HISTORY_FILE)
+        except Exception as e:
+            # 一時ファイルが残っている場合は削除
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+            raise e
             
     except Exception as e:
         print(f"履歴保存エラー: {e}")
@@ -93,18 +115,37 @@ async def query_api(
     search_limit: int = Form(10),
     min_score: float  = Form(0.0)
 ):
+    global _current_search_task, _search_cancelled
+    
     try:
         import time
+        import asyncio
+        
+        # キャンセルフラグをリセット
+        _search_cancelled = False
+        
         start_time = time.time()
-        result = await handle_query(query, model_key, mode, search_limit, min_score)
+        
+        # キャンセル可能なタスクとして実行
+        _current_search_task = asyncio.create_task(
+            handle_query(query, model_key, mode, search_limit, min_score)
+        )
+        
+        result = await _current_search_task
         processing_time = round(time.time() - start_time, 2)
         
         # 履歴に保存
         await save_search_history(query, model_key, mode, result, processing_time)
         
         return result
+        
+    except asyncio.CancelledError:
+        return JSONResponse({"error": "検索処理がキャンセルされました"}, status_code=499)
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+    finally:
+        _current_search_task = None
+        _search_cancelled = False
 
 @router.get("/history")
 async def get_search_history():
@@ -129,6 +170,21 @@ async def clear_search_history():
     try:
         await clear_all_search_history()
         return {"status": "cleared"}
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+@router.post("/stop_search")
+async def stop_current_search():
+    """現在実行中の検索処理を停止"""
+    global _search_cancelled
+    try:
+        _search_cancelled = True
+        
+        # 現在のタスクがあればキャンセル
+        if _current_search_task and not _current_search_task.done():
+            _current_search_task.cancel()
+            
+        return {"status": "stopped", "message": "検索処理の停止を要求しました"}
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 

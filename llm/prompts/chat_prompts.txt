@@ -1,0 +1,24 @@
+# チャット検索用プロンプト集
+
+<chunk_integration>
+質問：{QUERY}
+
+以下の文書スニペットを参照し、一つの回答を出力してください：
+
+{SNIPPETS}
+</chunk_integration>
+
+<file_summary_score>
+以下はユーザーの質問と文書の内容です。
+
+【質問】
+{QUERY}
+
+【文書】
+{CONTENT}
+
+この文書が質問にどの程度一致しているか（0.0〜1.0）で評価し、次の形式で出力してください：
+
+一致度: <score>
+要約: <summary>
+</file_summary_score>

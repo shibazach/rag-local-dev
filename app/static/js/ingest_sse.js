@@ -1,5 +1,4 @@
-// app/static/js/ingest_sse.js @作成日時: 2025-07-25
-// REM: SSE処理機能
+// app/static/js/ingest_sse.js
 
 class IngestSSE {
   constructor(layoutManager) {
@@ -51,7 +50,7 @@ class IngestSSE {
 
     // 全体開始イベント
     if (d.start) {
-      this.addLogMessage(`▶ 全 ${d.total_files} 件の処理を開始`);
+      this.addLogMessage(`全 ${d.total_files} 件の処理を開始`);
       return;
     }
 

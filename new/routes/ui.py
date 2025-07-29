@@ -32,32 +32,23 @@ async def chat_page(request: Request):
 @router.get("/files", response_class=HTMLResponse)
 async def files_page(request: Request):
     """ファイル管理ページ（admin権限必要）"""
-    try:
-        user = get_current_user(request)
-        if user.role != 'admin':
-            return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-        return templates.TemplateResponse("files.html", {"request": request})
-    except HTTPException:
+    user = get_optional_user(request)
+    if not user or user.role != 'admin':
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    return templates.TemplateResponse("files.html", {"request": request})
 
 @router.get("/upload", response_class=HTMLResponse)
 async def upload_page(request: Request):
     """ファイルアップロードページ（admin権限必要）"""
-    try:
-        user = get_current_user(request)
-        if user.role != 'admin':
-            return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-        return templates.TemplateResponse("upload.html", {"request": request})
-    except HTTPException:
+    user = get_optional_user(request)
+    if not user or user.role != 'admin':
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    return templates.TemplateResponse("upload.html", {"request": request})
 
 @router.get("/admin", response_class=HTMLResponse)
 async def admin_page(request: Request):
     """管理者ページ（admin権限必要）"""
-    try:
-        user = get_current_user(request)
-        if user.role != 'admin':
-            return RedirectResponse(url="/", status_code=status.HTTP_302_FOUND)
-        return templates.TemplateResponse("admin.html", {"request": request})
-    except HTTPException:
-        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND) 
+    user = get_optional_user(request)
+    if not user or user.role != 'admin':
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    return templates.TemplateResponse("admin.html", {"request": request}) 

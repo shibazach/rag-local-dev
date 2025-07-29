@@ -1,16 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}ファイルアップロード - 新しいRAGシステム{% endblock %}
+{% block title %}ファイルアップロード - R&D RAGシステム{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="upload-container">
-        <div class="upload-header">
-            <h1>📁 ファイルアップロード</h1>
-            <button class="btn btn-outline" onclick="location.href='/files'">
-                <span class="icon">←</span> ファイル一覧に戻る
-            </button>
-        </div>
+
         
         <div class="upload-sections">
             <!-- ファイルアップロードセクション -->
@@ -75,7 +70,7 @@
                     </div>
                     
                     <div class="folder-info">
-                        <h4>📋 フォルダアップロードについて</h4>
+                        <h4>�� フォルダアップロードについて</h4>
                         <ul>
                             <li>サーバー上のフォルダパスを指定します</li>
                             <li>フォルダ内の対応ファイルが自動で検出されます</li>
@@ -350,9 +345,25 @@ function displayResults(results) {
             <div class="result-content">
                 ${result.success ? 
                     `<div class="result-details">
-                        <p><strong>ファイルID:</strong> ${result.data.file_id || result.data.id}</p>
-                        <p><strong>ステータス:</strong> ${getStatusText(result.data.status)}</p>
-                        <p><strong>サイズ:</strong> ${formatFileSize(result.data.file_size || result.data.size || 0)}</p>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <strong>ステータス:</strong> 
+                                <span class="status-badge status-${result.data.status}">
+                                    ${getStatusText(result.data.status)}
+                                </span>
+                            </div>
+                            <div class="detail-item">
+                                <strong>サイズ:</strong> ${formatFileSize(result.data.file_size || result.data.size || 0)}
+                            </div>
+                        </div>
+                        <div class="detail-actions">
+                            <button class="btn btn-sm btn-primary" onclick="viewFileDetails('${result.data.file_id || result.data.id}')">
+                                👁️ 詳細表示
+                            </button>
+                            <button class="btn btn-sm btn-secondary" onclick="location.href='/files'">
+                                📋 ファイル一覧
+                            </button>
+                        </div>
                     </div>` :
                     `<div class="result-error">
                         <p><strong>エラー:</strong> ${result.error}</p>
@@ -386,6 +397,87 @@ function formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// ファイル詳細を表示
+async function viewFileDetails(fileId) {
+    try {
+        const response = await fetch(`/api/files/${fileId}`, {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const file = data.file || data;
+            showFileDetailsModal(file);
+        } else {
+            Utils.showNotification('ファイルの詳細取得に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error viewing file details:', error);
+        Utils.showNotification('ファイルの詳細取得に失敗しました', 'error');
+    }
+}
+
+// ファイル詳細モーダルを表示
+function showFileDetailsModal(file) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ファイル詳細</h3>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="file-detail">
+                    <strong>ファイル名:</strong> ${file.filename}
+                </div>
+                <div class="file-detail">
+                    <strong>ファイルID:</strong> ${file.id}
+                </div>
+                <div class="file-detail">
+                    <strong>サイズ:</strong> ${formatFileSize(file.file_size)}
+                </div>
+                <div class="file-detail">
+                    <strong>ページ数:</strong> ${file.page_count || '-'}
+                </div>
+                <div class="file-detail">
+                    <strong>ステータス:</strong> 
+                    <span class="status-badge status-${file.status}">
+                        ${getStatusText(file.status)}
+                    </span>
+                </div>
+                <div class="file-detail">
+                    <strong>アップロード日時:</strong> ${formatDate(file.created_at)}
+                </div>
+                ${file.text_content ? `
+                <div class="file-detail">
+                    <strong>テキスト内容:</strong>
+                    <div class="text-content">
+                        <pre>${file.text_content}</pre>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// 日付をフォーマット
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    
+    const date = new Date(dateString);
+    return date.toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }
 </script>
 

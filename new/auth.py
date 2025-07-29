@@ -47,90 +47,70 @@ class User:
             "role": self.role
         }
 
-def get_current_user(
-    request: Request,
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-    """
-    現在のユーザーを取得する関数
-    セキュリティ設計に基づき、後でSAML/OIDCに置き換え可能
-    
-    Args:
-        request: FastAPIリクエスト
-        credentials: HTTP認証情報
-        db: データベースセッション
-    
-    Returns:
-        User: 認証されたユーザー情報
-    
-    Raises:
-        HTTPException: 認証失敗時
-    """
-    # セッションからユーザー情報を取得
-    session_user = request.session.get("user")
-    if session_user:
-        LOGGER.info(f"セッションからユーザー取得: {session_user['username']}")
-        # idフィールドをuser_idに変換
-        user_data = session_user.copy()
-        if 'id' in user_data:
-            user_data['user_id'] = user_data.pop('id')
-        return User(**user_data)
-    
-    # 開発モードでは仮のユーザーを返す
-    if DEBUG_MODE:
-        LOGGER.info("開発モード: 仮のユーザーを返します")
-        # 開発モードでもセッションに保存
-        if "user" not in request.session:
-            user = User("admin", "admin@example.com", "admin", 1)
-            request.session["user"] = user.to_dict()
-        return User("admin", "admin@example.com", "admin", 1)
-    
-    # Bearer トークン認証
-    if credentials:
-        token = credentials.credentials
-        # ここでJWTトークンの検証を行う（実装予定）
-        LOGGER.warning("Bearer トークン認証は未実装")
-    
-    # 認証失敗
-    LOGGER.warning("認証失敗: ユーザー情報が見つかりません")
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="認証が必要です",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-def get_optional_user(
-    request: Request,
-    db: Session = Depends(get_db)
-) -> Optional[User]:
-    """
-    現在のユーザーを取得する関数（認証不要）
-    ユーザーがログインしていない場合はNoneを返す
-    """
+def get_current_user(request: Request) -> User:
+    """現在のユーザーを取得（認証必須）"""
     try:
+        debug_function("get_current_user")
+        
         # セッションからユーザー情報を取得
         session_user = request.session.get("user")
-        if session_user:
-            LOGGER.info(f"セッションからユーザー取得: {session_user['username']}")
-            # idフィールドをuser_idに変換
-            user_data = session_user.copy()
-            if 'id' in user_data:
-                user_data['user_id'] = user_data.pop('id')
-            return User(**user_data)
+        if not session_user:
+            raise HTTPException(
+                status_code=401,
+                detail="認証が必要です"
+            )
         
-        # 開発モードでは仮のユーザーを返す
+        # 開発モードの場合は仮のユーザーを返す
         if DEBUG_MODE:
-            LOGGER.info("開発モード: 仮のユーザーを返します")
-            # 開発モードでもセッションに保存
-            if "user" not in request.session:
-                user = User("admin", "admin@example.com", "admin", 1)
-                request.session["user"] = user.to_dict()
-            return User("admin", "admin@example.com", "admin", 1)
+            return User(
+                id=session_user.get("id", "dev-user"),
+                username=session_user.get("username", "admin"),
+                role=session_user.get("role", "admin")
+            )
         
-        return None
+        # 実際のユーザー情報を返す
+        return User(
+            id=session_user.get("id"),
+            username=session_user.get("username"),
+            role=session_user.get("role", "user")
+        )
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        LOGGER.error(f"ユーザー取得エラー: {e}")
+        debug_error(e, "get_current_user")
+        raise HTTPException(
+            status_code=401,
+            detail="認証が必要です"
+        )
+
+def get_optional_user(request: Request) -> Optional[User]:
+    """現在のユーザーを取得（認証オプション）"""
+    try:
+        debug_function("get_optional_user")
+        
+        # セッションからユーザー情報を取得
+        session_user = request.session.get("user")
+        if not session_user:
+            return None
+        
+        # 開発モードの場合は仮のユーザーを返す
+        if DEBUG_MODE:
+            return User(
+                id=session_user.get("id", "dev-user"),
+                username=session_user.get("username", "admin"),
+                role=session_user.get("role", "admin")
+            )
+        
+        # 実際のユーザー情報を返す
+        return User(
+            id=session_user.get("id"),
+            username=session_user.get("username"),
+            role=session_user.get("role", "user")
+        )
+        
+    except Exception as e:
+        debug_error(e, "get_optional_user")
         return None
 
 def require_admin(user: User = Depends(get_current_user)) -> User:
@@ -154,40 +134,54 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
         )
     return user
 
-def login_user(request: Request, username: str, password: str) -> Optional[User]:
-    """
-    ユーザーログイン処理
-    
-    Args:
-        request: FastAPIリクエスト
-        username: ユーザー名
-        password: パスワード
-    
-    Returns:
-        Optional[User]: ログイン成功時はユーザー情報、失敗時はNone
-    """
-    # 仮の認証（後でSAML/OIDCに置き換え）
-    if username in USERS and password == "password":  # 仮のパスワード
-        user_data = USERS[username].copy()
-        user_data['user_id'] = 1  # デフォルトのユーザーID
-        user = User(**user_data)
+def login_user(request: Request, username: str, password: str) -> bool:
+    """ユーザーログイン処理"""
+    try:
+        debug_function("login_user", username=username)
         
-        # セッションにユーザー情報を保存
-        request.session["user"] = user.to_dict()
-        LOGGER.info(f"ログイン成功: {username}")
-        return user
-    
-    LOGGER.warning(f"ログイン失敗: {username}")
-    return None
+        # 開発用アカウント認証
+        if username == "admin" and password == "password":
+            user = User(
+                id="admin-1",
+                username="admin",
+                role="admin"
+            )
+            request.session["user"] = {
+                "id": user.id,
+                "username": user.username,
+                "role": user.role
+            }
+            return True
+        
+        if username == "user" and password == "password":
+            user = User(
+                id="user-1",
+                username="user",
+                role="user"
+            )
+            request.session["user"] = {
+                "id": user.id,
+                "username": user.username,
+                "role": user.role
+            }
+            return True
+        
+        return False
+        
+    except Exception as e:
+        debug_error(e, "login_user")
+        return False
 
-def logout_user(request: Request):
-    """
-    ユーザーログアウト処理
-    
-    Args:
-        request: FastAPIリクエスト
-    """
-    if "user" in request.session:
-        username = request.session["user"].get("username", "unknown")
-        del request.session["user"]
-        LOGGER.info(f"ログアウト: {username}") 
+def logout_user(request: Request) -> bool:
+    """ユーザーログアウト処理"""
+    try:
+        debug_function("logout_user")
+        
+        # セッションをクリア
+        request.session.clear()
+        
+        return True
+        
+    except Exception as e:
+        debug_error(e, "logout_user")
+        return False 

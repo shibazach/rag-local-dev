@@ -1,0 +1,1109 @@
+2025-07-29 14:51:24,173 - new_rag - INFO - [new/config.py] DEBUG_MODE = True
+2025-07-29 14:51:24,173 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 14:51:24,173 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 14:51:24,174 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 14:51:24,174 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 14:51:24,498 - new_rag - INFO - 🚀 新しいRAGシステム起動中...
+2025-07-29 14:51:24,516 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 14:51:24,516 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 14:51:31,440 - new_rag - INFO - 🛑 新しいRAGシステム終了
+2025-07-29 14:51:40,608 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 14:51:40,608 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 14:51:40,608 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 14:51:40,608 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 14:51:40,608 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 14:51:41,040 - new_rag - INFO - 🚀 新しいRAGシステム起動中...
+2025-07-29 14:51:41,064 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 14:51:41,064 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 14:52:14,294 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 14:52:14,296 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 14:52:21,139 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 14:52:21,140 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 14:52:21,282 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 14:52:21,283 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 14:52:21,449 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 14:52:21,451 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 14:52:21,640 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 14:52:21,641 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 14:52:52,394 - new_rag - INFO - ログイン成功: admin
+2025-07-29 14:52:52,527 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:52:52,761 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:52:52,816 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:01,694 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:01,752 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:03,278 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:03,419 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:03,461 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:22,829 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:22,888 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:29,413 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:29,523 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:53:29,559 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:19,125 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:19,272 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:19,340 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:20,248 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:20,250 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:20,251 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:20,945 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:20,947 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:20,948 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,320 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,326 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,326 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,479 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,489 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,506 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,668 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,682 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,682 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,871 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,890 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:21,921 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,108 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,120 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,169 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,459 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,459 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,459 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,597 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,600 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,608 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,736 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,752 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,752 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,925 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,947 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:22,948 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,097 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,117 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,117 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,319 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,324 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,329 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,477 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,486 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,487 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,646 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,654 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,662 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,884 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,892 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:23,914 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,089 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,108 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,108 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,228 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,229 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,229 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,403 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,405 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,405 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,588 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,591 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,594 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,744 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,754 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,762 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,994 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:24,995 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,009 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,292 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,306 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,306 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,546 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,557 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,557 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,788 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,788 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,788 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:25,975 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:26,003 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:26,070 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,083 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,109 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,110 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,340 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,341 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,341 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,954 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,954 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:27,959 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,143 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,143 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,182 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,493 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,493 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,497 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,764 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,764 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:28,764 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,057 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,064 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,065 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,487 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,494 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,498 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,728 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,736 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:29,743 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:35,404 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:35,600 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:35,603 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:36,054 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:36,076 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:36,083 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:36,321 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:36,334 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:54:36,335 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:09,493 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:09,700 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:09,768 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:34,331 - new_rag - INFO - 🛑 新しいRAGシステム終了
+2025-07-29 14:55:34,773 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 14:55:34,773 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 14:55:34,773 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 14:55:34,773 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 14:55:34,773 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 14:55:35,290 - new_rag - INFO - 🚀 新しいRAGシステム起動中...
+2025-07-29 14:55:35,331 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 14:55:35,331 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 14:55:37,763 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,004 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,018 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,126 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,127 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,152 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,312 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,323 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:38,324 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:39,265 - new_rag - INFO - 🛑 新しいRAGシステム終了
+2025-07-29 14:55:39,947 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 14:55:39,948 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 14:55:39,948 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 14:55:39,948 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 14:55:39,948 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 14:55:40,446 - new_rag - INFO - 🚀 新しいRAGシステム起動中...
+2025-07-29 14:55:40,470 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 14:55:40,470 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 14:55:40,498 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:40,498 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:40,498 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:40,692 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:40,767 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:40,782 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:42,190 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:42,190 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:42,191 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:43,399 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:43,418 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:43,426 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:44,283 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:44,283 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:44,285 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:46,579 - new_rag - INFO - 🛑 新しいRAGシステム終了
+2025-07-29 14:55:47,333 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 14:55:47,333 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 14:55:47,333 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 14:55:47,333 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 14:55:47,333 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 14:55:47,693 - new_rag - INFO - 🚀 新しいRAGシステム起動中...
+2025-07-29 14:55:47,720 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 14:55:47,720 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 14:55:50,583 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:50,820 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:50,830 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:51,434 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:51,449 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:51,453 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:52,380 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:52,381 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:52,381 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:55:56,180 - new_rag - INFO - 🛑 新しいRAGシステム終了
+2025-07-29 14:55:57,161 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 14:55:57,161 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 14:55:57,161 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 14:55:57,161 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 14:55:57,161 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 14:55:57,679 - new_rag - INFO - 🚀 研究部 RAGシステム起動中...
+2025-07-29 14:55:57,712 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 14:55:57,712 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 14:56:06,527 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:06,696 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:06,710 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:10,563 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:10,578 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:10,579 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:10,855 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:10,855 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:56:10,855 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:57:02,486 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:57:02,667 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:57:02,692 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:07,685 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:07,873 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:07,917 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:10,570 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:10,571 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:10,571 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:10,794 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:10,803 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:10,804 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:11,869 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:11,880 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:11,880 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,111 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,111 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,134 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,399 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,399 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,403 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,734 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,734 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,740 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,929 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,929 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:12,942 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,146 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,146 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,159 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,331 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,332 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,332 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,525 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,533 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:13,533 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,177 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,177 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,178 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,382 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,396 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,414 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,654 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,658 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,665 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,834 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,844 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:14,844 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,059 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,076 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,085 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,275 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,275 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,276 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,454 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,470 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,475 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,817 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,817 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,818 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,968 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,982 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:15,983 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,206 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,207 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,213 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,449 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,450 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,450 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,759 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,760 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:16,768 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,015 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,015 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,017 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,251 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,254 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,254 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,832 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,847 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:17,849 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:18,805 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:18,808 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:18,810 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:22,324 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:22,324 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:22,339 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,145 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,153 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,153 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,329 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,338 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,339 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,584 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,585 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:23,586 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:24,387 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:24,399 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:24,408 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:24,591 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:24,610 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:24,614 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:25,099 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:25,099 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:25,099 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:25,296 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:25,296 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:25,297 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:26,071 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:26,083 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:26,084 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:26,277 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:26,278 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:26,285 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:27,070 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:27,071 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:27,071 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:27,290 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:27,295 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 14:59:27,311 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:00:32,157 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:00:32,204 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:09,869 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:10,041 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:10,049 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:11,143 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:11,146 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:11,172 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:11,774 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:11,774 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:11,774 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,646 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,657 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,657 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,833 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,849 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,854 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,958 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,970 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:12,986 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,279 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,279 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,279 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,707 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,720 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,737 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,936 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,948 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:13,953 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,135 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,154 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,164 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,367 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,375 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,383 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,670 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,670 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,672 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,848 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,848 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:14,849 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,067 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,080 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,081 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,250 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,257 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,258 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,491 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,494 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,494 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,705 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,705 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,708 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,926 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,927 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:15,940 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:16,517 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:16,540 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:16,540 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:17,045 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:17,063 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:17,063 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:17,619 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:17,619 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:17,619 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:21,143 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:21,143 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:21,144 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:22,121 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:22,304 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:22,320 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:22,642 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:22,642 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:22,642 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:26,279 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:26,287 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:26,287 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:26,919 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:26,941 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:26,941 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:27,532 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:27,542 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:27,542 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:28,212 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:28,226 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:28,226 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:30,452 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:30,456 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:30,463 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:30,822 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:30,831 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:30,832 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:31,423 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:31,433 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:31,433 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:31,687 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:31,689 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:31,702 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,132 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,152 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,152 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,388 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,389 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,389 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,826 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,827 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:32,828 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,075 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,075 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,075 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,517 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,532 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,533 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,812 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,812 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:33,815 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,212 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,212 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,215 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,447 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,447 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,448 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,975 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,985 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:34,995 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,198 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,200 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,200 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,394 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,396 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,395 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,569 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,579 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,580 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,774 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,789 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:35,793 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,310 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,317 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,318 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,622 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,626 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,636 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,896 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,914 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:36,914 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,234 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,249 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,255 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,624 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,624 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,624 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,823 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,832 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:37,837 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,379 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,380 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,380 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,626 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,626 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,626 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,957 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,969 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:38,981 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,237 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,237 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,237 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,708 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,709 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,726 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,948 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,961 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:39,966 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,160 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,161 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,162 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,397 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,399 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,400 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,702 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,703 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,702 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,923 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,924 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:40,924 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,172 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,188 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,189 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,411 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,424 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,425 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,656 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,657 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,657 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,852 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,861 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:41,867 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,076 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,087 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,089 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,438 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,446 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,456 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,645 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,655 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:42,655 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,003 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,003 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,004 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,221 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,221 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,230 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,479 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,480 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:43,480 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:44,859 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:44,871 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:44,871 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:45,091 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:45,101 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:02:45,101 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:37,084 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:37,244 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:37,245 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:38,987 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:38,999 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:39,003 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:39,325 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:39,335 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:39,335 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:41,001 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:41,045 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:43,494 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:43,551 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:43,552 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:46,804 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:46,852 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:50,354 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:50,424 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:50,555 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:50,576 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:50,582 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:52,954 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:52,965 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:52,976 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:54,361 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:03:54,395 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:04:05,521 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 15:04:05,522 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 15:04:12,007 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 15:04:12,008 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 15:04:12,634 - new_rag - INFO - �� 研究部 RAGシステム終了
+2025-07-29 15:04:13,286 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 15:04:13,286 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 15:04:13,287 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 15:04:13,287 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 15:04:13,287 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 15:04:13,829 - new_rag - INFO - 🚀 研究部 RAGシステム起動中...
+2025-07-29 15:04:13,854 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 15:04:13,854 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 15:04:15,959 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 15:04:15,960 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 15:04:17,489 - new_rag - INFO - �� 研究部 RAGシステム終了
+2025-07-29 15:04:17,942 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 15:04:17,942 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 15:04:17,942 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 15:04:17,942 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 15:04:17,942 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 15:04:18,350 - new_rag - INFO - 🚀 研究部 RAGシステム起動中...
+2025-07-29 15:04:18,372 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 15:04:18,373 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 15:04:21,717 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 15:04:21,722 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 15:04:27,828 - new_rag - INFO - �� 研究部 RAGシステム終了
+2025-07-29 15:04:28,277 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 15:04:28,277 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 15:04:28,277 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 15:04:28,277 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 15:04:28,277 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 15:04:28,672 - new_rag - INFO - 🚀 R&D RAGシステム起動中...
+2025-07-29 15:04:28,700 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 15:04:28,700 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 15:05:06,527 - new_rag - INFO - ログイン成功: admin
+2025-07-29 15:05:06,880 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:06,967 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:07,079 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:24,287 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:24,440 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:27,729 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:27,788 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:27,798 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:43,377 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:43,383 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:05:43,506 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:11,424 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:11,610 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:14,292 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:14,339 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:16,338 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:16,405 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:16,418 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:17,927 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:17,963 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:20,957 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:20,974 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:21,096 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:22,678 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:22,720 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:22,728 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:24,873 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:24,883 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:24,886 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:57,279 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:06:57,455 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:07:13,244 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:07:13,292 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:07:13,428 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:07:52,117 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:07:52,286 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:07:52,316 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:08:12,444 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:08:12,497 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:08:12,654 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:08:15,882 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:08:15,987 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:08:17,827 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:08:17,859 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:09:55,879 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:09:55,922 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:09:56,009 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:09:57,665 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:09:57,666 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:09:57,666 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:09,149 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:09,310 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:09,315 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:09,910 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:09,910 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:09,924 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:11,464 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:11,470 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:11,470 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:13,442 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:13,510 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:21,814 - new_rag - WARNING - 認証失敗: ユーザー情報が見つかりません
+2025-07-29 15:10:21,815 - new_rag - ERROR - データベースエラー: 401: 認証が必要です
+Traceback (most recent call last):
+  File "/workspace/new/database.py", line 35, in get_db
+    yield db
+  File "/usr/local/lib/python3.10/site-packages/fastapi/concurrency.py", line 27, in contextmanager_in_threadpool
+    yield await run_in_threadpool(cm.__enter__)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 292, in app
+    solved_result = await solve_dependencies(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/dependencies/utils.py", line 640, in solve_dependencies
+    solved = await run_in_threadpool(call, **solved_result.values)
+  File "/usr/local/lib/python3.10/site-packages/starlette/concurrency.py", line 38, in run_in_threadpool
+    return await anyio.to_thread.run_sync(func)
+  File "/usr/local/lib/python3.10/site-packages/anyio/to_thread.py", line 56, in run_sync
+    return await get_async_backend().run_sync_in_worker_thread(
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 2470, in run_sync_in_worker_thread
+    return await future
+  File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 967, in run
+    result = context.run(func, *args)
+  File "/workspace/new/auth.py", line 97, in get_current_user
+    raise HTTPException(
+fastapi.exceptions.HTTPException: 401: 認証が必要です
+2025-07-29 15:10:29,996 - new_rag - INFO - ログイン成功: admin
+2025-07-29 15:10:30,144 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:30,264 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:10:30,513 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:06,051 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:06,216 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:08,079 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:08,134 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:08,141 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:09,568 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:09,612 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:56,509 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:11:56,749 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:06,497 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:06,576 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:08,355 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:08,489 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:08,519 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:10,218 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:10,285 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:11,559 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:11,602 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:11,610 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:13,329 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:13,357 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:15,951 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:15,970 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:16,106 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:38,450 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:38,504 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:52,203 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:52,409 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:12:52,427 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:11,656 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:11,724 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:28,048 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:28,120 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:28,349 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:28,352 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:28,364 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:38,254 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:43,701 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:43,786 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:43,981 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:43,989 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:44,004 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:13:53,866 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:03,905 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:13,851 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:13,860 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:23,870 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:33,859 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:43,864 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:43,879 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:53,875 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:56,620 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:56,728 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:14:56,886 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:00,100 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:00,103 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:00,236 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:01,929 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:02,039 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:05,550 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:05,646 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:05,666 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:07,364 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:07,421 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:14,443 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:14,646 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:14,701 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:17,446 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:17,514 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:17,526 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:24,235 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:24,398 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:24,407 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:39,527 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:15:39,586 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:12,674 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:12,922 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:15,749 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:15,821 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:18,033 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:18,143 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:18,941 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:19,080 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:19,513 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:19,586 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:19,697 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:19,798 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:19,939 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:20,036 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:20,140 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:20,223 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:32,200 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:32,364 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:33,982 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:34,075 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:34,096 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:35,884 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:35,892 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:36,033 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:38,472 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:38,539 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:40,345 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:40,409 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:40,411 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:41,919 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:42,016 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:43,252 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:43,354 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:46,599 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:46,600 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:46,737 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:48,159 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:48,214 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:49,213 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:49,302 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:49,314 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:49,328 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:49,435 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:57,738 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:57,837 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:57,998 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:58,008 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:17:58,038 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:07,898 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:17,966 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:27,949 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:27,955 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:37,955 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:45,274 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:45,451 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:45,483 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:45,601 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:45,610 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:46,464 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:46,514 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:46,517 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:46,519 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:46,520 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:50,444 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:50,485 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:50,496 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:50,496 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:18:50,504 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:00,586 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:10,587 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:10,719 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:10,783 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:10,800 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:10,983 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:11,037 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:20,888 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:30,954 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:40,888 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:40,908 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:19:50,865 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:00,872 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:10,893 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:10,893 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:20,891 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:30,093 - new_rag - INFO - 🛑 R&D RAGシステム終了
+2025-07-29 15:20:30,626 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 15:20:30,627 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 15:20:30,627 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 15:20:30,627 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 15:20:30,627 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 15:20:31,160 - new_rag - INFO - 🚀 R&D RAGシステム起動中...
+2025-07-29 15:20:31,181 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 15:20:31,181 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 15:20:31,189 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:40,895 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:40,933 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:20:50,816 - new_rag - INFO - 🛑 R&D RAGシステム終了
+2025-07-29 15:20:51,306 - new_rag - INFO - [new/config.py] DEBUG_MODE = False
+2025-07-29 15:20:51,306 - new_rag - INFO - [new/config.py] DEBUG_PRINT_ENABLED = True
+2025-07-29 15:20:51,306 - new_rag - INFO - [new/config.py] OLLAMA_MODEL = phi4-mini
+2025-07-29 15:20:51,306 - new_rag - INFO - [new/config.py] SECURE_COOKIES = False
+2025-07-29 15:20:51,306 - new_rag - INFO - [new/config.py] ログファイル: /workspace/logs/app.log
+2025-07-29 15:20:51,839 - new_rag - INFO - 🚀 R&D RAGシステム起動中...
+2025-07-29 15:20:51,883 - new_rag - INFO - データベーステーブル初期化完了
+2025-07-29 15:20:51,883 - new_rag - INFO - ✅ データベース初期化完了
+2025-07-29 15:20:51,892 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:00,911 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:10,925 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:10,950 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:20,903 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:30,869 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:40,879 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:40,884 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:21:50,903 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:22:00,862 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:22:10,923 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:22:10,934 - new_rag - INFO - セッションからユーザー取得: admin
+2025-07-29 15:22:16,359 - new_rag - INFO - 🛑 R&D RAGシステム終了
+2025-07-29 15:22:26,076 - new_rag - ERROR - 起動エラー: name 'init_database' is not defined
+2025-07-29 15:22:40,075 - new_rag - ERROR - 起動エラー: name 'init_database' is not defined
+2025-07-29 15:22:52,020 - new_rag - ERROR - 起動エラー: name 'init_database' is not defined
+2025-07-29 15:23:00,874 - new_rag - ERROR - 起動エラー: name 'init_database' is not defined
+2025-07-29 15:23:09,500 - new_rag - ERROR - 起動エラー: name 'init_database' is not defined
+2025-07-29 15:23:16,017 - new_rag - ERROR - 起動エラー: name 'init_database' is not defined
+2025-07-29 15:24:00,716 - new_rag - ERROR - 起動エラー: name 'init_database' is not defined

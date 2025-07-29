@@ -1,83 +1,267 @@
 {% extends "base.html" %}
 
-{% block title %}ファイル管理 - 新しいRAGシステム{% endblock %}
+{% block title %}ファイル管理 - R&D RAGシステム{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="files-container">
-        <div class="files-header">
-            <h1>ファイル管理</h1>
-            <button class="btn btn-primary" onclick="location.href='/upload'">ファイルをアップロード</button>
+<div class="container-fluid">
+    <!-- デバッグステータスバー -->
+    <div id="debug-status" class="debug-status">
+        <div class="debug-info">
+            <span id="debug-text">初期化中...</span>
+            <button onclick="clearDebug()" class="debug-clear">クリア</button>
+        </div>
+    </div>
+
+    <div class="files-layout">
+        <!-- 左ペイン：ファイル一覧 -->
+        <div class="files-left-panel">
+            <div class="files-container">
+                
+                <div class="files-controls">
+                    <div class="search-box">
+                        <input type="text" id="search-input" placeholder="ファイル名で検索..." class="form-control">
+                    </div>
+                    <div class="filter-controls">
+                        <select id="status-filter" class="form-control">
+                            <option value="">すべてのステータス</option>
+                            <option value="uploaded">アップロード済み</option>
+                            <option value="processing">処理中</option>
+                            <option value="completed">完了</option>
+                            <option value="error">エラー</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="files-list">
+                    <div class="files-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ファイル名</th>
+                                    <th>サイズ</th>
+                                    <th>ステータス</th>
+                                    <th>アップロード日時</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="files-tbody">
+                                <!-- ファイル一覧がここに表示されます -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div id="no-files" class="no-files" style="display: none;">
+                        <p>ファイルがありません</p>
+                        <p>上部メニューの「アップロード」からファイルをアップロードしてください</p>
+                    </div>
+                </div>
+            </div>
         </div>
         
-        <div class="files-controls">
-            <div class="search-box">
-                <input type="text" id="search-input" placeholder="ファイル名で検索..." class="form-control">
-            </div>
-            <div class="filter-controls">
-                <select id="status-filter" class="form-control">
-                    <option value="">すべてのステータス</option>
-                    <option value="uploaded">アップロード済み</option>
-                    <option value="processing">処理中</option>
-                    <option value="completed">完了</option>
-                    <option value="error">エラー</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="files-list">
-            <div class="files-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ファイル名</th>
-                            <th>サイズ</th>
-                            <th>ステータス</th>
-                            <th>アップロード日時</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody id="files-tbody">
-                        <!-- ファイル一覧がここに表示されます -->
-                    </tbody>
-                </table>
-            </div>
-            
-            <div id="no-files" class="no-files" style="display: none;">
-                <p>ファイルがありません</p>
-                <button class="btn btn-primary" onclick="location.href='/upload'">ファイルをアップロード</button>
+                       <!-- リサイズハンドル -->
+               <div class="resize-handle" id="resize-handle"></div>
+               
+               <!-- 右ペイン：プレビュー -->
+               <div class="files-right-panel">
+            <div class="preview-container">
+                <div class="preview-content">
+                    <div id="preview-placeholder">
+                        <p>ファイルを選択してプレビューを表示</p>
+                    </div>
+                                               <div id="pdf-preview-content" style="display: none;">
+                               <iframe id="pdf-preview-frame" 
+                                       src=""
+                                       width="100%" 
+                                       height="100%"
+                                       style="border: none;">
+                               </iframe>
+                               <div id="pdf-fallback" style="display: none;">
+                                   <p>PDFを表示できません。<a id="pdf-download-link" href="#" target="_blank">新しいタブで開く</a></p>
+                               </div>
+                           </div>
+                    <div id="text-preview-content" style="display: none;">
+                        <pre id="text-preview-text"></pre>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+    
+    <!-- 通知エリア -->
+    <div id="notifications"></div>
 </div>
 
 <script>
-// ページ読み込み時の処理
+// ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', function() {
+    debugLog('ページ読み込み開始');
+    console.log('[INIT] ページ読み込み開始');
+    
+    // DOM要素の存在確認
+    const requiredElements = [
+        'files-tbody',
+        'no-files',
+        'pdf-preview-content',
+        'pdf-preview-frame',
+        'text-preview-content'
+    ];
+    
+    console.log('[INIT] DOM要素確認:');
+    requiredElements.forEach(elementId => {
+        const element = document.getElementById(elementId);
+        const exists = !!element;
+        console.log(`[INIT] ${elementId}: ${exists}`);
+        if (!exists) {
+            console.error(`[INIT] 警告: ${elementId} が見つかりません`);
+        }
+    });
+    
+    // ファイル一覧を読み込み
     loadFiles();
     
     // 検索とフィルターのイベントリスナー
     document.getElementById('search-input').addEventListener('input', filterFiles);
     document.getElementById('status-filter').addEventListener('change', filterFiles);
+    
+    // リサイズハンドルの初期化
+    initResizeHandle();
 });
+
+// リサイズハンドルの初期化
+function initResizeHandle() {
+    const resizeHandle = document.getElementById('resize-handle');
+    const leftPanel = document.querySelector('.files-left-panel');
+    const rightPanel = document.querySelector('.files-right-panel');
+    const layout = document.querySelector('.files-layout');
+    
+    if (!resizeHandle || !leftPanel || !rightPanel || !layout) {
+        console.error('[RESIZE] リサイズハンドルの初期化に失敗: 必要な要素が見つかりません');
+        return;
+    }
+    
+    let isResizing = false;
+    let startX = 0;
+    let startLeftWidth = 0;
+    
+    resizeHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startX = e.clientX;
+        startLeftWidth = leftPanel.offsetWidth;
+        
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+        
+        e.preventDefault();
+    });
+    
+    function handleMouseMove(e) {
+        if (!isResizing) return;
+        
+        const deltaX = e.clientX - startX;
+        const newLeftWidth = startLeftWidth + deltaX;
+        const layoutWidth = layout.offsetWidth;
+        
+        // 最小・最大幅の制限
+        const minWidth = 200;
+        const maxWidth = layoutWidth - 200;
+        
+        if (newLeftWidth >= minWidth && newLeftWidth <= maxWidth) {
+            leftPanel.style.width = newLeftWidth + 'px';
+            leftPanel.style.flex = 'none';
+        }
+    }
+    
+    function handleMouseUp() {
+        isResizing = false;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+    }
+}
+
+// デバッグログ関数
+function debugLog(message) {
+    const debugText = document.getElementById('debug-text');
+    const timestamp = new Date().toLocaleTimeString();
+    debugText.textContent = `[${timestamp}] ${message}`;
+    console.log(`[DEBUG] ${message}`);
+}
+
+// デバッグクリア
+function clearDebug() {
+    debugLog('デバッグ情報をクリアしました');
+}
+
+// ローディング表示
+function showLoading() {
+    debugLog('ローディング表示開始');
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'flex';
+    }
+}
+
+// ローディング非表示
+function hideLoading() {
+    debugLog('ローディング非表示');
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+    }
+}
+
+// 通知表示
+function showNotification(message, type = 'info') {
+    debugLog(`通知表示: ${type} - ${message}`);
+    const notifications = document.getElementById('notifications');
+    if (notifications) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notifications.appendChild(notification);
+        
+        // 3秒後に自動削除
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+}
 
 // ファイル一覧を読み込み
 async function loadFiles() {
     try {
+        debugLog('ファイル一覧読み込み開始');
         showLoading();
+        
+        debugLog('APIリクエスト送信中: /api/files');
         const response = await fetch('/api/files', {
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            }
+            credentials: 'include'  // セッション認証を使用
         });
         
+        debugLog(`APIレスポンス受信: ${response.status} ${response.statusText}`);
+        
         if (response.ok) {
-            const files = await response.json();
+            const data = await response.json();
+            debugLog(`APIレスポンスデータ: ${JSON.stringify(data).substring(0, 200)}...`);
+            debugLog(`APIレスポンスの型: ${typeof data}`);
+            debugLog(`APIレスポンスのキー: ${Object.keys(data).join(', ')}`);
+            
+            // APIレスポンスの構造に合わせて修正
+            const files = data.files || [];
+            debugLog(`ファイル数: ${files.length}`);
+            
+            if (files.length > 0) {
+                debugLog(`最初のファイル: ${JSON.stringify(files[0]).substring(0, 100)}...`);
+            }
+            
             displayFiles(files);
+            debugLog('ファイル一覧表示完了');
         } else {
+            const errorText = await response.text();
+            debugLog(`APIエラー: ${response.status} - ${errorText}`);
             showNotification('ファイルの読み込みに失敗しました', 'error');
         }
     } catch (error) {
+        debugLog(`例外発生: ${error.message}`);
         console.error('Error loading files:', error);
         showNotification('ファイルの読み込みに失敗しました', 'error');
     } finally {
@@ -87,49 +271,91 @@ async function loadFiles() {
 
 // ファイル一覧を表示
 function displayFiles(files) {
-    const tbody = document.getElementById('files-tbody');
-    const noFiles = document.getElementById('no-files');
-    
-    if (files.length === 0) {
-        tbody.innerHTML = '';
-        noFiles.style.display = 'block';
-        return;
+    try {
+        debugLog(`displayFiles開始: ${files.length}個のファイル`);
+        
+        const tbody = document.getElementById('files-tbody');
+        const noFiles = document.getElementById('no-files');
+        
+        if (!tbody) {
+            debugLog('エラー: files-tbody要素が見つかりません');
+            return;
+        }
+        
+        if (!noFiles) {
+            debugLog('エラー: no-files要素が見つかりません');
+            return;
+        }
+        
+        if (files.length === 0) {
+            debugLog('ファイルが0個のため、空の表示を設定');
+            tbody.innerHTML = '';
+            noFiles.style.display = 'block';
+            return;
+        }
+        
+        debugLog('ファイル一覧のHTML生成開始');
+        noFiles.style.display = 'none';
+        
+        const fileRows = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            debugLog(`ファイル${i + 1}: ${file.filename} (${file.file_size} bytes) - ステータス: ${file.status}`);
+            
+            try {
+                // ページ数情報を取得（PDFの場合）
+                const pageCount = file.page_count || '-';
+                const isCompleted = file.status === 'completed';
+                
+                const row = `
+                    <tr data-filename="${file.filename}" data-status="${file.status}">
+                        <td>
+                            <div class="file-info">
+                                <span class="file-icon">📄</span>
+                                <a href="#" onclick="previewFile('${file.id}')" class="file-name-link">${file.filename}</a>
+                            </div>
+                        </td>
+                        <td>${formatFileSize(file.file_size)} (${pageCount}頁)</td>
+                        <td>
+                            <span class="status-badge status-${file.status}">
+                                ${getStatusText(file.status)}
+                            </span>
+                        </td>
+                        <td>${formatDate(file.created_at)}</td>
+                        <td>
+                            <div class="file-actions">
+                                <button class="btn btn-sm btn-secondary" 
+                                        onclick="viewFile('${file.id}')" 
+                                        title="詳細表示">
+                                    👁️
+                                </button>
+                                <button class="btn btn-sm btn-info ${!isCompleted ? 'disabled' : ''}" 
+                                        onclick="${isCompleted ? 'previewFile(\'' + file.id + '\', \'text\')' : 'return false'}" 
+                                        title="${isCompleted ? 'テキストプレビュー' : '処理完了後に利用可能'}"
+                                        ${!isCompleted ? 'disabled' : ''}>
+                                    📄
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteFile('${file.id}')" title="削除">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                fileRows.push(row);
+            } catch (error) {
+                debugLog(`ファイル${i + 1}のHTML生成エラー: ${error.message}`);
+            }
+        }
+        
+        debugLog(`HTML生成完了: ${fileRows.length}個の行を生成`);
+        tbody.innerHTML = fileRows.join('');
+        debugLog('ファイル一覧表示完了');
+        
+    } catch (error) {
+        debugLog(`displayFilesエラー: ${error.message}`);
+        console.error('displayFiles error:', error);
     }
-    
-    noFiles.style.display = 'none';
-    tbody.innerHTML = files.map(file => `
-        <tr data-filename="${file.filename}" data-status="${file.status}">
-            <td>
-                <div class="file-info">
-                    <span class="file-icon">📄</span>
-                    <span class="file-name">${file.filename}</span>
-                </div>
-            </td>
-            <td>${formatFileSize(file.file_size)}</td>
-            <td>
-                <span class="status-badge status-${file.status}">
-                    ${getStatusText(file.status)}
-                </span>
-            </td>
-            <td>${formatDate(file.created_at)}</td>
-            <td>
-                <div class="file-actions">
-                    <button class="btn btn-sm btn-secondary" onclick="viewFile('${file.id}')" title="詳細表示">
-                        👁️
-                    </button>
-                    <button class="btn btn-sm btn-info" onclick="previewFile('${file.id}', 'text')" title="テキストプレビュー">
-                        📄
-                    </button>
-                    <button class="btn btn-sm btn-warning" onclick="previewFile('${file.id}', 'binary')" title="バイナリプレビュー">
-                        🔍
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="deleteFile('${file.id}')" title="削除">
-                        🗑️
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
 }
 
 // ファイルを検索・フィルター
@@ -154,13 +380,12 @@ async function viewFile(fileId) {
     try {
         showLoading();
         const response = await fetch(`/api/files/${fileId}`, {
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            }
+            credentials: 'include'
         });
         
         if (response.ok) {
-            const file = await response.json();
+            const data = await response.json();
+            const file = data.file || data;
             showFileDetails(file);
         } else {
             showNotification('ファイルの詳細取得に失敗しました', 'error');
@@ -189,6 +414,9 @@ function showFileDetails(file) {
                 </div>
                 <div class="file-detail">
                     <strong>サイズ:</strong> ${formatFileSize(file.file_size)}
+                </div>
+                <div class="file-detail">
+                    <strong>ページ数:</strong> ${file.page_count || '-'}
                 </div>
                 <div class="file-detail">
                     <strong>ステータス:</strong> 
@@ -224,9 +452,7 @@ async function deleteFile(fileId) {
         showLoading();
         const response = await fetch(`/api/files/${fileId}`, {
             method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            }
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -246,68 +472,132 @@ async function deleteFile(fileId) {
 // ファイルプレビュー
 async function previewFile(fileId, previewType) {
     try {
-        showLoading();
-        const response = await fetch(`/api/files/${fileId}/preview?preview_type=${previewType}`, {
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            }
+        debugLog(`ファイルプレビュー開始: ${fileId}, タイプ: ${previewType}`);
+        console.log(`[PREVIEW] ファイルプレビュー開始: fileId=${fileId}, previewType=${previewType}`);
+        
+        const response = await fetch(`/api/files/${fileId}/preview`, {
+            method: 'GET',
+            credentials: 'include'
         });
         
+        console.log(`[PREVIEW] APIレスポンス: status=${response.status}, ok=${response.ok}`);
+        debugLog(`APIレスポンス: status=${response.status}, ok=${response.ok}`);
+        
         if (response.ok) {
-            const preview = await response.json();
-            showFilePreview(preview, previewType);
+            const contentType = response.headers.get('content-type');
+            console.log(`[PREVIEW] Content-Type: ${contentType}`);
+            debugLog(`プレビューコンテンツタイプ: ${contentType}`);
+            
+            if (contentType && contentType.includes('application/pdf')) {
+                // PDFファイルの場合
+                console.log(`[PREVIEW] PDFプレビューを表示: fileId=${fileId}`);
+                debugLog('PDFプレビューを表示');
+                showPdfPreview(fileId);
+            } else {
+                // テキストまたはバイナリプレビューの場合
+                const data = await response.json();
+                console.log(`[PREVIEW] プレビューデータ:`, data);
+                debugLog(`プレビューデータ受信: ${JSON.stringify(data).substring(0, 100)}...`);
+                
+                if (data.type === 'text') {
+                    console.log(`[PREVIEW] テキストプレビューを表示`);
+                    debugLog('テキストプレビューを表示');
+                    showTextPreview(data.content);
+                } else {
+                    console.log(`[PREVIEW] バイナリプレビューを表示`);
+                    debugLog('バイナリプレビューを表示');
+                    showTextPreview(data.content);
+                }
+            }
         } else {
-            showNotification('ファイルプレビューの取得に失敗しました', 'error');
+            const errorData = await response.json();
+            const errorMessage = `HTTP ${response.status}: ${errorData.detail || 'Unknown error'}`;
+            console.error(`[PREVIEW] プレビューエラー: ${errorMessage}`);
+            console.error(`[PREVIEW] エラーレスポンス:`, errorData);
+            debugLog(`プレビューエラー: ${response.status} - ${errorData.detail}`);
+            showNotification(`プレビューエラー: ${errorMessage}`, 'error');
         }
     } catch (error) {
-        console.error('Error previewing file:', error);
-        showNotification('ファイルプレビューの取得に失敗しました', 'error');
-    } finally {
-        hideLoading();
+        const errorMessage = `${error.name}: ${error.message}`;
+        console.error(`[PREVIEW] プレビュー例外エラー:`, error);
+        console.error(`[PREVIEW] エラー詳細:`, {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+        });
+        debugLog(`プレビューエラー: ${errorMessage}`);
+        showNotification(`プレビューエラー: ${errorMessage}`, 'error');
     }
 }
 
-// ファイルプレビューを表示
-function showFilePreview(preview, previewType) {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
+// PDFプレビューを右ペインに表示
+function showPdfPreview(fileId) {
+    const pdfUrl = `${window.location.origin}/api/files/${fileId}/preview`;
+    const placeholder = document.getElementById('preview-placeholder');
+    const pdfContent = document.getElementById('pdf-preview-content');
+    const pdfFrame = document.getElementById('pdf-preview-frame');
+    const pdfFallback = document.getElementById('pdf-fallback');
+    const downloadLink = document.getElementById('pdf-download-link');
     
-    let content = '';
-    if (previewType === 'text') {
-        content = `
-            <div class="modal-header">
-                <h3>テキストプレビュー</h3>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="preview-content">
-                    <pre>${preview.content}</pre>
-                </div>
-            </div>
-        `;
-    } else if (previewType === 'binary') {
-        content = `
-            <div class="modal-header">
-                <h3>バイナリプレビュー</h3>
-                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="preview-content">
-                    <p><strong>サイズ:</strong> ${preview.size} bytes</p>
-                    <p><strong>ヘックスダンプ:</strong></p>
-                    <pre class="hex-dump">${preview.hex_preview}</pre>
-                </div>
-            </div>
-        `;
-    }
+    console.log(`[PREVIEW] PDFプレビュー表示: ${pdfUrl}`);
     
-    modal.innerHTML = `
-        <div class="modal-content">
-            ${content}
-        </div>
-    `;
+    // プレビューを表示
+    placeholder.style.display = 'none';
+    pdfContent.style.display = 'block';
+    pdfFallback.style.display = 'none';
     
-    document.body.appendChild(modal);
+    // PDF iframeの設定
+    pdfFrame.src = pdfUrl;
+    downloadLink.href = pdfUrl;
+    downloadLink.textContent = '新しいタブで開く';
+    
+    // iframeの読み込みエラーを検出
+    pdfFrame.onerror = function() {
+        console.log(`[PREVIEW] PDF iframe読み込みエラー、フォールバック表示`);
+        pdfFrame.style.display = 'none';
+        pdfFallback.style.display = 'block';
+    };
+    
+    // iframeの読み込み完了を検出
+    pdfFrame.onload = function() {
+        console.log(`[PREVIEW] PDF iframe読み込み完了`);
+    };
+    
+    console.log(`[PREVIEW] PDFプレビュー表示完了`);
+}
+
+// テキストプレビューを右ペインに表示
+function showTextPreview(content) {
+    const placeholder = document.getElementById('preview-placeholder');
+    const textContent = document.getElementById('text-preview-content');
+    const textElement = document.getElementById('text-preview-text');
+    
+    console.log(`[PREVIEW] テキストプレビュー表示`);
+    
+    // プレビューを表示
+    placeholder.style.display = 'none';
+    textContent.style.display = 'block';
+    
+    // テキスト内容を設定
+    textElement.textContent = content;
+    
+    console.log(`[PREVIEW] テキストプレビュー表示完了`);
+}
+
+// プレビューを閉じる
+function closePreview() {
+    const placeholder = document.getElementById('preview-placeholder');
+    const pdfContent = document.getElementById('pdf-preview-content');
+    const textContent = document.getElementById('text-preview-content');
+    
+    console.log(`[PREVIEW] プレビューを閉じる`);
+    
+    // プレビューを非表示
+    placeholder.style.display = 'block';
+    pdfContent.style.display = 'none';
+    textContent.style.display = 'none';
+    
+    console.log(`[PREVIEW] プレビューを閉じました`);
 }
 
 // ステータステキストを取得
@@ -320,9 +610,186 @@ function getStatusText(status) {
     };
     return statusMap[status] || status;
 }
+
+// ファイルサイズをフォーマット
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 日付をフォーマット
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    
+    const date = new Date(dateString);
+    return date.toLocaleString('ja-JP', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
 </script>
 
 <style>
+/* デバッグステータスバー */
+.debug-status {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 20px;
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.debug-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.debug-text {
+    color: #666;
+    word-break: break-all;
+}
+
+.debug-clear {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+        
+/* 右ペインレイアウト */
+.files-layout {
+    display: flex;
+    height: calc(100vh - 120px);
+    gap: 0;
+    position: relative;
+}
+        
+.files-left-panel {
+    flex: 1;
+    min-width: 300px;
+    max-width: 60%;
+    overflow: hidden;
+}
+        
+.resize-handle {
+    width: 8px;
+    background: #e0e0e0;
+    cursor: col-resize;
+    position: relative;
+    transition: background-color 0.2s;
+}
+
+.resize-handle:hover {
+    background: #c0c0c0;
+}
+
+.resize-handle:active {
+    background: #a0a0a0;
+}
+
+.resize-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 20px;
+    background: #999;
+    border-radius: 1px;
+}
+        
+.files-right-panel {
+    flex: 1;
+    min-width: 300px;
+    background-color: #f8f9fa;
+}
+        
+.preview-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+        
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    background-color: #fff;
+}
+        
+.preview-header h3 {
+    margin: 0;
+    color: #333;
+}
+        
+.preview-content {
+    flex: 1;
+    padding: 20px;
+    overflow: auto;
+}
+        
+#preview-placeholder {
+    text-align: center;
+    color: #666;
+    margin-top: 50px;
+}
+        
+#pdf-preview-content {
+    height: 100%;
+}
+        
+#pdf-preview-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+        
+#text-preview-content {
+    height: 100%;
+    overflow: auto;
+}
+        
+#text-preview-text {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+        
+/* レスポンシブ対応 */
+@media (max-width: 1200px) {
+    .files-layout {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .files-right-panel {
+        max-width: none;
+        height: 400px;
+    }
+}
+
 .files-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -444,33 +911,35 @@ function getStatusText(status) {
 }
 
 .modal {
+    display: none;
     position: fixed;
-    top: 0;
+    z-index: 1000;
     left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    background-color: rgba(0,0,0,0.5);
 }
 
 .modal-content {
-    background: white;
-    border-radius: 8px;
-    max-width: 600px;
+    background-color: #fefefe;
+    margin: 2% auto;
+    padding: 0;
+    border: 1px solid #888;
     width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
+    height: 90%;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .modal-header {
-    padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ddd;
+    background-color: #f8f9fa;
+    border-radius: 8px 8px 0 0;
 }
 
 .modal-header h3 {
@@ -491,7 +960,8 @@ function getStatusText(status) {
 }
 
 .modal-body {
-    padding: 20px;
+    padding: 0;
+    height: calc(100% - 70px);
 }
 
 .file-detail {
@@ -571,6 +1041,50 @@ function getStatusText(status) {
         flex-direction: column;
         gap: 4px;
     }
+}
+
+#pdf-preview-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+#text-preview-content {
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* ファイル名をクリック可能にするCSS */
+.file-name-link {
+    color: #007bff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.file-name-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+
+
+/* 無効化されたボタン */
+.btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.btn.disabled:hover {
+    opacity: 0.5;
 }
 </style>
 {% endblock %} 

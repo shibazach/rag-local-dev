@@ -19,30 +19,46 @@ from .auth import get_current_user
 
 # FastAPIアプリケーション作成
 app = FastAPI(
-    title="新しいRAGシステム",
-    description="セキュリティ設計に基づく日本語文書処理RAGシステム",
-    version="2.0.0",
-    debug=DEBUG_MODE
+    title="R&D RAGシステム",
+    description="R&D RAGシステムのAPI",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    openapi_tags=[
+        {"name": "auth", "description": "認証関連API"},
+        {"name": "files", "description": "ファイル管理API"},
+        {"name": "search", "description": "検索API"},
+        {"name": "chat", "description": "チャットAPI"},
+        {"name": "queue", "description": "キュー管理API"},
+        {"name": "stats", "description": "統計API"},
+    ]
 )
 
 # アプリケーション起動時の処理
 @app.on_event("startup")
 async def startup_event():
     """アプリケーション起動時の処理"""
-    LOGGER.info("🚀 新しいRAGシステム起動中...")
     try:
-        init_db()
-        LOGGER.info("✅ データベース初期化完了")
+        # データベース初期化
+        await init_database()
+        
+        # 必要なディレクトリを作成
+        INPUT_DIR.mkdir(parents=True, exist_ok=True)
+        OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+        
     except Exception as e:
-        LOGGER.error(f"❌ データベース初期化エラー: {e}")
-        # エラーが発生してもアプリケーションは起動を続行
-        pass
+        LOGGER.error(f"起動エラー: {e}")
+        raise
 
-# アプリケーション終了時の処理
 @app.on_event("shutdown")
 async def shutdown_event():
     """アプリケーション終了時の処理"""
-    LOGGER.info("🛑 新しいRAGシステム終了")
+    try:
+        # クリーンアップ処理
+        pass
+    except Exception as e:
+        LOGGER.error(f"終了エラー: {e}")
 
 # CORS設定
 app.add_middleware(

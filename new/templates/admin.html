@@ -1,10 +1,8 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAGシステム管理画面</title>
-    <link rel="stylesheet" href="/static/css/main.css">
+{% extends "base.html" %}
+
+{% block title %}RAGシステム管理画面{% endblock %}
+
+{% block content %}
     <style>
         .admin-dashboard {
             padding: 20px;
@@ -260,7 +258,6 @@
 </head>
 <body>
     <div class="admin-dashboard">
-        <h1>RAGシステム管理画面</h1>
         
         <!-- 統計情報 -->
         <div class="admin-section">
@@ -357,6 +354,9 @@
                 }
             } catch (error) {
                 console.error('統計情報取得エラー:', error);
+                if (window.Utils) {
+                    window.Utils.showNotification(`統計情報取得エラー: ${error.message}`, 'error');
+                }
             }
         }
         
@@ -391,6 +391,9 @@
                 }
             } catch (error) {
                 console.error('タスク取得エラー:', error);
+                if (window.Utils) {
+                    window.Utils.showNotification(`タスク取得エラー: ${error.message}`, 'error');
+                }
             }
         }
         
@@ -404,13 +407,17 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    Utils.showNotification(`処理完了: 成功${data.success}件, 失敗${data.error}件`, 'success');
+                    if (window.Utils) {
+                        window.Utils.showNotification(`処理完了: 成功${data.success}件, 失敗${data.error}件`, 'success');
+                    }
                     refreshTasks();
                     updateStats();
                 }
             } catch (error) {
                 console.error('全タスク処理エラー:', error);
-                Utils.showNotification('タスク処理に失敗しました', 'error');
+                if (window.Utils) {
+                    window.Utils.showNotification(`タスク処理エラー: ${error.message}`, 'error');
+                }
             }
         }
         
@@ -449,13 +456,17 @@
                         }
                     }
                     
-                    Utils.showNotification(`処理完了: 成功${successCount}件, 失敗${errorCount}件`, 'success');
+                    if (window.Utils) {
+                        window.Utils.showNotification(`処理完了: 成功${successCount}件, 失敗${errorCount}件`, 'success');
+                    }
                     refreshTasks();
                     updateStats();
                 }
             } catch (error) {
                 console.error('待機タスク処理エラー:', error);
-                Utils.showNotification('タスク処理に失敗しました', 'error');
+                if (window.Utils) {
+                    window.Utils.showNotification(`待機タスク処理エラー: ${error.message}`, 'error');
+                }
             }
         }
         
@@ -492,6 +503,9 @@
                 }
             } catch (error) {
                 console.error('ファイル取得エラー:', error);
+                if (window.Utils) {
+                    window.Utils.showNotification(`ファイル取得エラー: ${error.message}`, 'error');
+                }
             }
         }
         
@@ -499,7 +513,9 @@
         async function performSearch() {
             const query = document.getElementById('search-query').value.trim();
             if (!query) {
-                Utils.showNotification('検索クエリを入力してください', 'warning');
+                if (window.Utils) {
+                    window.Utils.showNotification('検索クエリを入力してください', 'warning');
+                }
                 return;
             }
             
@@ -552,7 +568,9 @@
                 }
             } catch (error) {
                 console.error('検索エラー:', error);
-                Utils.showNotification('検索に失敗しました', 'error');
+                if (window.Utils) {
+                    window.Utils.showNotification(`検索エラー: ${error.message}`, 'error');
+                }
             }
         }
         
@@ -576,5 +594,4 @@
             setInterval(refreshTasks, 10000); // 10秒ごと
         });
     </script>
-</body>
-</html> 
+{% endblock %} 

@@ -1,17 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}ホーム - 新しいRAGシステム{% endblock %}
+{% block title %}ホーム - R&D RAGシステム{% endblock %}
+
+{% block extra_css %}
+<style>
+body {
+    class: "home-page";
+}
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="hero">
     <div class="container">
-        <h1 class="hero-title">新しいRAGシステム</h1>
+        <h1 class="hero-title">R&D RAGシステム</h1>
         <p class="hero-subtitle">セキュリティ設計に基づく日本語文書処理システム</p>
-        
-        <div class="hero-actions">
-            <a href="/chat" class="btn btn-primary btn-lg">チャットを開始</a>
-            <a href="/upload" class="btn btn-outline btn-lg">ファイルをアップロード</a>
-        </div>
     </div>
 </div>
 
@@ -83,6 +86,11 @@
 </div>
 
 <script>
+// ホームページのナビゲーション調整
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.classList.add('home-page');
+});
+
 // システム統計の取得
 async function loadStats() {
     try {
@@ -93,12 +101,12 @@ async function loadStats() {
         
         if (filesResponse.ok) {
             const filesData = await filesResponse.json();
-            document.getElementById('file-count').textContent = filesData.data.length;
+            document.getElementById('file-count').textContent = filesData.files ? filesData.files.length : 0;
         }
         
         if (sessionsResponse.ok) {
             const sessionsData = await sessionsResponse.json();
-            document.getElementById('session-count').textContent = sessionsData.data.length;
+            document.getElementById('session-count').textContent = sessionsData.sessions ? sessionsData.sessions.length : 0;
         }
         
         // 埋め込みベクトル数は仮の値

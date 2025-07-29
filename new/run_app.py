@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-新しいRAGシステム起動スクリプト
+R&D RAGシステム起動スクリプト
 ユーザーがmain.pyとnew.pyを選択して起動できます
 """
 

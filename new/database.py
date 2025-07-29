@@ -41,10 +41,10 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 def init_db():
-    """データベーステーブルを初期化"""
+    """データベース初期化"""
     try:
+        engine = create_engine(DATABASE_URL)
         Base.metadata.create_all(bind=engine)
-        LOGGER.info("データベーステーブル初期化完了")
     except Exception as e:
         LOGGER.error(f"データベース初期化エラー: {e}")
         raise 

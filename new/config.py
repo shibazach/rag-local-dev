@@ -13,6 +13,7 @@ NEW_ROOT = Path(__file__).parent
 # 環境変数から設定を取得
 DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "false").lower() == "true"
+DEBUG_PRINT_ENABLED = os.getenv("DEBUG_PRINT_ENABLED", "true").lower() == "true"  # デバッグプリント機能のスイッチ
 
 # セキュリティ設定
 SECURE_COOKIES = os.getenv("SECURE_COOKIES", "false").lower() == "true"  # 開発時はfalse
@@ -69,9 +70,25 @@ SESSION_COOKIE_SAMESITE = "lax"
 
 # ログ設定
 LOGGER = logging.getLogger("new_rag")
-LOGGER.setLevel(logging.INFO if not DEBUG_MODE else logging.DEBUG)
+LOGGER.setLevel(logging.WARNING)  # WARNING以上のみ出力
 
-# 設定のログ出力
-LOGGER.info(f"[new/config.py] DEBUG_MODE = {DEBUG_MODE}")
-LOGGER.info(f"[new/config.py] OLLAMA_MODEL = {OLLAMA_MODEL}")
-LOGGER.info(f"[new/config.py] SECURE_COOKIES = {SECURE_COOKIES}") 
+# ログディレクトリの作成
+LOG_DIR.mkdir(exist_ok=True)
+
+# ファイルハンドラーの設定
+log_file = LOG_DIR / "app.log"
+file_handler = logging.FileHandler(log_file, encoding='utf-8')
+file_handler.setLevel(logging.WARNING)  # WARNING以上のみファイルに出力
+
+# コンソールハンドラーの設定
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.ERROR)  # コンソールにはエラーのみ出力
+
+# フォーマッターの設定
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# ハンドラーの追加
+LOGGER.addHandler(file_handler)
+LOGGER.addHandler(console_handler) 

@@ -1,21 +1,32 @@
-// new/static/js/main.js
-// 新しいRAGシステムのメインJavaScript
+// R&D RAGシステムのメインJavaScript
 
 // ユーティリティ関数
 const Utils = {
     // 通知を表示
-    showNotification: function(message, type = 'info') {
+    showNotification: function(message, type = 'info', details = null) {
         const notifications = document.getElementById('notifications');
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
-        notification.textContent = message;
+        
+        if (type === 'error' && details) {
+            notification.innerHTML = `
+                <div class="notification-title">エラーが発生しました</div>
+                <div class="notification-message">${message}</div>
+                <div class="notification-details" style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
+                    <strong>詳細:</strong> ${details}
+                </div>
+            `;
+        } else {
+            notification.textContent = message;
+        }
         
         notifications.appendChild(notification);
         
-        // 3秒後に自動削除
+        // エラーの場合は5秒、その他は3秒後に自動削除
+        const timeout = type === 'error' ? 5000 : 3000;
         setTimeout(() => {
             notification.remove();
-        }, 3000);
+        }, timeout);
     },
     
     // ローディングオーバーレイを表示
@@ -43,8 +54,21 @@ const Utils = {
             const response = await fetch(url, finalOptions);
             
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `HTTP ${response.status}: ${response.statusText}`);
+                let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                let errorDetails = '';
+                
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.detail || errorData.message || errorMessage;
+                    errorDetails = errorData.error || errorData.traceback || '';
+                } catch (parseError) {
+                    console.error('エラーレスポンスの解析に失敗:', parseError);
+                }
+                
+                const error = new Error(errorMessage);
+                error.details = errorDetails;
+                error.status = response.status;
+                throw error;
             }
             
             return await response.json();
@@ -224,25 +248,106 @@ const ChatManager = {
     }
 };
 
+// グローバルなエラーハンドリング関数
+window.catchAndLogError = function(func, context = '') {
+    return function(...args) {
+        try {
+            return func.apply(this, args);
+        } catch (error) {
+            console.error(`エラーが発生しました (${context}):`, error);
+            
+            // エラーをサーバーに送信
+            sendErrorToServer('Caught Error', error.message, error.stack);
+            
+            // エラー通知を表示
+            if (window.Utils) {
+                window.Utils.showNotification(`エラーが発生しました: ${error.message}`, 'error', error.stack);
+            }
+            
+            throw error;
+        }
+    };
+};
+
+// 非同期関数用のエラーハンドリング
+window.catchAndLogAsyncError = function(asyncFunc, context = '') {
+    return async function(...args) {
+        try {
+            return await asyncFunc.apply(this, args);
+        } catch (error) {
+            console.error(`非同期エラーが発生しました (${context}):`, error);
+            
+            // エラーをサーバーに送信
+            sendErrorToServer('Caught Async Error', error.message, error.stack);
+            
+            // エラー通知を表示
+            if (window.Utils) {
+                window.Utils.showNotification(`非同期エラーが発生しました: ${error.message}`, 'error', error.stack);
+            }
+            
+            throw error;
+        }
+    };
+};
+
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('新しいRAGシステムが読み込まれました');
+    console.log('R&D RAGシステムが読み込まれました');
     
     // グローバル関数として公開
     window.Utils = Utils;
     window.Auth = Auth;
     window.FileManager = FileManager;
     window.ChatManager = ChatManager;
+    
+    // 既存の関数をエラーハンドリングでラップ
+    if (window.Utils) {
+        const originalShowNotification = window.Utils.showNotification;
+        window.Utils.showNotification = window.catchAndLogError(originalShowNotification, 'showNotification');
+    }
 });
 
 // エラーハンドリング
 window.addEventListener('error', function(event) {
     console.error('JavaScriptエラー:', event.error);
-    Utils.showNotification('エラーが発生しました', 'error');
+    const errorMessage = event.error?.message || 'JavaScriptエラーが発生しました';
+    const errorDetails = event.error?.stack || '';
+    
+    // エラーをサーバーに送信
+    sendErrorToServer('JavaScript Error', errorMessage, errorDetails);
+    
+    Utils.showNotification(errorMessage, 'error', errorDetails);
 });
 
 // 未処理のPromise拒否をキャッチ
 window.addEventListener('unhandledrejection', function(event) {
     console.error('未処理のPromise拒否:', event.reason);
-    Utils.showNotification('エラーが発生しました', 'error');
-}); 
+    const errorMessage = event.reason?.message || '非同期処理でエラーが発生しました';
+    const errorDetails = event.reason?.details || '';
+    
+    // エラーをサーバーに送信
+    sendErrorToServer('Unhandled Promise Rejection', errorMessage, errorDetails);
+    
+    Utils.showNotification(errorMessage, 'error', errorDetails);
+});
+
+// エラーをサーバーに送信する関数
+async function sendErrorToServer(errorType, message, details) {
+    try {
+        await fetch('/api/debug/error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                type: errorType,
+                message: message,
+                details: details,
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            })
+        });
+    } catch (error) {
+        console.error('エラー送信に失敗:', error);
+    }
+} 

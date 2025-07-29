@@ -5,20 +5,70 @@ import logging
 import shutil
 import time
 from typing import List, Optional
+import uuid
 from pathlib import Path
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, Form
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request
+from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy.orm import Session
 
+from ..auth import get_current_user, require_admin, login_user, logout_user, User
 from ..database import get_db
-from ..auth import get_current_user, require_admin
+from ..models import File
 from ..services.file_service import FileService
 from ..services.chat_service import ChatService
 from ..services.search_service import SearchService
 from ..services.queue_service import QueueService
 from ..config import INPUT_DIR, LOGGER
+from ..debug import debug_print, debug_error, debug_function, debug_return, debug_js_error
 
 router = APIRouter()
+
+# 認証API
+@router.post("/auth/login")
+async def login(
+    request: Request,
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    """ユーザーログイン"""
+    try:
+        user = login_user(request, username, password)
+        if user:
+            return {
+                "success": True,
+                "message": "ログインに成功しました",
+                "user": {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "role": user.role
+                }
+            }
+        else:
+            raise HTTPException(status_code=401, detail="ユーザー名またはパスワードが正しくありません")
+    except HTTPException:
+        raise
+    except Exception as e:
+        LOGGER.error(f"ログインエラー: {e}")
+        raise HTTPException(status_code=500, detail="ログイン処理中にエラーが発生しました")
+
+@router.post("/auth/logout")
+async def logout(request: Request):
+    """ユーザーログアウト"""
+    try:
+        debug_function("logout", user_id=request.session.get("user", {}).get("id", "unknown"))
+        
+        # セッションを完全にクリア
+        request.session.clear()
+        
+        return {
+            "success": True,
+            "message": "ログアウトに成功しました"
+        }
+    except Exception as e:
+        LOGGER.error(f"ログアウトエラー: {e}")
+        debug_error(e, "ログアウト処理")
+        raise HTTPException(status_code=500, detail="ログアウト処理中にエラーが発生しました")
 
 # ファイル管理API
 @router.get("/files")
@@ -56,182 +106,41 @@ async def get_file(
 
 @router.post("/files/upload")
 async def upload_files(
-    files: List[UploadFile] = File(...),
-    folder_path: Optional[str] = Form(None),
-    current_user = Depends(require_admin),
+    files: List[UploadFile],
+    folder_path: str = Form(""),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """ファイルアップロード（複数ファイル対応）"""
+    """ファイルアップロード処理"""
     try:
-        LOGGER.info("=" * 50)
-        LOGGER.info("🚀 ファイルアップロード処理開始")
-        LOGGER.info(f"📁 ファイル数: {len(files)}")
-        LOGGER.info(f"👤 ユーザーID: {current_user.id}")
-        LOGGER.info(f"📂 フォルダパス: {folder_path}")
-        LOGGER.info(f"🎯 保存先ディレクトリ: {INPUT_DIR}")
-        LOGGER.info(f"🔍 ディレクトリ存在確認: {INPUT_DIR.exists()}")
-        LOGGER.info("=" * 50)
+        debug_function("upload_files", file_count=len(files), user_id=current_user.id)
         
-        file_service = FileService()
-        results = []
+        # アップロード結果を格納するリスト
+        upload_results = []
         
-        for i, file in enumerate(files):
-            LOGGER.info(f"📄 ファイル {i+1}/{len(files)} 処理開始")
-            LOGGER.info(f"📝 ファイル名: {file.filename}")
-            LOGGER.info(f"📏 ファイルサイズ: {file.size} bytes")
-            LOGGER.info(f"🔧 ファイルタイプ: {file.content_type}")
-            
-            if not file.filename:
-                LOGGER.warning("❌ ファイル名が空です")
-                continue
+        for file in files:
+            try:
+                # ファイル保存処理
+                result = await save_uploaded_file(file, folder_path, current_user, db)
+                upload_results.append(result)
                 
-            # ファイルサイズチェック（50MB制限）
-            if file.size and file.size > 50 * 1024 * 1024:
-                LOGGER.warning(f"❌ ファイルサイズ超過: {file.filename} ({file.size} bytes)")
-                results.append({
+            except Exception as e:
+                debug_error(e, f"ファイルアップロードエラー: {file.filename}")
+                upload_results.append({
                     "filename": file.filename,
                     "success": False,
-                    "error": "ファイルサイズが50MBを超えています"
-                })
-                continue
-            
-            # ディレクトリの作成
-            try:
-                LOGGER.info(f"📂 ディレクトリ作成開始: {INPUT_DIR}")
-                INPUT_DIR.mkdir(parents=True, exist_ok=True)
-                LOGGER.info(f"✅ ディレクトリ作成完了: {INPUT_DIR}")
-                LOGGER.info(f"🔍 ディレクトリ存在確認: {INPUT_DIR.exists()}")
-                LOGGER.info(f"📋 ディレクトリ権限確認: {oct(INPUT_DIR.stat().st_mode)[-3:]}")
-            except Exception as dir_error:
-                LOGGER.error(f"❌ ディレクトリ作成エラー: {dir_error}")
-                LOGGER.error(f"📋 エラー詳細: {type(dir_error).__name__}")
-                results.append({
-                    "filename": file.filename,
-                    "success": False,
-                    "error": f"ディレクトリ作成に失敗しました: {str(dir_error)}"
-                })
-                continue
-            
-            # ファイル保存（既存ファイルの処理）
-            timestamp = int(time.time())
-            filename_with_timestamp = f"{timestamp}_{file.filename}"
-            file_path = INPUT_DIR / filename_with_timestamp
-            
-            LOGGER.info(f"📝 元ファイル名: {file.filename}")
-            LOGGER.info(f"🕒 タイムスタンプ: {timestamp}")
-            LOGGER.info(f"📄 新しいファイル名: {filename_with_timestamp}")
-            LOGGER.info(f"🎯 保存先パス: {file_path}")
-            
-            if folder_path:
-                try:
-                    folder_dir = INPUT_DIR / folder_path
-                    LOGGER.info(f"📂 サブフォルダ作成開始: {folder_dir}")
-                    folder_dir.mkdir(parents=True, exist_ok=True)
-                    file_path = folder_dir / filename_with_timestamp
-                    LOGGER.info(f"✅ サブフォルダ作成完了: {folder_dir}")
-                    LOGGER.info(f"🎯 更新された保存先パス: {file_path}")
-                except Exception as subdir_error:
-                    LOGGER.error(f"❌ サブフォルダ作成エラー: {subdir_error}")
-                    LOGGER.error(f"📋 エラー詳細: {type(subdir_error).__name__}")
-                    results.append({
-                        "filename": file.filename,
-                        "success": False,
-                        "error": f"サブフォルダ作成に失敗しました: {str(subdir_error)}"
-                    })
-                    continue
-            
-            # ファイルが既に存在する場合は番号を追加
-            counter = 1
-            original_path = file_path
-            LOGGER.info(f"🔍 ファイル重複チェック開始: {file_path}")
-            while file_path.exists():
-                stem = original_path.stem
-                suffix = original_path.suffix
-                file_path = original_path.parent / f"{stem}_{counter}{suffix}"
-                LOGGER.info(f"🔄 ファイル重複検出、新しいパス: {file_path}")
-                counter += 1
-            
-            LOGGER.info(f"💾 最終保存先パス: {file_path}")
-            LOGGER.info(f"📋 ファイル保存開始...")
-            try:
-                with open(file_path, "wb") as buffer:
-                    shutil.copyfileobj(file.file, buffer)
-                LOGGER.info(f"✅ ファイル保存成功: {file_path}")
-                LOGGER.info(f"📏 保存されたファイルサイズ: {file_path.stat().st_size} bytes")
-            except Exception as save_error:
-                LOGGER.error(f"❌ ファイル保存エラー: {save_error}")
-                LOGGER.error(f"📋 エラー詳細: {type(save_error).__name__}")
-                results.append({
-                    "filename": file.filename,
-                    "success": False,
-                    "error": f"ファイル保存に失敗しました: {str(save_error)}"
-                })
-                continue
-            
-            # データベースに記録
-            file_data = {
-                "file_name": file.filename,  # 元のファイル名を保持
-                "file_path": str(file_path),
-                "file_size": file.size or 0,
-                "status": "uploaded",
-                "user_id": current_user.id
-            }
-            
-            LOGGER.info(f"💾 データベース保存開始")
-            LOGGER.info(f"📋 保存データ: {file_data}")
-            try:
-                saved_file = file_service.save_file(db, file_data)
-                LOGGER.info(f"✅ データベース保存成功: ID={saved_file.id}")
-                
-                results.append({
-                    "filename": file.filename,
-                    "success": True,
-                    "file_id": saved_file.id,
-                    "status": saved_file.status
-                })
-                LOGGER.info(f"✅ ファイル {file.filename} の処理完了")
-            except Exception as db_error:
-                LOGGER.error(f"❌ データベース保存エラー: {db_error}")
-                LOGGER.error(f"📋 エラー詳細: {type(db_error).__name__}")
-                results.append({
-                    "filename": file.filename,
-                    "success": False,
-                    "error": f"データベース保存に失敗しました: {str(db_error)}"
+                    "error": str(e)
                 })
         
-        LOGGER.info("=" * 50)
-        LOGGER.info("📊 アップロード結果サマリー")
-        success_count = len([r for r in results if r.get("success", False)])
-        error_count = len([r for r in results if not r.get("success", False)])
-        LOGGER.info(f"✅ 成功: {success_count}件")
-        LOGGER.info(f"❌ 失敗: {error_count}件")
-        LOGGER.info(f"📋 合計: {len(results)}件")
-        LOGGER.info("=" * 50)
-        
-        return {"results": results}
+        return {
+            "success": True,
+            "message": f"{len(upload_results)}個のファイルを処理しました",
+            "results": upload_results
+        }
         
     except Exception as e:
-        LOGGER.error("=" * 50)
-        LOGGER.error("💥 ファイルアップロード全体エラー")
-        LOGGER.error(f"❌ エラー内容: {e}")
-        LOGGER.error(f"📋 エラータイプ: {type(e).__name__}")
-        import traceback
-        LOGGER.error(f"📋 詳細スタックトレース:")
-        LOGGER.error(traceback.format_exc())
-        LOGGER.error("=" * 50)
-        
-        # より具体的なエラーメッセージを返す
-        error_message = "ファイルアップロードに失敗しました"
-        if "No such file or directory" in str(e):
-            error_message = "ディレクトリが見つかりません"
-        elif "Permission denied" in str(e):
-            error_message = "権限がありません"
-        elif "Network" in str(e) or "Connection" in str(e):
-            error_message = "ネットワークエラーが発生しました"
-        elif "timeout" in str(e).lower():
-            error_message = "タイムアウトが発生しました"
-        
-        raise HTTPException(status_code=500, detail=error_message)
+        debug_error(e, "upload_files")
+        raise HTTPException(status_code=500, detail="ファイルアップロード処理中にエラーが発生しました")
 
 @router.post("/files/upload-folder")
 async def upload_folder(
@@ -252,21 +161,109 @@ async def upload_folder(
 @router.get("/files/{file_id}/preview")
 async def preview_file(
     file_id: str,
-    current_user = Depends(require_admin),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """ファイルプレビュー"""
+    """ファイルプレビュー（PDF用）"""
+    debug_function("preview_file", file_id=file_id, user_id=current_user.id)
+    
     try:
-        file_service = FileService()
-        preview = file_service.get_file_preview(db, file_id)
-        if not preview:
+        LOGGER.info(f"📄 ファイルプレビュー開始: file_id={file_id}, user_id={current_user.id}")
+        debug_print(f"ファイルプレビュー開始: file_id={file_id}, user_id={current_user.id}")
+        
+        # UUIDの検証と変換
+        try:
+            file_uuid = uuid.UUID(file_id)
+            debug_print(f"UUID変換成功: {file_uuid}")
+        except ValueError as uuid_error:
+            error_msg = f"無効なファイルID形式: {file_id}"
+            LOGGER.error(f"❌ {error_msg}")
+            debug_error(uuid_error, "UUID変換")
+            raise HTTPException(status_code=422, detail=error_msg)
+        
+        # ファイル情報を取得
+        file_record = db.query(File).filter(File.id == file_uuid, File.user_id == current_user.id).first()
+        if not file_record:
+            error_msg = f"ファイルが見つかりません: file_id={file_id}, user_id={current_user.id}"
+            LOGGER.error(f"❌ {error_msg}")
+            debug_error(Exception(error_msg), "ファイル検索")
             raise HTTPException(status_code=404, detail="ファイルが見つかりません")
-        return {"preview": preview}
+        
+        LOGGER.info(f"📄 ファイル情報取得: {file_record.file_name}, パス: {file_record.file_path}")
+        debug_print(f"ファイル情報取得: {file_record.file_name}, パス: {file_record.file_path}")
+        
+        file_path = Path(file_record.file_path)
+        if not file_path.exists():
+            error_msg = f"ファイルが存在しません: {file_path}"
+            LOGGER.error(f"❌ {error_msg}")
+            debug_error(Exception(error_msg), "ファイル存在確認")
+            raise HTTPException(status_code=404, detail="ファイルが存在しません")
+        
+        # ファイルの拡張子を確認
+        file_extension = file_path.suffix.lower()
+        LOGGER.info(f"📄 ファイル拡張子: {file_extension}")
+        debug_print(f"ファイル拡張子: {file_extension}")
+        
+        if file_extension == '.pdf':
+            # PDFファイルの場合、ファイルを直接返す
+            LOGGER.info(f"📄 PDFプレビュー: {file_path}")
+            debug_print(f"PDFプレビュー: {file_path}")
+            try:
+                response = FileResponse(
+                    path=str(file_path),
+                    media_type='application/pdf',
+                    filename=file_record.file_name,
+                    headers={
+                        'Content-Disposition': 'inline',
+                        'X-Content-Type-Options': 'nosniff'
+                    }
+                )
+                debug_return("preview_file", f"PDFレスポンス: {file_record.file_name}")
+                return response
+            except Exception as pdf_error:
+                LOGGER.error(f"❌ PDFプレビューエラー: {pdf_error}")
+                debug_error(pdf_error, "PDFプレビュー")
+                raise HTTPException(status_code=500, detail=f"PDFプレビューエラー: {str(pdf_error)}")
+        else:
+            # その他のファイルはテキストプレビュー
+            LOGGER.info(f"📝 テキストプレビュー: {file_path}")
+            debug_print(f"テキストプレビュー: {file_path}")
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                LOGGER.info(f"📝 テキスト読み込み成功: {len(content)} 文字")
+                debug_print(f"テキスト読み込み成功: {len(content)} 文字")
+                result = {"content": content[:1000], "type": "text"}
+                debug_return("preview_file", f"テキストレスポンス: {len(content)} 文字")
+                return result
+            except UnicodeDecodeError as decode_error:
+                LOGGER.warning(f"⚠️ テキストデコードエラー、バイナリとして処理: {decode_error}")
+                debug_print(f"テキストデコードエラー、バイナリとして処理: {decode_error}")
+                # バイナリファイルの場合
+                try:
+                    with open(file_path, 'rb') as f:
+                        content = f.read(1000)
+                    LOGGER.info(f"📝 バイナリ読み込み成功: {len(content)} バイト")
+                    debug_print(f"バイナリ読み込み成功: {len(content)} バイト")
+                    result = {"content": content.hex(), "type": "binary"}
+                    debug_return("preview_file", f"バイナリレスポンス: {len(content)} バイト")
+                    return result
+                except Exception as binary_error:
+                    LOGGER.error(f"❌ バイナリ読み込みエラー: {binary_error}")
+                    debug_error(binary_error, "バイナリ読み込み")
+                    raise HTTPException(status_code=500, detail=f"ファイル読み込みエラー: {str(binary_error)}")
+            except Exception as text_error:
+                LOGGER.error(f"❌ テキスト読み込みエラー: {text_error}")
+                debug_error(text_error, "テキスト読み込み")
+                raise HTTPException(status_code=500, detail=f"ファイル読み込みエラー: {str(text_error)}")
+                
     except HTTPException:
         raise
     except Exception as e:
-        LOGGER.error(f"ファイルプレビューエラー: {e}")
-        raise HTTPException(status_code=500, detail="ファイルプレビューの取得に失敗しました")
+        LOGGER.error(f"❌ ファイルプレビューエラー: {e}")
+        LOGGER.error(f"❌ エラー詳細: {type(e).__name__}: {str(e)}")
+        debug_error(e, "ファイルプレビュー")
+        raise HTTPException(status_code=500, detail="ファイルプレビュー中にエラーが発生しました")
 
 # 検索API
 @router.post("/search/text")
@@ -496,3 +493,34 @@ async def get_user_profile(
     except Exception as e:
         LOGGER.error(f"ユーザープロフィール取得エラー: {e}")
         raise HTTPException(status_code=500, detail="ユーザープロフィールの取得に失敗しました") 
+
+@router.post("/debug/error")
+async def log_js_error(request: Request):
+    """JavaScriptエラーをログに記録"""
+    try:
+        debug_function("log_js_error")
+        
+        # リクエストボディを取得
+        body = await request.json()
+        
+        error_type = body.get('type', 'Unknown')
+        message = body.get('message', 'No message')
+        details = body.get('details', '')
+        url = body.get('url', '')
+        user_agent = body.get('userAgent', '')
+        
+        # JavaScriptエラーをCursorコンソールに出力
+        debug_js_error(
+            f"Type: {error_type}, Message: {message}, URL: {url}, UserAgent: {user_agent}",
+            "JavaScript Error"
+        )
+        
+        if details:
+            debug_js_error(f"Details: {details}", "JavaScript Error Details")
+        
+        return {"success": True, "message": "エラーが記録されました"}
+        
+    except Exception as e:
+        debug_error(e, "log_js_error")
+        LOGGER.error(f"JavaScriptエラーログ記録エラー: {e}")
+        raise HTTPException(status_code=500, detail="エラーログ記録に失敗しました") 

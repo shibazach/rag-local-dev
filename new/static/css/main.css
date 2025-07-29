@@ -1,5 +1,5 @@
 /* new/static/css/main.css */
-/* 新しいRAGシステムのメインスタイル */
+/* R&D RAGシステムのメインスタイル */
 
 /* リセットとベーススタイル */
 * {
@@ -28,21 +28,28 @@ body {
     position: sticky;
     top: 0;
     z-index: 100;
+    height: 60px;
 }
 
 .nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 0;
+    height: 60px;
     max-width: 1200px;
     margin: 0 auto;
-    padding-left: 20px;
-    padding-right: 20px;
+    padding: 0 20px;
+    position: relative;
+}
+
+.nav-brand {
+    flex-shrink: 0;
+    width: 200px;
+    order: 1;
 }
 
 .nav-brand .nav-link {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: bold;
     color: #2c3e50;
     text-decoration: none;
@@ -51,14 +58,26 @@ body {
 .nav-menu {
     display: flex;
     gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 60px;
+    order: 2;
 }
 
 .nav-link {
     color: #6c757d;
     text-decoration: none;
-    padding: 0.5rem 1rem;
+    padding: 0.75rem 1rem;
     border-radius: 4px;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    height: 40px;
+    font-size: 0.95rem;
+    font-weight: 500;
 }
 
 .nav-link:hover {
@@ -70,17 +89,78 @@ body {
     display: flex;
     align-items: center;
     gap: 1rem;
+    flex-shrink: 0;
+    width: 200px;
+    justify-content: flex-end;
+    order: 3;
 }
 
 .user-info {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    background: #f8f9fa;
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    border: 1px solid #e9ecef;
+    height: 40px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+}
+
+.user-avatar {
+    font-size: 1.1rem;
+    color: #007bff;
+    flex-shrink: 0;
+}
+
+.username {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.btn-outline {
+    background-color: transparent;
+    color: #007bff;
+    border: 1px solid #007bff;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    border-radius: 15px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+}
+
+.btn-outline:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* ホームページでのナビゲーション調整 */
+body.home-page .nav-brand {
+    display: none;
+}
+
+body.home-page .nav-menu {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+body.home-page .nav-auth {
+    justify-content: flex-end;
+    margin-left: auto;
 }
 
 /* メインコンテンツ */
 .main {
-    min-height: calc(100vh - 140px);
+    min-height: calc(100vh - 120px);
 }
 
 /* ヒーローセクション */
@@ -132,17 +212,6 @@ body {
     background-color: #0056b3;
 }
 
-.btn-outline {
-    background-color: transparent;
-    color: #007bff;
-    border: 2px solid #007bff;
-}
-
-.btn-outline:hover {
-    background-color: #007bff;
-    color: white;
-}
-
 .btn-lg {
     padding: 1rem 2rem;
     font-size: 1.1rem;
@@ -159,74 +228,75 @@ body {
 
 /* 機能セクション */
 .features {
-    padding: 4rem 0;
+    padding: 3rem 0;
     background: white;
 }
 
 .section-title {
     text-align: center;
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
+    font-size: 2rem;
+    margin-bottom: 2rem;
     color: #2c3e50;
 }
 
 .feature-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
 }
 
 .feature-card {
     background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     text-align: center;
     transition: transform 0.3s ease;
 }
 
 .feature-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
 }
 
 .feature-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.8rem;
 }
 
 .feature-card h3 {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
     color: #2c3e50;
 }
 
 .feature-card p {
     color: #6c757d;
-    line-height: 1.6;
+    line-height: 1.5;
+    font-size: 0.95rem;
 }
 
 /* 統計セクション */
 .stats {
-    padding: 4rem 0;
+    padding: 3rem 0;
     background: #f8f9fa;
 }
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1.5rem;
 }
 
 .stat-card {
     background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     text-align: center;
 }
 
 .stat-number {
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: bold;
     color: #007bff;
     margin-bottom: 0.5rem;
@@ -234,7 +304,7 @@ body {
 
 .stat-label {
     color: #6c757d;
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 /* ログインフォーム */
@@ -317,6 +387,7 @@ body {
     top: 20px;
     right: 20px;
     z-index: 1000;
+    max-width: 400px;
 }
 
 .notification {
@@ -326,6 +397,8 @@ body {
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     margin-bottom: 1rem;
     border-left: 4px solid #007bff;
+    font-size: 0.9rem;
+    line-height: 1.4;
 }
 
 .notification.success {
@@ -334,10 +407,24 @@ body {
 
 .notification.error {
     border-left-color: #dc3545;
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+}
+
+.notification.error .notification-title {
+    font-weight: bold;
+    color: #c53030;
+    margin-bottom: 0.5rem;
+}
+
+.notification.error .notification-message {
+    color: #2d3748;
 }
 
 .notification.warning {
     border-left-color: #ffc107;
+    background: #fffbeb;
+    border: 1px solid #fef5e7;
 }
 
 /* ローディングオーバーレイ */

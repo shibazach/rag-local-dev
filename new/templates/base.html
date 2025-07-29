@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}新しいRAGシステム{% endblock %}</title>
+    
+    <!-- セキュリティヘッダー -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', path='/js/main.js') }}" defer></script>
+    {% block extra_js %}{% endblock %}
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <a href="/" class="nav-link">新しいRAGシステム</a>
+            </div>
+            <div class="nav-menu" id="nav-menu">
+                <a href="/" class="nav-link">ホーム</a>
+                <a href="/chat" class="nav-link">チャット</a>
+                <a href="/files" class="nav-link nav-admin-only" style="display: none;">ファイル</a>
+                <a href="/upload" class="nav-link nav-admin-only" style="display: none;">アップロード</a>
+                <a href="/admin" class="nav-link nav-admin-only" style="display: none;">管理</a>
+            </div>
+            <div class="nav-auth">
+                <span id="user-info" class="user-info" style="display: none;">
+                    <span id="username"></span>
+                    <button id="logout-btn" class="btn btn-sm btn-outline">ログアウト</button>
+                </span>
+                <a href="/login" id="login-link" class="nav-link">ログイン</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- フッター -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 新しいRAGシステム. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- 通知エリア -->
+    <div id="notifications" class="notifications"></div>
+
+    <!-- ローディングオーバーレイ -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>処理中...</p>
+    </div>
+
+    <script>
+        // ユーザー認証状態の確認
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/user/profile', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('username').textContent = data.data.username;
+                    document.getElementById('user-info').style.display = 'inline';
+                    document.getElementById('login-link').style.display = 'none';
+                    
+                    // ユーザー権限に応じてナビゲーションを表示
+                    updateNavigationByRole(data.data.role);
+                } else {
+                    document.getElementById('user-info').style.display = 'none';
+                    document.getElementById('login-link').style.display = 'inline';
+                    
+                    // 未ログイン時はすべてのナビゲーションを非表示
+                    hideAdminNavigation();
+                }
+            } catch (error) {
+                console.error('認証状態確認エラー:', error);
+            }
+        }
+        
+        // ユーザー権限に応じてナビゲーションを更新
+        function updateNavigationByRole(role) {
+            const adminNavLinks = document.querySelectorAll('.nav-admin-only');
+            
+            if (role === 'admin') {
+                // admin権限の場合はすべて表示
+                adminNavLinks.forEach(link => {
+                    link.style.display = 'inline';
+                });
+            } else {
+                // user権限の場合は管理系メニューを非表示
+                hideAdminNavigation();
+            }
+        }
+        
+        // 管理系ナビゲーションを非表示
+        function hideAdminNavigation() {
+            const adminNavLinks = document.querySelectorAll('.nav-admin-only');
+            adminNavLinks.forEach(link => {
+                link.style.display = 'none';
+            });
+        }
+
+        // ログアウト処理
+        document.getElementById('logout-btn')?.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('ログアウトエラー:', error);
+            }
+        });
+
+        // ページ読み込み時に認証状態を確認
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
+    </script>
+</body>
+</html> 

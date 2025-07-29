@@ -7,8 +7,13 @@ import os
 from typing import Dict, Any, List
 import fitz  # PyMuPDF
 from PIL import Image
+import threading
 
 from ..base import OCREngine
+
+# グローバルEasyOCRインスタンス管理
+_easyocr_instances = {}
+_easyocr_lock = threading.Lock()
 
 class EasyOCREngine(OCREngine):
     """EasyOCRエンジン実装"""
@@ -16,13 +21,85 @@ class EasyOCREngine(OCREngine):
     def __init__(self):
         super().__init__("EasyOCR")
     
+    def _get_easyocr_instance(self, languages: List[str], use_gpu: bool = False):
+        """EasyOCRインスタンスを取得（スレッドセーフ）"""
+        # インスタンスキーの生成
+        instance_key = f"{','.join(languages)}_{'gpu' if use_gpu else 'cpu'}"
+        
+        with _easyocr_lock:
+            if instance_key in _easyocr_instances:
+                return _easyocr_instances[instance_key]
+            
+            # 新しいインスタンスを作成
+            try:
+                import easyocr
+                
+                print(f"🔍 EasyOCR初期化中... 言語: {languages}, GPU: {use_gpu}")
+                
+                # メインスレッドでのみEasyOCRを初期化
+                current_thread = threading.current_thread()
+                
+                if current_thread.name == 'MainThread':
+                    # メインスレッドの場合のみsignalを使用
+                    import signal
+                    
+                    def timeout_handler(signum, frame):
+                        raise TimeoutError("EasyOCR初期化がタイムアウトしました")
+                    
+                    # 60秒のタイムアウトを設定
+                    signal.signal(signal.SIGALRM, timeout_handler)
+                    signal.alarm(60)
+                    
+                    try:
+                        reader = easyocr.Reader(languages, gpu=use_gpu, verbose=False)
+                        print(f"✅ EasyOCR初期化完了")
+                    finally:
+                        signal.alarm(0)  # タイムアウトをクリア
+                else:
+                    # ワーカースレッドの場合はsignalを使用せずに初期化
+                    print(f"⚠️ ワーカースレッドでのEasyOCR初期化: {current_thread.name}")
+                    reader = easyocr.Reader(languages, gpu=use_gpu, verbose=False)
+                    print(f"✅ EasyOCR初期化完了（ワーカースレッド）")
+                
+                # インスタンスをキャッシュ
+                _easyocr_instances[instance_key] = reader
+                return reader
+                
+            except Exception as init_error:
+                print(f"❌ EasyOCR初期化エラー: {init_error}")
+                # GPU使用時にエラーが発生した場合はCPUモードで再試行
+                if use_gpu:
+                    print("🔄 CPUモードで再試行中...")
+                    try:
+                        if current_thread.name == 'MainThread':
+                            # メインスレッドの場合のみsignalを使用
+                            signal.signal(signal.SIGALRM, timeout_handler)
+                            signal.alarm(60)
+                            try:
+                                reader = easyocr.Reader(languages, gpu=False, verbose=False)
+                                print(f"✅ EasyOCR初期化完了（CPUモード）")
+                            finally:
+                                signal.alarm(0)
+                        else:
+                            # ワーカースレッドの場合はsignalを使用せずに初期化
+                            reader = easyocr.Reader(languages, gpu=False, verbose=False)
+                            print(f"✅ EasyOCR初期化完了（CPUモード、ワーカースレッド）")
+                        
+                        # インスタンスをキャッシュ
+                        _easyocr_instances[instance_key] = reader
+                        return reader
+                        
+                    except Exception as cpu_error:
+                        print(f"❌ EasyOCR CPUモード初期化も失敗: {cpu_error}")
+                        raise
+                else:
+                    raise
+    
     def process(self, pdf_path: str, page_num: int = 0, **kwargs) -> Dict[str, Any]:
         """EasyOCRでPDF処理を実行"""
         start_time = time.time()
         
         try:
-            import easyocr
-            
             # パラメータの検証と正規化
             params = self.validate_parameters(kwargs)
             
@@ -53,7 +130,7 @@ class EasyOCREngine(OCREngine):
                 temp_file.write(img_data)
                 temp_path = temp_file.name
             
-            # EasyOCRリーダーを初期化
+            # EasyOCRリーダーを取得
             languages = params.get('languages', ['ja', 'en'])
             use_gpu = params.get('use_gpu', False)
             
@@ -63,58 +140,8 @@ class EasyOCREngine(OCREngine):
             elif not isinstance(languages, list):
                 languages = ['ja', 'en']
             
-            print(f"🔍 EasyOCR初期化中... 言語: {languages}, GPU: {use_gpu}")
-            
-            try:
-                # タイムアウト付きでEasyOCRを初期化
-                import signal
-                
-                def timeout_handler(signum, frame):
-                    raise TimeoutError("EasyOCR初期化がタイムアウトしました")
-                
-                # 60秒のタイムアウトを設定
-                signal.signal(signal.SIGALRM, timeout_handler)
-                signal.alarm(60)
-                
-                try:
-                    reader = easyocr.Reader(languages, gpu=use_gpu, verbose=False)
-                    print(f"✅ EasyOCR初期化完了")
-                finally:
-                    signal.alarm(0)  # タイムアウトをクリア
-                    
-            except TimeoutError:
-                print(f"⏰ EasyOCR初期化タイムアウト（60秒）")
-                return {
-                    "success": False,
-                    "error": "EasyOCR初期化がタイムアウトしました（モデルダウンロード中の可能性があります）",
-                    "text": "",
-                    "processing_time": time.time() - start_time,
-                    "confidence": None
-                }
-            except Exception as init_error:
-                print(f"❌ EasyOCR初期化エラー: {init_error}")
-                # GPU使用時にエラーが発生した場合はCPUモードで再試行
-                if use_gpu:
-                    print("🔄 CPUモードで再試行中...")
-                    try:
-                        signal.signal(signal.SIGALRM, timeout_handler)
-                        signal.alarm(60)
-                        try:
-                            reader = easyocr.Reader(languages, gpu=False, verbose=False)
-                            print(f"✅ EasyOCR初期化完了（CPUモード）")
-                        finally:
-                            signal.alarm(0)
-                    except TimeoutError:
-                        print(f"⏰ EasyOCR CPUモード初期化もタイムアウト")
-                        return {
-                            "success": False,
-                            "error": "EasyOCR初期化がタイムアウトしました（CPUモードでも失敗）",
-                            "text": "",
-                            "processing_time": time.time() - start_time,
-                            "confidence": None
-                        }
-                else:
-                    raise
+            # EasyOCRインスタンスを取得
+            reader = self._get_easyocr_instance(languages, use_gpu)
             
             # OCR実行（詳細パラメータを適用）
             readtext_params = {

@@ -126,20 +126,38 @@ class IngestProcessing {
     if (!confirm('処理をキャンセルしますか？\n\n注意: OCR処理中の場合、完全に停止するまで時間がかかる場合があります。')) return;
 
     try {
-      // キャンセル要求を送信
-      await fetch('/ingest/cancel', { method: 'POST' });
-      
-      // UI状態を即座に更新
+      // 即座にUI状態を更新
       this.sseManager.addLogMessage('⏹️ キャンセル要求を送信しました...');
       this.sseManager.addLogMessage('⚠️ OCR処理中の場合、完全停止まで時間がかかります');
       
-      // ボタン状態を更新
+      // ボタン状態を即座に更新
       if (this.startBtn) this.startBtn.textContent = 'キャンセル中...';
       if (this.cancelBtn) {
         this.cancelBtn.textContent = 'キャンセル中...';
         this.cancelBtn.disabled = true;
       }
       
+      // 複数回キャンセル要求を送信（確実に停止するため）
+      for (let i = 0; i < 3; i++) {
+        try {
+          await fetch('/ingest/cancel', { 
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ force: true })
+          });
+          
+          // 少し待機
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } catch (error) {
+          console.warn(`キャンセル要求 ${i + 1} 回目でエラー:`, error);
+        }
+      }
+
+      // フロントエンドの更新を強制
+      this.sseManager.forceUpdate();
+
     } catch (error) {
       console.error('キャンセルエラー:', error);
       this.sseManager.addLogMessage('❌ キャンセルエラー: ' + error.message);

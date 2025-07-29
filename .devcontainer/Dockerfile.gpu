@@ -28,6 +28,11 @@ RUN python3 -m pip install --upgrade pip && \
     torch=="${TorchVer}" \
     torchvision=="${TorchVisionVer}" \
     --index-url https://download.pytorch.org/whl/cu124 && \
+    # GPU環境専用パッケージ
+    python3 -m pip install \
+    paddlepaddle-gpu \
+    paddleocr \
+    accelerate && \
     rm /tmp/requirements.txt
 
 # ---------- 4. 作業ディレクトリ ----------

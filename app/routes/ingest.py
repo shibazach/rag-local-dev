@@ -222,14 +222,34 @@ async def run_ingest_folder(
 
 # ══════════════════════ 3.1 POST /ingest/cancel (キャンセル指示) ══════════════════════
 @router.post("/cancel", response_class=JSONResponse)
-def cancel_ingest() -> JSONResponse:
+async def cancel_ingest(request: Request) -> JSONResponse:
     """実行中の ingest ジョブのキャンセルを指示"""
     global cancel_event
+    
+    # リクエストボディを取得
+    try:
+        body = await request.json()
+        force = body.get("force", False)
+    except:
+        force = False
+    
     if cancel_event is None:
         raise HTTPException(400, "キャンセル対象のジョブがありません")
-    cancel_event.set()
-    LOGGER.info("ingest job cancellation requested")
-    return JSONResponse({"status": "cancelling"})
+    
+    # 強制キャンセルの場合は即座に設定
+    if force:
+        cancel_event.set()
+        LOGGER.info("強制キャンセルが要求されました")
+    else:
+        cancel_event.set()
+        LOGGER.info("ingest job cancellation requested")
+    
+    # グローバルフラグも設定
+    global abort_flag
+    if abort_flag:
+        abort_flag["flag"] = True
+    
+    return JSONResponse({"status": "cancelling", "force": force})
 
 # ══════════════════════ 3.2 GET /ingest/status (ジョブ状態取得) ══════════════════════
 @router.get("/status", response_class=JSONResponse)
@@ -261,24 +281,33 @@ async def ingest_stream(request: Request) -> StreamingResponse:
                 abort_flag["flag"] = True
             await asyncio.sleep(0.3)
 
+    # REM: キャンセル監視（非同期）
+    async def monitor_cancellation():
+        while not abort_flag["flag"]:
+            if cancel_event and cancel_event.is_set():
+                abort_flag["flag"] = True
+                LOGGER.info("キャンセルフラグが設定されました")
+                break
+            await asyncio.sleep(0.5)
+
     # REM: SSE イベントジェネレータ
     async def event_generator():
-        # 切断監視開始
+        # 切断監視とキャンセル監視を開始
         asyncio.create_task(monitor_disconnect())
+        asyncio.create_task(monitor_cancellation())
 
         # REM: 全体開始イベント
         yield f"data: {json.dumps({'start': True, 'total_files': total_files})}\n\n"
 
-        loop = asyncio.get_event_loop()
         for idx, info in enumerate(files, start=1):
             # REM: キャンセルまたは切断検知
             if abort_flag["flag"] or (cancel_event and cancel_event.is_set()):
                 # REM: キャンセル開始通知
-                yield f"data: {json.dumps({'cancelling': True})}\n\n"
+                yield f"data: {json.dumps({'cancelling': True, 'message': '処理をキャンセルしています...'})}\n\n"
                 break
 
             # REM: 編集ペインのテキストとOCR設定を渡す
-            gen = process_file(
+            async for ev in process_file(
                 file_path           = info["path"],
                 file_name           = info["file_name"],
                 index               = idx,
@@ -292,18 +321,17 @@ async def ingest_stream(request: Request) -> StreamingResponse:
                 abort_flag          = abort_flag,
                 ocr_engine_id       = last_ingest.get("ocr_engine_id"),
                 ocr_settings        = last_ingest.get("ocr_settings", {}),
-            )
-
-            # REM: ジェネレータからイベントを取り出しストリーミング
-            while not abort_flag["flag"] and not (cancel_event and cancel_event.is_set()):
-                ev = await loop.run_in_executor(None, lambda: next(gen, None))
-                if ev is None:
+            ):
+                # REM: キャンセルまたは切断検知
+                if abort_flag["flag"] or (cancel_event and cancel_event.is_set()):
+                    # キャンセル通知を送信
+                    yield f"data: {json.dumps({'cancelling': True, 'message': '処理をキャンセルしています...'})}\n\n"
                     break
                 yield f"data: {json.dumps(ev)}\n\n"
 
         # REM: キャンセル完了通知
         if cancel_event and cancel_event.is_set():
-            yield f"data: {json.dumps({'stopped': True})}\n\n"
+            yield f"data: {json.dumps({'stopped': True, 'message': '処理がキャンセルされました'})}\n\n"
 
         # REM: 全体完了イベント
         yield "data: {\"done\": true}\n\n"

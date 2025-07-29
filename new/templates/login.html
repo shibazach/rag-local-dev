@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}ログイン - 新しいRAGシステム{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <h1 class="login-title">ログイン</h1>
+        
+        <form id="login-form" class="login-form">
+            <div class="form-group">
+                <label for="username" class="form-label">ユーザー名</label>
+                <input type="text" id="username" name="username" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">パスワード</label>
+                <input type="password" id="password" name="password" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-full">ログイン</button>
+            </div>
+        </form>
+        
+        <div class="login-info">
+            <h3>開発用アカウント</h3>
+            <ul>
+                <li><strong>管理者:</strong> admin / password</li>
+                <li><strong>一般ユーザー:</strong> user / password</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+        
+        if (response.ok) {
+            // ログイン成功
+            window.location.href = '/';
+        } else {
+            const data = await response.json();
+            alert('ログインに失敗しました: ' + (data.detail || '不明なエラー'));
+        }
+    } catch (error) {
+        console.error('ログインエラー:', error);
+        alert('ログインに失敗しました');
+    }
+});
+</script>
+{% endblock %} 

@@ -6,6 +6,7 @@ import time
 import unicodedata
 import os
 import logging
+import threading
 from typing import Dict, Generator, List, AsyncGenerator
 
 from src.config import OLLAMA_MODEL
@@ -69,6 +70,9 @@ class IngestProcessor:
         """1ファイルを処理しイベントを yield"""
         t0 = time.perf_counter()
 
+        # abort_flagをインスタンス変数として保存（OCR処理で使用）
+        self.abort_flag = abort_flag
+
         # ── ① DB 仮登録 ───────────────────────────────────
         try:
             file_id = insert_file_full(file_path, "", "", 0.0)
@@ -88,25 +92,17 @@ class IngestProcessor:
         # ── ② テキスト抽出（新しいOCRサービス使用） ─────────────────────────────────
         yield {"file": file_name, "step": "テキスト抽出開始"}
         
-        try:
-            # OCR処理をジェネレータとして実行し、進捗を直接yield
-            pages = []
-            for event_or_result in self._extract_text_with_ocr_generator(
-                file_path, 
-                file_name, 
-                ocr_engine_id, 
-                ocr_settings
-            ):
-                if isinstance(event_or_result, dict) and "step" in event_or_result:
-                    # 進捗イベントを即座にyield
-                    yield event_or_result
-                elif isinstance(event_or_result, list):
-                    # 最終結果（ページリスト）を受け取り
-                    pages = event_or_result
-        except Exception as exc:
-            LOGGER.exception("extract_text_with_ocr")
-            update_file_status(file_id, status="error", note=str(exc))
-            yield {"file": file_name, "step": "テキスト抽出失敗", "detail": str(exc)}
+        # キャンセルチェック
+        if abort_flag["flag"]:
+            yield {"file": file_name, "step": "処理がキャンセルされました"}
+            return
+
+        # テキスト抽出を実行
+        pages = self._extract_text_with_ocr(file_path, file_name, ocr_engine_id, ocr_settings)
+
+        # キャンセルチェック
+        if abort_flag["flag"]:
+            yield {"file": file_name, "step": "処理がキャンセルされました"}
             return
 
         if not pages:
@@ -229,10 +225,10 @@ class IngestProcessor:
                     # キャンセル可能なLLM処理を実行
                     refined, _, score, _ = await helper.run_ollama_with_cancellation(
                         lambda: refine_text_with_llm(
-                            block,
-                            model=OLLAMA_MODEL,
-                            force_lang=refine_prompt_key,
-                            abort_flag=abort_flag,
+                    block,
+                    model=OLLAMA_MODEL,
+                    force_lang=refine_prompt_key,
+                    abort_flag=abort_flag,
                         ),
                         timeout=llm_timeout_sec if llm_timeout_sec > 0 else 300
                     )
@@ -354,6 +350,7 @@ class IngestProcessor:
     ) -> List[str]:
         """PDFからテキスト抽出（新しいOCRサービス使用）"""
         import fitz
+        import asyncio
         
         doc = fitz.open(pdf_path)
         text_list = []
@@ -375,20 +372,33 @@ class IngestProcessor:
             # PyMuPDF抽出（テキスト層）
             pdf_text = page.get_text().strip()
 
-            # 新しいOCRサービスでOCR抽出
-            ocr_result = self.ocr_factory.process_with_settings(
+            # 新しいOCRサービスでOCR抽出（非同期で実行）
+            try:
+                # OCR処理を別スレッドで実行
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        self.ocr_factory.process_with_settings,
                 engine_id=ocr_engine_id,
                 pdf_path=pdf_path,
                 page_num=page_number,
                 custom_params=ocr_settings or {}
             )
+                    
+                    # 非同期で結果を待機（キャンセル可能）
+                    ocr_result = future.result(timeout=60)  # 60秒タイムアウト
+                    
+            except concurrent.futures.TimeoutError:
+                ocr_result = {"success": False, "error": "OCR処理がタイムアウトしました"}
+            except Exception as e:
+                ocr_result = {"success": False, "error": f"OCR処理エラー: {str(e)}"}
             
             if ocr_result["success"]:
                 ocr_text = ocr_result["text"].strip()
                 if progress_yield:
                     progress_yield({
                         "file": file_name, 
-                        "step": f"ページ {page_number + 1} OCR完了 (処理時間: {int(ocr_result['processing_time'])}秒)"
+                        "step": f"ページ {page_number + 1} OCR完了 (処理時間: {int(ocr_result.get('processing_time', 0))}秒)"
                     })
             else:
                 ocr_text = f"OCRエラー: {ocr_result['error']}"
@@ -588,72 +598,48 @@ class IngestProcessor:
         file_path: str, 
         file_name: str, 
         ocr_engine_id: str = None, 
-        ocr_settings: Dict = None
+        ocr_settings: Dict = None,
+        abort_flag: Dict[str, bool] = None
     ) -> Generator:
-        """OCR処理をジェネレータとして実行し、進捗をリアルタイムで報告"""
-        ext = os.path.splitext(file_path)[1].lower()
-        
-        if ext == ".pdf":
-            yield from self._extract_pdf_with_ocr_generator(file_path, file_name, ocr_engine_id, ocr_settings)
-        elif ext == ".docx":
-            yield from self._extract_docx_with_ocr_generator(file_path, file_name, ocr_engine_id, ocr_settings)
-        elif ext == ".txt":
-            yield {"file": file_name, "step": "テキストファイルを処理中..."}
-            yield self._extract_text_from_txt(file_path)
-        elif ext == ".csv":
-            yield {"file": file_name, "step": "CSVファイルを処理中..."}
-            yield self._extract_text_from_csv(file_path)
-        elif ext == ".json":
-            yield {"file": file_name, "step": "JSONファイルを処理中..."}
-            yield self._extract_text_from_json(file_path)
-        elif ext == ".eml":
-            yield {"file": file_name, "step": "EMLファイルを処理中..."}
-            yield self._extract_text_from_eml(file_path)
-        else:
-            raise ValueError(f"未対応のファイル形式: {ext}")
 
-    def _extract_pdf_with_ocr_generator(
-        self, 
-        pdf_path: str, 
-        file_name: str, 
-        ocr_engine_id: str = None, 
-        ocr_settings: Dict = None
-    ) -> Generator:
-        """PDFからテキスト抽出（ジェネレータ版、リアルタイム進捗報告）"""
-        import fitz
-        
-        doc = fitz.open(pdf_path)
-        text_list = []
-        total_pages = len(doc)
-        
-        # OCRエンジンの決定
+        # PDFファイルの場合のみOCR処理
+        if not file_path.lower().endswith('.pdf'):
+            yield {"file": file_name, "step": "PDF以外のファイルのためOCR処理をスキップ"}
+            return
+
+        try:
+            import fitz  # PyMuPDF
+            doc = fitz.open(file_path)
+            total_pages = len(doc)
+            doc.close()
+        except Exception as e:
+            yield {"file": file_name, "step": f"PDFファイル読み込みエラー: {str(e)}"}
+            return
+
+        yield {"file": file_name, "step": f"PDFページ数: {total_pages}"}
+
+        # OCRエンジンの確認
         if not ocr_engine_id:
-            ocr_engine_id = self.ocr_factory.settings_manager.get_default_engine()
-        
+            yield {"file": file_name, "step": "OCRエンジンが指定されていません"}
+            return
+
         yield {"file": file_name, "step": f"OCRエンジン: {ocr_engine_id} を使用"}
 
+        # 各ページを処理
         for page_number in range(total_pages):
-            # ページ処理開始時間を記録
+            # キャンセルチェック
+            if abort_flag and abort_flag.get("flag"):
+                yield {"file": file_name, "step": "OCR処理がキャンセルされました"}
+                return
+
             page_start_time = time.perf_counter()
-            
-            # 初期の「処理中...」メッセージ
             yield {
                 "file": file_name, 
                 "step": f"ページ {page_number + 1}/{total_pages} 処理中...",
-                "page_id": f"page_{page_number + 1}_{total_pages}",  # ページ識別子
-                "is_progress_update": True  # 進捗更新フラグ
+                "page_id": f"page_{page_number + 1}_{total_pages}"
             }
-            
-            page = doc.load_page(page_number)
 
-            # PyMuPDF抽出（テキスト層）
-            pdf_text = page.get_text().strip()
-
-            # 定期的に経過時間を更新しながらOCR処理
-            import threading
-            import time as time_module
-            
-            # OCR処理を別スレッドで実行
+            # OCR処理を別スレッドで実行（キャンセル可能）
             ocr_result = None
             ocr_exception = None
             
@@ -662,8 +648,8 @@ class IngestProcessor:
                 try:
                     ocr_result = self.ocr_factory.process_with_settings(
                         engine_id=ocr_engine_id,
-                        pdf_path=pdf_path,
-                        page_num=page_number,
+                        pdf_path=file_path,
+                        page_num=page_number + 1,  # 1ベースで渡す
                         custom_params=ocr_settings or {}
                     )
                 except Exception as e:
@@ -673,9 +659,14 @@ class IngestProcessor:
             ocr_thread = threading.Thread(target=run_ocr)
             ocr_thread.start()
             
-            # OCR処理中は1秒ごとに経過時間を更新
+            # OCR処理中は0.5秒ごとにキャンセルチェック
             progress_count = 0
             while ocr_thread.is_alive():
+                # キャンセルチェック
+                if abort_flag and abort_flag.get("flag"):
+                    yield {"file": file_name, "step": "OCR処理がキャンセルされました"}
+                    return
+                
                 elapsed = time.perf_counter() - page_start_time
                 progress_count += 1
                 
@@ -689,7 +680,7 @@ class IngestProcessor:
                         "is_progress_update": True  # 進捗更新フラグ
                     }
                 
-                time_module.sleep(1)
+                time.sleep(0.5)  # 0.5秒間隔でチェック
                 
                 # 安全装置：60秒以上経過した場合は強制終了
                 if elapsed > 60:
@@ -702,87 +693,325 @@ class IngestProcessor:
             # 例外が発生した場合は再発生
             if ocr_exception:
                 raise ocr_exception
-            
-            if ocr_result["success"]:
-                ocr_text = ocr_result["text"].strip()
+
+            # キャンセルチェック
+            if abort_flag and abort_flag.get("flag"):
+                yield {"file": file_name, "step": "OCR処理がキャンセルされました"}
+                return
+
+            # OCR結果の処理
+            if ocr_result and ocr_result.get("success"):
+                text = ocr_result.get("text", "")
+                confidence = ocr_result.get("confidence", 0.0)
+                processing_time = ocr_result.get("processing_time", 0.0)
+                
                 yield {
-                    "file": file_name, 
-                    "step": f"ページ {page_number + 1} OCR完了 (処理時間: {ocr_result['processing_time']:.2f}秒)"
+                    "file": file_name,
+                    "step": f"ページ {page_number + 1} OCR完了",
+                    "detail": f"信頼度: {confidence:.2f}, 処理時間: {processing_time:.1f}秒"
+                }
+                
+                if text.strip():
+                    yield {
+                        "file": file_name,
+                        "step": "ocr_text",
+                        "page": page_number + 1,
+                        "content": text,
+                        "confidence": confidence
+                    }
+                else:
+                    yield {
+                        "file": file_name,
+                        "step": f"ページ {page_number + 1} OCR結果が空です"
+                    }
+            else:
+                error_msg = ocr_result.get("error", "不明なエラー") if ocr_result else "OCR処理に失敗しました"
+                yield {
+                    "file": file_name,
+                    "step": f"ページ {page_number + 1} OCRエラー: {error_msg}"
+                }
+
+    async def _extract_pdf_with_ocr_generator(
+        self, 
+        file_path: str, 
+        file_name: str, 
+        ocr_engine_id: str = None, 
+        ocr_settings: Dict = None,
+        abort_flag: Dict[str, bool] = None
+    ) -> AsyncGenerator[Dict, None]:
+
+        # PDFファイルの場合のみOCR処理
+        if not file_path.lower().endswith('.pdf'):
+            yield {"file": file_name, "step": "PDF以外のファイルのためOCR処理をスキップ"}
+            return
+
+        try:
+            import fitz  # PyMuPDF
+            doc = fitz.open(file_path)
+            total_pages = len(doc)
+            doc.close()
+        except Exception as e:
+            yield {"file": file_name, "step": f"PDFファイル読み込みエラー: {str(e)}"}
+            return
+        
+        yield {"file": file_name, "step": f"PDFページ数: {total_pages}"}
+
+        # OCRエンジンの確認
+        if not ocr_engine_id:
+            yield {"file": file_name, "step": "OCRエンジンが指定されていません"}
+            return
+        
+        yield {"file": file_name, "step": f"OCRエンジン: {ocr_engine_id} を使用"}
+
+        # 各ページを処理
+        for page_number in range(total_pages):
+            # キャンセルチェック
+            if abort_flag and abort_flag.get("flag"):
+                yield {"file": file_name, "step": "OCR処理がキャンセルされました"}
+                return
+
+            page_start_time = time.perf_counter()
+            yield {
+                "file": file_name, 
+                "step": f"ページ {page_number + 1}/{total_pages} 処理中...",
+                "page_id": f"page_{page_number + 1}_{total_pages}"
+            }
+
+            # OCR処理を別スレッドで実行（キャンセル可能）
+            ocr_result = None
+            ocr_exception = None
+            
+            def run_ocr():
+                nonlocal ocr_result, ocr_exception
+                try:
+                    ocr_result = self.ocr_factory.process_with_settings(
+                        engine_id=ocr_engine_id,
+                        pdf_path=file_path,
+                        page_num=page_number + 1,  # 1ベースで渡す
+                        custom_params=ocr_settings or {}
+                    )
+                except Exception as e:
+                    ocr_exception = e
+            
+            # OCR処理を開始
+            ocr_thread = threading.Thread(target=run_ocr)
+            ocr_thread.start()
+            
+            # OCR処理中は0.5秒ごとにキャンセルチェック
+            progress_count = 0
+            while ocr_thread.is_alive():
+                # キャンセルチェック
+                if abort_flag and abort_flag.get("flag"):
+                    yield {"file": file_name, "step": "OCR処理がキャンセルされました"}
+                    return
+                
+                elapsed = time.perf_counter() - page_start_time
+                progress_count += 1
+                
+                # 最初の進捗更新は表示しない（初期メッセージと重複を避ける）
+                if progress_count > 1:
+                    yield {
+                        "file": file_name, 
+                        "step": f"ページ {page_number + 1}/{total_pages} 処理中... ({elapsed:.1f}秒経過)",
+                        "update_type": "progress_update",
+                        "page_id": f"page_{page_number + 1}_{total_pages}",  # ページ識別子
+                        "is_progress_update": True  # 進捗更新フラグ
+                    }
+                
+                time.sleep(0.5)  # 0.5秒間隔でチェック
+            
+            # 安全装置：60秒以上経過した場合は強制終了
+            if elapsed > 60:
+                print(f"⚠️ ページ {page_number + 1} OCR処理が60秒を超過しました")
+                break
+        
+        # OCR処理完了を待機
+        ocr_thread.join()
+        
+        # 例外が発生した場合は再発生
+        if ocr_exception:
+            raise ocr_exception
+        
+        # キャンセルチェック
+        if abort_flag and abort_flag.get("flag"):
+            yield {"file": file_name, "step": "OCR処理がキャンセルされました"}
+            return
+
+        # OCR結果の処理
+        if ocr_result and ocr_result.get("success"):
+            text = ocr_result.get("text", "")
+            confidence = ocr_result.get("confidence", 0.0)
+            processing_time = ocr_result.get("processing_time", 0.0)
+            
+            yield {
+                "file": file_name, 
+                "step": f"ページ {page_number + 1} OCR完了",
+                "detail": f"信頼度: {confidence:.2f}, 処理時間: {processing_time:.1f}秒"
+            }
+            
+            if text.strip():
+                yield {
+                    "file": file_name,
+                    "step": "ocr_text",
+                    "page": page_number + 1,
+                    "content": text,
+                    "confidence": confidence
                 }
             else:
-                ocr_text = f"OCRエラー: {ocr_result['error']}"
                 yield {
                     "file": file_name, 
-                    "step": f"ページ {page_number + 1} OCRエラー: {ocr_result['error']}"
+                    "step": f"ページ {page_number + 1} OCR結果が空です"
                 }
+        else:
+            error_msg = ocr_result.get("error", "不明なエラー") if ocr_result else "OCR処理に失敗しました"
+            yield {
+                "file": file_name,
+                "step": f"ページ {page_number + 1} OCRエラー: {error_msg}"
+            }
 
-            # 構造化データの抽出
-            structural_data = self._extract_structural_data(page, page_number)
-            
-            # タグ形式で結合して1ページ分として格納
-            merged = f"<pdf_text>\n{pdf_text}\n</pdf_text>\n\n<ocr_text>\n{ocr_text}\n</ocr_text>\n\n<structural_data>\n{structural_data}\n</structural_data>"
-            text_list.append(merged)
-
-        doc.close()
-        yield text_list  # 最終結果を返す
-
-    def _extract_docx_with_ocr_generator(
+    async def _extract_docx_with_ocr_generator(
         self, 
         docx_path: str, 
         file_name: str, 
         ocr_engine_id: str = None, 
-        ocr_settings: Dict = None
-    ) -> Generator:
-        """Wordファイルから構造とOCRを統合して抽出（ジェネレータ版）"""
-        import docx
-        import subprocess
-        import tempfile
-        
-        structured_text = []
+        ocr_settings: Dict = None,
+        abort_flag: Dict[str, bool] = None
+    ) -> AsyncGenerator[Dict, None]:
+        """DOCXからテキスト抽出（ジェネレータ版、リアルタイム進捗報告）"""
+        try:
+            from docx import Document
+            
+            doc = Document(docx_path)
+            total_pages = len(doc.paragraphs)
 
-        yield {"file": file_name, "step": "Word文書の構造を抽出中..."}
+            yield {"file": file_name, "step": f"DOCX段落数: {total_pages}"}
 
-        # 表や段落など、論理構造ベースで抽出
-        doc = docx.Document(docx_path)
-        structured_text.extend([p.text for p in doc.paragraphs if p.text])
-
-        for table in doc.tables:
-            for row in table.rows:
-                row_text = [cell.text.strip().replace("\n", " ") for cell in row.cells if cell.text.strip()]
-                if row_text:
-                    structured_text.append(" | ".join(row_text))
-
-        # OCRベース（LibreOffice経由でPDF化 → 新しいOCRサービス使用）
-        with tempfile.TemporaryDirectory() as tmpdir:
-            yield {"file": file_name, "step": "Word文書をPDFに変換中..."}
+            # OCRエンジンの決定
+            if not ocr_engine_id:
+                ocr_engine_id = self.ocr_factory.settings_manager.get_default_engine()
+            
+            yield {"file": file_name, "step": f"OCRエンジン: {ocr_engine_id} を使用"}
+            
+            # 各段落を処理
+            for para_idx, paragraph in enumerate(doc.paragraphs):
+                # キャンセルチェック
+                if abort_flag and abort_flag.get("flag"):
+                    yield {"file": file_name, "step": "DOCX処理がキャンセルされました"}
+                    return
                 
-            try:
-                subprocess.run([
-                    "libreoffice", "--headless", "--convert-to", "pdf",
-                    "--outdir", tmpdir, docx_path
-                ], check=True)
-            except subprocess.CalledProcessError:
-                raise RuntimeError("LibreOfficeによるPDF変換に失敗しました")
-
-            basename = os.path.splitext(os.path.basename(docx_path))[0]
-            pdf_path = os.path.join(tmpdir, f"{basename}.pdf")
-            if os.path.exists(pdf_path):
-                ocr_text = []
-                for event_or_result in self._extract_pdf_with_ocr_generator(pdf_path, file_name, ocr_engine_id, ocr_settings):
-                    if isinstance(event_or_result, dict) and "step" in event_or_result:
-                        yield event_or_result
+                para_start_time = time.perf_counter()
+                yield {
+                    "file": file_name, 
+                    "step": f"段落 {para_idx + 1}/{total_pages} 処理中...",
+                    "page_id": f"para_{para_idx + 1}_{total_pages}"
+                }
+                
+                # 段落テキストを取得
+                para_text = paragraph.text.strip()
+                
+                if not para_text:
+                    yield {"file": file_name, "step": f"段落 {para_idx + 1} は空です"}
+                    continue
+                
+                # OCR処理を別スレッドで実行（キャンセル可能）
+                ocr_result = None
+                ocr_exception = None
+                
+                def run_ocr():
+                    nonlocal ocr_result, ocr_exception
+                    try:
+                        ocr_result = self.ocr_factory.process_with_settings(
+                            engine_id=ocr_engine_id,
+                            pdf_path=docx_path,  # DOCXファイルのパスを渡す
+                            page_num=para_idx + 1,
+                            custom_params=ocr_settings or {}
+                        )
+                    except Exception as e:
+                        ocr_exception = e
+                
+                # OCR処理を開始
+                ocr_thread = threading.Thread(target=run_ocr)
+                ocr_thread.start()
+                
+                # OCR処理中は0.5秒ごとにキャンセルチェック
+                progress_count = 0
+                while ocr_thread.is_alive():
+                    # キャンセルチェック
+                    if abort_flag and abort_flag.get("flag"):
+                        yield {"file": file_name, "step": "DOCX処理がキャンセルされました"}
+                        return
+                    
+                    elapsed = time.perf_counter() - para_start_time
+                    progress_count += 1
+                    
+                    # 最初の進捗更新は表示しない（初期メッセージと重複を避ける）
+                    if progress_count > 1:
+                        yield {
+                            "file": file_name, 
+                            "step": f"段落 {para_idx + 1}/{total_pages} 処理中... ({elapsed:.1f}秒経過)",
+                            "update_type": "progress_update",
+                            "page_id": f"para_{para_idx + 1}_{total_pages}",
+                            "is_progress_update": True
+                        }
+                    
+                    time.sleep(0.5)  # 0.5秒間隔でチェック
+                    
+                    # 安全装置：30秒以上経過した場合は強制終了
+                    if elapsed > 30:
+                        print(f"⚠️ 段落 {para_idx + 1} DOCX処理が30秒を超過しました")
+                        break
+                
+                # OCR処理完了を待機
+                ocr_thread.join()
+                
+                # 例外が発生した場合は再発生
+                if ocr_exception:
+                    raise ocr_exception
+                
+                # キャンセルチェック
+                if abort_flag and abort_flag.get("flag"):
+                    yield {"file": file_name, "step": "DOCX処理がキャンセルされました"}
+                    return
+                
+                # OCR結果の処理
+                if ocr_result and ocr_result.get("success"):
+                    text = ocr_result.get("text", "")
+                    confidence = ocr_result.get("confidence", 0.0)
+                    processing_time = ocr_result.get("processing_time", 0.0)
+                    
+                    yield {
+                        "file": file_name,
+                        "step": f"段落 {para_idx + 1} OCR完了",
+                        "detail": f"信頼度: {confidence:.2f}, 処理時間: {processing_time:.1f}秒"
+                    }
+                    
+                    if text.strip():
+                        yield {
+                            "file": file_name,
+                            "step": "ocr_text",
+                            "page": para_idx + 1,
+                            "content": text,
+                            "confidence": confidence
+                        }
                     else:
-                        ocr_text = event_or_result
-            else:
-                raise FileNotFoundError(f"PDF変換後ファイルが見つかりません: {pdf_path}")
-
-        # 統合：タグを付けて LLM 整形に渡す
-        structured_content = "\n".join(structured_text)
-        ocr_content = "\n".join(ocr_text)
-        
-        # 両内容を統合して1つのテキストとして返す
-        combined_text = f"<structured_text>\n{structured_content}\n</structured_text>\n\n<ocr_text>\n{ocr_content}\n</ocr_text>"
-        yield [combined_text]
+                        yield {
+                            "file": file_name,
+                            "step": f"段落 {para_idx + 1} OCR結果が空です"
+                        }
+                else:
+                    error_msg = ocr_result.get("error", "不明なエラー") if ocr_result else "OCR処理に失敗しました"
+                    yield {
+                        "file": file_name,
+                        "step": f"段落 {para_idx + 1} OCRエラー: {error_msg}"
+                    }
+            
+            yield {"file": file_name, "step": "DOCX処理完了"}
+            
+        except Exception as e:
+            yield {
+                "file": file_name,
+                "step": f"DOCX処理エラー: {str(e)}"
+            }
 
     def _run_with_timeout(self, func, timeout_sec: int):
         """タイムアウト付きで関数を実行"""

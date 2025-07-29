@@ -117,20 +117,27 @@ class IngestLayout {
 
   showPDFPreview(fileIdOrName, fileName) {
     console.log('PDFプレビュー:', fileIdOrName, fileName);
+    console.log('現在のレイアウト:', this.currentLayout);
+    console.log('PDFフレーム要素:', this.pdfFrame);
     
     // PDFのURLを構築（file_idがある場合はそれを使用、なければファイル名）
     const pdfUrl = `/api/pdf/${encodeURIComponent(fileIdOrName)}`;
+    console.log('PDF URL:', pdfUrl);
     
     // 現在のレイアウトに応じてPDF表示
     if (this.currentLayout === 'no-preview') {
       // PDFプレビューなしモードの場合、第1パターンに切り替え
+      console.log('no-preview → pattern1 に切り替え');
       this.switchLayout('pattern1');
     }
     
     // PDFフレームにURLを設定
     if (this.pdfFrame) {
+      console.log('PDFフレームにURLを設定:', pdfUrl);
       this.pdfFrame.src = pdfUrl;
       this.currentPdfUrl = pdfUrl;
+    } else {
+      console.error('PDFフレーム要素が見つかりません');
     }
   }
 

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}ホーム - 新しいRAGシステム{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <div class="container">
+        <h1 class="hero-title">新しいRAGシステム</h1>
+        <p class="hero-subtitle">セキュリティ設計に基づく日本語文書処理システム</p>
+        
+        <div class="hero-actions">
+            <a href="/chat" class="btn btn-primary btn-lg">チャットを開始</a>
+            <a href="/upload" class="btn btn-outline btn-lg">ファイルをアップロード</a>
+        </div>
+    </div>
+</div>
+
+<div class="features">
+    <div class="container">
+        <h2 class="section-title">主な機能</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📄</div>
+                <h3>多形式文書対応</h3>
+                <p>PDF、Word、テキスト、CSV、JSON、EMLファイルの処理に対応</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>高精度OCR</h3>
+                <p>複数のOCRエンジンによる高精度なテキスト抽出</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>LLM整形</h3>
+                <p>Ollamaを使用した日本語テキストの品質向上</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔎</div>
+                <h3>ベクトル検索</h3>
+                <p>複数の埋め込みモデルによる高精度検索</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>リアルタイム処理</h3>
+                <p>SSEによる進捗表示とリアルタイム処理</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>セキュリティ設計</h3>
+                <p>HTTPS対応、認証、API分離によるセキュアな設計</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats">
+    <div class="container">
+        <h2 class="section-title">システム状況</h2>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="file-count">-</div>
+                <div class="stat-label">登録ファイル数</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number" id="session-count">-</div>
+                <div class="stat-label">チャットセッション数</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-number" id="embedding-count">-</div>
+                <div class="stat-label">埋め込みベクトル数</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// システム統計の取得
+async function loadStats() {
+    try {
+        const [filesResponse, sessionsResponse] = await Promise.all([
+            fetch('/api/files', { credentials: 'include' }),
+            fetch('/api/chat/sessions', { credentials: 'include' })
+        ]);
+        
+        if (filesResponse.ok) {
+            const filesData = await filesResponse.json();
+            document.getElementById('file-count').textContent = filesData.data.length;
+        }
+        
+        if (sessionsResponse.ok) {
+            const sessionsData = await sessionsResponse.json();
+            document.getElementById('session-count').textContent = sessionsData.data.length;
+        }
+        
+        // 埋め込みベクトル数は仮の値
+        document.getElementById('embedding-count').textContent = '0';
+        
+    } catch (error) {
+        console.error('統計取得エラー:', error);
+    }
+}
+
+// ページ読み込み時に統計を取得
+document.addEventListener('DOMContentLoaded', loadStats);
+</script>
+{% endblock %} 

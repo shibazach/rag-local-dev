@@ -1,20 +1,24 @@
-# run_app.py
-# RAGアプリケーション（FastAPI）の起動スクリプト
+#!/usr/bin/env python3
+"""
+新しいRAGシステム起動スクリプト
+ユーザーがmain.pyとnew.pyを選択して起動できます
+"""
 
 import os
+import sys
 import subprocess
 import argparse
-from src.utils import debug_print
+from pathlib import Path
 
-def run_app(app_type: str = "main"):
+def run_app(app_type: str = "new"):
     """
     RAGアプリケーションを起動
     
     Args:
-        app_type: "main" または "new" (デフォルト: "main")
+        app_type: "main" または "new" (デフォルト: "new")
     """
     if app_type == "main":
-        debug_print("🚀 既存のRAG FastAPIアプリ起動中...")
+        print("🚀 既存のRAG FastAPIアプリ起動中...")
         cmd = [
             "uvicorn",
             "app.main:app",
@@ -24,17 +28,17 @@ def run_app(app_type: str = "main"):
             "--log-level", "warning",
         ]
     else:
-        debug_print("🚀 新しいRAG FastAPIアプリ起動中...")
+        print("🚀 新しいRAG FastAPIアプリ起動中...")
         cmd = [
             "uvicorn",
             "new.main:app",
             "--host", "0.0.0.0",
-            "--port", "8001",
+            "--port", "8000",
             "--reload",
             "--log-level", "warning",
         ]
     
-    debug_print(f"→ Running: {' '.join(cmd)}")
+    print(f"→ Running: {' '.join(cmd)}")
     subprocess.run(cmd)
 
 def main():
@@ -42,7 +46,7 @@ def main():
     parser.add_argument(
         "--app", 
         choices=["main", "new"], 
-        default="main",
+        default="new",
         help="起動するアプリケーション (main: 既存, new: 新アーキテクチャ)"
     )
     
@@ -50,4 +54,4 @@ def main():
     run_app(args.app)
 
 if __name__ == "__main__":
-    main()
+    main() 

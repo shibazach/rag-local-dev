@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}ファイル管理 - 新しいRAGシステム{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="files-container">
+        <div class="files-header">
+            <h1>ファイル管理</h1>
+            <button class="btn btn-primary" onclick="location.href='/upload'">ファイルをアップロード</button>
+        </div>
+        
+        <div class="files-controls">
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="ファイル名で検索..." class="form-control">
+            </div>
+            <div class="filter-controls">
+                <select id="status-filter" class="form-control">
+                    <option value="">すべてのステータス</option>
+                    <option value="uploaded">アップロード済み</option>
+                    <option value="processing">処理中</option>
+                    <option value="completed">完了</option>
+                    <option value="error">エラー</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="files-list">
+            <div class="files-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ファイル名</th>
+                            <th>サイズ</th>
+                            <th>ステータス</th>
+                            <th>アップロード日時</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="files-tbody">
+                        <!-- ファイル一覧がここに表示されます -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="no-files" class="no-files" style="display: none;">
+                <p>ファイルがありません</p>
+                <button class="btn btn-primary" onclick="location.href='/upload'">ファイルをアップロード</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ページ読み込み時の処理
+document.addEventListener('DOMContentLoaded', function() {
+    loadFiles();
+    
+    // 検索とフィルターのイベントリスナー
+    document.getElementById('search-input').addEventListener('input', filterFiles);
+    document.getElementById('status-filter').addEventListener('change', filterFiles);
+});
+
+// ファイル一覧を読み込み
+async function loadFiles() {
+    try {
+        showLoading();
+        const response = await fetch('/api/files', {
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            const files = await response.json();
+            displayFiles(files);
+        } else {
+            showNotification('ファイルの読み込みに失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading files:', error);
+        showNotification('ファイルの読み込みに失敗しました', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ファイル一覧を表示
+function displayFiles(files) {
+    const tbody = document.getElementById('files-tbody');
+    const noFiles = document.getElementById('no-files');
+    
+    if (files.length === 0) {
+        tbody.innerHTML = '';
+        noFiles.style.display = 'block';
+        return;
+    }
+    
+    noFiles.style.display = 'none';
+    tbody.innerHTML = files.map(file => `
+        <tr data-filename="${file.filename}" data-status="${file.status}">
+            <td>
+                <div class="file-info">
+                    <span class="file-icon">📄</span>
+                    <span class="file-name">${file.filename}</span>
+                </div>
+            </td>
+            <td>${formatFileSize(file.file_size)}</td>
+            <td>
+                <span class="status-badge status-${file.status}">
+                    ${getStatusText(file.status)}
+                </span>
+            </td>
+            <td>${formatDate(file.created_at)}</td>
+            <td>
+                <div class="file-actions">
+                    <button class="btn btn-sm btn-secondary" onclick="viewFile('${file.id}')" title="詳細表示">
+                        👁️
+                    </button>
+                    <button class="btn btn-sm btn-info" onclick="previewFile('${file.id}', 'text')" title="テキストプレビュー">
+                        📄
+                    </button>
+                    <button class="btn btn-sm btn-warning" onclick="previewFile('${file.id}', 'binary')" title="バイナリプレビュー">
+                        🔍
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteFile('${file.id}')" title="削除">
+                        🗑️
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// ファイルを検索・フィルター
+function filterFiles() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const statusFilter = document.getElementById('status-filter').value;
+    const rows = document.querySelectorAll('#files-tbody tr');
+    
+    rows.forEach(row => {
+        const filename = row.querySelector('.file-name').textContent.toLowerCase();
+        const status = row.dataset.status;
+        
+        const matchesSearch = filename.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        row.style.display = matchesSearch && matchesStatus ? '' : 'none';
+    });
+}
+
+// ファイルの詳細表示
+async function viewFile(fileId) {
+    try {
+        showLoading();
+        const response = await fetch(`/api/files/${fileId}`, {
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            const file = await response.json();
+            showFileDetails(file);
+        } else {
+            showNotification('ファイルの詳細取得に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error viewing file:', error);
+        showNotification('ファイルの詳細取得に失敗しました', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ファイル詳細を表示
+function showFileDetails(file) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>ファイル詳細</h3>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="file-detail">
+                    <strong>ファイル名:</strong> ${file.filename}
+                </div>
+                <div class="file-detail">
+                    <strong>サイズ:</strong> ${formatFileSize(file.file_size)}
+                </div>
+                <div class="file-detail">
+                    <strong>ステータス:</strong> 
+                    <span class="status-badge status-${file.status}">
+                        ${getStatusText(file.status)}
+                    </span>
+                </div>
+                <div class="file-detail">
+                    <strong>アップロード日時:</strong> ${formatDate(file.created_at)}
+                </div>
+                ${file.text_content ? `
+                <div class="file-detail">
+                    <strong>テキスト内容:</strong>
+                    <div class="text-content">
+                        <pre>${file.text_content}</pre>
+                    </div>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// ファイルを削除
+async function deleteFile(fileId) {
+    if (!confirm('このファイルを削除しますか？')) {
+        return;
+    }
+    
+    try {
+        showLoading();
+        const response = await fetch(`/api/files/${fileId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            showNotification('ファイルを削除しました', 'success');
+            loadFiles(); // 一覧を再読み込み
+        } else {
+            showNotification('ファイルの削除に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting file:', error);
+        showNotification('ファイルの削除に失敗しました', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ファイルプレビュー
+async function previewFile(fileId, previewType) {
+    try {
+        showLoading();
+        const response = await fetch(`/api/files/${fileId}/preview?preview_type=${previewType}`, {
+            headers: {
+                'Authorization': `Bearer ${getAuthToken()}`
+            }
+        });
+        
+        if (response.ok) {
+            const preview = await response.json();
+            showFilePreview(preview, previewType);
+        } else {
+            showNotification('ファイルプレビューの取得に失敗しました', 'error');
+        }
+    } catch (error) {
+        console.error('Error previewing file:', error);
+        showNotification('ファイルプレビューの取得に失敗しました', 'error');
+    } finally {
+        hideLoading();
+    }
+}
+
+// ファイルプレビューを表示
+function showFilePreview(preview, previewType) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    
+    let content = '';
+    if (previewType === 'text') {
+        content = `
+            <div class="modal-header">
+                <h3>テキストプレビュー</h3>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-content">
+                    <pre>${preview.content}</pre>
+                </div>
+            </div>
+        `;
+    } else if (previewType === 'binary') {
+        content = `
+            <div class="modal-header">
+                <h3>バイナリプレビュー</h3>
+                <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="preview-content">
+                    <p><strong>サイズ:</strong> ${preview.size} bytes</p>
+                    <p><strong>ヘックスダンプ:</strong></p>
+                    <pre class="hex-dump">${preview.hex_preview}</pre>
+                </div>
+            </div>
+        `;
+    }
+    
+    modal.innerHTML = `
+        <div class="modal-content">
+            ${content}
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// ステータステキストを取得
+function getStatusText(status) {
+    const statusMap = {
+        'uploaded': 'アップロード済み',
+        'processing': '処理中',
+        'completed': '完了',
+        'error': 'エラー'
+    };
+    return statusMap[status] || status;
+}
+</script>
+
+<style>
+.files-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.files-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.files-controls {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    align-items: center;
+}
+
+.search-box {
+    flex: 1;
+}
+
+.filter-controls {
+    min-width: 200px;
+}
+
+.files-table {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.files-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.files-table th,
+.files-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.files-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #333;
+}
+
+.files-table tr:hover {
+    background: #f8f9fa;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-icon {
+    font-size: 18px;
+}
+
+.file-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-uploaded {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-processing {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.status-completed {
+    background: #e8f5e8;
+    color: #388e3c;
+}
+
+.status-error {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.file-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.no-files {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+}
+
+.no-files p {
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.file-detail {
+    margin-bottom: 15px;
+}
+
+.file-detail strong {
+    display: inline-block;
+    width: 120px;
+    color: #333;
+}
+
+.text-content {
+    margin-top: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.text-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.preview-content {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.preview-content pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.hex-dump {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 12px;
+    color: #333;
+    background: #f0f0f0;
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+    .files-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .files-controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .files-table {
+        overflow-x: auto;
+    }
+    
+    .files-table table {
+        min-width: 600px;
+    }
+    
+    .file-actions {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+</style>
+{% endblock %} 

@@ -7,7 +7,7 @@ StreamingResponse 側へ dict を逐次 yield し、SSE で送出してもらう
 
 # ── 標準ライブラリ ────────────────────────────────
 import functools, time, unicodedata, os
-from typing import Dict, Generator, List
+from typing import Dict, AsyncGenerator, List
 import logging
 
 # ── プロジェクト共通 ────────────────────────────────
@@ -24,7 +24,7 @@ _processor = IngestProcessor()
 
 
 # process_file ─ 1ファイルを処理しイベントを yield（新しいOCRサービス対応）
-def process_file(
+async def process_file(
     *,
     file_path: str,
     file_name: str,
@@ -39,9 +39,9 @@ def process_file(
     abort_flag: Dict[str, bool],
     ocr_engine_id: str = None,      # 新規追加: OCRエンジン指定
     ocr_settings: Dict = None,      # 新規追加: OCR設定
-) -> Generator[Dict, None, None]:
+) -> AsyncGenerator[Dict, None]:
     """新しいIngestProcessorに処理を委譲"""
-    yield from _processor.process_file(
+    async for event in _processor.process_file(
         file_path=file_path,
         file_name=file_name,
         index=index,
@@ -55,4 +55,5 @@ def process_file(
         abort_flag=abort_flag,
         ocr_engine_id=ocr_engine_id,
         ocr_settings=ocr_settings,
-    )
+    ):
+        yield event

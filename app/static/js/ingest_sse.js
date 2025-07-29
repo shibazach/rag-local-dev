@@ -27,7 +27,7 @@ class IngestSSE {
       console.log('✅ SSE接続が開かれました');
     };
 
-    this.eventSource.onmessage = evt => this.handleMessage(evt);
+    this.eventSource.onmessage = evt => this.handleSSEMessage(evt);
 
     this.eventSource.onerror = evt => {
       console.error('SSE接続エラー:', evt);
@@ -38,133 +38,67 @@ class IngestSSE {
     };
   }
 
-  handleMessage(evt) {
-    console.log('📨 SSEメッセージ受信:', evt.data);
-    const d = JSON.parse(evt.data);
-    console.log('📨 パース済みデータ:', d);
+  handleSSEMessage(event) {
+    try {
+      const data = JSON.parse(event.data);
 
-    // cancelling イベントはログ化しない（即時フィードバックのみ）
-    if (d.cancelling) {
-      return;
-    }
-
-    // 全体開始イベント
-    if (d.start) {
-      this.addLogMessage(`全 ${d.total_files} 件の処理を開始`);
-      return;
-    }
-
-    // 停止完了通知
-    if (d.stopped) {
-      this.addLogMessage('⏹️ 処理が停止しました');
-      this.eventSource.close();
-      if (this.onComplete) this.onComplete();
-      return;
-    }
-
-    // 全完了イベント
-    if (d.done) {
-      this.addLogMessage('✅ 全処理完了');
-      this.eventSource.close();
-      if (this.onComplete) this.onComplete();
-      return;
-    }
-
-    // 各ファイル・ステップイベント（元のingest_sse.jsと同じ詳細処理）
-    const { file, step, file_id, index, total, part, content, duration } = d;
-
-    // ファイルセクション準備
-    let section = this.fileContainers[file];
-    if (!section) {
-      if (this.logContent) {
-        this.logContent.appendChild(document.createElement("br"));
-        this.logContent.appendChild(this.createLine(`${index}/${total} ${file} の処理中…`, "file-progress"));
-        this.scrollBottom(this.logContent);
-
-        const header = document.createElement("div");
-        header.className = "file-header";
-        const link = document.createElement("a");
-        link.href = file_id ? `/api/pdf/${file_id}` : '#';
-        link.textContent = file;
-        // PDFプレビュー機能（オルタネートスイッチ）
-        link.addEventListener('click', (e) => {
-          e.preventDefault();
-          if (file_id && this.layoutManager) {
-            this.layoutManager.togglePDFPreview(file_id, file);
-          }
-        });
-        header.appendChild(link);
-        this.logContent.appendChild(header);
-        this.scrollBottom(this.logContent);
-
-        section = document.createElement("div");
-        section.className = "file-section";
-        this.logContent.appendChild(section);
-        this.scrollBottom(this.logContent);
-
-        this.fileContainers[file] = section;
-      }
-    }
-
-    // ページ単位の見出し
-    if (step && step.startsWith("Page ")) {
-      section.appendChild(this.createLine(step, "page-header"));
-      this.scrollBottom(this.logContent);
-      return;
-    }
-
-    // プロンプト全文／整形結果全文の details 初期化
-    if (step.startsWith("使用プロンプト全文") || step.startsWith("LLM整形結果全文")) {
-      const [title, raw] = step.split(" part:");
-      const key = `${file}__${title}__${raw||"all"}`;
-      if (!section.querySelector(`details[data-key="${key}"]`)) {
-        const det = document.createElement("details");
-        det.setAttribute("data-key", key);
-        const sum = document.createElement("summary");
-        sum.textContent = step;
-        det.appendChild(sum);
-        section.appendChild(det);
-        this.scrollBottom(this.logContent);
-      }
-      return;
-    }
-
-    // プロンプト／整形結果のテキスト挿入
-    if (step === "prompt_text" || step === "refined_text") {
-      const title = step === "prompt_text" ? "使用プロンプト全文" : "LLM整形結果全文";
-      const key = `${file}__${title}__${part||"all"}`;
-      const det = section.querySelector(`details[data-key="${key}"]`);
-      if (det) {
-        let pre = det.querySelector("pre");
-        if (!pre) {
-          pre = document.createElement("pre");
-          det.appendChild(pre);
+      // キャンセルメッセージを即座に処理
+      if (data.cancelling) {
+        this.addLogMessage('🛑 処理をキャンセルしています...');
+        if (data.message) {
+          this.addLogMessage(data.message);
         }
-        pre.textContent = (content || "").replace(/\n{3,}/g, "\n\n");
-        this.scrollBottom(this.logContent);
+        return;
       }
-      return;
-    }
 
-    // 進捗更新の場合は同じ行を上書き
-    if (d.is_progress_update && d.page_id) {
-      // 既存の進捗行を検索
-      const existingProgress = section.querySelector(`[data-page-id="${d.page_id}"]`);
-      if (existingProgress) {
-        // 既存の行を更新
-        existingProgress.textContent = step;
-      } else {
-        // 新しい進捗行を作成
-        const progressLine = this.createLine(step);
-        progressLine.setAttribute('data-page-id', d.page_id);
-        section.appendChild(progressLine);
+      if (data.stopped) {
+        this.addLogMessage('⏹️ 処理がキャンセルされました');
+        if (data.message) {
+          this.addLogMessage(data.message);
+        }
+        return;
       }
-    } else if (step) {
-      // 通常ログ行
-      const label = duration ? `${step} (${duration}s)` : step;
-      section.appendChild(this.createLine(label));
+
+      // 通常の処理メッセージ
+      if (data.file && data.step) {
+        const fileName = data.file;
+        const step = data.step;
+        const detail = data.detail;
+        const pageId = data.page_id;
+        const isProgressUpdate = data.is_progress_update;
+        
+        // 進捗更新メッセージの処理
+        if (isProgressUpdate && pageId) {
+          this.updateProgressMessage(fileName, step, detail, pageId);
+        } else if (step === "ファイル登録完了" || step === "テキスト抽出完了" || step.includes("OCR完了")) {
+          // 完了メッセージ（クリック可能）
+          this.addClickableFileMessage(fileName, step, detail);
+        } else if (step.includes("ページ") && step.includes("処理中")) {
+          // ページ処理中の進捗表示
+          this.addProgressMessage(fileName, step, detail, pageId);
+        } else {
+          // 通常のメッセージ表示
+          this.addLogMessage(`${fileName}: ${step}`);
+          
+          // 詳細情報がある場合は追加表示
+          if (detail) {
+            this.addLogMessage(`  → ${detail}`);
+          }
+        }
+      }
+
+      // 開始・完了メッセージ
+      if (data.start) {
+        this.addLogMessage(`🚀 全 ${data.total_files} 件の処理を開始`);
+      }
+      
+      if (data.done) {
+        this.addLogMessage('✅ 全処理が完了しました');
+      }
+      
+    } catch (error) {
+      console.error('SSEメッセージ解析エラー:', error);
     }
-    this.scrollBottom(this.logContent);
   }
 
   addLogMessage(message) {
@@ -174,6 +108,141 @@ class IngestSSE {
     line.innerHTML = '<span style="color: #666; font-size: 11px;">[' + timestamp + ']</span> ' + message;
     this.logContent.appendChild(line);
     this.logContent.scrollTop = this.logContent.scrollHeight;
+    
+    // フロントエンドの更新を強制
+    this.forceUpdate();
+  }
+
+  forceUpdate() {
+    // フロントエンドの更新を強制する
+    if (this.logContent) {
+      // スクロール位置を更新
+      this.logContent.scrollTop = this.logContent.scrollHeight;
+      
+      // ブラウザの再描画を強制
+      this.logContent.style.display = 'none';
+      this.logContent.offsetHeight; // リフローを強制
+      this.logContent.style.display = 'block';
+    }
+  }
+
+
+
+  addClickableFileMessage(fileName, step, detail = null) {
+    if (!this.logContent) return;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    
+    // ファイル名をクリック可能にする
+    const fileLink = document.createElement('span');
+    fileLink.textContent = fileName;
+    fileLink.style.color = '#007bff';
+    fileLink.style.cursor = 'pointer';
+    fileLink.style.textDecoration = 'underline';
+    fileLink.style.fontWeight = 'bold';
+    fileLink.title = 'クリックしてPDFプレビューを表示';
+    fileLink.onclick = () => {
+      console.log('ファイル名クリック:', fileName);
+      this.showPDFPreview(fileName);
+    };
+    
+    // メッセージを構築
+    line.innerHTML = `<span style="color: #666; font-size: 11px;">[${timestamp}]</span> `;
+    line.appendChild(fileLink);
+    line.innerHTML += `: ${step}`;
+    if (detail) {
+      line.innerHTML += ` - ${detail}`;
+    }
+    
+    this.logContent.appendChild(line);
+    this.logContent.scrollTop = this.logContent.scrollHeight;
+  }
+
+  addProgressMessage(fileName, step, detail = null, pageId = null) {
+    if (!this.logContent) return;
+    
+    const timestamp = new Date().toLocaleTimeString();
+    const line = document.createElement('div');
+    
+    // 進捗メッセージのスタイル
+    line.style.color = '#28a745';
+    line.style.fontWeight = 'bold';
+    
+    // ファイル名をクリック可能にする
+    const fileLink = document.createElement('span');
+    fileLink.textContent = fileName;
+    fileLink.style.color = '#007bff';
+    fileLink.style.cursor = 'pointer';
+    fileLink.style.textDecoration = 'underline';
+    fileLink.title = 'クリックしてPDFプレビューを表示';
+    fileLink.onclick = () => {
+      console.log('ファイル名クリック:', fileName);
+      this.showPDFPreview(fileName);
+    };
+    
+    // メッセージを構築
+    line.innerHTML = `<span style="color: #666; font-size: 11px;">[${timestamp}]</span> `;
+    line.appendChild(fileLink);
+    line.innerHTML += `: ${step}`;
+    if (detail) {
+      line.innerHTML += ` - ${detail}`;
+    }
+    
+    // ページIDがある場合は進捗更新として扱う
+    if (pageId) {
+      line.setAttribute('data-page-id', pageId);
+      line.className = 'progress-update';
+    }
+    
+    this.logContent.appendChild(line);
+    this.logContent.scrollTop = this.logContent.scrollHeight;
+  }
+
+  updateProgressMessage(fileName, step, detail = null, pageId = null) {
+    if (!this.logContent) return;
+    
+    // 既存の進捗メッセージを探す
+    const existingLine = this.logContent.querySelector(`[data-page-id="${pageId}"]`);
+    
+    if (existingLine) {
+      // 既存の進捗メッセージを更新
+      const timestamp = new Date().toLocaleTimeString();
+      const fileLink = document.createElement('span');
+      fileLink.textContent = fileName;
+      fileLink.style.color = '#007bff';
+      fileLink.style.cursor = 'pointer';
+      fileLink.style.textDecoration = 'underline';
+      fileLink.onclick = () => this.showPDFPreview(fileName);
+      
+      existingLine.innerHTML = `<span style="color: #666; font-size: 11px;">[${timestamp}]</span> `;
+      existingLine.appendChild(fileLink);
+      existingLine.innerHTML += `: ${step}`;
+      if (detail) {
+        existingLine.innerHTML += ` - ${detail}`;
+      }
+      
+      // 進捗更新のスタイルを適用
+      existingLine.style.color = '#28a745';
+      existingLine.style.fontWeight = 'bold';
+    } else {
+      // 新しい進捗メッセージを追加
+      this.addProgressMessage(fileName, step, detail, pageId);
+    }
+  }
+
+  showPDFPreview(fileName) {
+    console.log('📄 PDFプレビューを表示:', fileName);
+    
+    // PDFプレビューを右ペインに表示
+    if (this.layoutManager && this.layoutManager.showPDFPreview) {
+      this.layoutManager.showPDFPreview(fileName, fileName);
+    } else {
+      // フォールバック: 新しいタブでPDFを開く
+      const pdfUrl = `/api/pdf/${encodeURIComponent(fileName)}`;
+      console.log('📄 PDF URL:', pdfUrl);
+      window.open(pdfUrl, '_blank');
+    }
   }
 
   createLine(text, cls) {

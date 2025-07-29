@@ -46,7 +46,7 @@ async def handle_query(query: str, model_key: str, mode: str = "チャンク統�
 
     # 埋め込みテーブル名の決定（モデルキーに基づく）
     tablename = f"embeddings_{model_key}"
-    
+
     # ── A. チャンク統合 ────────────────────────
     if mode == "チャンク統合":
          # 2) 上位Kチャンクを取得（ユーザー指定の件数）
@@ -103,7 +103,7 @@ async def handle_query(query: str, model_key: str, mode: str = "チャンク統�
             summaries.append(result)
 
     return {
-        "mode": mode,
+        "mode": mode, 
         "summaries": summaries,
         "results": rows
     }

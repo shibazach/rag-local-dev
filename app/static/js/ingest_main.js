@@ -45,6 +45,27 @@
       promptEditBtn.addEventListener('click', showPromptModal);
     }
 
+    // ファイル選択機能
+    const browseFilesBtn = document.getElementById('browse-files');
+    const inputFiles = document.getElementById('input-files');
+    const selectedFilesDisplay = document.getElementById('selected-files-display');
+    
+    if (browseFilesBtn && inputFiles && selectedFilesDisplay) {
+      browseFilesBtn.addEventListener('click', () => {
+        inputFiles.click();
+      });
+      
+      inputFiles.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length > 0) {
+          const fileNames = files.map(f => f.name).join('\n');
+          selectedFilesDisplay.value = fileNames;
+        } else {
+          selectedFilesDisplay.value = '';
+        }
+      });
+    }
+
     async function showPromptModal() {
       const promptSelect = document.getElementById('refine-prompt');
       const promptKey = promptSelect ? promptSelect.value : '';

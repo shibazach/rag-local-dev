@@ -1,7 +1,9 @@
-<!-- app/templates/dict_editor.html -->
+<!-- app/templates/dic_edit.html -->
 {% extends "base.html" %}
 
 {% block head %}
+<!-- 共通CSSファイル -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/common.css') }}">
 <style>
 .dict-editor-container {
     padding: 20px;
@@ -41,19 +43,7 @@
     margin-bottom: 15px;
 }
 
-.dict-card button {
-    background: #f8f9fa;
-    color: #333;
-    border: 1px solid #ccc;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.dict-card button:hover {
-    background: #e9ecef;
-}
+/* dict-cardのボタンは共通CSSを使用 */
 
 .editor-area {
     display: none;
@@ -91,39 +81,13 @@
     gap: 10px;
 }
 
-.editor-actions button {
-    padding: 6px 12px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: white;
-    cursor: pointer;
-}
-
-.editor-actions .btn-save {
-    background: #28a745;
-    color: white;
-    border-color: #28a745;
-}
-
-.editor-actions .btn-save:hover {
-    background: #218838;
-}
-
-.editor-actions .btn-cancel {
-    background: #6c757d;
-    color: white;
-    border-color: #6c757d;
-}
-
-.editor-actions .btn-cancel:hover {
-    background: #545b62;
-}
+/* ボタンスタイルは共通CSSを使用 */
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="dict-editor-container">
-    <h1>📝 OCR辞書編集</h1>
+    <h1 class="page-title">📝 OCR辞書編集</h1>
     
     <div id="dict-list" class="dict-list">
         <!-- 辞書一覧がここに動的に表示される -->
@@ -132,16 +96,16 @@
     <div id="editor-area" class="editor-area">
         <div class="editor-header">
             <h2 id="editor-title">辞書編集</h2>
-            <button onclick="closeEditor()">✖️ 閉じる</button>
+            <button class="btn" onclick="closeEditor()">✖️ 閉じる</button>
         </div>
         
         <div class="editor-content">
             <textarea id="editor-textarea" class="editor-textarea" placeholder="辞書内容を編集してください..."></textarea>
             
             <div class="editor-actions">
-                <button class="btn-save" onclick="saveDictionary()">💾 保存</button>
-                <button class="btn-cancel" onclick="closeEditor()">❌ キャンセル</button>
-                <button onclick="downloadDictionary()">📥 ダウンロード</button>
+                <button class="btn btn-success" onclick="saveDictionary()">💾 保存</button>
+                <button class="btn btn-cancel" onclick="closeEditor()">❌ キャンセル</button>
+                <button class="btn" onclick="downloadDictionary()">📥 ダウンロード</button>
                 <span id="editor-status" style="margin-left: auto; color: #666;"></span>
             </div>
         </div>
@@ -175,7 +139,7 @@ async function loadDictList() {
                     更新日時: ${dict.modified} | 
                     サイズ: ${(dict.size / 1024).toFixed(1)}KB
                 </div>
-                <button onclick="editDictionary('${dict.name}')">編集</button>
+                <button class="btn" onclick="editDictionary('${dict.name}')">編集</button>
             `;
             listContainer.appendChild(card);
         });

@@ -4,7 +4,7 @@
 #try-ocr-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 2em);
+  height: 100vh;
 }
 
 /* 上ペイン：2分割（リサイズ可能） */
@@ -55,7 +55,7 @@
 }
 
 #top-splitter:hover {
-  background: rgba(0, 123, 255, 0.3);
+  background: rgba(90, 108, 125, 0.3);
 }
 
 /* 右上ペイン：エンジン調整 */
@@ -73,11 +73,11 @@
 #engine-parameters {
   flex: 1 1 auto;
   overflow-y: auto;
-  max-height: 400px;
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 10px;
   background: white;
+  min-height: 0;
 }
 
 /* パラメータカテゴリ */
@@ -90,14 +90,15 @@
   align-items: center;
   justify-content: space-between;
   background: #f8f9fa;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 3px;
-  font-weight: bold;
-  margin-bottom: 2px;
+  font-weight: bold !important;
+  margin-bottom: 1px;
   cursor: pointer;
   user-select: none;
-  border-left: 3px solid #007bff;
-  font-size: 12px;
+  border-left: 3px solid var(--primary-color);
+  font-size: var(--font-size-base);
+  line-height: 1.0;
 }
 
 .category-header:hover {
@@ -124,7 +125,7 @@
 
 /* パラメータ項目 */
 .parameter-item {
-  margin-bottom: 1px;
+  margin-bottom: 0;
   padding: 0;
   background: transparent;
   border: none;
@@ -134,15 +135,16 @@
 .parameter-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  min-height: 24px;
+  gap: 6px;
+  min-height: 18px;
+  line-height: 1.0;
 }
 
 .parameter-label {
   font-weight: normal;
   min-width: 90px;
   flex-shrink: 0;
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .parameter-control {
@@ -152,23 +154,26 @@
 
 .parameter-description {
   flex: 1;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: #6c757d;
   line-height: 1.2;
 }
 
 .parameter-input {
   width: 100%;
-  padding: 2px 4px;
-  border: 1px solid #ccc;
-  border-radius: 2px;
-  font-size: 12px;
+  padding: var(--control-padding);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: var(--control-font-size) !important;
+  height: var(--control-height) !important;
+  line-height: var(--control-line-height);
+  font-weight: normal !important;
 }
 
 .parameter-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(90, 108, 125, 0.25);
 }
 
 /* チェックボックス用スタイル */
@@ -211,7 +216,9 @@
   width: 50px;
   text-align: right;
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--control-font-size) !important;
+  height: var(--control-height) !important;
+  font-weight: normal !important;
 }
 
 /* 大きな数値（キャンバスサイズなど）用スタイル */
@@ -224,7 +231,9 @@
 /* テキスト入力用スタイル */
 .parameter-input[type="text"] {
   font-family: monospace;
-  font-size: 12px;
+  font-size: var(--control-font-size) !important;
+  height: var(--control-height) !important;
+  font-weight: normal !important;
   width: 120px;
 }
 
@@ -238,7 +247,7 @@
 }
 
 #vertical-splitter:hover {
-  background: rgba(0, 123, 255, 0.3);
+  background: rgba(90, 108, 125, 0.3);
 }
 
 /* 下ペイン：結果表示エリア */
@@ -301,7 +310,7 @@
   padding: 0.5em;
   background: #f8f9fa;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: normal;
   border-bottom: 1px solid #ddd;
   user-select: none;
 }
@@ -351,7 +360,7 @@
 }
 
 #splitter:hover {
-  background: rgba(0, 123, 255, 0.3);
+  background: rgba(90, 108, 125, 0.3);
 }
 
 /* 右ペイン：PDF表示 */
@@ -362,75 +371,165 @@
   overflow: hidden;
 }
 
-/* ページタイトル - ingest/chatと同じ高さに揃える */
-.page-title {
-  margin: 0 0 8px;
-  font-size: 1.2em;
-  line-height: 1.5em;
-}
+/* try_ocr固有のスタイル（共通CSSで定義されたものは削除） */
 
-/* フォーム */
-.form-section {
+/* try_ocrでは共通CSSのフォーム要素スタイルを使用 */
+#top-left .form-section {
   display: flex;
   align-items: center;
-  margin-bottom: 0.3em;
-  line-height: 1.1;
+  margin-bottom: var(--spacing-xs);
+  line-height: var(--line-height-tight);
   width: 100%;
 }
 
-.form-section label {
+#top-left .form-section label {
   min-width: 120px;
   flex-shrink: 0;
   font-weight: normal;
-  font-size: 0.9em;
+  font-size: var(--font-size-base);
+  color: var(--gray-700);
 }
 
-.form-section input,
-.form-section select {
-  padding: 2px 6px;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  font-size: 0.9em;
-  height: 1.8em;
+#top-left .form-section input,
+#top-left .form-section select,
+#top-left .form-section textarea {
+  padding: var(--control-padding);
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: var(--control-font-size) !important;
+  height: var(--control-height) !important;
+  line-height: var(--control-line-height);
   box-sizing: border-box;
+  font-family: inherit;
+  font-weight: normal !important;
+  vertical-align: middle;
 }
 
-.form-actions button {
-  padding: 2px 8px;
-  font-size: 0.9em;
-  height: 1.8em;
-  margin-right: 0.75em;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  background: #f8f9fa;
-  cursor: pointer;
-  box-sizing: border-box;
+#top-left .form-section input:focus,
+#top-left .form-section select:focus,
+#top-left .form-section textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(90, 108, 125, 0.25);
 }
 
-.form-actions button:hover {
-  background: #e9ecef;
+/* ファイル入力の特別設定 */
+#file-input {
+  flex: 1;
+  margin-right: 4px;
+  min-width: 200px;
+  max-width: 600px;
+  resize: horizontal;
+  overflow: hidden;
 }
 
-.form-actions button:disabled {
-  background: #e9ecef;
+#browse-file {
+  flex-shrink: 0;
+  background: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+  width: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#browse-file:hover {
+  background: #e0a800;
+  border-color: #e0a800;
+}
+
+/* エンジン選択 */
+#engine-select {
+  width: 250px;
+}
+
+/* ページ番号 */
+#page-num {
+  width: 4em;
+  text-align: center;
+  ime-mode: disabled;
+}
+
+/* ラジオボタンとチェックボックス */
+input[type="radio"],
+input[type="checkbox"] {
+  width: auto !important;
+  height: auto !important;
+  margin-right: 4px;
+}
+
+/* try_ocrでは共通CSSのボタンスタイルを使用 */
+
+/* フォームアクション */
+.form-actions {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.form-actions label {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #495057;
+  margin: 0;
+  height: 24px;
+}
+
+/* 処理ステータス表示の改善 */
+#processing-status {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  display: none;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-message {
+  font-weight: bold;
+  color: #856404;
+  font-size: 14px;
+}
+
+.status-timer {
   color: #6c757d;
-  cursor: not-allowed;
+  font-size: 13px;
 }
 
-/* キャンセルボタンの統一スタイル */
-#cancel-btn {
-  background: #f1f3f4 !important;
-  color: #5f6368 !important;
-  border: 1px solid #dadce0 !important;
+/* 修正文字の赤字表示 */
+.result-text .correction {
+  color: #dc3545;
+  font-weight: bold;
 }
 
-#cancel-btn:hover:not(:disabled) {
-  background: #e8eaed !important;
+.result-text mark {
+  background-color: #fff3cd;
+  color: #dc3545;
+  padding: 0 2px;
 }
 
-#cancel-btn:disabled {
-  background: #f8f9fa !important;
-  color: #9aa0a6 !important;
+/* 結果ヘッダーのスタイル調整 */
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-bottom: 1px solid #ddd;
+  font-weight: normal;
+}
+
+.result-stats {
+  font-size: 0.8em;
+  color: #666;
+  white-space: nowrap;
 }
 
 /* パラメータ調整用スタイル */
@@ -445,17 +544,22 @@
 .parameter-group label {
   display: inline-block;
   min-width: 120px;
-  font-weight: bold;
-  font-size: 0.85em;
+  font-weight: normal;
+  font-size: 14px;
 }
 
 .parameter-group input,
 .parameter-group select {
   width: 120px;
-  padding: 2px 4px;
-  font-size: 0.85em;
-  border: 1px solid #ccc;
-  border-radius: 2px;
+  padding: var(--control-padding);
+  font-size: var(--control-font-size) !important;
+  height: var(--control-height) !important;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-weight: normal !important;
+  vertical-align: middle !important;
+  line-height: var(--control-line-height) !important;
+  box-sizing: border-box !important;
 }
 
 .parameter-group .description {
@@ -486,7 +590,7 @@
   background: #f8f9fa;
   padding: 0.5em 1em;
   border-bottom: 1px solid #ddd;
-  font-weight: bold;
+  font-weight: normal;
 }
 
 .result-content {
@@ -534,7 +638,7 @@
 
 .spinner {
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border-top: 4px solid var(--primary-color);
   border-radius: 50%;
   width: 40px;
   height: 40px;

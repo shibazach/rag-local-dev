@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/edit", response_class=HTMLResponse)
 async def dict_editor_page(request: Request):
     """OCR辞書編集ページを表示"""
-    return templates.TemplateResponse("dict_editor.html", {
+    return templates.TemplateResponse("dic_edit.html", {
         "request": request
     })
 

@@ -203,27 +203,37 @@ class TryOcrEngine {
       this.loadEngineParameters();
     });
     
-    // エンジン調整エリアにボタンを追加
-    const engineParametersDiv = document.getElementById('engine-parameters');
-    if (engineParametersDiv) {
-      const settingsButton = document.createElement('button');
-      settingsButton.textContent = '⚙️ 詳細設定';
-      settingsButton.style.cssText = 'margin-bottom: 10px; padding: 6px 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;';
-      settingsButton.addEventListener('click', async () => {
+    // 設定ボタンのイベントリスナーを設定
+    const settingsBtn = document.getElementById('ocr-settings-btn');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', async () => {
         const engineSelect = document.getElementById("engine-select");
         const engineName = engineSelect.value;
         if (engineName) {
           await this.ocrSettingsDialog.show(engineName, {[engineName]: {name: engineName}});
         }
       });
-      
-      engineParametersDiv.insertBefore(settingsButton, engineParametersDiv.firstChild);
     }
   }
 
   // 現在のエンジンパラメータを取得
   getCurrentEngineParameters() {
-    return { ...this.currentEngineParameters };
+    // DOM要素から現在の値を取得
+    const params = {};
+    const paramInputs = document.querySelectorAll('.parameter-input');
+    
+    paramInputs.forEach(input => {
+      const paramName = input.id.replace('param-', '');
+      if (input.type === 'checkbox') {
+        params[paramName] = input.checked;
+      } else if (input.type === 'number') {
+        params[paramName] = parseFloat(input.value) || 0;
+      } else {
+        params[paramName] = input.value;
+      }
+    });
+    
+    return params;
   }
 
   // 設定保存機能
@@ -266,8 +276,12 @@ class TryOcrEngine {
 
   // プリセット管理機能
   async showPresets() {
+    console.log('🔧 プリセットボタンがクリックされました');
+    
     const engineSelect = document.getElementById("engine-select");
     const engineName = engineSelect.value;
+    
+    console.log('🔧 選択されたエンジン:', engineName);
     
     if (!engineName) {
       alert("OCRエンジンを選択してください");
@@ -275,11 +289,19 @@ class TryOcrEngine {
     }
 
     try {
-      const response = await fetch(`/api/ocr/presets/list?engine_id=${encodeURIComponent(engineName)}`);
+      const url = `/api/ocr/presets/list?engine_id=${encodeURIComponent(engineName)}`;
+      console.log('🔧 リクエストURL:', url);
+      
+      const response = await fetch(url);
+      console.log('🔧 レスポンスステータス:', response.status);
+      
       const result = await response.json();
+      console.log('🔧 レスポンス内容:', result);
       
       if (!result.success) {
-        alert(`プリセット取得に失敗しました: ${result.error}`);
+        const errorMsg = `プリセット取得に失敗しました: ${result.error || 'サーバーエラー'}`;
+        console.error('🔧 エラー:', errorMsg);
+        alert(errorMsg);
         return;
       }
 
@@ -316,19 +338,7 @@ class TryOcrEngine {
     }
   }
 
-  // 初期化時にボタンイベントを設定
-  initializeButtons() {
-    const saveBtn = document.getElementById('save-settings-btn');
-    const presetBtn = document.getElementById('preset-settings-btn');
-    
-    if (saveBtn) {
-      saveBtn.addEventListener('click', () => this.saveSettings());
-    }
-    
-    if (presetBtn) {
-      presetBtn.addEventListener('click', () => this.showPresets());
-    }
-  }
+  // 不要になったメソッド（設定ダイアログ内で処理）
 }
 
 // グローバルに公開

@@ -33,3 +33,6 @@ paddlepaddle
 paddleocr
 easyocr
 ocrmypdf
+# マルチモーダル処理用（GPU環境でのみ使用）
+# torch>=2.0.0  # GPU環境でのみインストール
+# accelerate>=0.20.0  # GPU環境でのみインストール

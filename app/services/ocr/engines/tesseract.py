@@ -28,16 +28,21 @@ class TesseractEngine(OCREngine):
             
             # PDFから画像を抽出
             doc = fitz.open(pdf_path)
-            if page_num >= len(doc):
+            total_pages = len(doc)
+            
+            # ページ番号の調整（1ベース→0ベース）
+            page_index = page_num - 1 if page_num > 0 else 0
+            
+            if page_index >= total_pages or page_index < 0:
                 return {
                     "success": False,
-                    "error": f"ページ {page_num} が存在しません",
+                    "error": f"ページ {page_num} が存在しません（総ページ数: {total_pages}）",
                     "text": "",
                     "processing_time": time.time() - start_time,
                     "confidence": None
                 }
             
-            page = doc[page_num]
+            page = doc[page_index]
             pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2倍解像度
             img_data = pix.tobytes("png")
             

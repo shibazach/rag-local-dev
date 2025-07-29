@@ -29,17 +29,21 @@
   <!-- REM: ファイル選択（非表示） -->
   <div id="files-mode" style="display:none; flex-direction: column; gap: 0.2em; margin-left: 1.5em;">
     <div style="display: flex; align-items: center; gap: 0.5em;">
-      <label for="input-files">処理対象ファイル：</label>
-      <input type="file" id="input-files" name="input_files" multiple style="flex: 1;">
+      <label for="selected-files-display" style="min-width: 140px;">処理対象ファイル：</label>
+      <div style="display: flex; align-items: flex-start; gap: 4px; flex: 1;">
+        <textarea id="selected-files-display" readonly
+          placeholder="ファイルを選択してください"
+          style="flex: 1; min-height: 3em; resize: both; box-sizing: border-box; 
+                 padding: 4px 8px; font-family: inherit; font-size: inherit; 
+                 line-height: 1.2; border: 1px solid #ccc; border-radius: 3px;"></textarea>
+        <button type="button" id="browse-files" 
+                style="background: #ffc107; border: 1px solid #ffc107; color: #212529; 
+                       border-radius: 3px; width: 32px; height: 32px; flex-shrink: 0; 
+                       display: flex; align-items: center; justify-content: center; 
+                       cursor: pointer; font-size: 16px;">📂</button>
+      </div>
     </div>
-    <!-- 選択されたファイル名表示（処理対象ファイル：の下に配置） -->
-    <div style="display: flex; align-items: flex-start; gap: 0.5em;">
-      <div style="min-width: 120px;"></div> <!-- ラベル幅分のスペース -->
-      <textarea id="selected-files-display" readonly
-        placeholder="選択したファイル名がここに表示されます"
-        style="display:none; flex: 1; min-height:3em; resize:vertical; box-sizing: border-box; max-width: calc(100% - 120px);">
-      </textarea>
-    </div>
+    <input type="file" id="input-files" name="input_files" multiple style="display: none;">
   </div>
 </div>
 

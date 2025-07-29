@@ -6,7 +6,7 @@ import time
 import unicodedata
 import os
 import logging
-from typing import Dict, Generator, List
+from typing import Dict, Generator, List, AsyncGenerator
 
 from src.config import OLLAMA_MODEL
 from fileio.file_embedder import embed_and_insert
@@ -26,6 +26,10 @@ from db.handler import (
 
 # 新しい共通OCRサービスをインポート
 from app.services.ocr import OCREngineFactory
+# マルチモーダル処理をインポート
+from app.services.multimodal.processor import multimodal_processor
+# 非同期キャンセル機能をインポート
+from app.services.async_cancellation import cancellation_manager, OllamaCancellationHelper
 
 # 定数
 TOK_LIMIT = 8192
@@ -45,7 +49,7 @@ class IngestProcessor:
     def __init__(self):
         self.ocr_factory = OCREngineFactory()
     
-    def process_file(
+    async def process_file(
         self,
         *,
         file_path: str,
@@ -61,7 +65,7 @@ class IngestProcessor:
         abort_flag: Dict[str, bool],
         ocr_engine_id: str = None,  # 新規追加: OCRエンジン指定
         ocr_settings: Dict = None,  # 新規追加: OCR設定
-    ) -> Generator[Dict, None, None]:
+    ) -> AsyncGenerator[Dict, None]:
         """1ファイルを処理しイベントを yield"""
         t0 = time.perf_counter()
 
@@ -118,6 +122,20 @@ class IngestProcessor:
             for p in pages
         ]
         full_text = "\n\n".join(page_blocks)
+        
+        # マルチモーダル処理を適用（PDFファイルの場合）
+        ext = os.path.splitext(file_path)[1].lower()
+        if ext == ".pdf":
+            # GPU環境でのみマルチモーダル処理を実行
+            from src.config import MULTIMODAL_ENABLED
+            if MULTIMODAL_ENABLED:
+                full_text = await self._apply_multimodal_processing(
+                    full_text, file_path, file_name, 
+                    progress_yield=None  # 非同期ジェネレータ内では直接yieldできないためNone
+                )
+            else:
+                yield {"file": file_name, "step": "マルチモーダル処理をスキップ（CPU環境）"}
+        
         update_file_text(file_id, raw_text=full_text)
 
         token_est = int(len(full_text) * 1.6)
@@ -203,16 +221,26 @@ class IngestProcessor:
                 # 進行中メッセージ（※廃止しない）
                 yield {"file": file_name, "step": f"LLM整形中 part:{label}"}
 
-                job = functools.partial(
-                    refine_text_with_llm,
-                    block,
-                    model=OLLAMA_MODEL,
-                    force_lang=refine_prompt_key,
-                    abort_flag=abort_flag,
-                )
+                # 非同期キャンセル機能を使用したLLM処理
+                task_id = f"llm_refine_{file_name}_{label}"
+                helper = OllamaCancellationHelper(task_id)
+                
                 try:
-                    refined, _, score, _ = job() if llm_timeout_sec == 0 else \
-                        self._run_with_timeout(job, llm_timeout_sec)
+                    # キャンセル可能なLLM処理を実行
+                    refined, _, score, _ = await helper.run_ollama_with_cancellation(
+                        lambda: refine_text_with_llm(
+                            block,
+                            model=OLLAMA_MODEL,
+                            force_lang=refine_prompt_key,
+                            abort_flag=abort_flag,
+                        ),
+                        timeout=llm_timeout_sec if llm_timeout_sec > 0 else 300
+                    )
+                    
+                except asyncio.CancelledError:
+                    update_file_status(file_id, status="error", note="llm cancelled")
+                    yield {"file": file_name, "step": "LLM処理がキャンセルされました", "part": label}
+                    return
                 except TimeoutError:
                     update_file_status(file_id, status="error", note="llm timeout")
                     yield {"file": file_name, "step": "LLMタイムアウト", "part": label}
@@ -370,12 +398,52 @@ class IngestProcessor:
                         "step": f"ページ {page_number + 1} OCRエラー: {ocr_result['error']}"
                     })
 
-            # 結合して1ページ分として格納
-            merged = f"【PDF抽出】\n{pdf_text}\n\n【OCR抽出】\n{ocr_text}"
+            # 構造化データの抽出
+            structural_data = self._extract_structural_data(page, page_number)
+            
+            # タグ形式で結合して1ページ分として格納
+            merged = f"<pdf_text>\n{pdf_text}\n</pdf_text>\n\n<ocr_text>\n{ocr_text}\n</ocr_text>\n\n<structural_data>\n{structural_data}\n</structural_data>"
             text_list.append(merged)
 
         doc.close()
         return text_list
+
+    def _extract_structural_data(self, page, page_number: int) -> str:
+        """ページから構造化データを抽出"""
+        try:
+            # テキストブロックの抽出
+            blocks = page.get_text("dict")["blocks"]
+            structural_info = []
+            
+            for block in blocks:
+                if block['type'] == 0:  # テキストブロック
+                    bbox = block['bbox']
+                    block_text = ""
+                    for line in block["lines"]:
+                        line_text = " ".join(span["text"] for span in line["spans"])
+                        block_text += line_text + "\n"
+                    
+                    if block_text.strip():
+                        structural_info.append({
+                            "type": "text_block",
+                            "text": block_text.strip(),
+                            "bbox": bbox,
+                            "page": page_number + 1
+                        })
+                elif block['type'] == 1:  # 画像ブロック
+                    structural_info.append({
+                        "type": "image",
+                        "bbox": block['bbox'],
+                        "page": page_number + 1
+                    })
+            
+            # 構造化データをJSON形式で返す
+            import json
+            return json.dumps(structural_info, ensure_ascii=False, indent=2)
+            
+        except Exception as e:
+            LOGGER.warning(f"構造化データ抽出エラー: {e}")
+            return "{}"
 
     def _extract_docx_with_ocr(
         self, 
@@ -648,8 +716,11 @@ class IngestProcessor:
                     "step": f"ページ {page_number + 1} OCRエラー: {ocr_result['error']}"
                 }
 
-            # 結合して1ページ分として格納
-            merged = f"【PDF抽出】\n{pdf_text}\n\n【OCR抽出】\n{ocr_text}"
+            # 構造化データの抽出
+            structural_data = self._extract_structural_data(page, page_number)
+            
+            # タグ形式で結合して1ページ分として格納
+            merged = f"<pdf_text>\n{pdf_text}\n</pdf_text>\n\n<ocr_text>\n{ocr_text}\n</ocr_text>\n\n<structural_data>\n{structural_data}\n</structural_data>"
             text_list.append(merged)
 
         doc.close()
@@ -722,3 +793,188 @@ class IngestProcessor:
                 return future.result(timeout=timeout_sec)
             except concurrent.futures.TimeoutError:
                 raise TimeoutError
+
+    async def _apply_multimodal_processing(
+        self, 
+        text_content: str, 
+        file_path: str, 
+        file_name: str,
+        progress_yield=None
+    ) -> str:
+        """マルチモーダル処理を適用"""
+        try:
+            if progress_yield:
+                progress_yield({"file": file_name, "step": "マルチモーダル処理を適用中..."})
+            
+            # 画像ファイルの抽出
+            image_paths = self._extract_images_from_pdf(file_path)
+            
+            # 構造情報の抽出（既存の構造化データから）
+            structure_info = self._extract_structure_from_text(text_content)
+            
+            # マルチモーダル処理を実行
+            multimodal_result = multimodal_processor.process_document(
+                text_content=text_content,
+                image_paths=image_paths,
+                structure_info=structure_info
+            )
+            
+            if multimodal_result["success"]:
+                if progress_yield:
+                    progress_yield({"file": file_name, "step": "マルチモーダル処理完了"})
+                
+                # 統合結果をテキストに変換
+                integrated_text = self._format_multimodal_result(multimodal_result)
+                return integrated_text
+            else:
+                LOGGER.warning(f"マルチモーダル処理エラー: {multimodal_result.get('error', 'unknown')}")
+                if progress_yield:
+                    progress_yield({"file": file_name, "step": f"マルチモーダル処理エラー: {multimodal_result.get('error', 'unknown')}"})
+                return text_content  # 元のテキストを返す
+                
+        except Exception as e:
+            LOGGER.exception("マルチモーダル処理例外")
+            if progress_yield:
+                progress_yield({"file": file_name, "step": f"マルチモーダル処理例外: {str(e)}"})
+            return text_content  # 元のテキストを返す
+
+    def _extract_images_from_pdf(self, pdf_path: str) -> List[str]:
+        """PDFから画像を抽出"""
+        try:
+            import fitz
+            import tempfile
+            
+            doc = fitz.open(pdf_path)
+            image_paths = []
+            
+            # 一時ディレクトリを作成
+            with tempfile.TemporaryDirectory() as tmpdir:
+                for page_num in range(len(doc)):
+                    page = doc.load_page(page_num)
+                    
+                    # 画像リストを取得
+                    image_list = page.get_images()
+                    
+                    for img_index, img in enumerate(image_list):
+                        try:
+                            # 画像を抽出
+                            xref = img[0]
+                            pix = fitz.Pixmap(doc, xref)
+                            
+                            if pix.n - pix.alpha < 4:  # GRAY or RGB
+                                img_data = pix.tobytes("png")
+                            else:  # CMYK: convert to RGB
+                                pix1 = fitz.Pixmap(fitz.csRGB, pix)
+                                img_data = pix1.tobytes("png")
+                                pix1 = None
+                            
+                            # 画像ファイルとして保存
+                            img_filename = f"page_{page_num + 1}_img_{img_index + 1}.png"
+                            img_path = os.path.join(tmpdir, img_filename)
+                            
+                            with open(img_path, "wb") as img_file:
+                                img_file.write(img_data)
+                            
+                            image_paths.append(img_path)
+                            pix = None
+                            
+                        except Exception as e:
+                            LOGGER.warning(f"画像抽出エラー (page {page_num + 1}, img {img_index + 1}): {e}")
+                            continue
+                
+                doc.close()
+                return image_paths
+                
+        except Exception as e:
+            LOGGER.exception("PDF画像抽出エラー")
+            return []
+
+    def _extract_structure_from_text(self, text_content: str) -> Dict:
+        """テキストから構造情報を抽出"""
+        try:
+            import re
+            import json
+            
+            structure_info = {
+                "headings": [],
+                "paragraphs": [],
+                "lists": [],
+                "tables": []
+            }
+            
+            # <structural_data>タグからJSONデータを抽出
+            structural_match = re.search(r'<structural_data>\s*(.*?)\s*</structural_data>', text_content, re.DOTALL)
+            if structural_match:
+                try:
+                    structural_data = json.loads(structural_match.group(1))
+                    
+                    for item in structural_data:
+                        if item.get("type") == "text_block":
+                            text = item.get("text", "")
+                            page = item.get("page", 1)
+                            
+                            # 見出し判定（#で始まる行）
+                            if text.strip().startswith("#"):
+                                structure_info["headings"].append({
+                                    "level": text.count("#"),
+                                    "text": text.strip(),
+                                    "page": page,
+                                    "position": item.get("bbox", [0, 0, 0, 0])[1]  # y座標
+                                })
+                            # リスト判定（• - 1. 2.で始まる行）
+                            elif re.match(r'^[\s]*[•\-1-9\.]', text.strip()):
+                                structure_info["lists"].append({
+                                    "type": "bullet" if "•" in text or "-" in text else "numbered",
+                                    "items": [text.strip()],
+                                    "page": page,
+                                    "position": item.get("bbox", [0, 0, 0, 0])[1]
+                                })
+                            # 段落として追加
+                            else:
+                                structure_info["paragraphs"].append({
+                                    "text": text.strip(),
+                                    "page": page,
+                                    "position": item.get("bbox", [0, 0, 0, 0])[1]
+                                })
+                                
+                except json.JSONDecodeError:
+                    LOGGER.warning("構造化データのJSON解析エラー")
+            
+            return structure_info
+            
+        except Exception as e:
+            LOGGER.exception("構造情報抽出エラー")
+            return {"headings": [], "paragraphs": [], "lists": [], "tables": []}
+
+    def _format_multimodal_result(self, multimodal_result: Dict) -> str:
+        """マルチモーダル処理結果をテキスト形式に変換"""
+        try:
+            # 統合結果を構築
+            integrated_parts = []
+            
+            # テキスト内容
+            if "text_content" in multimodal_result:
+                integrated_parts.append(f"<processed_text>\n{multimodal_result['text_content']}\n</processed_text>")
+            
+            # 画像説明
+            if "image_descriptions" in multimodal_result and multimodal_result["image_descriptions"]:
+                image_summary = multimodal_result.get("integrated_result", {}).get("image_summary", "画像あり")
+                integrated_parts.append(f"<image_summary>\n{image_summary}\n</image_summary>")
+            
+            # 構造情報
+            if "structure_info" in multimodal_result and multimodal_result["structure_info"]:
+                structure_summary = multimodal_result.get("integrated_result", {}).get("structure_summary", "構造情報あり")
+                integrated_parts.append(f"<structure_summary>\n{structure_summary}\n</structure_summary>")
+            
+            # マルチモーダル洞察
+            if "integrated_result" in multimodal_result and "multimodal_insights" in multimodal_result["integrated_result"]:
+                insights = multimodal_result["integrated_result"]["multimodal_insights"]
+                if insights:
+                    insights_text = "\n".join(insights)
+                    integrated_parts.append(f"<multimodal_insights>\n{insights_text}\n</multimodal_insights>")
+            
+            return "\n\n".join(integrated_parts)
+            
+        except Exception as e:
+            LOGGER.exception("マルチモーダル結果フォーマットエラー")
+            return multimodal_result.get("text_content", "")

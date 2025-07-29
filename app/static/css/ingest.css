@@ -58,14 +58,14 @@
 }
 
 .layout-btn.active {
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
-    border-color: #007bff;
+    border-color: var(--primary-color);
 }
 
 /* ===== 基本レイアウト ===== */
 #app-container {
-    height: calc(100vh - 2em);
+    height: 100vh;
     display: flex;
     flex-direction: column;
     background: rgba(255, 255, 255, 0.1);
@@ -167,7 +167,7 @@
     background: rgba(248, 249, 250, 0.8);
     padding: 8px 12px;
     border-bottom: 1px solid rgba(222, 226, 230, 0.8);
-    font-weight: bold;
+    font-weight: normal;
     font-size: 14px;
 }
 
@@ -229,7 +229,7 @@
 .page-title {
     margin: 0 0 8px;
     font-size: 1.2em;
-    font-weight: bold; /* タイトルのみ太字 */
+    font-weight: normal; /* 太字を削除 */
     line-height: 1.3em;
 }
 
@@ -245,74 +245,34 @@
     min-width: 120px;
     flex-shrink: 0;
     font-weight: normal; /* 太字を削除 */
-    font-size: 0.9em;
+    font-size: 14px;
     display: flex;
     align-items: center; /* ラベルとコントロールの高さを揃える */
 }
 
 .form-section input,
 .form-section select {
-    padding: 2px 4px; /* パディングを小さく */
-    font-size: 0.9em;
-    height: 24px; /* 高さを統一 */
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    box-sizing: border-box; /* パディングを含めた高さ計算 */
+    padding: var(--control-padding);
+    font-size: var(--control-font-size) !important;
+    height: var(--control-height) !important;
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-sizing: border-box;
 }
 
 .form-section select {
-    height: 24px; /* selectもinputと同じ高さに統一 */
+    height: 28px !important; /* selectもinputと同じ高さに統一 */
 }
 
 #quality_threshold, #quality_threshold2 {
     text-align: center;
 }
 
-.form-actions {
-    margin-top: 0.6em;
-}
-
-.form-actions button {
-    margin-right: 0.75em;
-    padding: 2px 8px;
-    font-size: 0.9em;
-    height: 1.8em;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    background: #f8f9fa;
-    cursor: pointer;
-    box-sizing: border-box;
-}
-
-.form-actions button:hover {
-    background: #e9ecef;
-}
-
-.form-actions button:disabled {
-    background: #e9ecef;
-    color: #6c757d;
-    cursor: not-allowed;
-}
-
-/* キャンセルボタンの統一スタイル */
-#cancel-btn {
-    background: #f1f3f4 !important;
-    color: #5f6368 !important;
-    border: 1px solid #dadce0 !important;
-}
-
-#cancel-btn:hover:not(:disabled) {
-    background: #e8eaed !important;
-}
-
-#cancel-btn:disabled {
-    background: #f8f9fa !important;
-    color: #9aa0a6 !important;
-}
+/* ingest固有のスタイル（共通CSSで定義されたものは削除） */
 
 /* ===== ボタンスタイル ===== */
 .btn-test {
-    background: #28a745;
+    background: var(--success-color);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -541,7 +501,7 @@ button:disabled {
 }
 
 .btn-primary {
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
 }
 
@@ -563,7 +523,7 @@ button:disabled {
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     z-index: 10001;
-    font-weight: bold;
+    font-weight: normal;
     text-align: center;
     border: 2px solid #ffc107;
 }

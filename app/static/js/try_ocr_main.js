@@ -5,6 +5,7 @@ class TryOcrMain {
     this.pdfManager = new TryOcrPdf();
     this.engineManager = new TryOcrEngine();
     this.uiManager = new TryOcrUI();
+    this.resizeManager = new TryOcrResize();
     this.processingInProgress = false;
     this.controller = null;
   }
@@ -13,6 +14,9 @@ class TryOcrMain {
   initialize() {
     // UI初期化
     this.uiManager.initialize();
+
+    // リサイズ機能初期化
+    this.resizeManager.initialize();
 
     // DOM要素の取得
     this.processBtn = document.getElementById("process-btn");
@@ -33,8 +37,8 @@ class TryOcrMain {
     // OCR設定ダイアログの初期化
     this.engineManager.initializeSettingsDialog();
 
-    // 保存・プリセットボタンの初期化
-    this.engineManager.initializeButtons();
+    // OCR設定ダイアログの初期化のみ
+    // 保存・プリセット機能は設定ダイアログ内で処理
   }
 
   // イベントリスナーの設定
@@ -139,8 +143,19 @@ class TryOcrMain {
     this.uiManager.showProcessing();
     this.uiManager.showProcessingStatus();
 
+    // タイムアウト設定（5分）
+    const TIMEOUT_MS = 5 * 60 * 1000;
+    let timeoutId = null;
+
     try {
       this.controller = new AbortController();
+      
+      // タイムアウト処理を設定
+      timeoutId = setTimeout(() => {
+        console.warn('OCR処理がタイムアウトしました');
+        this.controller.abort();
+        this.uiManager.updateProcessingProgress('タイムアウトによりキャンセル中...');
+      }, TIMEOUT_MS);
       
       const formData = new FormData();
       formData.append("file", selectedFile);
@@ -163,6 +178,12 @@ class TryOcrMain {
         signal: this.controller.signal
       });
 
+      // 正常完了時はタイムアウトをクリア
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
       const result = await response.json();
 
       if (result.success) {
@@ -171,13 +192,23 @@ class TryOcrMain {
         this.uiManager.displayError(result.error || "OCR処理に失敗しました");
       }
     } catch (error) {
+      // タイムアウトをクリア
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      
       if (error.name === 'AbortError') {
-        this.uiManager.displayError("OCR処理がキャンセルされました");
+        this.uiManager.displayError("OCR処理がキャンセルまたはタイムアウトしました");
       } else {
         console.error("OCR処理エラー:", error);
         this.uiManager.displayError(`処理エラー: ${error.message}`);
       }
     } finally {
+      // 確実にタイムアウトをクリア
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       this.onProcessingComplete();
     }
   }
@@ -253,8 +284,20 @@ class TryOcrMain {
     this.uiManager.showProcessing();
     this.uiManager.showProcessingStatus();
 
+    // 全体タイムアウト設定（エンジン数 × 5分）
+    const TIMEOUT_PER_ENGINE = 5 * 60 * 1000;
+    const TOTAL_TIMEOUT = engines.length * TIMEOUT_PER_ENGINE;
+    let globalTimeoutId = null;
+
     try {
       this.controller = new AbortController();
+      
+      // 全体タイムアウト処理を設定
+      globalTimeoutId = setTimeout(() => {
+        console.warn('全エンジン比較がタイムアウトしました');
+        this.controller.abort();
+        this.uiManager.updateProcessingProgress('タイムアウトによりキャンセル中...');
+      }, TOTAL_TIMEOUT);
       
       // 各エンジンで順次処理
       for (const engineName of engines) {
@@ -274,12 +317,24 @@ class TryOcrMain {
         const useCorrectionCheckbox = document.getElementById("use-correction-dict");
         formData.append("use_correction", useCorrectionCheckbox ? useCorrectionCheckbox.checked : false);
 
+        // 個別エンジンのタイムアウト設定
+        let engineTimeoutId = setTimeout(() => {
+          console.warn(`${engineName} の処理がタイムアウトしました`);
+          this.controller.abort();
+        }, TIMEOUT_PER_ENGINE);
+
         try {
           const response = await fetch("/api/try_ocr/process", {
             method: "POST",
             body: formData,
             signal: this.controller.signal
           });
+
+          // 正常完了時は個別タイムアウトをクリア
+          if (engineTimeoutId) {
+            clearTimeout(engineTimeoutId);
+            engineTimeoutId = null;
+          }
 
           const result = await response.json();
 
@@ -289,8 +344,14 @@ class TryOcrMain {
             this.uiManager.displayError(`${engineName}: ${result.error || "処理に失敗しました"}`);
           }
         } catch (error) {
+          // 個別タイムアウトをクリア
+          if (engineTimeoutId) {
+            clearTimeout(engineTimeoutId);
+            engineTimeoutId = null;
+          }
+          
           if (error.name === 'AbortError') {
-            this.uiManager.displayError(`${engineName}: 処理がキャンセルされました`);
+            this.uiManager.displayError(`${engineName}: 処理がキャンセルまたはタイムアウトしました`);
             break;
           } else {
             console.error(`${engineName} エラー:`, error);
@@ -304,6 +365,10 @@ class TryOcrMain {
         }
       }
     } finally {
+      // 全体タイムアウトをクリア
+      if (globalTimeoutId) {
+        clearTimeout(globalTimeoutId);
+      }
       this.onProcessingComplete();
     }
   }

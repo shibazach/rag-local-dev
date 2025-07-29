@@ -16,16 +16,24 @@ DEBUG_MODE = True
 # REM: GPU があれば "cuda"、無ければ "cpu"
 CUDA_AVAILABLE = True if torch.cuda.is_available() else False
 
+# REM: マルチモーダル処理の設定
+# GPU環境でのみ有効（HuggingFace版 Qwen-VLはGPU必須）
+MULTIMODAL_ENABLED = CUDA_AVAILABLE
+MULTIMODAL_MODEL = "Qwen/Qwen-VL-Chat" if CUDA_AVAILABLE else None
+
 # REM: プロジェクトのルートディレクトリと関連ディレクトリの設定
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 BIN_DIR = os.path.join(PROJECT_ROOT, "bin")
-PROMPT_FILE_PATH = os.path.join(BIN_DIR, "refine_prompt_multi.txt")
+# 高度化されたプロンプトファイルを使用
+PROMPT_FILE_PATH = os.path.join(BIN_DIR, "refine_prompt_advanced.txt")
 
 # REM: Ollamaのモデル名とベースURL, 接続エンジン
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")
 OLLAMA_MODEL = "gemma:7b" if CUDA_AVAILABLE else "phi4-mini"
 LLM_ENGINE = OllamaLLM(model=OLLAMA_MODEL, base_url=OLLAMA_BASE)
 print(f"[config.py] LLM_MODEL = {OLLAMA_MODEL}")
+print(f"[config.py] CUDA_AVAILABLE = {CUDA_AVAILABLE}")
+print(f"[config.py] MULTIMODAL_ENABLED = {MULTIMODAL_ENABLED}")
 
 #"http://host.docker.internal:11434")
 

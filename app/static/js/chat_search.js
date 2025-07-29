@@ -156,9 +156,12 @@ class ChatSearch {
 
     console.log("🚀 検索リクエスト送信:", params);
 
-    // ユーザー設定のタイムアウトを取得（デフォルト5秒）
-    const timeoutSeconds = parseInt(document.getElementById('search_timeout')?.value) || 5;
+    // ユーザー設定のタイムアウトを取得
+    const timeoutInput = document.getElementById('search_timeout');
+    const timeoutSeconds = timeoutInput ? parseInt(timeoutInput.value) : 10;
     const timeoutMs = timeoutSeconds > 0 ? timeoutSeconds * 1000 : 0; // 0の場合はタイムアウトなし
+    
+    console.log('🕐 タイムアウト設定:', timeoutSeconds, '秒 →', timeoutMs, 'ms');
     
     let timeoutId = null;
     if (timeoutMs > 0) {

@@ -10,6 +10,8 @@
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 </script>
+<!-- 共通CSSファイル -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/common.css') }}">
 <!-- 専用CSSファイル -->
 <link rel="stylesheet" href="{{ url_for('static', path='css/try_ocr.css') }}">
 {% endblock %}
@@ -20,18 +22,11 @@
   <div id="pane-top">
     <!-- 左上ペイン：基本設定（ファイル選択含む） -->
     <div id="top-left">
-      <h1 class="page-title">⚙️ 基本設定</h1>
+      <h1 class="section-title">⚙️ 基本設定</h1>
       <div class="form-section">
         <label for="file-input">ファイル指定:</label>
-        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
-          <textarea id="file-input" readonly
-                    style="width: 300px; min-width: 200px; max-width: 600px; height: 1.5em; resize: horizontal; 
-                           padding: 4px 8px; box-sizing: border-box; font-family: inherit; font-size: inherit; 
-                           line-height: 1.2; overflow: hidden; vertical-align: top;"
-                    placeholder="ファイルを選択してください"></textarea>
-          <button type="button" id="browse-file" 
-                  style="padding: 4px 8px; flex-shrink: 0; height: 2em;">📂</button>
-        </div>
+        <input type="text" id="file-input" readonly placeholder="ファイルを選択してください">
+        <button type="button" id="browse-file">📂</button>
       </div>
       <input type="file" id="file-picker" style="display:none;" accept=".pdf,.png,.jpg,.jpeg">
       
@@ -46,7 +41,7 @@
       
       <div class="form-section">
         <label for="page-num">ページ番号:</label>
-        <input type="number" id="page-num" value="1" min="0" style="width:4em; ime-mode:disabled;" inputmode="numeric">
+        <input type="number" id="page-num" value="1" min="0" step="1">
         <span style="margin-left:0.5em; color:#666; font-size:0.8em;">(0は全ページ)</span>
       </div>
       
@@ -57,13 +52,13 @@
       </div>
       
       <div class="form-actions">
-        <button id="process-btn">🚀 OCR実行</button>
-        <button id="cancel-btn" disabled>✖️ キャンセル</button>
-        <label style="margin-left:0.5em;">
+        <button id="process-btn" class="btn btn-primary">🚀 OCR実行</button>
+        <button id="cancel-btn" class="btn btn-cancel" disabled>✖️ キャンセル</button>
+        <label>
           <input type="checkbox" id="use-correction-dict" checked> 誤字修正
         </label>
-        <button id="clear-btn" style="margin-left:1em;">🗑️ 結果クリア</button>
-        <button id="compare-all-btn">📊 全エンジン比較</button>
+        <button id="clear-btn" class="btn">🗑️ 結果クリア</button>
+        <button id="compare-all-btn" class="btn">📊 全エンジン比較</button>
       </div>
     </div>
 
@@ -73,10 +68,9 @@
     <!-- 右上ペイン：エンジン調整 -->
     <div id="top-right">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-        <h1 class="page-title">🔧 エンジン調整</h1>
+        <h1 class="section-title">🔧 エンジン調整</h1>
         <div class="form-actions" style="margin: 0;">
-          <button id="save-settings-btn" style="padding: 2px 6px; font-size: 0.8em;">💾 保存</button>
-          <button id="preset-settings-btn" style="padding: 2px 6px; font-size: 0.8em; margin-left: 4px;">📋 プリセット</button>
+          <button id="ocr-settings-btn" class="btn">設定</button>
         </div>
       </div>
       <div id="engine-parameters">
@@ -99,9 +93,7 @@
       
       <!-- OCR結果表示エリア -->
       <div id="results-container">
-        <p style="color:#888; text-align:center; margin-top:2em;">
-          OCRエンジンとファイルを選択して「OCR実行」ボタンを押してください
-        </p>
+        <!-- 初期メッセージはJavaScriptで動的に設定 -->
       </div>
     </div>
 
@@ -126,5 +118,6 @@
 <script src="{{ url_for('static', path='js/try_ocr_pdf.js') }}"></script>
 <script src="{{ url_for('static', path='js/try_ocr_engine.js') }}"></script>
 <script src="{{ url_for('static', path='js/try_ocr_ui.js') }}"></script>
+<script src="{{ url_for('static', path='js/try_ocr_resize.js') }}"></script>
 <script src="{{ url_for('static', path='js/try_ocr_main.js') }}"></script>
 {% endblock %}

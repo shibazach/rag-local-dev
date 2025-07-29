@@ -1,26 +1,22 @@
-# fileio/extractor.py  最終更新 2025-07-08 00:00
-import os, json, csv, subprocess, tempfile
-from io import BytesIO
-from typing import List
+# fileio/extractor.py
+# ファイル抽出ユーティリティ
 
-import docx
+import os
 import fitz  # PyMuPDF
-import numpy as np
 import pytesseract
 from PIL import Image
+import io
+import tempfile
+from typing import List, Dict, Any
+import logging
 
-from src import bootstrap
-from ocr import (correct_orientation, detect_rotation_angle)
+from ocr.orientation_corrector import (
+    pdf_page_to_image,
+    detect_rotation_angle,
+    correct_orientation
+)
 
-# PDFを画像に変換（ページごと）
-def pdf_page_to_image(pdf_path, page_number, dpi=300) -> Image.Image:
-    doc = fitz.open(pdf_path)
-    page = doc.load_page(page_number)
-    zoom = dpi / 72
-    mat = fitz.Matrix(zoom, zoom)
-    pix = page.get_pixmap(matrix=mat)
-    img_data = pix.tobytes("png")
-    return Image.open(BytesIO(img_data))
+LOGGER = logging.getLogger("fileio.extractor")
 
 # PDFからテキスト（PyMuPDF + OCR 両方、OCRは向き補正つき）
 def extract_text_from_pdf(pdf_path: str, progress_callback=None) -> List[str]:
@@ -44,8 +40,8 @@ def extract_text_from_pdf(pdf_path: str, progress_callback=None) -> List[str]:
         rotated = correct_orientation(image, angle)
         ocr_text = pytesseract.image_to_string(rotated, lang="jpn+eng").strip()
 
-        # 結合して1ページ分として格納
-        merged = f"【PDF抽出】\n{pdf_text}\n\n【OCR抽出】\n{ocr_text}"
+        # タグ形式で結合して1ページ分として格納
+        merged = f"<pdf_text>\n{pdf_text}\n</pdf_text>\n\n<ocr_text>\n{ocr_text}\n</ocr_text>"
         text_list.append(merged)
 
     return text_list
@@ -72,8 +68,8 @@ def extract_text_from_pdf_with_progress(pdf_path: str):
         rotated = correct_orientation(image, angle)
         ocr_text = pytesseract.image_to_string(rotated, lang="jpn+eng").strip()
 
-        # 結合して1ページ分として格納
-        merged = f"【PDF抽出】\n{pdf_text}\n\n【OCR抽出】\n{ocr_text}"
+        # タグ形式で結合して1ページ分として格納
+        merged = f"<pdf_text>\n{pdf_text}\n</pdf_text>\n\n<ocr_text>\n{ocr_text}\n</ocr_text>"
         text_list.append(merged)
 
     # 最終結果をyield
@@ -81,6 +77,10 @@ def extract_text_from_pdf_with_progress(pdf_path: str):
 
 # Wordファイルから構造とOCRを統合して抽出
 def extract_text_from_docx_combined(docx_path: str) -> List[str]:
+    import docx
+    import subprocess
+    import tempfile
+    
     structured_text = []
 
     # 🔹 表や段落など、論理構造ベースで抽出

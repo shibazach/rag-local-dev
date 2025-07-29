@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>研究部RAG</title>
   <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/common.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', path='css/base.css') }}">
   {% block head %}{% endblock %}
 </head>
@@ -19,10 +20,10 @@
         <li><a href="/try_ocr">🔬 OCR機能比較</a></li>
         <li><a href="/edit">📝 OCR辞書編集</a></li>
         <li style="margin-left: 1em; margin-top: 0.5em;">
-          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('一般用語')" style="text-decoration: none; color: #333;">📄 一般用語 <span id="dict-count-一般用語" style="color: #666;">-件</span></a></div>
-          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('専門用語')" style="text-decoration: none; color: #333;">🔬 専門用語 <span id="dict-count-専門用語" style="color: #666;">-件</span></a></div>
-          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('誤字修正')" style="text-decoration: none; color: #333;">🔧 誤字修正 <span id="dict-count-誤字修正" style="color: #666;">-件</span></a></div>
-          <div style="font-size: 0.85em; margin-left: 1em;"><a href="javascript:void(0)" onclick="loadDictDirect('形態素辞書')" style="text-decoration: none; color: #333;">⚙️ 形態素辞書 <span id="dict-count-形態素辞書" style="color: #666;">-件</span></a></div>
+          <div style="font-size: 0.85em; margin-left: 1em; margin-bottom: 0.2em;"><a href="javascript:void(0)" onclick="loadDictDirect('一般用語')" style="text-decoration: none; color: #333;">📄 一般用語 <span id="dict-count-一般用語" style="color: #666;">-件</span></a></div>
+          <div style="font-size: 0.85em; margin-left: 1em; margin-bottom: 0.2em;"><a href="javascript:void(0)" onclick="loadDictDirect('専門用語')" style="text-decoration: none; color: #333;">🔬 専門用語 <span id="dict-count-専門用語" style="color: #666;">-件</span></a></div>
+          <div style="font-size: 0.85em; margin-left: 1em; margin-bottom: 0.2em;"><a href="javascript:void(0)" onclick="loadDictDirect('誤字修正')" style="text-decoration: none; color: #333;">🔧 誤字修正 <span id="dict-count-誤字修正" style="color: #666;">-件</span></a></div>
+          <div style="font-size: 0.85em; margin-left: 1em; margin-bottom: 0.2em;"><a href="javascript:void(0)" onclick="loadDictDirect('形態素辞書')" style="text-decoration: none; color: #333;">⚙️ 形態素辞書 <span id="dict-count-形態素辞書" style="color: #666;">-件</span></a></div>
         </li>
       </ul>
     </div>

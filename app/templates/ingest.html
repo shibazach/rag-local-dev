@@ -2,6 +2,8 @@
 {% extends "base.html" %}
 {% block content %}
 
+<!-- 共通CSSファイル -->
+<link rel="stylesheet" href="{{ url_for('static', path='css/common.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', path='css/ingest.css') }}">
 
 <div id="app-container" class="layout-no-preview">
@@ -29,7 +31,7 @@
               <option value="{{ key }}">{{ key }}</option>
               {% endfor %}
             </select>
-            <button type="button" id="prompt-edit-btn" style="margin-left: 0.5em;">確認</button>
+            <button type="button" id="prompt-edit-btn" class="btn">確認</button>
             <span style="margin-left: 1em; color: #666; font-size: 0.9em;">（LLM モデル：{{ llm_model }}）</span>
           </div>
 
@@ -38,8 +40,8 @@
             <select id="ocr-engine" name="ocr_engine_id" style="width: 200px;">
               <!-- OCRエンジンは動的に読み込まれます -->
             </select>
-            <button type="button" id="ocr-settings-btn" style="margin-left: 0.5em;">設定</button>
-            <button type="button" id="ocr-presets-btn" style="margin-left: 0.5em;">プリセット</button>
+            <button type="button" id="ocr-settings-btn" class="btn">設定</button>
+            <button type="button" id="ocr-presets-btn" class="btn">プリセット</button>
           </div>
           
           <div class="form-section">
@@ -67,8 +69,8 @@
           </div>
           
           <div class="form-actions">
-            <button type="button" id="start-btn">🚀 処理開始</button>
-            <button type="button" id="cancel-btn" disabled>✖️ キャンセル</button>
+            <button type="button" id="start-btn" class="btn btn-primary">🚀 処理開始</button>
+            <button type="button" id="cancel-btn" class="btn btn-cancel" disabled>✖️ キャンセル</button>
             <span style="margin-left:1em;">
               PDF表示：<label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="embed" checked> 同一タブ内</label>
               <label style="margin-left:0.5em;"><input type="radio" name="pdf_mode" value="newtab"> 別タブ</label>

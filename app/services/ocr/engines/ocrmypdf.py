@@ -112,10 +112,23 @@ class OCRMyPDFEngine(OCREngine):
             
             # 処理後のPDFからテキスト抽出
             doc = fitz.open(temp_path)
-            if page_num < len(doc):
-                text = doc[page_num].get_text()
+            total_pages = len(doc)
+            
+            # ページ番号の調整（1ベース→0ベース）
+            page_index = page_num - 1 if page_num > 0 else 0
+            
+            if page_index < total_pages and page_index >= 0:
+                text = doc[page_index].get_text()
             else:
                 text = ""
+                doc.close()
+                return {
+                    "success": False,
+                    "error": f"ページ {page_num} が存在しません（総ページ数: {total_pages}）",
+                    "text": "",
+                    "processing_time": time.time() - start_time,
+                    "confidence": None
+                }
             doc.close()
             
             # 一時ファイル削除

@@ -1,0 +1,19 @@
+{
+  "OCRMyPDF_設定": {
+    "deskew": false,
+    "rotate_pages": false,
+    "remove_background": false,
+    "clean": false,
+    "oversample": 300,
+    "optimize": 1,
+    "jpeg_quality": 0,
+    "png_quality": 0,
+    "jbig2_lossy": false,
+    "color_conversion_strategy": "auto",
+    "pdfa_image_compression": "auto",
+    "threshold": false,
+    "unpaper_args": "",
+    "tesseract_config": "",
+    "tesseract_pagesegmode": "auto"
+  }
+}

@@ -1,14 +1,18 @@
 <!-- app/templates/edit.html @2025-07-18 00:00 UTC +9 -->
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8"><title>ファイル編集</title>
-</head>
-<body>
-  <h1>✏️ ファイル編集: {{ file_id }}</h1>
+{% extends "base.html" %}
+
+{% block content %}
+<div style="padding: 20px; max-width: 800px; margin: 0 auto;">
+  <h1 class="page-title">✏️ ファイル編集: {{ file_id }}</h1>
   <form method="post" action="/edit/{{ file_id }}">
-    <textarea name="content" rows="20" cols="80">{{ content }}</textarea><br>
-    <button type="submit">保存して再ベクトル化</button>
+    <div class="form-section" style="flex-direction: column; align-items: stretch;">
+      <label for="content">ファイル内容:</label>
+      <textarea name="content" id="content" rows="20" style="width: 100%; margin-top: 0.5em; font-family: monospace; font-size: 14px;">{{ content }}</textarea>
+    </div>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-success">💾 保存して再ベクトル化</button>
+      <a href="/" class="btn">❌ キャンセル</a>
+    </div>
   </form>
-</body>
-</html>
+</div>
+{% endblock %}

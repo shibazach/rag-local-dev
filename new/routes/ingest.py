@@ -3,26 +3,26 @@
 
 from fastapi import APIRouter, HTTPException, Request, Form, File, UploadFile, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 import tempfile
 import os
 import asyncio
 import json
 
-from ..database import get_db
-from ..auth import get_current_user, require_admin, User
-from ..debug import debug_function, debug_error
+from new.database import get_db
+from new.auth import get_current_user, require_admin
+from new.debug import debug_function, debug_error
 
 router = APIRouter()
 
 @router.get("/ingest", response_class=HTMLResponse)
 async def ingest_page(
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """インジェスト画面"""
-    from ..main import templates
+    from new.main import templates
     
     # 埋め込みモデルオプション
     embedding_options = {
@@ -50,7 +50,7 @@ async def process_ingest(
     overwrite_existing: bool = Form(False),
     quality_threshold: float = Form(0.0),
     llm_timeout: int = Form(300),
-    current_user: User = Depends(get_current_user),
+    current_user: Dict[str, Any] = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """ファイルインジェスト処理"""
@@ -125,7 +125,7 @@ async def run_ingest_background(
 
 @router.get("/ingest/status")
 async def get_ingest_status(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """インジェスト処理状況取得"""
     # TODO: 実際の処理状況を返す
@@ -137,7 +137,7 @@ async def get_ingest_status(
 
 @router.post("/ingest/cancel")
 async def cancel_ingest(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """インジェスト処理キャンセル"""
     # TODO: 実際のキャンセル処理を実装

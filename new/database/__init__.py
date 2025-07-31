@@ -2,7 +2,7 @@
 # データベース関連モジュール
 
 from .models import *
-from .connection import get_db_connection, test_connection
+from .connection import get_db_connection, get_db, test_connection, Base
 from .schemas import init_schema
 
 def init_db():
@@ -11,6 +11,8 @@ def init_db():
 
 __all__ = [
     "get_db_connection",
+    "get_db",
+    "Base",
     "test_connection", 
     "init_schema",
     "init_db",

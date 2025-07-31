@@ -7,7 +7,25 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import SQLAlchemyError
 
-from new.config import DB_ENGINE, DEBUG_MODE
+from new.config import DB_ENGINE, DEBUG_MODE, DATABASE_URL, LOGGER
+from typing import Generator
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.ext.declarative import declarative_base
+
+# データベースエンジン作成
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    echo=False  # SQLログを無効化
+)
+
+# セッションファクトリ作成
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# ベースクラス作成
+Base = declarative_base()
 
 def get_db_connection() -> Generator[Connection, None, None]:
     """
@@ -30,6 +48,22 @@ def get_db_connection() -> Generator[Connection, None, None]:
         if connection:
             connection.close()
 
+def get_db() -> Generator[Session, None, None]:
+    """
+    データベースセッションを取得するジェネレータ
+    
+    Yields:
+        Session: データベースセッション
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    except Exception as e:
+        LOGGER.exception(f"データベースエラー: {e}")
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 def test_connection() -> bool:
     """

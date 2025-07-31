@@ -12,20 +12,21 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request
 from fastapi.responses import JSONResponse, FileResponse, Response
 from urllib.parse import quote
 from sqlalchemy.orm import Session
+from typing import Dict, Any
 
-from ..auth import get_current_user, require_admin, get_optional_user
-from ..database import get_db
-from ..models import File
-from ..services.file_service import FileService
-from ..services.chat_service import ChatService
-from ..services.search_service import SearchService
-from ..db_handler import (
-    insert_file_blob_only, insert_file_blob_with_details, get_all_files, get_file_blob, 
-    get_file_meta, get_file_text, delete_file, get_file_path
-)
-from ..services.queue_service import QueueService
-from ..config import INPUT_DIR, LOGGER
-from ..debug import debug_print, debug_error, debug_function, debug_return, debug_js_error
+from new.auth import get_current_user, require_admin, get_optional_user
+from new.config import INPUT_DIR, LOGGER
+from new.database import get_db
+# from new.models import File  # 現在未使用のためコメントアウト  
+# from new.services.file_service import FileService  # 現在未使用のためコメントアウト
+# from new.services.chat_service import ChatService  # 現在未使用のためコメントアウト
+# from new.services.search_service import SearchService  # 現在未使用のためコメントアウト
+# from new.db_handler import (  # 現在未使用のためコメントアウト
+#     insert_file_blob_only, insert_file_blob_with_details, get_all_files, get_file_blob, 
+#     get_file_meta, get_file_text, delete_file, get_file_path
+# )
+# from new.services.queue_service import QueueService  # 現在未使用のためコメントアウト
+# from new.debug import debug_print, debug_error, debug_function, debug_return, debug_js_error  # 現在未使用のためコメントアウト
 
 def get_file_status(file_text_data):
     """ファイルの実際の処理状況に基づいてステータスを判定"""
@@ -103,7 +104,7 @@ async def logout(request: Request):
 # ファイル管理API
 @router.get("/files")
 async def get_files(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """ファイル一覧取得 - 新DB設計対応"""
     try:
@@ -156,7 +157,7 @@ async def get_files(
 @router.get("/files/{file_id}")
 async def get_file(
     file_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """ファイル詳細取得 - 新DB設計対応"""
     try:
@@ -215,7 +216,7 @@ async def get_file(
 @router.delete("/files/{file_id}")
 async def delete_file_endpoint(
     file_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """ファイル削除 - 新DB設計対応"""
     try:
@@ -239,7 +240,7 @@ async def delete_file_endpoint(
 @router.post("/files/upload")
 async def upload_files(
     files: List[UploadFile],
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """ファイルアップロード処理 - DBにblobとして保存"""
     try:
@@ -307,7 +308,7 @@ async def upload_folder(
 @router.get("/files/{file_id}/preview")
 async def preview_file(
     file_id: str,
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """ファイルプレビュー（PDF用）- 新DB設計対応"""
     debug_function("preview_file", file_id=file_id, user_id=current_user.id)
@@ -611,11 +612,11 @@ async def log_js_error(request: Request):
 
 @router.get("/config/prompts")
 async def get_prompt_config(
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """プロンプト設定情報を取得"""
     try:
-        from ..config import CUDA_AVAILABLE, OLLAMA_MODEL, EMBEDDING_OPTIONS
+        from new.config import CUDA_AVAILABLE, OLLAMA_MODEL, EMBEDDING_OPTIONS
         
         return {
             "cuda_available": CUDA_AVAILABLE,
@@ -629,7 +630,7 @@ async def get_prompt_config(
 @router.get("/list-folders")
 async def list_folders(
     path: str = "",
-    current_user: User = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """フォルダ一覧を取得（フォルダブラウザ用）"""
     try:

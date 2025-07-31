@@ -10,11 +10,11 @@ from pathlib import Path
 from fastapi import APIRouter, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from ..auth import User, require_admin
-from ..config import LOGGER
-from ..services.queue_service import QueueService
-from ..services.search_service import SearchService
-from ..main import templates
+from new.auth import require_admin
+from new.config import LOGGER
+from new.services.queue_service import QueueService
+from new.services.search_service import SearchService
+from new.main import templates
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -104,7 +104,7 @@ LOGGER.info("管理画面ログ機能が初期化されました")
 @router.get("", response_class=HTMLResponse)
 async def admin_dashboard(
     request: Request,
-    current_user: User = Depends(require_admin)
+    current_user: Dict[str, Any] = Depends(require_admin)
 ):
     """管理画面ダッシュボード"""
     try:
@@ -131,7 +131,7 @@ async def admin_dashboard(
 async def get_system_logs(
     limit: int = 100,
     level: str = None,
-    current_user: User = Depends(require_admin)
+    current_user: Dict[str, Any] = Depends(require_admin)
 ):
     """システムログ取得API"""
     try:
@@ -146,7 +146,7 @@ async def get_system_logs(
 
 @router.get("/system/status")
 async def get_system_status(
-    current_user: User = Depends(require_admin)
+    current_user: Dict[str, Any] = Depends(require_admin)
 ):
     """システム状態監視API"""
     try:
@@ -194,7 +194,7 @@ async def get_system_status(
 
 @router.post("/logs/clear")
 async def clear_logs(
-    current_user: User = Depends(require_admin)
+    current_user: Dict[str, Any] = Depends(require_admin)
 ):
     """ログクリアAPI"""
     try:

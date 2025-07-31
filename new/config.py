@@ -1,99 +1,179 @@
 # new/config.py
-# セキュリティ設計を考慮した設定管理
+# 新系RAGシステム設定ファイル
 
 import os
-import logging
+import torch
+from sqlalchemy import create_engine
+from sqlalchemy.engine import Engine
 from typing import Dict, Any
-from pathlib import Path
 
-# プロジェクトルート
-PROJECT_ROOT = Path(__file__).parent.parent
-NEW_ROOT = Path(__file__).parent
+# ============================================================================
+# 基本設定
+# ============================================================================
 
-# 環境変数から設定を取得
-DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
+# デバッグ・開発モード設定
+DEBUG_MODE = True
 DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "false").lower() == "true"
-DEBUG_PRINT_ENABLED = os.getenv("DEBUG_PRINT_ENABLED", "true").lower() == "true"  # デバッグプリント機能のスイッチ
 
-# セキュリティ設定
-SECURE_COOKIES = os.getenv("SECURE_COOKIES", "false").lower() == "true"  # 開発時はfalse
-CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000,http://localhost:8001").split(",")
+# GPU・マルチモーダル設定
+CUDA_AVAILABLE = torch.cuda.is_available()
+MULTIMODAL_ENABLED = CUDA_AVAILABLE
+MULTIMODAL_MODEL = "Qwen/Qwen-VL-Chat" if CUDA_AVAILABLE else None
 
+print(f"[config.py] CUDA_AVAILABLE = {CUDA_AVAILABLE}")
+print(f"[config.py] MULTIMODAL_ENABLED = {MULTIMODAL_ENABLED}")
+
+# ============================================================================
+# LLM設定（Ollama）
+# ============================================================================
+
+OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")
+OLLAMA_MODEL = "gemma3" if CUDA_AVAILABLE else "phi4-mini"
+LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "300"))
+
+print(f"[config.py] LLM_MODEL = {OLLAMA_MODEL}")
+
+# ============================================================================
+# 処理設定
+# ============================================================================
+
+# ファイル処理設定
+SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".eml", ".png", ".jpg", ".jpeg", ".tiff", ".bmp"}
+DEFAULT_OCR_ENGINE = os.getenv("DEFAULT_OCR_ENGINE", "ocrmypdf")
+DEFAULT_EMBEDDING_MODELS = ["intfloat-e5-large-v2"]
+DEFAULT_QUALITY_THRESHOLD = 0.0
+
+# ============================================================================
 # データベース設定
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://raguser:ragpass@ragdb:5432/rag")
+# ============================================================================
 
-# LLM設定
-OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
+# PostgreSQL接続設定
+DB_HOST = os.getenv("DB_HOST", "ragdb")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_USER = os.getenv("DB_USER", "raguser")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "ragpass")
+DB_NAME = os.getenv("DB_NAME", "rag")
 
-# GPU/CPU環境に応じてモデルを選択
-CUDA_AVAILABLE = os.getenv("CUDA_AVAILABLE", "false").lower() == "true"
-if CUDA_AVAILABLE:
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma:7b")  # GPU環境
-else:
-    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi4-mini")  # CPU環境
+# 接続URL構築
+DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
+# SQLAlchemyエンジン作成
+DB_ENGINE: Engine = create_engine(
+    DATABASE_URL,
+    echo=DEBUG_MODE,  # デバッグモード時にSQL文を出力
+    pool_size=10,
+    max_overflow=20,
+    pool_pre_ping=True,  # 接続確認
+    pool_recycle=3600,   # 1時間で接続リサイクル
+)
+
+print(f"[config.py] Database URL: {DATABASE_URL}")
+
+# ============================================================================
+# ファイル処理設定
+# ============================================================================
+
+# サポートする拡張子
+SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".docx", ".csv", ".json", ".eml"}
+
+# ファイルサイズ制限（100MB）
+MAX_FILE_SIZE = 100 * 1024 * 1024
+
+# アップロード一時ディレクトリ
+UPLOAD_TEMP_DIR = os.getenv("UPLOAD_TEMP_DIR", "/tmp/rag_uploads")
+os.makedirs(UPLOAD_TEMP_DIR, exist_ok=True)
+
+# ============================================================================
 # 埋め込みモデル設定
-EMBEDDING_OPTIONS = {
-    "sentence-transformers": {
-        "models": [
-            "intfloat/e5-large-v2",
-            "intfloat/e5-small-v2"
-        ],
-        "default": "intfloat/e5-small-v2"
+# ============================================================================
+
+EMBEDDING_OPTIONS: Dict[str, Dict[str, Any]] = {
+    "1": {
+        "name": "intfloat/multilingual-e5-large",
+        "description": "多言語対応・高精度",
+        "model_path": "intfloat/multilingual-e5-large",
+        "dimensions": 1024,
     },
-    "ollama": {
-        "models": [
-            "nomic-embed-text"
-        ],
-        "default": "nomic-embed-text"
-    }
+    "2": {
+        "name": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", 
+        "description": "軽量・多言語対応",
+        "model_path": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+        "dimensions": 384,
+    },
+    "3": {
+        "name": "cl-tohoku/shioriha-large-pt",
+        "description": "日本語特化・高精度",
+        "model_path": "cl-tohoku/shioriha-large-pt", 
+        "dimensions": 768,
+    },
 }
 
-DEFAULT_EMBEDDING_OPTION = os.getenv("DEFAULT_EMBEDDING_OPTION", "sentence-transformers")
+# ============================================================================
+# ログ設定
+# ============================================================================
 
-# ファイルパス設定
-INPUT_DIR = PROJECT_ROOT / "ignored" / "input_files"
-OUTPUT_DIR = PROJECT_ROOT / "output"
-LOG_DIR = PROJECT_ROOT / "logs"
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-# アプリケーション設定
-API_PREFIX = "/api"
-STATIC_DIR = NEW_ROOT / "static"
-TEMPLATES_DIR = NEW_ROOT / "templates"
+# ============================================================================
+# セキュリティ設定
+# ============================================================================
+
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # セッション設定
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-SESSION_COOKIE_NAME = "new_rag_session"
-SESSION_COOKIE_SECURE = SECURE_COOKIES
+SESSION_COOKIE_NAME = "rag_session"
+SESSION_COOKIE_SECURE = False  # HTTPSの場合はTrue
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "lax"
 
+# CORS設定
+CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000", 
+    "http://localhost:8001",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8000",
+    "http://127.0.0.1:8001",
+]
+
+# ============================================================================
+# API・ディレクトリ設定
+# ============================================================================
+
+# API設定
+API_PREFIX = "/api"
+
+# ディレクトリ設定
+STATIC_DIR = "static"
+TEMPLATES_DIR = "templates" 
+
+# 入出力ディレクトリ
+INPUT_DIR = "ignored/input_files"
+OUTPUT_DIR = "ignored/output_files"
+
+# ディレクトリ作成
+for directory in [INPUT_DIR, OUTPUT_DIR]:
+    os.makedirs(directory, exist_ok=True)
+
+# ============================================================================
 # ログ設定
-LOGGER = logging.getLogger("new_rag")
-LOGGER.setLevel(logging.WARNING)  # WARNING以上のみ出力
+# ============================================================================
 
-# uvicornログの抑制
-logging.getLogger("uvicorn").setLevel(logging.WARNING)
-logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
-logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
+import logging
 
-# ログディレクトリの作成
-LOG_DIR.mkdir(exist_ok=True)
+# ロガー設定
+LOGGER = logging.getLogger("rag_system")
+LOGGER.setLevel(getattr(logging, LOG_LEVEL))
 
-# ファイルハンドラーの設定
-log_file = LOG_DIR / "app.log"
-file_handler = logging.FileHandler(log_file, encoding='utf-8')
-file_handler.setLevel(logging.WARNING)  # WARNING以上のみファイルに出力
-
-# コンソールハンドラーの設定
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.ERROR)  # コンソールにはエラーのみ出力
-
-# フォーマッターの設定
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
-# ハンドラーの追加
-LOGGER.addHandler(file_handler)
-LOGGER.addHandler(console_handler) 
+# ハンドラー設定
+if not LOGGER.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    handler.setFormatter(formatter)
+    LOGGER.addHandler(handler)

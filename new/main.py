@@ -8,15 +8,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from .config import (
+from config import (
     DEBUG_MODE, CORS_ORIGINS, SECRET_KEY, 
     SESSION_COOKIE_NAME, SESSION_COOKIE_SECURE,
     SESSION_COOKIE_HTTPONLY, SESSION_COOKIE_SAMESITE,
     STATIC_DIR, TEMPLATES_DIR, API_PREFIX, LOGGER,
     INPUT_DIR, OUTPUT_DIR
 )
-from .database import init_db
-from .auth import get_current_user
+from database import init_db
+from auth import get_current_user
 
 # FastAPIアプリケーション作成
 app = FastAPI(
@@ -111,21 +111,24 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # テンプレート設定
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# ルーター登録
-from .routes import api_router, ui_router, ingest_router
-from .routes.admin import router as admin_router
+# ルーター登録  
+from api import files_router, upload_router
 
-# APIルーター（認証付き）
-app.include_router(api_router, prefix=API_PREFIX, tags=["API"])
+# データ登録関連APIルーター
+app.include_router(files_router, prefix=API_PREFIX, tags=["Files"])
+app.include_router(upload_router, prefix=API_PREFIX, tags=["Upload"])
 
-# UIルーター（認証不要）
-app.include_router(ui_router, tags=["UI"])
+# Processing API
+from api.processing import router as processing_router
+app.include_router(processing_router, prefix=API_PREFIX, tags=["Processing"])
 
-# インジェストルーター（認証付き）
-app.include_router(ingest_router, tags=["Ingest"])
+# Ingest API (データ登録処理・SSE)
+from api.ingest import router as ingest_router
+app.include_router(ingest_router, prefix=API_PREFIX, tags=["Ingest"])
 
-# 管理画面ルーター（管理者認証付き）
-app.include_router(admin_router, tags=["Admin"])
+# File Selection API (ファイル選択・フィルタリング)
+from api.file_selection import router as file_selection_router
+app.include_router(file_selection_router, prefix=API_PREFIX, tags=["File Selection"])
 
 # ヘルスチェック
 @app.get("/health")

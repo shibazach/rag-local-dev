@@ -6,6 +6,11 @@
 <link rel="stylesheet" href="{{ url_for('static', path='/css/data_registration.css') }}?v=20">
 {% endblock %}
 
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/data_registration.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', path='/js/file_selection.js') }}?v=1" defer></script>
+{% endblock %}
+
 {% block content %}
 <div class="data-registration-container">
     <!-- 左上ペイン: 設定項目 -->
@@ -778,4 +783,29 @@ function adjustFileNameColumn() {
     }
 }
 </script>
+
+<!-- 進捗表示オーバーレイ -->
+<div class="progress-panel" id="progress-panel" style="display: none;">
+    <div class="panel-header">
+        <h3>📊 処理進捗</h3>
+    </div>
+    <div class="panel-content">
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-bar-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-text">0%</div>
+        </div>
+        <div class="progress-message">処理準備中...</div>
+        <div class="progress-details">
+            <div class="progress-files">
+                <span class="progress-current">0</span> / <span class="progress-total">0</span> ファイル
+            </div>
+            <div class="progress-time">
+                経過時間: <span class="progress-elapsed">0</span>秒
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

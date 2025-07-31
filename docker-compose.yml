@@ -14,8 +14,9 @@ services:
     container_name: ragapp
     restart: unless-stopped
     ports:
-      - "8501:8501"
       - "8000:8000"
+      - "8002:8002"
+      - "8003:8003"
     environment:
       DB_HOST: ragdb
       DB_PORT: "5432"

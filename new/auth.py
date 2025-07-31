@@ -1,178 +1,28 @@
 # new/auth.py
-# セキュリティ設計に基づく認証システム
+# 認証関連モジュール（一時的なスタブ）
 
-import logging
-from typing import Optional, Dict, Any
-from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException, status
 
-from .config import LOGGER, SECRET_KEY, SESSION_COOKIE_NAME, DEBUG_MODE
-from .database import get_db
-from .debug import debug_function, debug_error
-
-# セキュリティスキーム
-security = HTTPBearer(auto_error=False)
-
-# 仮のユーザー管理（後でSAML/OIDCに置き換え予定）
-USERS = {
-    "admin": {
+def get_current_user():
+    """
+    現在のユーザーを取得する（一時的なスタブ）
+    TODO: 実際の認証実装
+    """
+    # 一時的に常にadminユーザーを返す
+    return {
         "username": "admin",
-        "email": "admin@example.com",
-        "role": "admin"
-    },
-    "user": {
-        "username": "user", 
-        "email": "user@example.com",
-        "role": "user"
+        "role": "admin",
+        "is_active": True
     }
-}
 
-class User:
-    """ユーザー情報を管理するクラス"""
-    
-    def __init__(self, username: str, email: str, role: str, user_id: int = 1):
-        self.username = username
-        self.email = email
-        self.role = role
-        self.id = user_id  # APIで使用するID
-    
-    def is_admin(self) -> bool:
-        return self.role == "admin"
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "id": self.id,
-            "username": self.username,
-            "email": self.email,
-            "role": self.role
-        }
-
-def get_current_user(request: Request) -> User:
-    """現在のユーザーを取得（認証必須）"""
-    try:
-        debug_function("get_current_user")
-        
-        # セッションからユーザー情報を取得
-        session_user = request.session.get("user")
-        if not session_user:
-            raise HTTPException(
-                status_code=401,
-                detail="認証が必要です"
-            )
-        
-        # 開発モードの場合は仮のユーザーを返す
-        if DEBUG_MODE:
-            return User(
-                username=session_user.get("username", "admin"),
-                email=session_user.get("email", "admin@example.com"),
-                role=session_user.get("role", "admin"),
-                user_id=session_user.get("id", 1)
-            )
-        
-        # 実際のユーザー情報を返す
-        return User(
-            username=session_user.get("username"),
-            email=session_user.get("email"),
-            role=session_user.get("role", "user"),
-            user_id=session_user.get("id")
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        debug_error(e, "get_current_user")
-        raise HTTPException(
-            status_code=401,
-            detail="認証が必要です"
-        )
-
-def get_optional_user(request: Request) -> Optional[User]:
-    """現在のユーザーを取得（認証オプション）"""
-    try:
-        debug_function("get_optional_user")
-        
-        # セッションからユーザー情報を取得
-        session_user = request.session.get("user")
-        if not session_user:
-            return None
-        
-        # 開発モードの場合は仮のユーザーを返す
-        if DEBUG_MODE:
-            return User(
-                username=session_user.get("username", "admin"),
-                email=session_user.get("email", "admin@example.com"),
-                role=session_user.get("role", "admin"),
-                user_id=session_user.get("id", 1)
-            )
-        
-        # 実際のユーザー情報を返す
-        return User(
-            username=session_user.get("username"),
-            email=session_user.get("email"),
-            role=session_user.get("role", "user"),
-            user_id=session_user.get("id")
-        )
-        
-    except Exception as e:
-        debug_error(e, "get_optional_user")
-        return None
-
-def require_admin(user: User = Depends(get_current_user)) -> User:
+def require_admin():
     """
-    管理者権限を要求する依存関数
-    
-    Args:
-        user: 認証されたユーザー
-    
-    Returns:
-        User: 管理者ユーザー
-    
-    Raises:
-        HTTPException: 管理者権限がない場合
+    管理者権限を要求する
     """
-    if not user.is_admin():
-        LOGGER.warning(f"管理者権限なし: {user.username}")
+    user = get_current_user()
+    if user["role"] != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="管理者権限が必要です"
         )
     return user
-
-def login_user(request: Request, username: str, password: str) -> Optional[User]:
-    """
-    ユーザーログイン処理
-    
-    Args:
-        request: FastAPIリクエスト
-        username: ユーザー名
-        password: パスワード
-    
-    Returns:
-        Optional[User]: ログイン成功時はユーザー情報、失敗時はNone
-    """
-    # 仮の認証（後でSAML/OIDCに置き換え）
-    if username in USERS and password == "password":  # 仮のパスワード
-        user_data = USERS[username].copy()
-        user_data['user_id'] = 1  # デフォルトのユーザーID
-        user = User(**user_data)
-        
-        # セッションにユーザー情報を保存
-        request.session["user"] = user.to_dict()
-        return user
-    
-    return None
-
-def logout_user(request: Request) -> bool:
-    """ユーザーログアウト処理"""
-    try:
-        debug_function("logout_user")
-        
-        # セッションをクリア
-        request.session.clear()
-        
-        return True
-        
-    except Exception as e:
-        debug_error(e, "logout_user")
-        return False 

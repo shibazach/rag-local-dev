@@ -1,247 +1,170 @@
-# UI設計統一ルール
+# UI設計標準 - R&D RAGシステム
 
 ## 基本方針
 
-### デザイン哲学
-- **一貫性**: 全ページで統一されたUI/UX
-- **可読性**: 適切なフォントサイズと行間
-- **操作性**: 統一されたコントロールサイズ
-- **保守性**: CSS変数による集中管理
+### 1. 統一されたレイアウト構造
+- **Flexboxベースの設計**: 全てのレイアウトはFlexboxを基本とする
+- **固定高さ設定**: `height: 100%`を使用してコンテナの高さを明確に定義
+- **ブラウザ間互換性**: Chrome、Edge等での表示差異を防ぐ統一構造
 
-## フォントサイズ階層
+### 2. 表（テーブル）設計標準
 
-### 統一ルール
+#### 共通CSS設定
 ```css
-:root {
-  /* フォントサイズ階層 - 統一ルール */
-  --font-size-xs: 12px;      /* 補助情報、キャプション */
-  --font-size-sm: 13px;      /* 小さなラベル */
-  --font-size-base: 14px;    /* 基本テキスト、フォーム */
-  --font-size-lg: 16px;      /* セクション見出し */
-  --font-size-xl: 18px;      /* 大見出し */
-  --font-size-xxl: 20px;     /* ページタイトル */
+/* 表コンテナ */
+.file-list-container {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* 表本体 */
+.file-table {
+    width: 100%;
+    border-collapse: collapse;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin: 0;
+    border-spacing: 0;
+}
+
+/* 固定ヘッダー */
+.file-table thead {
+    background: #f8f9fa;
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* スクロール可能な本体 */
+.file-table tbody {
+    overflow-y: auto;
+    display: block;
+    flex: 1;
+}
+
+/* 行レイアウト */
+.file-table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
 }
 ```
 
-### 使用例
-- **ページタイトル**: `--font-size-xxl` (20px)
-- **セクション見出し**: `--font-size-lg` (16px)
-- **フォーム要素**: `--font-size-base` (14px)
-- **補助テキスト**: `--font-size-xs` (12px)
+#### 統一クラス名
+- `.file-table`: メイン表クラス（全ページ共通）
+- `.files-table`: 代替表クラス（後方互換性）
+- `.results-table`: 結果表示用クラス（アップロード結果等）
 
-## コントロール統一ルール
+### 3. ページネーション設計
 
-### 基本設定
-```css
-:root {
-  /* コントロール統一ルール */
-  --control-font-size: 14px;
-  --control-height: 28px;
-  --control-line-height: 1.1;
-  --control-padding: 4px 8px;
-}
-```
+#### 配置原則
+- **表の直下に配置**: `.file-list-container`内の最下部
+- **固定高さ**: `min-height: 32px`
+- **余白なし**: `margin: 0`でギャップを排除
 
-### 適用対象
-- `input[type="text"]`
-- `input[type="number"]`
-- `select`
-- `textarea`
-- `button`
-
-### 実装例
-```css
-.form-section input,
-.form-section select,
-.form-section textarea {
-  font-size: var(--control-font-size) !important;
-  height: var(--control-height) !important;
-  line-height: var(--control-line-height);
-  padding: var(--control-padding);
-}
-```
-
-## 行間・余白統一
-
-### 基本設定
-```css
-:root {
-  /* 行間・余白 - 統一ルール */
-  --line-height-tight: 1.1;    /* 密な行間（フォーム） */
-  --line-height-base: 1.2;     /* 標準行間 */
-  --line-height-relaxed: 1.4;  /* ゆったり行間（本文） */
-  
-  --spacing-xs: 4px;           /* 最小余白 */
-  --spacing-sm: 8px;           /* 小余白 */
-  --spacing-base: 12px;        /* 標準余白 */
-  --spacing-lg: 16px;          /* 大余白 */
-  --spacing-xl: 24px;          /* 最大余白 */
-}
-```
-
-## 見出し階層
-
-### H1要素（ページタイトル）
-```css
-.page-title {
-  font-size: var(--font-size-xxl);  /* 20px */
-  font-weight: bold;
-  margin: 0 0 var(--spacing-base) 0;
-  color: var(--gray-800);
-  line-height: var(--line-height-tight);
-}
-```
-
-### セクション見出し
-```css
-.section-title {
-  font-size: var(--font-size-lg);   /* 16px */
-  font-weight: normal;
-  margin: 0 0 var(--spacing-sm) 0;
-  color: var(--gray-700);
-  line-height: var(--line-height-tight);
-}
-```
-
-## 色彩統一ルール
-
-### 基本カラーパレット
-```css
-:root {
-  /* カラーパレット - 調和の取れた色調 */
-  --primary-color: #5a6c7d;      /* メインカラー */
-  --secondary-color: #6c757d;    /* セカンダリカラー */
-  --success-color: #4a7c59;      /* 成功・実行 */
-  --danger-color: #c85450;       /* 危険・削除 */
-  --warning-color: #d4a843;      /* 警告 */
-  --info-color: #5a9aa8;         /* 情報 */
-  
-  /* グレースケール */
-  --gray-100: #f8f9fa;
-  --gray-200: #e9ecef;
-  --gray-300: #dee2e6;
-  --gray-400: #ced4da;
-  --gray-500: #adb5bd;
-  --gray-600: #6c757d;
-  --gray-700: #495057;
-  --gray-800: #343a40;
-  --gray-900: #212529;
-}
-```
-
-### 使用ガイドライン
-- **青色系の禁止**: `#007bff`, `#3498db` などの青色は使用禁止
-- **統一された色調**: `--primary-color` ベースの落ち着いた色調
-- **アクセシビリティ**: 十分なコントラスト比を確保
-
-## フォーム設計
-
-### 基本構造
+#### 標準構造
 ```html
-<div class="form-section">
-  <label for="input-id">ラベル:</label>
-  <input type="text" id="input-id" />
+<div class="file-list-container">
+    <table class="file-table">
+        <!-- 表内容 -->
+    </table>
+    <div class="pagination-container">
+        <!-- ページネーション内容 -->
+    </div>
 </div>
 ```
 
-### スタイル適用
-```css
-.form-section {
-  display: flex;
-  align-items: center;
-  margin-bottom: var(--spacing-xs);  /* 4px */
-  line-height: var(--line-height-tight);
-}
+### 4. CSS組織化方針
 
-.form-section label {
-  min-width: 120px;
-  flex-shrink: 0;
-  font-weight: normal;
-  font-size: var(--font-size-base);
-}
-```
+#### ファイル構成
+- `main.css`: 共通スタイル・基本設定
+- `[page].css`: ページ固有のスタイル
+- `components.css`: 再利用可能コンポーネント
 
-## レイアウト統一
+#### CSS優先順位
+1. **!importantの回避**: 可能な限り使用しない
+2. **詳細度による制御**: クラス名の組み合わせで優先度調整
+3. **読み込み順序**: 共通CSS → ページ固有CSS
 
-### コンテナ高さ
-```css
-#app-container,
-#try-ocr-container {
-  height: 100vh;  /* 余白なし */
-  display: flex;
-  flex-direction: column;
-}
-```
+### 5. レスポンシブ対応
 
-### パネル構造
-```css
-.panel {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-```
+#### ブレークポイント
+- デスクトップ: 1200px以上
+- タブレット: 768px - 1199px
+- モバイル: 767px以下
 
-## 実装ガイドライン
+#### パネルレイアウト
+- デスクトップ: 左右分割表示
+- タブレット以下: 縦積み表示
 
-### CSS変数の優先使用
-❌ **悪い例**
-```css
-.my-input {
-  font-size: 14px;
-  height: 28px;
-}
-```
+### 6. 色彩・タイポグラフィ
 
-✅ **良い例**
-```css
-.my-input {
-  font-size: var(--control-font-size);
-  height: var(--control-height);
-}
-```
+#### 基本色
+- プライマリ: `#007bff`
+- 背景: `#f8f9fa`
+- 境界線: `#e9ecef`、`#ddd`
+- テキスト: `#333`、`#666`
 
-### !important の適切な使用
-- 個別CSSファイルでの上書き防止に限定使用
-- CSS変数の値変更を優先
+#### フォント
+- 基本: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`
+- サイズ: 12px（表内）、13-16px（一般UI）
 
-### メンテナンス性の確保
-1. **集中管理**: common.cssのCSS変数で統一
-2. **一貫性**: 全ページで同じ変数を使用
-3. **拡張性**: 新しいコンポーネントも変数を使用
+### 7. 状態表示
 
-## ファイル構成
+#### ステータスバッジ
+- 統一パディング: `2px 8px`
+- 角丸: `border-radius: 12px`
+- 最小幅: `60px`
+- フォントサイズ: `11px`
 
-### CSS階層
-```
-app/static/css/
-├── common.css      # 統一ルール・CSS変数
-├── base.css        # 全体レイアウト
-├── chat.css        # チャット固有
-├── ingest.css      # データ整形固有
-└── try_ocr.css     # OCR比較固有
-```
+#### ホバー効果
+- 背景色変更: `#f8f9fa`
+- トランジション: `all 0.2s ease`
 
-### 優先順位
-1. `common.css` - 最高優先度
-2. `base.css` - 全体レイアウト
-3. 個別CSS - ページ固有の調整
+### 8. アクセシビリティ
 
-## 品質チェックリスト
+#### 基本要件
+- キーボードナビゲーション対応
+- 適切なコントラスト比確保
+- スクリーンリーダー対応のラベル
 
-### デザイン統一性
-- [ ] フォントサイズがCSS変数を使用している
-- [ ] コントロール高さが統一されている
-- [ ] 色調が統一カラーパレットを使用している
-- [ ] 行間・余白が統一ルールに従っている
+#### フォーカス管理
+- 可視的なフォーカスインジケーター
+- 論理的なタブオーダー
 
-### 機能性
-- [ ] 全ブラウザで表示が統一されている
-- [ ] レスポンシブ対応ができている
-- [ ] アクセシビリティが確保されている
+### 9. パフォーマンス考慮
 
-### 保守性
-- [ ] CSS変数による集中管理ができている
-- [ ] コードの重複がない
-- [ ] 命名規則が統一されている
+#### CSS最適化
+- 不要なセレクターの削除
+- 効率的なセレクター使用
+- CSS Minificationの適用
+
+#### 画像・アイコン
+- SVGアイコンの使用
+- 適切なサイズ設定
+- 遅延読み込み対応
+
+### 10. 実装時の注意点
+
+#### 共通ルール
+1. **データ登録ページとファイル管理ページの統一**: 同じ構造・スタイルを使用
+2. **マージン・パディングの統一**: `0`を基本とし、必要な箇所のみ設定
+3. **Flexboxの適切な使用**: `flex: 1`で可変領域、`flex-shrink: 0`で固定領域
+4. **ブラウザテスト**: Chrome、Edge、Firefox での動作確認必須
+
+#### 避けるべき事項
+- `!important`の多用
+- インラインスタイルの使用
+- 固定ピクセル値での高さ指定（calc()は除く）
+- ブラウザ固有のプレフィックス依存
+
+---
+
+## 更新履歴
+- 2024/01/XX: 初版作成（表レイアウト標準化対応）

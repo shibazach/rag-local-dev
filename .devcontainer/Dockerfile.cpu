@@ -32,7 +32,6 @@ RUN pip install --no-cache-dir \
 # 残りの requirements を一括インストール
 RUN pip install --no-cache-dir \
       -r /tmp/requirements.txt && \
-    pip install --no-cache-dir streamlit && \
     pip install --no-cache-dir \
       torch=="${TorchVer}" \
       torchvision=="${TorchVisionVer}" \
@@ -45,8 +44,8 @@ RUN mkdir -p src scripts/views && \
           scripts/__init__.py \
           scripts/views/__init__.py
 
-# REM: Streamlit ポート公開（必要に応じてアンコメント）
-# EXPOSE 8501
+# REM: FastAPI ポート公開（必要に応じてアンコメント）
+# EXPOSE 8000
 
 # REM: デフォルト起動コマンド（必要に応じてアンコメント）
-# CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# CMD ["python3", "run_app.py", "--app", "old"]

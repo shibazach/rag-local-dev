@@ -17,7 +17,9 @@
     "PYTHONPATH": "/workspace"
   },
   "forwardPorts": [
-    8501
+    8000,
+    8002,
+    8003
   ],
   "runArgs": [
     "--gpus","all",                // 既存の GPU オプションはそのまま

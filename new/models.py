@@ -1,17 +1,48 @@
 # new/models.py
-# データベースモデル定義
+# データベースモデル定義（旧系3テーブル構成に準拠）
 
 import uuid
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, JSON
+from sqlalchemy import Column, Integer, String, Text, DateTime, Float, Boolean, JSON, LargeBinary, ForeignKey
 from sqlalchemy.sql import func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 
 from .database import Base
 
+class FilesBlob(Base):
+    """ファイルバイナリ格納テーブル（主テーブル）"""
+    __tablename__ = "files_blob"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    checksum = Column(String, nullable=False, unique=True)
+    blob_data = Column(LargeBinary, nullable=False)
+    stored_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class FilesMeta(Base):
+    """ファイルメタ情報テーブル（1:1対応）"""
+    __tablename__ = "files_meta"
+    
+    blob_id = Column(UUID(as_uuid=True), ForeignKey("files_blob.id", ondelete="CASCADE"), primary_key=True)
+    file_name = Column(String, nullable=False)
+    mime_type = Column(String, nullable=False)
+    size = Column(Integer, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class FilesText(Base):
+    """ファイルテキスト格納テーブル（1:1対応）"""
+    __tablename__ = "files_text"
+    
+    blob_id = Column(UUID(as_uuid=True), ForeignKey("files_blob.id", ondelete="CASCADE"), primary_key=True)
+    raw_text = Column(Text)
+    refined_text = Column(Text)
+    quality_score = Column(Float)
+    tags = Column(ARRAY(String), server_default='{}')
+    updated_at = Column(DateTime(timezone=True), server_default=func.now())
+
+# ========== 旧compatibilityモデル（段階移行用） ==========
 class File(Base):
-    """ファイル管理テーブル"""
+    """ファイル管理テーブル（旧compatibility用）"""
     __tablename__ = "files"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
@@ -26,6 +57,13 @@ class File(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     note = Column(Text)
     file_metadata = Column(JSON)  # ファイルのメタデータ（ページ数、言語等）
+    
+    @property
+    def page_count(self) -> Optional[int]:
+        """ファイルの頁数を取得"""
+        if self.file_metadata and isinstance(self.file_metadata, dict):
+            return self.file_metadata.get('page_count')
+        return None
 
 class FileText(Base):
     """ファイルテキスト管理テーブル"""

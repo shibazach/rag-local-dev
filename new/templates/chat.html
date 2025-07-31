@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
 {% block title %}チャット - R&D RAGシステム{% endblock %}
 
@@ -48,24 +48,32 @@ document.addEventListener('DOMContentLoaded', function() {
 // セッション一覧を読み込み
 async function loadSessions() {
     try {
-        showLoading();
+        if (window.Utils) {
+            window.Utils.showLoading();
+        }
+        
         const response = await fetch('/api/chat/sessions', {
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            }
+            credentials: 'include'
         });
         
         if (response.ok) {
-            const sessions = await response.json();
+            const data = await response.json();
+            sessions = data.sessions || [];
             displaySessions(sessions);
         } else {
-            showNotification('セッションの読み込みに失敗しました', 'error');
+            if (window.Utils) {
+                window.Utils.showNotification('セッションの読み込みに失敗しました', 'error');
+            }
         }
     } catch (error) {
         console.error('Error loading sessions:', error);
-        showNotification('セッションの読み込みに失敗しました', 'error');
+        if (window.Utils) {
+            window.Utils.showNotification('セッションの読み込みに失敗しました', 'error');
+        }
     } finally {
-        hideLoading();
+        if (window.Utils) {
+            window.Utils.hideLoading();
+        }
     }
 }
 
@@ -90,58 +98,78 @@ function displaySessions(sessions) {
 // 新しいセッションを作成
 async function createSession() {
     try {
-        showLoading();
+        if (window.Utils) {
+            window.Utils.showLoading();
+        }
+        
         const response = await fetch('/api/chat/sessions', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                title: '新しいセッション'
-            })
+                name: `セッション ${new Date().toLocaleString('ja-JP')}`
+            }),
+            credentials: 'include'
         });
         
         if (response.ok) {
-            const session = await response.json();
-            openSession(session.id);
+            const data = await response.json();
+            currentSessionId = data.session.id;
+            await loadSessions();
+            openSession(currentSessionId);
         } else {
-            showNotification('セッションの作成に失敗しました', 'error');
+            if (window.Utils) {
+                window.Utils.showNotification('セッションの作成に失敗しました', 'error');
+            }
         }
     } catch (error) {
         console.error('Error creating session:', error);
-        showNotification('セッションの作成に失敗しました', 'error');
+        if (window.Utils) {
+            window.Utils.showNotification('セッションの作成に失敗しました', 'error');
+        }
     } finally {
-        hideLoading();
+        if (window.Utils) {
+            window.Utils.hideLoading();
+        }
     }
 }
 
 // セッションを開く
 async function openSession(sessionId) {
-    currentSessionId = sessionId;
-    
     try {
-        showLoading();
-        const response = await fetch(`/api/chat/sessions/${sessionId}`, {
-            headers: {
-                'Authorization': `Bearer ${getAuthToken()}`
-            }
+        if (window.Utils) {
+            window.Utils.showLoading();
+        }
+        
+        const response = await fetch(`/api/chat/sessions/${sessionId}/messages`, {
+            credentials: 'include'
         });
         
         if (response.ok) {
-            const session = await response.json();
-            document.getElementById('current-session-title').textContent = session.title || '無題のセッション';
-            loadMessages(sessionId);
-            document.getElementById('chat-messages').style.display = 'block';
+            const data = await response.json();
+            messages = data.messages || [];
+            currentSessionId = sessionId;
+            displayMessages(messages);
+            
+            // セッション表示を切り替え
+            document.querySelector('.chat-sessions').style.display = 'none';
+            document.querySelector('.chat-interface').style.display = 'flex';
             document.querySelector('.chat-sessions').style.display = 'none';
         } else {
-            showNotification('セッションの読み込みに失敗しました', 'error');
+            if (window.Utils) {
+                window.Utils.showNotification('セッションの読み込みに失敗しました', 'error');
+            }
         }
     } catch (error) {
         console.error('Error opening session:', error);
-        showNotification('セッションの読み込みに失敗しました', 'error');
+        if (window.Utils) {
+            window.Utils.showNotification('セッションの読み込みに失敗しました', 'error');
+        }
     } finally {
-        hideLoading();
+        if (window.Utils) {
+            window.Utils.hideLoading();
+        }
     }
 }
 
@@ -191,7 +219,9 @@ async function sendMessage() {
     if (!message || !currentSessionId) return;
     
     try {
-        showLoading();
+        if (window.Utils) {
+            window.Utils.showLoading();
+        }
         
         // ユーザーメッセージを表示
         const messagesContainer = document.getElementById('messages-container');
@@ -246,7 +276,9 @@ async function sendMessage() {
         console.error('Error sending message:', error);
         showNotification('メッセージの送信に失敗しました', 'error');
     } finally {
-        hideLoading();
+        if (window.Utils) {
+            window.Utils.hideLoading();
+        }
     }
 }
 

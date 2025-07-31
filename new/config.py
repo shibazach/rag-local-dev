@@ -72,6 +72,11 @@ SESSION_COOKIE_SAMESITE = "lax"
 LOGGER = logging.getLogger("new_rag")
 LOGGER.setLevel(logging.WARNING)  # WARNING以上のみ出力
 
+# uvicornログの抑制
+logging.getLogger("uvicorn").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.error").setLevel(logging.WARNING)
+
 # ログディレクトリの作成
 LOG_DIR.mkdir(exist_ok=True)
 

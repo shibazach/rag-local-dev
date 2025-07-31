@@ -12,6 +12,7 @@ from sqlalchemy import and_, or_
 from ..models import File as FileModel, FileText as FileTextModel
 from ..config import LOGGER, INPUT_DIR
 from ..utils.file_converter import FileConverter
+from ..db_handler import insert_file_blob_with_details
 
 class FileService:
     """ファイルサービス"""
@@ -37,7 +38,8 @@ class FileService:
                     "created_at": file.created_at.isoformat() if file.created_at else None,
                     "updated_at": file.updated_at.isoformat() if file.updated_at else None,
                     "note": file.note,
-                    "file_metadata": file.file_metadata
+                    "file_metadata": file.file_metadata,
+                    "page_count": file.page_count
                 }
                 for file in files
             ]
@@ -64,7 +66,8 @@ class FileService:
                 "created_at": file.created_at.isoformat() if file.created_at else None,
                 "updated_at": file.updated_at.isoformat() if file.updated_at else None,
                 "note": file.note,
-                "file_metadata": file.file_metadata
+                "file_metadata": file.file_metadata,
+                "page_count": file.page_count
             }
         except Exception as e:
             LOGGER.error(f"ファイル詳細取得エラー: {e}")
@@ -98,105 +101,50 @@ class FileService:
     def save_file(self, db: Session, file_data: Dict[str, Any]) -> FileModel:
         """ファイル情報を保存（完全版：PDF変換→テキスト抽出→ベクトル化）"""
         try:
-            LOGGER.info("=" * 50)
-            LOGGER.info("🚀 FileService.save_file 完全版開始")
-            LOGGER.info(f"📋 受信データ: {file_data}")
+            # ファイルパスからファイルタイプを判定
+            file_path = Path(file_data["file_path"])
+            file_type = file_path.suffix.lower().lstrip('.')  # 小文字で、ドットを除去
             
-            # 元ファイルのパス
-            original_path = Path(file_data["file_path"])
-            LOGGER.info(f"📁 元ファイルパス: {original_path}")
-            LOGGER.info(f"🔍 ファイル存在確認: {original_path.exists()}")
+            # ファイルメタデータの初期化
+            file_metadata = {}
             
-            # ステップ1: 基本的なファイル保存
-            LOGGER.info("📝 ステップ1: ファイル情報をDBに保存")
-            file = FileModel(**file_data)
+            # PDFファイルの場合、頁数を取得
+            if file_type == "pdf":
+                try:
+                    import fitz  # PyMuPDF
+                    doc = fitz.open(file_path)
+                    page_count = len(doc)
+                    doc.close()
+                    file_metadata["page_count"] = page_count
+                    LOGGER.info(f"PDF頁数取得: {file_path.name} - {page_count}頁")
+                except ImportError:
+                    LOGGER.warning("PyMuPDFがインストールされていません。頁数は取得できません。")
+                except Exception as e:
+                    LOGGER.error(f"PDF頁数取得エラー: {e}")
+            
+            # データベースに保存
+            file = FileModel(
+                file_name=file_data["file_name"],
+                file_path=file_data["file_path"],
+                file_size=file_data["file_size"],
+                file_type=file_type,
+                user_id=file_data["user_id"],
+                status=file_data.get("status", "uploaded"),
+                processing_stage=file_data.get("processing_stage", "uploaded"),
+                note=file_data.get("note"),
+                file_metadata=file_metadata
+            )
+            
             db.add(file)
             db.commit()
             db.refresh(file)
-            LOGGER.info(f"✅ ファイル保存完了: ID={file.id}")
             
-            # ステップ2: ファイル形式判定と処理
-            LOGGER.info("🔄 ステップ2: ファイル形式判定と処理開始")
-            file_ext = original_path.suffix.lower()
-            
-            # テキストファイルの場合はPDF変換をスキップ
-            if file_ext in ['.txt', '.json', '.csv', '.md']:
-                LOGGER.info(f"📝 テキストファイル: {original_path.name} - PDF変換スキップ")
-                pdf_path = original_path
-            else:
-                # その他のファイルはPDF変換を試行
-                LOGGER.info(f"📄 非テキストファイル: {original_path.name} - PDF変換試行")
-                pdf_path = original_path.parent / f"{original_path.stem}_converted.pdf"
-                
-                if FileConverter.is_supported_format(original_path.name):
-                    if FileConverter.convert_to_pdf(original_path, pdf_path):
-                        LOGGER.info(f"✅ PDF変換成功: {pdf_path}")
-                        # PDFパスを更新
-                        file.file_path = str(pdf_path)
-                        file.file_type = "PDF"
-                        db.commit()
-                    else:
-                        LOGGER.warning("⚠️ PDF変換失敗、元ファイルを使用")
-                        pdf_path = original_path
-                else:
-                    LOGGER.warning(f"⚠️ 未対応形式: {original_path.name}")
-                    pdf_path = original_path
-            
-            # ステップ3: テキスト抽出（即座実行）
-            LOGGER.info("📖 ステップ3: テキスト抽出開始（即座実行）")
-            
-            # テキストファイルの場合は即座にテキスト抽出
-            if file_ext in ['.txt', '.json', '.csv', '.md']:
-                LOGGER.info(f"📝 テキストファイル即座処理: {original_path.name}")
-                text_content = FileConverter._extract_text_direct(original_path)
-                
-                if text_content:
-                    LOGGER.info(f"✅ テキスト抽出成功: {len(text_content)}文字")
-                    # テキストをDBに保存
-                    self.save_file_text(db, file.id, text_content)
-                    file.status = "text_extracted"
-                else:
-                    LOGGER.warning("⚠️ テキスト抽出失敗")
-                    file.status = "text_extraction_failed"
-                
-                db.commit()
-                LOGGER.info(f"✅ テキスト保存完了: ステータス={file.status}")
-            else:
-                # その他のファイルは後処理対象としてマーク
-                LOGGER.info(f"📄 後処理対象ファイル: {original_path.name}")
-                file.status = "pending_processing"
-                db.commit()
-                LOGGER.info(f"✅ 後処理対象としてマーク: ステータス={file.status}")
-            
-            # ステップ4: ベクトル化（将来的に実装）
-            LOGGER.info("🧠 ステップ4: ベクトル化（将来実装予定）")
-            # TODO: テキストをチャンクに分割してベクトル化
-            
-            # 元ファイルがPDFでない場合は削除
-            if original_path != pdf_path and original_path.exists():
-                try:
-                    original_path.unlink()
-                    LOGGER.info(f"🗑️ 元ファイル削除: {original_path}")
-                except Exception as e:
-                    LOGGER.warning(f"⚠️ 元ファイル削除失敗: {e}")
-            
-            LOGGER.info("=" * 50)
-            LOGGER.info(f"🎉 ファイル処理完了: ID={file.id}, ステータス={file.status}")
-            LOGGER.info("=" * 50)
+            LOGGER.info(f"ファイル保存完了: {file.file_name} (ID: {file.id})")
             return file
-                
-        except Exception as e:
-            LOGGER.error("=" * 50)
-            LOGGER.error("💥 FileService.save_file エラー")
-            LOGGER.error(f"❌ エラー内容: {e}")
-            LOGGER.error(f"📋 エラータイプ: {type(e).__name__}")
-            import traceback
-            LOGGER.error(f"📋 詳細スタックトレース:")
-            LOGGER.error(traceback.format_exc())
-            LOGGER.error("=" * 50)
             
+        except Exception as e:
             db.rollback()
-            LOGGER.error("🔄 データベースロールバック完了")
+            LOGGER.error(f"ファイル保存エラー: {e}")
             raise
     
     def save_file_text(self, db: Session, file_id: str, text_content: str) -> bool:
@@ -281,21 +229,40 @@ class FileService:
             return None
     
     def upload_folder(self, db: Session, folder_path: str, include_subfolders: bool, user_id: int) -> List[Dict[str, Any]]:
-        """フォルダ内のファイルを一括アップロード"""
+        """フォルダ内のファイルを一括アップロード（新DB設計対応）"""
+        from ..db_handler import insert_file_blob_only
+        import mimetypes
+        
         try:
-            folder_dir = INPUT_DIR / folder_path
+            # パスの正規化
+            if folder_path.startswith('/'):
+                folder_dir = Path(folder_path)
+            else:
+                folder_dir = INPUT_DIR / folder_path
+                
             if not folder_dir.exists():
                 raise ValueError("指定されたフォルダが見つかりません")
             
             results = []
+            supported_exts = {'.pdf', '.txt', '.doc', '.docx', '.jpg', '.jpeg', '.png'}
+            
             # サブフォルダ処理の選択
             if include_subfolders:
-                file_paths = folder_dir.rglob("*")
+                file_paths = [f for f in folder_dir.rglob("*") if f.is_file()]
             else:
-                file_paths = folder_dir.iterdir()
+                file_paths = [f for f in folder_dir.iterdir() if f.is_file()]
             
             for file_path in file_paths:
-                if file_path.is_file():
+                try:
+                    # 拡張子チェック
+                    if file_path.suffix.lower() not in supported_exts:
+                        results.append({
+                            "filename": file_path.name,
+                            "success": False,
+                            "error": f"サポートされていないファイル形式: {file_path.suffix}"
+                        })
+                        continue
+                    
                     # ファイルサイズチェック
                     file_size = file_path.stat().st_size
                     if file_size > 50 * 1024 * 1024:
@@ -306,32 +273,35 @@ class FileService:
                         })
                         continue
                     
-                    # 既存ファイルのチェック（データベース内）
-                    existing_file = self.get_file_by_path(db, str(file_path))
-                    if existing_file:
-                        results.append({
-                            "filename": file_path.name,
-                            "success": False,
-                            "error": "ファイルは既にアップロード済みです"
-                        })
-                        continue
+                    # ファイルデータを読み込み
+                    with open(file_path, 'rb') as f:
+                        file_data = f.read()
                     
-                    # データベースに記録
-                    file_data = {
-                        "file_name": file_path.name,
-                        "file_path": str(file_path),
-                        "file_size": file_size,
-                        "status": "uploaded",
-                        "user_id": user_id
-                    }
+                    # MIMEタイプ推定
+                    mime_type = mimetypes.guess_type(file_path.name)[0]
                     
-                    saved_file = self.save_file(db, file_data)
+                    # 新DB設計でファイルを保存（詳細情報付き）
+                    result = insert_file_blob_with_details(
+                        file_name=file_path.name,
+                        file_data=file_data,
+                        mime_type=mime_type
+                    )
                     
                     results.append({
                         "filename": file_path.name,
                         "success": True,
-                        "file_id": str(saved_file.id),
-                        "status": saved_file.status
+                        "id": result["blob_id"],
+                        "size": file_size,
+                        "is_existing": result["is_existing"],
+                        "file_info": result["file_info"],
+                        "message": "既存ファイル" if result["is_existing"] else "新規保存完了"
+                    })
+                    
+                except Exception as file_error:
+                    results.append({
+                        "filename": file_path.name,
+                        "success": False,
+                        "error": f"ファイル処理エラー: {str(file_error)}"
                     })
             
             return results

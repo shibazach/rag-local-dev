@@ -12,7 +12,8 @@ from .config import (
     DEBUG_MODE, CORS_ORIGINS, SECRET_KEY, 
     SESSION_COOKIE_NAME, SESSION_COOKIE_SECURE,
     SESSION_COOKIE_HTTPONLY, SESSION_COOKIE_SAMESITE,
-    STATIC_DIR, TEMPLATES_DIR, API_PREFIX, LOGGER
+    STATIC_DIR, TEMPLATES_DIR, API_PREFIX, LOGGER,
+    INPUT_DIR, OUTPUT_DIR
 )
 from .database import init_db
 from .auth import get_current_user
@@ -41,7 +42,7 @@ async def startup_event():
     """アプリケーション起動時の処理"""
     try:
         # データベース初期化
-        await init_database()
+        init_db()
         
         # 必要なディレクトリを作成
         INPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -87,7 +88,7 @@ async def add_security_headers(request: Request, call_next):
     
     # セキュリティヘッダー設定
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
+    # X-Frame-Optionsを削除（PDFプレビュー用）
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     
@@ -111,13 +112,20 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # ルーター登録
-from .routes import api_router, ui_router
+from .routes import api_router, ui_router, ingest_router
+from .routes.admin import router as admin_router
 
 # APIルーター（認証付き）
 app.include_router(api_router, prefix=API_PREFIX, tags=["API"])
 
 # UIルーター（認証不要）
 app.include_router(ui_router, tags=["UI"])
+
+# インジェストルーター（認証付き）
+app.include_router(ingest_router, tags=["Ingest"])
+
+# 管理画面ルーター（管理者認証付き）
+app.include_router(admin_router, tags=["Admin"])
 
 # ヘルスチェック
 @app.get("/health")

@@ -1,0 +1,95 @@
+{% extends 'base_new.html' %}
+
+{% block content %}
+<div class="register-container">
+  <!-- 左ペイン -->
+  <div class="left-pane">
+    <!-- 上: 設定フォーム -->
+    <section class="settings-section">
+      <h3>データ登録設定</h3>
+      <form id="register-settings" onsubmit="event.preventDefault(); startProcessing();">
+        <div class="form-row">
+          <label for="prompt">精製プロンプト</label>
+          <select id="prompt" name="prompt">
+            <option value="default">デフォルト</option>
+            <option value="short">短め</option>
+            <option value="long">詳細</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>埋め込みモデル</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" value="intfloat/e5-large-v2"> intfloat/e5-large-v2</label>
+            <label><input type="checkbox" value="intfloat/e5-small-v2"> intfloat/e5-small-v2</label>
+            <label><input type="checkbox" value="nomic-embed-text"> nomic-embed-text</label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label>オプション</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" id="overwrite" value="1"> 既存データを上書き</label>
+          </div>
+        </div>
+
+        <div class="form-row inline">
+          <label for="quality">品質しきい値</label>
+          <input type="number" id="quality" value="0.0" min="0" max="1" step="0.1">
+        </div>
+
+        <div class="form-row inline">
+          <label for="llm_timeout">LLMタイムアウト (秒)</label>
+          <input type="number" id="llm_timeout" value="300" min="30">
+        </div>
+
+        <button id="start-btn" class="btn btn-primary" type="submit">処理開始</button>
+      </form>
+    </section>
+
+    <!-- 下: ログ -->
+    <section class="log-section">
+      <h3>処理ログ</h3>
+      <pre id="process-log" class="log-area"></pre>
+    </section>
+  </div>
+
+  <!-- 右ペイン: ファイル一覧 -->
+  <div class="right-pane">
+    <div class="file-toolbar">
+      <select id="status-filter" onchange="filterFiles();">
+        <option value="">すべてのステータス</option>
+        <option value="pending_processing">未処理</option>
+        <option value="processing">処理中</option>
+        <option value="text_extracted">未整形</option>
+        <option value="text_refined">未ベクトル化</option>
+        <option value="processed">処理完了</option>
+        <option value="error">エラー</option>
+      </select>
+      <button class="btn btn-sm" onclick="selectAll(true);">全選択</button>
+      <button class="btn btn-sm" onclick="selectAll(false);">全解除</button>
+    </div>
+    <table class="files-table">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="master-check" onclick="toggleMaster(this);"></th>
+          <th>ファイル名</th>
+          <th>ステータス</th>
+          <th>ページ数</th>
+        </tr>
+      </thead>
+      <tbody id="files-tbody"></tbody>
+    </table>
+    <div id="no-files" style="display:none; text-align:center; padding:20px;">ファイルがありません</div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/register.css') }}?v=1">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', path='/js/register.js') }}?v=1" defer></script>
+{% endblock %}

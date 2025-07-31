@@ -31,9 +31,9 @@ async def chat_page(request: Request):
 
 @router.get("/files", response_class=HTMLResponse)
 async def files_page(request: Request):
-    """ファイル管理ページ（admin権限必要）"""
+    """ファイル管理ページ（認証必要）"""
     user = get_optional_user(request)
-    if not user or user.role != 'admin':
+    if not user:
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     return templates.TemplateResponse("files.html", {"request": request})
 
@@ -51,4 +51,12 @@ async def admin_page(request: Request):
     user = get_optional_user(request)
     if not user or user.role != 'admin':
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
-    return templates.TemplateResponse("admin.html", {"request": request}) 
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@router.get("/data-registration", response_class=HTMLResponse)
+async def data_registration_page(request: Request):
+    """データ登録ページ（admin権限必要）"""
+    user = get_optional_user(request)
+    if not user or user.role != 'admin':
+        return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
+    return templates.TemplateResponse("data_registration.html", {"request": request}) 

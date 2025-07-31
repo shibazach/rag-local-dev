@@ -1,0 +1,906 @@
+/* データ登録画面専用CSS */
+.data-registration-container {
+    display: grid;
+    grid-template-columns: 3fr 3fr 4fr; /* 3:3:4 の横分割 */
+    grid-template-rows: 1fr 1fr; /* 左ペインを上下に分割 */
+    gap: 6px; /* 横ギャップを最小に */
+    height: calc(100vh - 95px); /* 5px余白を追加 */
+    padding: 8px;
+    overflow: hidden; /* 全体のスクロールを無効化 */
+}
+
+.settings-panel {
+    grid-row: 1 / 2;
+    grid-column: 1 / 2; /* 左上 */
+    min-height: 405px; /* 5px伸ばす */
+}
+
+.file-selection-panel {
+    grid-row: 1 / 3; /* 全体の右側 */
+    grid-column: 3 / 4;
+    max-height: calc(100vh - 130px); /* さらに5px伸ばす */
+}
+
+.log-panel {
+    grid-row: 1 / 3; /* 中央全体 */
+    grid-column: 2 / 3;
+    min-height: 305px; /* 5px伸ばす */
+}
+
+.status-panel {
+    grid-row: 2 / 3;
+    grid-column: 1 / 2; /* 左下 */
+    min-height: 205px; /* 5px伸ばす */
+    margin-top: 6px; /* 上部余白をさらに削減 */
+    padding-bottom: 8px; /* 統計ボックス下に余白を追加 */
+}
+
+/* パネル共通スタイル */
+.settings-panel, .file-selection-panel, .log-panel, .status-panel {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: 100%;
+}
+
+/* 中央パネル（処理状況）の高さ調整 */
+.status-panel {
+    min-height: auto; /* 自動調整に変更 */
+}
+
+.panel-header {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* 水平レイアウト専用スタイル */
+.panel-header.horizontal-layout {
+    justify-content: flex-start;
+    gap: 12px;
+    flex-wrap: nowrap;
+    align-items: center;
+    padding-right: 8px;
+}
+
+.panel-header.horizontal-layout h3 {
+    flex-shrink: 0;
+    margin: 0;
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.panel-header.horizontal-layout .compact-select {
+    flex-shrink: 0;
+    min-width: 180px;
+    max-width: 220px;
+    height: 32px;
+    font-size: 12px;
+}
+
+.panel-header.horizontal-layout .compact-input {
+    flex: 1 1 auto;
+    min-width: 120px;
+    max-width: none;
+    height: 32px;
+    font-size: 12px;
+}
+
+.panel-header.horizontal-layout .selection-count {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-size: 12px;
+    color: #666;
+    white-space: nowrap;
+    padding: 0 8px;
+    min-width: 80px;
+    text-align: right;
+}
+
+.panel-header-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.panel-content {
+    flex: 1;
+    padding: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ファイル選択と処理ログの余白ゼロ化 */
+.file-selection-panel .panel-content {
+    padding: 0 !important;
+}
+
+.log-panel .panel-content {
+    padding: 0 !important;
+}
+
+/* ページネーションスタイル - Files画面と統一 */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 6px; /* ファイル頁と統一 */
+    border-top: 1px solid #e9ecef;
+    background: #f8f9fa;
+    flex-shrink: 0;
+    margin-top: 0; /* 上部余白を削除 */
+    border-radius: 0 0 4px 4px;
+    min-height: 32px; /* 最小高さを削減 */
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 4px; /* 間隔を削減 */
+    font-size: 12px;
+    color: #666;
+    margin-left: 2px; /* 左余白を削減 */
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    gap: 4px; /* 間隔を削減 */
+}
+
+.pagination-nav button {
+    min-width: 32px !important; /* サイズを戻す */
+    height: 32px !important; /* サイズを戻す */
+    padding: 0 !important;
+    font-size: 12px !important;
+    border: 1px solid #ddd !important;
+    background: white !important;
+    cursor: pointer;
+    border-radius: 4px !important;
+    transition: all 0.2s ease;
+}
+
+.pagination-nav button:hover:not(:disabled) {
+    background: #007bff !important;
+    color: white !important;
+    border-color: #007bff !important;
+}
+
+.pagination-nav button:disabled {
+    opacity: 0.3 !important;
+    cursor: not-allowed !important;
+}
+
+.pagination-nav #page-info {
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    min-width: 50px;
+    text-align: center;
+}
+
+.pagination-select {
+    font-size: 11px !important;
+    height: 28px !important; /* 高さを戻す */
+    width: 120px !important; /* 幅を拡大して見切れ防止 */
+    border: 1px solid #ddd !important;
+    border-radius: 3px !important;
+    padding: 0 4px !important;
+}
+
+/* 設定パネル */
+.setting-group {
+    margin-bottom: 16px;
+}
+
+.horizontal-group {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.setting-left {
+    flex: 1;
+}
+
+.setting-right {
+    flex: 1;
+}
+
+.compact-input {
+    width: 80px;
+}
+
+.compact-input-small {
+    width: 65px !important; /* 品質閾値用に適切なサイズに */
+    height: 28px !important; /* 高さも適切に */
+    font-size: 11px !important; /* フォントサイズも適切に */
+    text-align: right !important; /* 値は右寄せ */
+}
+
+.compact-input-small.timeout {
+    width: 70px !important; /* タイムアウト用に大きく */
+    text-align: left !important; /* 左寄せ */
+}
+
+/* 整形プロセスドロップダウンの幅を拡大 */
+.process-select-wide {
+    min-width: 320px !important; /* 埋め込みモデルの右端に揃える */
+}
+
+/* 使用モデルのインライン表示 */
+.model-display-inline {
+    color: #666;
+    font-size: 13px;
+    margin-top: 6px; /* 整形プロセスにより近づける */
+    margin-left: -180px; /* もっと左に移動して整形プロセスに近づける */
+}
+
+.model-display-inline span {
+    color: #888;
+    font-weight: normal;
+}
+
+/* モデル情報表示 */
+.model-info {
+    margin-top: 6px;
+    font-size: 11px;
+    color: #666;
+}
+
+/* 無効化されたオプション */
+select option:disabled {
+    color: #ccc !important;
+    background-color: #f9f9f9 !important;
+}
+
+/* モデル表示エリア */
+.model-display {
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+}
+
+.setting-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+    font-size: 13px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.model-group {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 8px;
+    background: #fafafa;
+}
+
+.model-category {
+    margin-bottom: 6px;
+}
+
+.model-category:last-child {
+    margin-bottom: 0;
+}
+
+.category-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 11px;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.category-inline {
+    font-weight: 600;
+    color: #666;
+    font-size: 14px; /* 文字サイズを揃える */
+    margin-right: 4px;
+}
+
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.checkbox-group label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+    font-size: 14px; /* 1段大きく */
+}
+
+.checkbox-group input[type="checkbox"] {
+    margin-right: 8px;
+    transform: scale(1.3); /* チェックボックスも1段大きく */
+}
+
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.btn {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: #0056b3;
+}
+
+.btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #ddd;
+    color: #333;
+}
+
+.btn-outline:hover {
+    background: #f8f9fa;
+}
+
+.btn-outline.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+}
+
+/* ファイル選択パネル */
+.selection-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selection-count {
+    font-size: 12px;
+    color: #666;
+    margin-left: auto;
+}
+
+.filter-controls {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.file-list-container {
+    flex: 1;
+    overflow: hidden;
+    border: none !important;
+    border-radius: 0 !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* データ登録専用テーブルスタイル - 最高優先度 */
+.data-registration-container .file-table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 12px !important;
+    table-layout: fixed !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    background: white !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.data-registration-container .file-table thead {
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+.data-registration-container .file-table tbody {
+    display: block !important;
+    overflow-y: auto !important;
+    flex: 1 !important;
+    width: 100% !important;
+    max-height: calc(100vh - 230px) !important; /* さらに5px伸ばす */
+}
+
+.data-registration-container .file-table tbody tr {
+    display: table !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+}
+
+/* データ行のカラム幅統一 - ヘッダーと完全一致 */
+.data-registration-container .file-table tbody tr td:nth-child(1) { width: 40px !important; }
+.data-registration-container .file-table tbody tr td:nth-child(2) { width: calc(100% - 290px) !important; }
+.data-registration-container .file-table tbody tr td:nth-child(3) { width: 50px !important; }
+.data-registration-container .file-table tbody tr td:nth-child(4) { width: 90px !important; }
+.data-registration-container .file-table tbody tr td:nth-child(5) { width: 110px !important; }
+
+/* スクロールバーのスタイル調整 */
+.file-table tbody::-webkit-scrollbar {
+    width: 8px;
+}
+
+.file-table tbody::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.file-table tbody::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.file-table tbody::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+.data-registration-container .file-table th {
+    background: #f8f9fa !important;
+    padding: 6px 8px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #ddd !important;
+    font-weight: 600 !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    font-size: 10px !important;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+    border-right: 1px solid #ddd !important;
+    position: relative !important;
+    user-select: none !important;
+}
+
+/* カラム幅変更用のリサイザー */
+.data-registration-container .file-table th .column-resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    background: transparent;
+    cursor: col-resize;
+    z-index: 999;
+}
+
+.data-registration-container .file-table th .column-resizer:hover,
+.data-registration-container .file-table th .column-resizer.active {
+    background: #007bff;
+}
+
+/* データ登録専用ページのカラム幅設定 - ステータス幅調整 */
+.data-registration-container .file-table th:nth-child(1) { width: 40px !important; }                     /* チェックボックス: 固定 */
+.data-registration-container .file-table th:nth-child(2) { width: calc(100% - 290px) !important; }      /* ファイル名: 残り全幅 */
+.data-registration-container .file-table th:nth-child(3) { width: 50px !important; }                     /* 頁数: 固定 */
+.data-registration-container .file-table th:nth-child(4) { width: 90px !important; }                     /* ステータス: 拡張 */
+.data-registration-container .file-table th:nth-child(5) { width: 110px !important; }                    /* サイズ: 拡張 */
+
+.data-registration-container .file-table td {
+    padding: 4px 8px !important;
+    border-bottom: 1px solid #eee !important;
+    vertical-align: top !important;
+    line-height: 1.3 !important;
+    font-size: 11px !important;
+}
+
+.file-table td:nth-child(4) {
+    text-align: right;
+}
+
+/* カラムヘッダー配置 - 最高優先度 */
+.data-registration-container .file-table th:nth-child(1) {
+    text-align: center !important;  /* チェックボックス列: センタリング */
+}
+
+.data-registration-container .file-table th:nth-child(2) {
+    text-align: center !important;  /* ファイル名タイトル: センタリング */
+}
+
+.data-registration-container .file-table th:nth-child(3) {
+    text-align: center !important;  /* 頁数タイトル: センタリング */
+}
+
+.data-registration-container .file-table th:nth-child(4) {
+    text-align: center !important;  /* ステータスタイトル: センタリング */
+}
+
+.data-registration-container .file-table th:nth-child(5) {
+    text-align: center !important;  /* 操作タイトル: センタリング */
+}
+
+/* データセル配置 - 最高優先度 */
+.data-registration-container .file-table td:nth-child(1) {
+    text-align: center !important;  /* チェックボックス: センタリング */
+}
+
+.data-registration-container .file-table td:nth-child(2) {
+    text-align: left !important;    /* ファイル名データ: 左寄せ */
+}
+
+.data-registration-container .file-table td:nth-child(3) {
+    text-align: right !important;  /* 頁数データ: 右寄せ */
+}
+
+.data-registration-container .file-table td:nth-child(4) {
+    text-align: center !important;  /* ステータスデータ: センタリング */
+}
+
+.data-registration-container .file-table td:nth-child(5) {
+    text-align: right !important;  /* サイズデータ: 右寄せ */
+    padding: 2px 4px !important;    /* コンパクトなパディング */
+}
+
+.file-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.file-table tbody tr.selected {
+    background: #e3f2fd;
+}
+
+.file-name {
+    font-weight: 500;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+/* 重複するステータスCSSは削除 - status_common.cssを使用 */
+
+/* ログパネル */
+.log-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* トグルスイッチ */
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 12px;
+    color: #666;
+}
+
+.toggle-switch input[type="checkbox"] {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    background-color: #ccc;
+    border-radius: 20px;
+    transition: 0.3s;
+    margin-right: 8px;
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background-color: #007bff;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(16px);
+}
+
+.toggle-label {
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.log-container {
+    height: 100%;
+    overflow-y: auto;
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 8px !important;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    margin: 0 !important;
+}
+
+.log-entry {
+    display: flex;
+    margin-bottom: 2px;
+    line-height: 1.3;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: background-color 0.2s;
+}
+
+.log-entry:hover {
+    background: #e9ecef;
+}
+
+.log-entry.clickable {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.log-time {
+    color: #666;
+    margin-right: 6px;
+    white-space: nowrap;
+    font-size: 10px;
+}
+
+.log-level {
+    margin-right: 6px;
+    font-weight: 600;
+    width: 45px;
+    white-space: nowrap;
+    font-size: 10px;
+}
+
+.log-level.INFO { color: #007bff; }
+.log-level.SUCCESS { color: #28a745; }
+.log-level.WARNING { color: #ffc107; }
+.log-level.ERROR { color: #dc3545; }
+
+.log-message {
+    flex: 1;
+}
+
+/* ステータスパネル */
+.progress-section {
+    margin-bottom: 16px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.progress-label {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.progress-text {
+    font-size: 11px;
+    color: #666;
+}
+
+.progress-bar {
+    height: 16px;
+    background: #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar.small {
+    height: 10px;
+    border-radius: 5px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    transition: width 0.3s ease;
+    border-radius: inherit;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 11px;
+    color: #666;
+}
+
+.current-task {
+    margin-bottom: 16px;
+}
+
+.current-task h4 {
+    margin: 0 0 6px 0;
+    font-size: 13px;
+}
+
+.task-file {
+    font-weight: 600;
+    margin-bottom: 3px;
+    font-size: 12px;
+}
+
+.task-stage {
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.stats-grid-horizontal {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 0 4px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    flex: 1; /* 横並びで均等に配置 */
+    min-width: 0; /* flexアイテムの縮小を許可 */
+}
+
+.stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #007bff;
+}
+
+.stat-label {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+}
+
+/* マルチモーダル設定 */
+.multimodal-group {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 8px;
+    background: #f9f9f9;
+}
+
+/* ダイアログ */
+.log-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.log-dialog {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 800px;
+    max-height: 80vh;
+    overflow: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.log-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eee;
+}
+
+.log-dialog-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #666;
+}
+
+.log-dialog-content {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 4px;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.prompt-info {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #666;
+}
+
+.prompt-info small {
+    display: block;
+    font-style: italic;
+}

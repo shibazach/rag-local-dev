@@ -206,22 +206,37 @@ class SearchService:
             return {}
     
     def get_search_statistics(self, db: Session) -> Dict[str, Any]:
-        """検索統計情報を取得"""
+        """検索統計情報を取得（新DB設計対応）"""
         try:
+            from sqlalchemy import text as sql_text
+            from ..db_handler import get_all_files
+            
+            # 新しいDBハンドラーからファイル一覧を取得
+            files = get_all_files()
+            
             # ファイル数
-            total_files = db.query(File).count()
+            total_files = len(files)
             
-            # 処理済みファイル数
-            processed_files = db.query(File).filter(File.status == "completed").count()
+            # 処理済みファイル数（files_textテーブルにデータがあるもの）
+            processed_files = len([f for f in files if f["status"] == "processed"])
             
-            # テキストチャンク数
-            total_chunks = db.query(Embedding).count()
+            # テキストチャンク数（embeddingsテーブルから取得）
+            total_chunks_query = db.execute(sql_text("SELECT COUNT(*) FROM embeddings"))
+            total_chunks = total_chunks_query.scalar() or 0
             
-            # 画像数
-            total_images = db.query(FileImage).count()
+            # 画像数（処理済みファイルから推定 - 実際の画像テーブルは別途実装予定）
+            total_images = 0  # 一時的に0とする
             
-            # ベクトル化済みファイル数
-            vectorized_files = db.query(File).filter(File.processing_stage == "vectorized").count()
+            # ベクトル化済みファイル数（embeddingsテーブルにデータがあるファイル）
+            vectorized_files_query = db.execute(sql_text("""
+                SELECT COUNT(DISTINCT blob_id) FROM embeddings WHERE blob_id IS NOT NULL
+            """))
+            vectorized_files = vectorized_files_query.scalar() or 0
+            
+            # 処理率計算
+            processing_rate = (processed_files / total_files * 100) if total_files > 0 else 0.0
+            
+            LOGGER.info(f"📊 統計情報: ファイル={total_files}, 処理済み={processed_files}, チャンク={total_chunks}, 画像={total_images}")
             
             return {
                 "total_files": total_files,
@@ -229,9 +244,16 @@ class SearchService:
                 "total_chunks": total_chunks,
                 "total_images": total_images,
                 "vectorized_files": vectorized_files,
-                "processing_rate": (processed_files / total_files * 100) if total_files > 0 else 0.0
+                "processing_rate": processing_rate
             }
             
         except Exception as e:
             LOGGER.error(f"検索統計取得エラー: {e}")
-            return {} 
+            return {
+                "total_files": 0,
+                "processed_files": 0,
+                "total_chunks": 0,
+                "total_images": 0,
+                "vectorized_files": 0,
+                "processing_rate": 0.0
+            } 

@@ -1,0 +1,118 @@
+/* 共通ステータスバッジスタイル */
+.status-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+}
+
+/* ステータス別カラー */
+.status-pending_processing, 
+.status-pending-processing { 
+    background: #ffeaa7; 
+    color: #2d3436; 
+}
+
+.status-processing { 
+    background: #74b9ff; 
+    color: white; 
+}
+
+.status-text_extracted, 
+.status-text-extracted { 
+    background: #fd79a8; 
+    color: white; 
+}
+
+.status-text_refined, 
+.status-text-refined { 
+    background: #fdcb6e; 
+    color: #2d3436; 
+}
+
+.status-processed { 
+    background: #00b894; 
+    color: white; 
+}
+
+.status-error { 
+    background: #d63031; 
+    color: white; 
+}
+
+.status-unknown { 
+    background: #b2bec3; 
+    color: #2d3436; 
+}
+
+/* 日本語ステータス */
+.status-未処理 { 
+    background: #ffeaa7; 
+    color: #2d3436; 
+}
+
+.status-処理中 { 
+    background: #74b9ff; 
+    color: white; 
+}
+
+.status-未整形 { 
+    background: #fd79a8; 
+    color: white; 
+}
+
+.status-未ベクトル化 { 
+    background: #fdcb6e; 
+    color: #2d3436; 
+}
+
+.status-処理完了 { 
+    background: #00b894; 
+    color: white; 
+}
+
+.status-エラー { 
+    background: #d63031; 
+    color: white; 
+}
+
+/* 共通テーブルヘッダー配置 */
+.table-common th.status-header {
+    text-align: center;
+}
+
+.table-common th.size-header {
+    text-align: right;
+}
+
+.table-common td.status-cell {
+    text-align: center;
+}
+
+.table-common td.size-cell {
+    text-align: right;
+}
+
+/* ドロップダウン内のステータスオプション */
+.status-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+}
+
+.status-option .status-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    min-width: 50px;
+    text-align: center;
+}
+
+.status-option .status-text {
+    flex: 1;
+}

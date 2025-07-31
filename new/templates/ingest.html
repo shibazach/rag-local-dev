@@ -1,0 +1,265 @@
+{% extends "base_new.html" %}
+
+{% block title %}データ登録 - R&D RAGシステム{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2>データ登録</h2>
+            <p>PDFやテキストファイルをアップロードして、RAGシステムに登録します。</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>ファイルアップロード</h5>
+                </div>
+                <div class="card-body">
+                    <form id="ingest-form" enctype="multipart/form-data">
+                        <!-- ファイル選択 -->
+                        <div class="mb-3">
+                            <label for="files" class="form-label">ファイル選択</label>
+                            <input type="file" class="form-control" id="files" name="files" multiple accept=".pdf,.txt,.docx,.csv,.json,.eml" required>
+                            <div class="form-text">対応形式: PDF, TXT, DOCX, CSV, JSON, EML</div>
+                        </div>
+
+                        <!-- プロンプト選択 -->
+                        <div class="mb-3">
+                            <label for="refine-prompt" class="form-label">精製プロンプト</label>
+                            <select class="form-control" id="refine-prompt" name="refine_prompt_key" required>
+                                <option value="default">デフォルト</option>
+                                <option value="academic">学術文書</option>
+                                <option value="technical">技術文書</option>
+                                <option value="business">ビジネス文書</option>
+                            </select>
+                        </div>
+
+                        <!-- 埋め込みモデル選択 -->
+                        <div class="mb-3">
+                            <label class="form-label">埋め込みモデル</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Sentence Transformers</h6>
+                                    {% for model in embedding_options['sentence-transformers']['models'] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="embed_models" value="st:{{ model }}" id="st-{{ loop.index }}">
+                                        <label class="form-check-label" for="st-{{ loop.index }}">
+                                            {{ model }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Ollama</h6>
+                                    {% for model in embedding_options['ollama']['models'] %}
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="embed_models" value="ollama:{{ model }}" id="ollama-{{ loop.index }}">
+                                        <label class="form-check-label" for="ollama-{{ loop.index }}">
+                                            {{ model }}
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- オプション設定 -->
+                        <div class="mb-3">
+                            <h6>オプション設定</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="overwrite" name="overwrite_existing">
+                                <label class="form-check-label" for="overwrite">
+                                    既存データを上書き
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="quality-threshold" class="form-label">品質しきい値</label>
+                                <input type="number" class="form-control" id="quality-threshold" name="quality_threshold" value="0.0" min="0" max="1" step="0.1">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="llm-timeout" class="form-label">LLMタイムアウト（秒）</label>
+                                <input type="number" class="form-control" id="llm-timeout" name="llm_timeout" value="300" min="30" max="1800">
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary" id="start-btn">
+                                <i class="fas fa-play"></i> 処理開始
+                            </button>
+                            <button type="button" class="btn btn-danger" id="cancel-btn" style="display: none;">
+                                <i class="fas fa-stop"></i> キャンセル
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- 処理状況 -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>処理状況</h5>
+                </div>
+                <div class="card-body">
+                    <div id="status-display">
+                        <div class="alert alert-info">
+                            待機中
+                        </div>
+                    </div>
+                    
+                    <div id="progress-container" style="display: none;">
+                        <div class="progress mb-3">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <div id="progress-text">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('ingest-form');
+    const startBtn = document.getElementById('start-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const statusDisplay = document.getElementById('status-display');
+    const progressContainer = document.getElementById('progress-container');
+    
+    let processingInterval = null;
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(form);
+        
+        // 埋め込みモデルの選択チェック
+        const embedModels = formData.getAll('embed_models');
+        if (embedModels.length === 0) {
+            if (window.Utils) {
+                window.Utils.showNotification('少なくとも1つの埋め込みモデルを選択してください', 'error');
+            }
+            return;
+        }
+        
+        try {
+            if (window.Utils) {
+                window.Utils.showLoading();
+            }
+            
+            const response = await fetch('/ingest', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                startProcessing();
+                if (window.Utils) {
+                    window.Utils.showNotification(result.message, 'success');
+                }
+            } else {
+                throw new Error(result.detail || '処理開始に失敗しました');
+            }
+            
+        } catch (error) {
+            console.error('インジェスト開始エラー:', error);
+            if (window.Utils) {
+                window.Utils.showNotification('処理開始に失敗しました: ' + error.message, 'error');
+            }
+        } finally {
+            if (window.Utils) {
+                window.Utils.hideLoading();
+            }
+        }
+    });
+
+    cancelBtn.addEventListener('click', async function() {
+        try {
+            const response = await fetch('/ingest/cancel', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                stopProcessing();
+                if (window.Utils) {
+                    window.Utils.showNotification('処理をキャンセルしました', 'info');
+                }
+            }
+        } catch (error) {
+            console.error('キャンセルエラー:', error);
+        }
+    });
+
+    function startProcessing() {
+        startBtn.style.display = 'none';
+        cancelBtn.style.display = 'inline-block';
+        progressContainer.style.display = 'block';
+        
+        // 定期的に状況を確認
+        processingInterval = setInterval(checkStatus, 2000);
+        checkStatus();
+    }
+
+    function stopProcessing() {
+        startBtn.style.display = 'inline-block';
+        cancelBtn.style.display = 'none';
+        progressContainer.style.display = 'none';
+        
+        if (processingInterval) {
+            clearInterval(processingInterval);
+            processingInterval = null;
+        }
+        
+        statusDisplay.innerHTML = '<div class="alert alert-info">待機中</div>';
+    }
+
+    async function checkStatus() {
+        try {
+            const response = await fetch('/ingest/status', {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const status = await response.json();
+                updateStatus(status);
+                
+                if (status.status === 'completed' || status.status === 'error') {
+                    stopProcessing();
+                }
+            }
+        } catch (error) {
+            console.error('状況確認エラー:', error);
+        }
+    }
+
+    function updateStatus(status) {
+        let alertClass = 'alert-info';
+        if (status.status === 'processing') alertClass = 'alert-warning';
+        if (status.status === 'completed') alertClass = 'alert-success';
+        if (status.status === 'error') alertClass = 'alert-danger';
+        
+        statusDisplay.innerHTML = `<div class="alert ${alertClass}">${status.message}</div>`;
+        
+        if (status.progress !== undefined) {
+            const progressBar = document.querySelector('.progress-bar');
+            const progressText = document.getElementById('progress-text');
+            
+            progressBar.style.width = `${status.progress}%`;
+            progressText.textContent = `${status.progress}%`;
+        }
+    }
+});
+</script>
+{% endblock %} 

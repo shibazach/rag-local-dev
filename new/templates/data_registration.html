@@ -1,0 +1,781 @@
+{% extends "base_new.html" %}
+{% block title %}データ登録{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='/css/status_common.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', path='/css/data_registration.css') }}?v=20">
+{% endblock %}
+
+{% block content %}
+<div class="data-registration-container">
+    <!-- 左上ペイン: 設定項目 -->
+    <div class="settings-panel">
+        <div class="panel-header">
+            <h3>📋 処理設定</h3>
+            <div class="panel-header-actions">
+                <button id="start-processing" class="btn btn-primary btn-sm" disabled>
+                    <span class="btn-icon">🚀</span>
+                    処理開始
+                </button>
+                <button id="stop-processing" class="btn btn-secondary btn-sm" style="display: none;">
+                    <span class="btn-icon">⏹️</span>
+                    停止
+                </button>
+            </div>
+        </div>
+        <div class="panel-content">
+            <!-- 整形プロセスと使用モデル -->
+            <div class="setting-group horizontal-group">
+                <div class="setting-left">
+                    <label for="process-select">整形プロセス</label>
+                    <select id="process-select" class="form-control process-select-wide">
+                        <option value="default">デフォルト (OCR + LLM整形)</option>
+                        <option value="multimodal" id="multimodal-option">マルチモーダル</option>
+                    </select>
+                </div>
+                <div class="setting-right">
+                    <div class="model-display-inline">使用モデル：<span id="current-model">自動判定中...</span></div>
+                </div>
+            </div>
+
+
+
+            <!-- 埋め込みモデル -->
+            <div class="setting-group">
+                <label>埋め込みモデル</label>
+                <div class="model-group">
+                    <div class="model-category">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="intfloat-e5-large-v2" checked> <span class="category-inline">Sentence Transformers:</span> intfloat/e5-large-v2</label>
+                            <label><input type="checkbox" id="intfloat-e5-small-v2"> <span class="category-inline">Sentence Transformers:</span> intfloat/e5-small-v2</label>
+                        </div>
+                    </div>
+                    <div class="model-category">
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" id="nomic-embed-text"> <span class="category-inline">Ollama:</span> nomic-embed-text</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 既存データ上書きと品質しきい値 -->
+            <div class="setting-group horizontal-group">
+                <div class="setting-left">
+                    <div class="checkbox-group" style="margin-left: 2em;">
+                        <label>
+                            <input type="checkbox" id="overwrite-existing" checked>
+                            既存データを上書き
+                        </label>
+                    </div>
+                </div>
+                <div class="setting-right">
+                    <label for="quality-threshold">品質しきい値</label>
+                    <input type="number" id="quality-threshold" class="form-control compact-input-small" value="0.0" min="0" max="1" step="0.1">
+                </div>
+            </div>
+
+            <!-- LLMタイムアウト -->
+            <div class="setting-group">
+                <label for="llm-timeout">LLMタイムアウト (秒)</label>
+                <input type="number" id="llm-timeout" class="form-control compact-input-small timeout" value="300" min="30" max="3600">
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- 右上ペイン: ファイル選択 -->
+    <div class="file-selection-panel">
+        <div class="panel-header horizontal-layout">
+            <h3>📁 ファイル選択</h3>
+            <select id="status-filter" class="form-control compact-select">
+                <option value="">すべてのステータス</option>
+                <option value="pending_processing" data-status="未処理">未処理</option>
+                <option value="processing" data-status="処理中">処理中</option>
+                <option value="text_extracted" data-status="未整形">未整形</option>
+                <option value="text_refined" data-status="未ベクトル化">未ベクトル化</option>
+                <option value="processed" data-status="処理完了">処理完了</option>
+                <option value="error" data-status="エラー">エラー</option>
+            </select>
+            <input type="text" id="search-input" class="form-control compact-input" placeholder="ファイル名で検索...">
+            <span class="selection-count">選択: <span id="selected-count">0</span>件</span>
+        </div>
+        <div class="panel-content">
+
+            <!-- ファイル一覧テーブル -->
+            <div class="file-list-container">
+                <table class="file-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="header-checkbox" title="全選択/解除">
+                            </th>
+                            <th>ファイル名</th>
+                            <th>頁数</th>
+                            <th>ステータス</th>
+                            <th>サイズ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="file-list-tbody">
+                        <!-- ファイル一覧がここに動的に挿入される -->
+                    </tbody>
+                </table>
+                <!-- ページネーション -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="file-count-info">0件のファイル</span>
+                        <select id="page-size" class="form-control pagination-select">
+                            <option value="50">50件/ページ</option>
+                            <option value="100" selected>100件/ページ</option>
+                            <option value="200">200件/ページ</option>
+                            <option value="500">500件/ページ</option>
+                        </select>
+                    </div>
+                    <div class="pagination-nav">
+                        <button id="prev-page" class="btn btn-sm btn-outline" disabled>◀</button>
+                        <span id="page-info">1 / 1</span>
+                        <button id="next-page" class="btn btn-sm btn-outline" disabled>▶</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 左下ペイン: 処理ログ -->
+    <div class="log-panel">
+        <div class="panel-header">
+            <h3>📋 処理ログ</h3>
+            <div class="log-controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="auto-scroll-toggle" checked>
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label">自動スクロール</span>
+                </label>
+                <button id="export-csv" class="btn btn-sm btn-outline">CSV出力</button>
+            </div>
+        </div>
+        <div class="panel-content">
+            <div id="processing-log" class="log-container">
+                <div class="log-entry info">
+                    <span class="log-time">[2025-01-30 16:00:00]</span>
+                    <span class="log-level">INFO</span>
+                    <span class="log-message">システム準備完了</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右下ペイン: 処理状況 -->
+    <div class="status-panel">
+        <div class="panel-header">
+            <h3>📊 処理状況</h3>
+        </div>
+        <div class="panel-content">
+            <div class="progress-section">
+                <div class="progress-header">
+                    <span class="progress-label">全体進捗</span>
+                    <span class="progress-text">待機中</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="overall-progress" style="width: 0%"></div>
+                </div>
+                <div class="progress-stats">
+                    <span>完了: <span id="completed-count">0</span></span>
+                    <span>エラー: <span id="error-count">0</span></span>
+                    <span>残り: <span id="remaining-count">0</span></span>
+                </div>
+            </div>
+
+            <div class="current-task">
+                <h4>現在の処理</h4>
+                <div id="current-task-info">
+                    <div class="task-file">待機中...</div>
+                    <div class="task-stage">-</div>
+                    <div class="task-progress">
+                        <div class="progress-bar small">
+                            <div class="progress-fill" id="current-progress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid-horizontal">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-files">0</div>
+                    <div class="stat-label">総ファイル数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="selected-files">0</div>
+                    <div class="stat-label">選択ファイル数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="processing-time">00:00</div>
+                    <div class="stat-label">処理時間</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="estimated-time">--:--</div>
+                    <div class="stat-label">予想残り時間</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ダイアログ -->
+<div id="log-dialog-overlay" class="log-dialog-overlay" style="display: none;">
+    <div class="log-dialog">
+        <div class="log-dialog-header">
+            <h3>処理詳細ログ</h3>
+            <button class="log-dialog-close" onclick="closeLogDialog()">&times;</button>
+        </div>
+        <div id="log-dialog-content" class="log-dialog-content">
+            <!-- 詳細ログ内容がここに表示される -->
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeDataRegistration();
+});
+
+async function initializeDataRegistration() {
+    await loadFileList();
+    setupEventListeners();
+    updateSelectionCount();
+    loadPromptConfig();
+    initColumnResizing();  // カラム幅変更機能を初期化
+    initializeStatusDropdown();  // ステータスドロップダウンの色付きバッジを初期化
+    
+    // 自動スクロールを初期化（デフォルトで有効）
+    window.autoScrollEnabled = true;
+}
+
+async function loadPromptConfig() {
+    try {
+        const response = await fetch('/api/config/prompts', {
+            headers: {
+                'Authorization': `Bearer ${Auth.getAuthToken()}`
+            },
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const config = await response.json();
+            
+            // CPU/GPU環境に応じてマルチモーダルオプションを制御
+            const multimodalOption = document.getElementById('multimodal-option');
+            const currentModelSpan = document.getElementById('current-model');
+            const processSelect = document.getElementById('process-select');
+            
+            if (config.cuda_available) {
+                // GPU環境: マルチモーダル使用可能
+                multimodalOption.disabled = false;
+                multimodalOption.style.color = '';
+                multimodalOption.title = 'マルチモーダル処理 (Qwen-VL 7B)';
+                currentModelSpan.textContent = 'gemma3 (GPU)';
+            } else {
+                // CPU環境: マルチモーダル使用不可
+                multimodalOption.disabled = true;
+                multimodalOption.style.color = '#ccc';
+                multimodalOption.title = 'GPU環境でのみ利用可能';
+                currentModelSpan.textContent = 'Phi4-mini (CPU)';
+                
+                // CPU環境でマルチモーダルが選択されている場合、デフォルトに戻す
+                if (processSelect.value === 'multimodal') {
+                    processSelect.value = 'default';
+                }
+            }
+            
+            // プロセス選択の変更監視
+            processSelect.addEventListener('change', function() {
+                if (this.value === 'multimodal' && config.cuda_available) {
+                    currentModelSpan.textContent = 'Qwen-VL 7B (GPU)';
+                } else {
+                    currentModelSpan.textContent = config.cuda_available ? 'gemma3 (GPU)' : 'Phi4-mini (CPU)';
+                }
+            });
+        }
+    } catch (error) {
+        console.error('プロンプト設定の取得に失敗:', error);
+        document.getElementById('current-model').textContent = '設定取得失敗';
+    }
+}
+
+function setupEventListeners() {
+    // 全選択/解除
+    document.getElementById('select-all').addEventListener('click', selectAllFiles);
+    document.getElementById('deselect-all').addEventListener('click', deselectAllFiles);
+    document.getElementById('header-checkbox').addEventListener('change', toggleAllFiles);
+    
+    // フィルター
+    document.getElementById('status-filter').addEventListener('change', filterFiles);
+    document.getElementById('search-input').addEventListener('input', filterFiles);
+    
+    // 処理ボタン
+    document.getElementById('start-processing').addEventListener('click', startProcessing);
+    document.getElementById('stop-processing').addEventListener('click', stopProcessing);
+    
+    // ログ制御
+    document.getElementById('auto-scroll-toggle').addEventListener('change', toggleAutoScroll);
+    document.getElementById('export-csv').addEventListener('click', exportLogToCSV);
+    
+    // 埋め込みモデルの変更監視
+    document.querySelectorAll('input[type="checkbox"][id*="intfloat"], input[type="checkbox"][id*="nomic"]').forEach(checkbox => {
+        checkbox.addEventListener('change', updateProcessButton);
+    });
+}
+
+async function loadFileList() {
+    try {
+        const response = await fetch('/api/files', {
+            headers: {
+                'Authorization': `Bearer ${Auth.getAuthToken()}`
+            },
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            displayFileList(data.files || []);
+        } else {
+            addLogEntry('ERROR', 'ファイル一覧の取得に失敗しました');
+        }
+    } catch (error) {
+        addLogEntry('ERROR', `ファイル一覧取得エラー: ${error.message}`);
+    }
+}
+
+function displayFileList(files) {
+    const tbody = document.getElementById('file-list-tbody');
+    tbody.innerHTML = '';
+    
+    files.forEach(file => {
+        const row = document.createElement('tr');
+        row.dataset.fileId = file.id;
+        row.dataset.status = file.status;
+        row.dataset.fileName = file.file_name;
+        
+        const pageCount = file.page_count || '-';
+        
+        row.innerHTML = `
+            <td>
+                <input type="checkbox" class="file-checkbox" data-file-id="${file.id}">
+            </td>
+            <td class="file-name" title="${file.file_name}">${file.file_name}</td>
+            <td>${pageCount}</td>
+            <td>
+                <span class="status-badge status-${file.status}">
+                    ${getStatusText(file.status)}
+                </span>
+            </td>
+            <td>${formatFileSize(file.file_size || 0)}</td>
+        `;
+        
+        tbody.appendChild(row);
+        
+        // チェックボックスイベント
+        const checkbox = row.querySelector('.file-checkbox');
+        checkbox.addEventListener('change', function() {
+            if (this.checked) {
+                row.classList.add('selected');
+            } else {
+                row.classList.remove('selected');
+            }
+            updateSelectionCount();
+            updateProcessButton();
+        });
+    });
+    
+    document.getElementById('total-files').textContent = files.length;
+    updateSelectionCount();
+}
+
+function selectAllFiles() {
+    const visibleRows = Array.from(document.querySelectorAll('#file-list-tbody tr'))
+        .filter(row => row.style.display !== 'none');
+    const visibleCheckboxes = visibleRows.map(row => row.querySelector('.file-checkbox'));
+    
+    visibleCheckboxes.forEach(cb => {
+        if (cb && !cb.disabled) {
+            cb.checked = true;
+            cb.closest('tr').classList.add('selected');
+        }
+    });
+    
+    document.getElementById('header-checkbox').checked = true;
+    updateSelectionCount();
+    updateProcessButton();
+}
+
+function deselectAllFiles() {
+    const checkboxes = document.querySelectorAll('.file-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+        cb.closest('tr').classList.remove('selected');
+    });
+    
+    document.getElementById('header-checkbox').checked = false;
+    updateSelectionCount();
+    updateProcessButton();
+}
+
+function toggleAllFiles() {
+    const headerCheckbox = document.getElementById('header-checkbox');
+    const visibleRows = Array.from(document.querySelectorAll('#file-list-tbody tr'))
+        .filter(row => row.style.display !== 'none');
+    
+    const visibleCheckboxes = visibleRows.map(row => row.querySelector('.file-checkbox'));
+    const allChecked = visibleCheckboxes.every(cb => cb.checked);
+    
+    if (allChecked) {
+        // 全てチェック済みの場合は解除
+        visibleCheckboxes.forEach(cb => {
+            cb.checked = false;
+            cb.closest('tr').classList.remove('selected');
+        });
+        headerCheckbox.checked = false;
+    } else {
+        // 一部または全てが未チェックの場合は全選択
+        visibleCheckboxes.forEach(cb => {
+            cb.checked = true;
+            cb.closest('tr').classList.add('selected');
+        });
+        headerCheckbox.checked = true;
+    }
+    
+    updateSelectionCount();
+    updateProcessButton();
+}
+
+function updateSelectionCount() {
+    const selectedCount = document.querySelectorAll('.file-checkbox:checked').length;
+    document.getElementById('selected-count').textContent = selectedCount;
+    document.getElementById('selected-files').textContent = selectedCount;
+}
+
+function updateProcessButton() {
+    const selectedCount = document.querySelectorAll('.file-checkbox:checked').length;
+    const startButton = document.getElementById('start-processing');
+    
+    // MUST項目のチェック
+    const hasSelectedFiles = selectedCount > 0;
+    const hasSelectedModel = document.querySelectorAll('input[type="checkbox"][id*="intfloat"], input[type="checkbox"][id*="nomic"]:checked').length > 0;
+    
+    const canProcess = hasSelectedFiles && hasSelectedModel;
+    startButton.disabled = !canProcess;
+    
+    // ツールチップでエラー理由を表示
+    if (!hasSelectedFiles) {
+        startButton.title = 'ファイルを選択してください';
+    } else if (!hasSelectedModel) {
+        startButton.title = '埋め込みモデルを選択してください';
+    } else {
+        startButton.title = '処理を開始します';
+    }
+}
+
+function filterFiles() {
+    const statusFilter = document.getElementById('status-filter').value;
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const rows = document.querySelectorAll('#file-list-tbody tr');
+    
+    rows.forEach(row => {
+        const status = row.dataset.status;
+        const fileName = row.dataset.fileName.toLowerCase();
+        
+        const matchesStatus = !statusFilter || status === statusFilter;
+        const matchesSearch = !searchTerm || fileName.includes(searchTerm);
+        
+        row.style.display = matchesStatus && matchesSearch ? '' : 'none';
+    });
+}
+
+// ドロップダウン内のステータスオプションに色付きバッジを追加
+function initializeStatusDropdown() {
+    const statusFilter = document.getElementById('status-filter');
+    if (!statusFilter) return;
+    
+    // 既存のオプションを取得して色付きバッジを追加
+    const options = statusFilter.querySelectorAll('option');
+    options.forEach(option => {
+        const statusText = option.getAttribute('data-status');
+        if (statusText) {
+            const statusClass = `status-${statusText}`;
+            option.innerHTML = `<span class="status-badge ${statusClass}">${statusText}</span>`;
+        }
+    });
+}
+
+function startProcessing() {
+    const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
+        .map(cb => cb.dataset.fileId);
+    
+    if (selectedFiles.length === 0) {
+        addLogEntry('WARNING', '処理するファイルが選択されていません');
+        return;
+    }
+    
+    // UI状態変更
+    document.getElementById('start-processing').style.display = 'none';
+    document.getElementById('stop-processing').style.display = 'inline-flex';
+    
+    addLogEntry('INFO', `処理開始: ${selectedFiles.length}ファイル選択`);
+    
+    // TODO: 実際の処理ロジックを実装
+    simulateProcessing(selectedFiles);
+}
+
+function stopProcessing() {
+    // UI状態変更
+    document.getElementById('start-processing').style.display = 'inline-flex';
+    document.getElementById('stop-processing').style.display = 'none';
+    
+    addLogEntry('WARNING', '処理を停止しました');
+}
+
+function simulateProcessing(fileIds) {
+    // デモ用の疑似処理
+    let processed = 0;
+    const total = fileIds.length;
+    
+    const interval = setInterval(() => {
+        processed++;
+        const progress = (processed / total) * 100;
+        
+        document.getElementById('overall-progress').style.width = `${progress}%`;
+        document.getElementById('completed-count').textContent = processed;
+        document.getElementById('remaining-count').textContent = total - processed;
+        
+        addLogEntry('INFO', `ファイル ${processed}/${total} 処理完了`);
+        
+        if (processed >= total) {
+            clearInterval(interval);
+            addLogEntry('SUCCESS', '全ての処理が完了しました');
+            document.getElementById('start-processing').style.display = 'inline-flex';
+            document.getElementById('stop-processing').style.display = 'none';
+        }
+    }, 1000);
+}
+
+function addLogEntry(level, message, detailData = null) {
+    const logContainer = document.getElementById('processing-log');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    
+    if (detailData) {
+        entry.classList.add('clickable');
+        entry.onclick = () => showLogDetail(detailData);
+    }
+    
+    const now = new Date();
+    const timeStr = now.toLocaleString('ja-JP', {
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    
+    entry.innerHTML = `
+        <span class="log-time">[${timeStr}]</span>
+        <span class="log-level ${level}">${level}</span>
+        <span class="log-message">${message}${detailData ? ' [詳細]' : ''}</span>
+    `;
+    
+    // 最新のログを上に追加
+    if (logContainer.firstChild) {
+        logContainer.insertBefore(entry, logContainer.firstChild);
+    } else {
+        logContainer.appendChild(entry);
+    }
+    
+    // 自動スクロールが有効な場合はスクロール
+    if (window.autoScrollEnabled !== false) {
+        logContainer.scrollTop = 0;
+    }
+}
+
+function showLogDetail(detailData) {
+    const overlay = document.getElementById('log-dialog-overlay');
+    const content = document.getElementById('log-dialog-content');
+    
+    let detailText = '';
+    if (typeof detailData === 'object') {
+        detailText = JSON.stringify(detailData, null, 2);
+    } else {
+        detailText = detailData;
+    }
+    
+    content.textContent = detailText;
+    overlay.style.display = 'flex';
+}
+
+function closeLogDialog() {
+    document.getElementById('log-dialog-overlay').style.display = 'none';
+}
+
+function toggleAutoScroll() {
+    const toggle = document.getElementById('auto-scroll-toggle');
+    const isActive = toggle.checked;
+    
+    // 自動スクロールの状態を更新
+    window.autoScrollEnabled = isActive;
+    
+    if (isActive) {
+        addLogEntry('INFO', '自動スクロールを有効にしました');
+    } else {
+        addLogEntry('INFO', '自動スクロールを無効にしました');
+    }
+}
+
+function exportLogToCSV() {
+    const logContainer = document.getElementById('processing-log');
+    const logEntries = logContainer.querySelectorAll('.log-entry');
+    
+    if (logEntries.length === 0) {
+        addLogEntry('WARNING', 'エクスポートするログがありません');
+        return;
+    }
+    
+    // CSVヘッダー
+    let csvContent = '時刻,レベル,メッセージ\n';
+    
+    // ログエントリをCSVに変換
+    logEntries.forEach(entry => {
+        const time = entry.querySelector('.log-time').textContent.replace(/[\[\]]/g, '');
+        const level = entry.querySelector('.log-level').textContent;
+        const message = entry.querySelector('.log-message').textContent.replace(/"/g, '""'); // ダブルクォートをエスケープ
+        
+        csvContent += `"${time}","${level}","${message}"\n`;
+    });
+    
+    // ファイル名を生成（現在の日時）
+    const now = new Date();
+    const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+    const filename = `processing_log_${timestamp}.csv`;
+    
+    // ダウンロード
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    
+    addLogEntry('SUCCESS', `ログをCSVファイル (${filename}) にエクスポートしました`);
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        'pending_processing': '未処理',
+        'processing': '処理中',
+        'text_extracted': '未整形',
+        'text_refined': '未ベクトル化',
+        'processed': '処理完了',
+        'error': 'エラー'
+    };
+    return statusMap[status] || status;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+// Excelライクなカラム幅変更機能
+function initColumnResizing() {
+    const table = document.querySelector('.file-table');
+    if (!table) return;
+    
+    // ヘッダーにリサイザーを追加
+    const headers = table.querySelectorAll('th');
+    headers.forEach((th, index) => {
+        // 最後のカラム以外にリサイザーを追加
+        if (index < headers.length - 1) {
+            const resizer = document.createElement('div');
+            resizer.className = 'column-resizer';
+            th.appendChild(resizer);
+            
+            let isResizing = false;
+            let startX = 0;
+            let startWidth = 0;
+            
+            resizer.addEventListener('mousedown', (e) => {
+                isResizing = true;
+                startX = e.clientX;
+                startWidth = th.offsetWidth;
+                resizer.classList.add('active');
+                document.body.style.cursor = 'col-resize';
+                e.preventDefault();
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                
+                const diff = e.clientX - startX;
+                const newWidth = Math.max(30, startWidth + diff); // 最小幅30px
+                
+                // カラム幅を更新
+                th.style.width = newWidth + 'px';
+                
+                // 対応するデータセルの幅も更新
+                const tbody = table.querySelector('tbody');
+                if (tbody) {
+                    tbody.querySelectorAll(`tr td:nth-child(${index + 1})`).forEach(td => {
+                        td.style.width = newWidth + 'px';
+                    });
+                }
+                
+                // ファイル名カラムの幅を再計算
+                adjustFileNameColumn();
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isResizing) {
+                    isResizing = false;
+                    resizer.classList.remove('active');
+                    document.body.style.cursor = '';
+                }
+            });
+        }
+    });
+}
+
+function adjustFileNameColumn() {
+    const table = document.querySelector('.file-table');
+    if (!table) return;
+    
+    const headers = table.querySelectorAll('th');
+    let fixedWidth = 0;
+    
+    // ファイル名以外のカラム幅を計算
+    headers.forEach((th, index) => {
+        if (index !== 1) { // ファイル名カラム以外
+            fixedWidth += th.offsetWidth;
+        }
+    });
+    
+    // ファイル名カラムの幅を設定
+    const fileNameHeader = headers[1];
+    const fileNameWidth = table.offsetWidth - fixedWidth - 20; // 余白を考慮
+    
+    if (fileNameWidth > 100) { // 最小幅を確保
+        fileNameHeader.style.width = fileNameWidth + 'px';
+        
+        // データセルも更新
+        const tbody = table.querySelector('tbody');
+        if (tbody) {
+            tbody.querySelectorAll('tr td:nth-child(2)').forEach(td => {
+                td.style.width = fileNameWidth + 'px';
+            });
+        }
+    }
+}
+</script>
+{% endblock %}

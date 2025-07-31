@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}R&D RAGシステム{% endblock %}</title>
+    
+    <!-- セキュリティヘッダー -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; img-src 'self' data: blob:;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}?v=27">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/header.css') }}?v=4">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', path='/js/main.js') }}?v=20" defer></script>
+    <script src="{{ url_for('static', path='/js/header.js') }}?v=2" defer></script>
+    {% block extra_js %}{% endblock %}
+</head>
+<body>
+    <!-- 共通ヘッダー -->
+    {% include "components/header.html" %}
+
+    <!-- メインコンテンツ -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 通知エリア -->
+    <div id="notifications" class="notifications"></div>
+
+    <!-- ローディングオーバーレイ -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>処理中...</p>
+    </div>
+
+    <!-- 共通ステータスバー -->
+    {% include "components/status_bar.html" %}
+</body>
+</html> 

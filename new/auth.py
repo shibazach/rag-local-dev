@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from .config import LOGGER, SECRET_KEY, SESSION_COOKIE_NAME, DEBUG_MODE
 from .database import get_db
+from .debug import debug_function, debug_error
 
 # セキュリティスキーム
 security = HTTPBearer(auto_error=False)
@@ -63,16 +64,18 @@ def get_current_user(request: Request) -> User:
         # 開発モードの場合は仮のユーザーを返す
         if DEBUG_MODE:
             return User(
-                id=session_user.get("id", "dev-user"),
                 username=session_user.get("username", "admin"),
-                role=session_user.get("role", "admin")
+                email=session_user.get("email", "admin@example.com"),
+                role=session_user.get("role", "admin"),
+                user_id=session_user.get("id", 1)
             )
         
         # 実際のユーザー情報を返す
         return User(
-            id=session_user.get("id"),
             username=session_user.get("username"),
-            role=session_user.get("role", "user")
+            email=session_user.get("email"),
+            role=session_user.get("role", "user"),
+            user_id=session_user.get("id")
         )
         
     except HTTPException:
@@ -97,16 +100,18 @@ def get_optional_user(request: Request) -> Optional[User]:
         # 開発モードの場合は仮のユーザーを返す
         if DEBUG_MODE:
             return User(
-                id=session_user.get("id", "dev-user"),
                 username=session_user.get("username", "admin"),
-                role=session_user.get("role", "admin")
+                email=session_user.get("email", "admin@example.com"),
+                role=session_user.get("role", "admin"),
+                user_id=session_user.get("id", 1)
             )
         
         # 実際のユーザー情報を返す
         return User(
-            id=session_user.get("id"),
             username=session_user.get("username"),
-            role=session_user.get("role", "user")
+            email=session_user.get("email"),
+            role=session_user.get("role", "user"),
+            user_id=session_user.get("id")
         )
         
     except Exception as e:
@@ -134,43 +139,29 @@ def require_admin(user: User = Depends(get_current_user)) -> User:
         )
     return user
 
-def login_user(request: Request, username: str, password: str) -> bool:
-    """ユーザーログイン処理"""
-    try:
-        debug_function("login_user", username=username)
+def login_user(request: Request, username: str, password: str) -> Optional[User]:
+    """
+    ユーザーログイン処理
+    
+    Args:
+        request: FastAPIリクエスト
+        username: ユーザー名
+        password: パスワード
+    
+    Returns:
+        Optional[User]: ログイン成功時はユーザー情報、失敗時はNone
+    """
+    # 仮の認証（後でSAML/OIDCに置き換え）
+    if username in USERS and password == "password":  # 仮のパスワード
+        user_data = USERS[username].copy()
+        user_data['user_id'] = 1  # デフォルトのユーザーID
+        user = User(**user_data)
         
-        # 開発用アカウント認証
-        if username == "admin" and password == "password":
-            user = User(
-                id="admin-1",
-                username="admin",
-                role="admin"
-            )
-            request.session["user"] = {
-                "id": user.id,
-                "username": user.username,
-                "role": user.role
-            }
-            return True
-        
-        if username == "user" and password == "password":
-            user = User(
-                id="user-1",
-                username="user",
-                role="user"
-            )
-            request.session["user"] = {
-                "id": user.id,
-                "username": user.username,
-                "role": user.role
-            }
-            return True
-        
-        return False
-        
-    except Exception as e:
-        debug_error(e, "login_user")
-        return False
+        # セッションにユーザー情報を保存
+        request.session["user"] = user.to_dict()
+        return user
+    
+    return None
 
 def logout_user(request: Request) -> bool:
     """ユーザーログアウト処理"""

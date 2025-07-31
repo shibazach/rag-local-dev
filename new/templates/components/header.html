@@ -1,0 +1,47 @@
+<!-- 共通ヘッダーコンポーネント -->
+<header class="app-header">
+    <nav class="app-nav">
+        <div class="nav-brand">
+            <a href="/" class="brand-link">
+                <span class="brand-icon">⬢</span>
+                <span class="brand-text">R&D RAGシステム</span>
+            </a>
+        </div>
+        
+        <div class="nav-menu">
+            <a href="/" class="nav-item" data-page="home">
+                <span class="nav-icon">▣</span>
+                <span class="nav-text">ホーム</span>
+            </a>
+            <a href="/chat" class="nav-item" data-page="chat">
+                <span class="nav-icon">⎘</span>
+                <span class="nav-text">チャット</span>
+            </a>
+            <a href="/files" class="nav-item nav-admin-only" data-page="files" style="display: none;">
+                <span class="nav-icon">≡</span>
+                <span class="nav-text">ファイル</span>
+            </a>
+            <a href="/upload" class="nav-item nav-admin-only" data-page="upload" style="display: none;">
+                <span class="nav-icon">↗</span>
+                <span class="nav-text">アップロード</span>
+            </a>
+            <a href="/data-registration" class="nav-item nav-admin-only" data-page="data-registration" style="display: none;">
+                <span class="nav-icon">⚙</span>
+                <span class="nav-text">データ登録</span>
+            </a>
+            <a href="/admin" class="nav-item nav-admin-only" data-page="admin" style="display: none;">
+                <span class="nav-icon">⚡</span>
+                <span class="nav-text">管理</span>
+            </a>
+        </div>
+        
+        <div class="nav-auth">
+            <div id="user-info" class="user-info" style="display: none;">
+                <span class="user-avatar">◉</span>
+                <span id="username" class="username"></span>
+                <button id="logout-btn" class="btn-logout">ログアウト</button>
+            </div>
+            <a href="/login" id="login-link" class="btn-login" style="display: none;">ログイン</a>
+        </div>
+    </nav>
+</header> 

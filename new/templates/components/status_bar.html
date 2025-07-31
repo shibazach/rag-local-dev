@@ -1,0 +1,38 @@
+<!-- 共通ステータスバーコンポーネント -->
+<div id="debug-status" class="debug-status" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999; background: rgba(0,0,0,0.9); color: white; padding: 8px 15px; font-size: 12px; display: block; height: 30px; box-sizing: border-box; border-top: 1px solid rgba(255,255,255,0.2);">
+    <div class="debug-info" style="display: flex; justify-content: space-between; align-items: center; height: 100%;">
+        <span id="debug-text">初期化中...</span>
+        <button onclick="clearDebug()" class="debug-clear" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; cursor: pointer; transition: background 0.2s;">クリア</button>
+    </div>
+</div>
+
+<script>
+// 共通ステータスバー関数
+function updateDebugStatus(message) {
+    const debugText = document.getElementById('debug-text');
+    if (debugText) {
+        const timestamp = new Date().toLocaleTimeString('ja-JP', { hour12: false });
+        debugText.textContent = `[${timestamp}] ${message}`;
+    }
+}
+
+function clearDebug() {
+    const debugText = document.getElementById('debug-text');
+    if (debugText) {
+        debugText.textContent = 'ログクリア済み';
+    }
+}
+
+// クリアボタンのホバー効果
+document.addEventListener('DOMContentLoaded', function() {
+    const clearBtn = document.querySelector('.debug-clear');
+    if (clearBtn) {
+        clearBtn.addEventListener('mouseenter', function() {
+            this.style.background = 'rgba(255,255,255,0.3)';
+        });
+        clearBtn.addEventListener('mouseleave', function() {
+            this.style.background = 'rgba(255,255,255,0.2)';
+        });
+    }
+});
+</script> 

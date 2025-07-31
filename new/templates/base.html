@@ -12,7 +12,7 @@
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/main.css') }}?v=19">
     {% block extra_css %}{% endblock %}
     
     <style>
@@ -25,7 +25,7 @@
     </style>
     
     <!-- JavaScript -->
-    <script src="{{ url_for('static', path='/js/main.js') }}" defer></script>
+    <script src="{{ url_for('static', path='/js/main.js') }}?v=19" defer></script>
     {% block extra_js %}{% endblock %}
 </head>
 <body>

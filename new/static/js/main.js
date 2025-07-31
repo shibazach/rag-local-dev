@@ -300,35 +300,75 @@ document.addEventListener('DOMContentLoaded', function() {
     window.FileManager = FileManager;
     window.ChatManager = ChatManager;
     
-    // 既存の関数をエラーハンドリングでラップ
-    if (window.Utils) {
-        const originalShowNotification = window.Utils.showNotification;
-        window.Utils.showNotification = window.catchAndLogError(originalShowNotification, 'showNotification');
-    }
+    // showNotificationをエラーハンドリングでラップ
+    const originalShowNotification = Utils.showNotification;
+    Utils.showNotification = window.catchAndLogError(originalShowNotification, 'showNotification');
+    window.Utils.showNotification = Utils.showNotification;
 });
 
 // エラーハンドリング
 window.addEventListener('error', function(event) {
     console.error('JavaScriptエラー:', event.error);
+    console.error('エラー詳細:', {
+        message: event.error?.message,
+        stack: event.error?.stack,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno
+    });
+    
     const errorMessage = event.error?.message || 'JavaScriptエラーが発生しました';
     const errorDetails = event.error?.stack || '';
     
     // エラーをサーバーに送信
     sendErrorToServer('JavaScript Error', errorMessage, errorDetails);
     
-    Utils.showNotification(errorMessage, 'error', errorDetails);
+    // Utilsが利用可能な場合のみ通知
+    if (window.Utils && window.Utils.showNotification) {
+        window.Utils.showNotification(errorMessage, 'error', errorDetails);
+    }
 });
 
 // 未処理のPromise拒否をキャッチ
 window.addEventListener('unhandledrejection', function(event) {
     console.error('未処理のPromise拒否:', event.reason);
+    console.error('Promise拒否詳細:', {
+        reason: event.reason,
+        promise: event.promise
+    });
+    
     const errorMessage = event.reason?.message || '非同期処理でエラーが発生しました';
-    const errorDetails = event.reason?.details || '';
+    const errorDetails = event.reason?.details || event.reason?.stack || '';
     
     // エラーをサーバーに送信
     sendErrorToServer('Unhandled Promise Rejection', errorMessage, errorDetails);
     
-    Utils.showNotification(errorMessage, 'error', errorDetails);
+    // Utilsが利用可能な場合のみ通知
+    if (window.Utils && window.Utils.showNotification) {
+        window.Utils.showNotification(errorMessage, 'error', errorDetails);
+    }
+});
+
+// 構文エラーもキャッチ
+window.addEventListener('error', function(event) {
+    if (event.error instanceof SyntaxError) {
+        console.error('構文エラー:', event.error);
+        console.error('構文エラー詳細:', {
+            message: event.error.message,
+            stack: event.error.stack,
+            filename: event.filename,
+            lineno: event.lineno,
+            colno: event.colno
+        });
+        
+        // エラーをサーバーに送信
+        sendErrorToServer('Syntax Error', event.error.message, event.error.stack);
+        
+        // Utilsが利用可能な場合のみ通知
+        if (window.Utils && window.Utils.showNotification) {
+            window.Utils.showNotification(`構文エラー: ${event.error.message}`, 'error', event.error.stack);
+        }
+    }
 });
 
 // エラーをサーバーに送信する関数

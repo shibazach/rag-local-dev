@@ -1,20 +1,443 @@
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
 {% block title %}ホーム - R&D RAGシステム{% endblock %}
 
 {% block extra_css %}
+<!-- v=2 -->
 <style>
-body {
-    class: "home-page";
+body.home-page .main-content {
+    padding-top: 0;
 }
+
+/* ホームページでは上部ヘッダーを非表示 */
+body.home-page .app-header {
+    display:none;
+}
+
+body.home-page .hero {
+    background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #455a64 100%);
+    color: white;
+    padding: 20px 0 10px;
+    position: relative;
+}
+
+body.home-page .hero-title {
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.home-page .hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* ログインボタンの右上配置 */
+.hero-auth-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hero-login-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.hero-login-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.hero-user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: white;
+}
+
+/* 全体センタリング */
+body.home-page .container {
+    text-align: center;
+}
+
+/* 主な機能のセンタリング */
+.feature-list-container {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.feature-list {
+    display: inline-block;
+    text-align: left;
+    max-width: 600px;
+}
+
+/* システム状況のセンタリング */
+.stats-grid {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin: 0 auto;
+    max-width: 600px;
+}
+
+body.home-page .features {
+    padding: 40px 0;
+}
+
+body.home-page .feature-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+body.home-page .feature-card {
+    padding: 20px;
+    margin-bottom: 0;
+}
+
+body.home-page .feature-icon {
+    font-size: 32px;
+    margin-bottom: 10px;
+}
+
+body.home-page .feature-card h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+body.home-page .feature-card p {
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+body.home-page .section-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* ホームページ専用メニュー */
+.home-nav-menu {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+.home-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-weight: 500;
+    min-width: 100px;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.home-nav-item:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.home-nav-item.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.home-nav-item .nav-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.home-nav-item .nav-text {
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* 新しいメインナビゲーション */
+.main-navigation {
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid #ddd;
+    padding: 15px 0;
+}
+
+.nav-buttons {
+    display: inline-flex;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 15px;
+    align-items: center;
+}
+
+.nav-button {
+    padding: 10px 20px;
+    color: #666;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    background: white;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-button:first-child {
+    border-radius: 6px 0 0 6px;
+}
+
+.nav-button:not(:first-child) {
+    border-left: none;
+}
+
+.nav-button:last-child {
+    border-radius: 0 6px 6px 0;
+}
+
+.nav-button:hover {
+    background: #f8f9fa;
+    color: #333;
+}
+
+.nav-button.active {
+    background: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.nav-button-auth {
+    background: transparent;
+    color: #007bff;
+    border-color: #007bff;
+}
+
+.nav-button-auth:hover {
+    background: #007bff;
+    color: white;
+}
+
+.auth-section {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.user-menu span {
+    color: #333;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.authenticated-menu {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #333;
+    transition: all 0.2s ease;
+    min-height: 80px;
+    justify-content: center;
+}
+
+.menu-item:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+}
+
+.menu-icon {
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.menu-text {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* 新しい機能リスト */
+
+
+
+
+
+
+
+
+
 </style>
+
+<script>
+document.body.classList.add('home-page');
+
+// ホームページ専用の認証状態確認
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuthForHome();
+});
+
+async function checkAuthForHome() {
+    try {
+        const response = await fetch('/api/user/profile', {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showAuthenticatedState(data.data.username, data.data.role);
+        } else {
+            showUnauthenticatedState();
+        }
+    } catch (error) {
+        console.error('認証状態確認エラー:', error);
+        showUnauthenticatedState();
+    }
+}
+
+function showAuthenticatedState(username, role) {
+    console.log('認証状態表示:', username, role);
+    
+    // ログインボタンを隠し、ユーザーメニューを表示
+    const loginBtn = document.getElementById('login-button');
+    const userMenu = document.getElementById('user-menu');
+    const userName = document.getElementById('user-name');
+    
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'flex';
+    if (userName) userName.textContent = username;
+    
+    // 認証後メニューを表示
+    const authMenu = document.getElementById('authenticated-menu');
+    if (authMenu) authMenu.style.display = 'block';
+    
+    // admin限定項目の表示制御
+    const adminItems = document.querySelectorAll('.admin-only');
+    if (role === 'admin') {
+        adminItems.forEach(item => {
+            item.style.display = 'flex';
+        });
+    } else {
+        adminItems.forEach(item => {
+            item.style.display = 'none';
+        });
+    }
+}
+
+function showUnauthenticatedState() {
+    console.log('未認証状態表示');
+    
+    // ユーザーメニューを隠し、ログインボタンを表示
+    const userMenu = document.getElementById('user-menu');
+    const loginBtn = document.getElementById('login-button');
+    const authMenu = document.getElementById('authenticated-menu');
+    
+    if (userMenu) userMenu.style.display = 'none';
+    if (loginBtn) loginBtn.style.display = 'block';
+    if (authMenu) authMenu.style.display = 'none';
+}
+
+// ログインモーダル表示（main.jsの関数を使用）
+function showLoginModal() {
+    if (typeof window.showLoginModal === 'function') {
+        window.showLoginModal();
+    } else {
+        window.location.href = '/login';
+    }
+}
+
+// ログアウト（main.jsの関数を使用）
+function logout() {
+    if (typeof window.logout === 'function') {
+        window.logout();
+    } else {
+        window.location.href = '/logout';
+    }
+}
+</script>
 {% endblock %}
 
 {% block content %}
 <div class="hero">
     <div class="container">
         <h1 class="hero-title">R&D RAGシステム</h1>
-        <p class="hero-subtitle">セキュリティ設計に基づく日本語文書処理システム</p>
+        <p class="hero-subtitle">AIブーストされた新世代ドキュメント検索プラットフォーム✨</p>
+        <!-- ログインボタンを右上に配置 -->
+        <div class="hero-auth-container">
+            <button id="login-button" class="hero-login-button" onclick="showLoginModal()" style="display: none;">ログイン</button>
+            <div id="user-menu" class="hero-user-menu" style="display: none;">
+                <span id="user-name"></span>
+                <button id="logout-button" class="btn btn-sm btn-outline" onclick="logout()">ログアウト</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- メインナビゲーション -->
+<div class="main-navigation">
+    <div class="container">
+        <div class="nav-buttons">
+            <a href="/chat" class="nav-button">チャット</a>
+            <a href="/files" class="nav-button">ファイル</a>
+        </div>
+        
+        <!-- 認証後メニュー -->
+        <div id="authenticated-menu" class="authenticated-menu" style="display: none;">
+            <div class="menu-grid">
+                <a href="/files" class="menu-item">
+                    <span class="menu-icon">≡</span>
+                    <span class="menu-text">ファイル</span>
+                </a>
+                <a href="/upload" class="menu-item admin-only" style="display: none;">
+                    <span class="menu-icon">↗</span>
+                    <span class="menu-text">アップロード</span>
+                </a>
+                <a href="/ingest" class="menu-item admin-only" style="display: none;">
+                    <span class="menu-icon">⚙</span>
+                    <span class="menu-text">データ登録</span>
+                </a>
+                <a href="/admin" class="menu-item admin-only" style="display: none;">
+                    <span class="menu-icon">⚡</span>
+                    <span class="menu-text">管理</span>
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -22,42 +445,56 @@ body {
     <div class="container">
         <h2 class="section-title">主な機能</h2>
         
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon">📄</div>
-                <h3>多形式文書対応</h3>
-                <p>PDF、Word、テキスト、CSV、JSON、EMLファイルの処理に対応</p>
+        <div class="feature-list-container">
+            <div class="feature-list">
+            <div class="feature-item">
+                <span class="feature-icon">📄</span>
+                <div class="feature-content">
+                    <span class="feature-name">多形式文書対応：</span>
+                    <span class="feature-description">PDF、Word、テキスト、CSV、JSON、EMLファイルの処理に対応</span>
+                </div>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">🔍</div>
-                <h3>高精度OCR</h3>
-                <p>複数のOCRエンジンによる高精度なテキスト抽出</p>
+            <div class="feature-item">
+                <span class="feature-icon">🔍</span>
+                <div class="feature-content">
+                    <span class="feature-name">高精度OCR：</span>
+                    <span class="feature-description">複数のOCRエンジンによる高精度なテキスト抽出</span>
+                </div>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">🤖</div>
-                <h3>LLM整形</h3>
-                <p>Ollamaを使用した日本語テキストの品質向上</p>
+            <div class="feature-item">
+                <span class="feature-icon">🤖</span>
+                <div class="feature-content">
+                    <span class="feature-name">LLM整形：</span>
+                    <span class="feature-description">Ollamaを使用した日本語テキストの品質向上</span>
+                </div>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">🔎</div>
-                <h3>ベクトル検索</h3>
-                <p>複数の埋め込みモデルによる高精度検索</p>
+            <div class="feature-item">
+                <span class="feature-icon">🔎</span>
+                <div class="feature-content">
+                    <span class="feature-name">ベクトル検索：</span>
+                    <span class="feature-description">複数の埋め込みモデルによる高精度検索</span>
+                </div>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3>リアルタイム処理</h3>
-                <p>SSEによる進捗表示とリアルタイム処理</p>
+            <div class="feature-item">
+                <span class="feature-icon">⚡</span>
+                <div class="feature-content">
+                    <span class="feature-name">リアルタイム処理：</span>
+                    <span class="feature-description">SSEによる進捗表示とリアルタイム処理</span>
+                </div>
             </div>
             
-            <div class="feature-card">
-                <div class="feature-icon">🔒</div>
-                <h3>セキュリティ設計</h3>
-                <p>HTTPS対応、認証、API分離によるセキュアな設計</p>
+            <div class="feature-item">
+                <span class="feature-icon">🔒</span>
+                <div class="feature-content">
+                    <span class="feature-name">セキュリティ設計：</span>
+                    <span class="feature-description">HTTPS対応、認証、API分離によるセキュアな設計</span>
+                </div>
             </div>
+        </div>
         </div>
     </div>
 </div>
@@ -89,31 +526,103 @@ body {
 // ホームページのナビゲーション調整
 document.addEventListener('DOMContentLoaded', function() {
     document.body.classList.add('home-page');
+    
+    // 認証状態を確認してボタンを表示
+    checkAuthForHome();
 });
+
+// ホーム用の認証確認
+async function checkAuthForHome() {
+    try {
+        const response = await fetch('/api/user/profile', {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            const userData = await response.json();
+            showAuthenticatedState(userData.data);
+        } else {
+            showUnauthenticatedState();
+        }
+    } catch (error) {
+        console.error('認証確認エラー:', error);
+        showUnauthenticatedState();
+    }
+}
+
+// ログイン済み状態の表示
+function showAuthenticatedState(user) {
+    const loginButton = document.getElementById('login-button');
+    const userMenu = document.getElementById('user-menu');
+    
+    if (loginButton) loginButton.style.display = 'none';
+    if (userMenu) {
+        userMenu.style.display = 'flex';
+        const usernameElement = userMenu.querySelector('.username');
+        if (usernameElement) {
+            usernameElement.textContent = user.username || 'ユーザー';
+        }
+    }
+}
+
+// 未ログイン状態の表示
+function showUnauthenticatedState() {
+    const loginButton = document.getElementById('login-button');
+    const userMenu = document.getElementById('user-menu');
+    
+    if (loginButton) loginButton.style.display = 'block';
+    if (userMenu) userMenu.style.display = 'none';
+}
 
 // システム統計の取得
 async function loadStats() {
     try {
-        const [filesResponse, sessionsResponse] = await Promise.all([
-            fetch('/api/files', { credentials: 'include' }),
-            fetch('/api/chat/sessions', { credentials: 'include' })
-        ]);
+        // 管理画面の統計APIを使用
+        const response = await fetch('/api/admin/stats', { 
+            credentials: 'include' 
+        });
         
+        if (response.ok) {
+            const stats = await response.json();
+            document.getElementById('file-count').textContent = stats.total_files || 0;
+            document.getElementById('session-count').textContent = stats.total_sessions || 0;
+            document.getElementById('embedding-count').textContent = stats.vectorized_files || 0;
+        } else {
+            // 認証エラーの場合は個別APIを試行
+            await loadStatsIndividually();
+        }
+        
+    } catch (error) {
+        console.error('統計取得エラー:', error);
+        await loadStatsIndividually();
+    }
+}
+
+// 個別API使用のフォールバック
+async function loadStatsIndividually() {
+    try {
+        // ファイル数
+        const filesResponse = await fetch('/api/files', { credentials: 'include' });
         if (filesResponse.ok) {
             const filesData = await filesResponse.json();
             document.getElementById('file-count').textContent = filesData.files ? filesData.files.length : 0;
         }
         
+        // セッション数
+        const sessionsResponse = await fetch('/api/chat/sessions', { credentials: 'include' });
         if (sessionsResponse.ok) {
             const sessionsData = await sessionsResponse.json();
             document.getElementById('session-count').textContent = sessionsData.sessions ? sessionsData.sessions.length : 0;
         }
         
-        // 埋め込みベクトル数は仮の値
-        document.getElementById('embedding-count').textContent = '0';
+        // 埋め込みベクトル数（仮）
+        document.getElementById('embedding-count').textContent = '-';
         
     } catch (error) {
-        console.error('統計取得エラー:', error);
+        console.error('個別統計取得エラー:', error);
+        document.getElementById('file-count').textContent = '-';
+        document.getElementById('session-count').textContent = '-';
+        document.getElementById('embedding-count').textContent = '-';
     }
 }
 

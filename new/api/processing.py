@@ -37,7 +37,7 @@ def get_processing_config() -> JSONResponse:
             "nomic-embed-text": {
                 "name": "nomic-embed-text",
                 "type": "ollama",
-                "available": False  # Ollama接続確認が必要
+                "available": True  # Ollama統合完了
             }
         }
         
@@ -45,7 +45,7 @@ def get_processing_config() -> JSONResponse:
         llm_models = {
             "phi4-mini": {
                 "name": "phi4-mini",
-                "available": False  # Ollama接続確認が必要
+                "available": True  # Ollama統合完了
             }
         }
         

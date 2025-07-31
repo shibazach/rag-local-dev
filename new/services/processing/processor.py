@@ -227,24 +227,47 @@ class FileProcessor:
         return '\n'.join(lines)
     
     async def _process_llm_refinement(self, text: str, settings: Dict, abort_flag: Optional[Dict]) -> str:
-        """LLM整形処理（模擬実装）"""
+        """LLM整形処理（Ollama統合版）"""
         try:
-            # 現在は模擬実装（Ollama統合は後のフェーズで実装）
-            await asyncio.sleep(1.5)  # LLM処理時間をシミュレート
+            # Ollamaクライアント初期化
+            from services.llm import OllamaRefiner
+            refiner = OllamaRefiner()
             
-            # 中断チェック
-            if abort_flag and abort_flag.get('flag', False):
-                return ""
+            # LLM設定取得
+            llm_model = settings.get('llm_model', 'phi4-mini')
+            language = settings.get('language', 'ja')
+            quality_threshold = settings.get('quality_threshold', 0.7)
             
-            # 簡単な整形処理
-            if len(text) > 100:
-                return f"[LLM整形済み] {text[:500]}..."
-            else:
-                return f"[LLM整形済み] {text}"
+            self.logger.info(f"LLM整形開始: モデル={llm_model}, 言語={language}")
+            
+            # 実際のOllama整形実行
+            refined_text, detected_lang, quality_score = await refiner.refine_text(
+                raw_text=text,
+                abort_flag=abort_flag,
+                language=language,
+                quality_threshold=quality_threshold
+            )
+            
+            self.logger.info(f"LLM整形完了: 品質スコア={quality_score:.2f}, 言語={detected_lang}")
+            
+            return refined_text
                 
+        except ImportError as e:
+            self.logger.warning(f"Ollama統合未使用（依存関係不足）: {e}")
+            # フォールバック：正規化処理のみ
+            return self._fallback_text_refinement(text)
         except Exception as e:
             self.logger.error(f"LLM整形エラー: {e}")
-            return ""
+            # フォールバック：正規化処理のみ  
+            return self._fallback_text_refinement(text)
+    
+    def _fallback_text_refinement(self, text: str) -> str:
+        """フォールバック用テキスト整形"""
+        import re
+        # 基本的な正規化のみ
+        text = re.sub(r'^[\s\u3000]+$', '', text, flags=re.MULTILINE)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        return text.strip()
     
     async def _process_embedding(self, text: str, settings: Dict, abort_flag: Optional[Dict]) -> Dict:
         """ベクトル化処理（模擬実装）"""

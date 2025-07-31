@@ -39,10 +39,16 @@ class OllamaClient:
     async def is_available(self) -> bool:
         """Ollama接続確認"""
         try:
-            # 簡単な接続テスト
+            # 簡単な接続テスト（タイムアウト付き）
             llm = ChatOllama(model=self.model, base_url=self.base_url, max_new_tokens=10)
-            await asyncio.to_thread(llm.invoke, "Test")
+            result = await asyncio.wait_for(
+                asyncio.to_thread(llm.invoke, "Test"), 
+                timeout=10.0
+            )
             return True
+        except asyncio.TimeoutError:
+            self.logger.warning(f"Ollama接続タイムアウト ({self.base_url}, {self.model})")
+            return False
         except Exception as e:
             self.logger.warning(f"Ollama接続失敗 ({self.base_url}, {self.model}): {e}")
             return False

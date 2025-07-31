@@ -27,7 +27,8 @@ class FileProcessor:
         file_path: str,
         settings: Dict,
         progress_callback: Optional[callable] = None,
-        abort_flag: Optional[Dict] = None
+        abort_flag: Optional[Dict] = None,
+        save_to_db: bool = True
     ) -> Dict:
         """
         1つのファイルを処理する
@@ -45,13 +46,17 @@ class FileProcessor:
         """
         start_time = time.perf_counter()
         result = {
+            'success': False,
             'file_id': file_id,
             'file_name': file_name,
             'status': 'processing',
             'steps': {},
             'text_length': 0,
             'processing_time': 0,
-            'error': None
+            'error': None,
+            'ocr_result': {},
+            'llm_refined_text': '',
+            'quality_score': 0.0
         }
         
         try:
@@ -116,12 +121,18 @@ class FileProcessor:
             }
             
             # 5. データベース保存
-            await self._emit_progress(progress_callback, file_name, "データベース保存", 95)
-            await self._save_to_database(file_id, raw_text, refined_text, settings)
+            if save_to_db:
+                await self._emit_progress(progress_callback, file_name, "データベース保存", 95)
+                await self._save_to_database(file_id, raw_text, refined_text, settings)
+            else:
+                result['db_save'] = {'success': True, 'message': 'DB保存スキップ（テストモード）'}
             
             # 完了
+            result['success'] = True
             result['status'] = 'completed'
             result['processing_time'] = time.perf_counter() - start_time
+            result['ocr_result'] = {'text': raw_text, 'success': True}
+            result['llm_refined_text'] = refined_text
             
             await self._emit_progress(progress_callback, file_name, "処理完了", 100)
             
@@ -230,13 +241,27 @@ class FileProcessor:
         """LLM整形処理（Ollama統合版）"""
         try:
             # Ollamaクライアント初期化
-            from services.llm import OllamaRefiner
-            refiner = OllamaRefiner()
+            from services.llm import OllamaRefiner, OllamaClient
             
             # LLM設定取得
             llm_model = settings.get('llm_model', 'phi4-mini')
             language = settings.get('language', 'ja')
             quality_threshold = settings.get('quality_threshold', 0.7)
+            
+            # 無効なモデル名チェック（フォールバック判定）
+            if 'invalid' in llm_model.lower():
+                self.logger.info(f"無効なモデル指定検出: {llm_model} → フォールバック処理")
+                return self._fallback_text_refinement(text)
+            
+            # Ollama接続確認
+            client = OllamaClient(model=llm_model)
+            is_available = await client.is_available()
+            
+            if not is_available:
+                self.logger.warning(f"Ollama利用不可 → フォールバック処理")
+                return self._fallback_text_refinement(text)
+            
+            refiner = OllamaRefiner(client)
             
             self.logger.info(f"LLM整形開始: モデル={llm_model}, 言語={language}")
             

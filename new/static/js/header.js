@@ -27,6 +27,8 @@ function setActiveNavigation() {
             (currentPath.startsWith('/files') && href === '/files') ||
             (currentPath.startsWith('/chat') && href === '/chat') ||
             (currentPath.startsWith('/upload') && href === '/upload') ||
+            (currentPath.startsWith('/ocr-comparison') && href === '/ocr-comparison') ||
+            (currentPath.startsWith('/data-registration') && href === '/data-registration') ||
             (currentPath.startsWith('/admin') && href === '/admin')) {
             item.classList.add('active');
         }

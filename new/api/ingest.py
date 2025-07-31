@@ -10,10 +10,10 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import StreamingResponse, JSONResponse
 from sqlalchemy.engine import Connection
 
-from database.connection import get_db_connection
-from services.ocr import OCREngineFactory
-from services.processing import ProcessingPipeline
-from config import LOGGER
+from new.database.connection import get_db_connection
+from new.services.ocr import OCREngineFactory
+from new.services.processing.pipeline import ProcessingPipeline
+from new.config import LOGGER
 
 router = APIRouter(prefix="/ingest", tags=["ingest"])
 

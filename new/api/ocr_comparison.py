@@ -15,10 +15,10 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-from database.connection import get_db_connection
-from database.models import files_blob, files_meta
-from services.ocr import OCREngineFactory
-from config import LOGGER
+from new.database.connection import get_db_connection
+from new.database.models import files_blob, files_meta
+from new.services.ocr import OCREngineFactory
+from new.config import LOGGER
 
 router = APIRouter(prefix="/ocr-comparison", tags=["OCR Comparison"])
 

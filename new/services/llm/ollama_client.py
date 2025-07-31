@@ -22,7 +22,7 @@ except ImportError:
     ChatOllama = None
     OllamaEndpointNotFoundError = Exception
 
-from config import OLLAMA_BASE, OLLAMA_MODEL, LOGGER
+from new.config import OLLAMA_BASE, OLLAMA_MODEL, LOGGER
 
 
 class OllamaClient:

@@ -6,7 +6,7 @@ import logging
 from typing import Dict, List, AsyncGenerator, Optional
 
 from .processor import FileProcessor
-from config import LOGGER
+from new.config import LOGGER
 
 class ProcessingPipeline:
     """ファイル処理パイプライン統合管理"""

@@ -7,10 +7,10 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-from database.connection import get_db_connection
-from database.models import files_meta, files_blob, files_text, FILE_STATUS
-from config import LOGGER
-from schemas import FileListResponse, FileDetailResponse, FileStatusUpdate
+from new.database.connection import get_db_connection
+from new.database.models import files_meta, files_blob, files_text, FILE_STATUS
+from new.config import LOGGER
+from new.schemas import FileListResponse, FileDetailResponse, FileStatusUpdate
 
 router = APIRouter(prefix="/files", tags=["files"])
 

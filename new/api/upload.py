@@ -11,10 +11,10 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-from database.connection import get_db_connection
-from database.models import FILE_STATUS
-from config import SUPPORTED_EXTENSIONS, MAX_FILE_SIZE, UPLOAD_TEMP_DIR, LOGGER
-from schemas import UploadResponse, BatchUploadResponse
+from new.database.connection import get_db_connection
+from new.database.models import FILE_STATUS
+from new.config import SUPPORTED_EXTENSIONS, MAX_FILE_SIZE, UPLOAD_TEMP_DIR, LOGGER
+from new.schemas import UploadResponse, BatchUploadResponse
 
 router = APIRouter(prefix="/upload", tags=["upload"])
 

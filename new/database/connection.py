@@ -7,8 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from sqlalchemy.exc import SQLAlchemyError
 
-from config import DB_ENGINE, DEBUG_MODE
-
+from new.config import DB_ENGINE, DEBUG_MODE
 
 def get_db_connection() -> Generator[Connection, None, None]:
     """

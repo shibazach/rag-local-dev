@@ -8,15 +8,15 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from config import (
+from new.config import (
     DEBUG_MODE, CORS_ORIGINS, SECRET_KEY, 
     SESSION_COOKIE_NAME, SESSION_COOKIE_SECURE,
     SESSION_COOKIE_HTTPONLY, SESSION_COOKIE_SAMESITE,
     STATIC_DIR, TEMPLATES_DIR, API_PREFIX, LOGGER,
     INPUT_DIR, OUTPUT_DIR
 )
-from database import init_db
-from auth import get_current_user
+from new.database import init_db
+from new.auth import get_current_user
 
 # FastAPIアプリケーション作成
 app = FastAPI(
@@ -112,23 +112,35 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # ルーター登録  
-from api import files_router, upload_router
+from new.api import files_router, upload_router
+
+# 認証APIルーター（api.py）
+from new.routes.api import router as api_router
+app.include_router(api_router, prefix=API_PREFIX, tags=["Auth"])
 
 # データ登録関連APIルーター
 app.include_router(files_router, prefix=API_PREFIX, tags=["Files"])
 app.include_router(upload_router, prefix=API_PREFIX, tags=["Upload"])
 
 # Processing API
-from api.processing import router as processing_router
+from new.api.processing import router as processing_router
 app.include_router(processing_router, prefix=API_PREFIX, tags=["Processing"])
 
 # Ingest API (データ登録処理・SSE)
-from api.ingest import router as ingest_router
+from new.api.ingest import router as ingest_router
 app.include_router(ingest_router, prefix=API_PREFIX, tags=["Ingest"])
 
 # File Selection API (ファイル選択・フィルタリング)
-from api.file_selection import router as file_selection_router
+from new.api.file_selection import router as file_selection_router
 app.include_router(file_selection_router, prefix=API_PREFIX, tags=["File Selection"])
+
+# OCR Comparison API (OCR比較検証)
+from new.api.ocr_comparison import router as ocr_comparison_router
+app.include_router(ocr_comparison_router, prefix=API_PREFIX, tags=["OCR Comparison"])
+
+# UI Routes (UIルーター)
+from new.routes.ui import router as ui_router
+app.include_router(ui_router, prefix="", tags=["UI"])
 
 # ヘルスチェック
 @app.get("/health")

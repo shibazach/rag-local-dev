@@ -3,6 +3,7 @@
 
 import os
 import torch
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from typing import Dict, Any
@@ -148,16 +149,17 @@ CORS_ORIGINS = [
 API_PREFIX = "/api"
 
 # ディレクトリ設定
-STATIC_DIR = "static"
-TEMPLATES_DIR = "templates" 
+BASE_DIR = Path(__file__).parent
+STATIC_DIR = BASE_DIR / "static"
+TEMPLATES_DIR = BASE_DIR / "templates" 
 
 # 入出力ディレクトリ
-INPUT_DIR = "ignored/input_files"
-OUTPUT_DIR = "ignored/output_files"
+INPUT_DIR = Path("ignored/input_files")
+OUTPUT_DIR = Path("ignored/output_files")
 
 # ディレクトリ作成
-for directory in [INPUT_DIR, OUTPUT_DIR]:
-    os.makedirs(directory, exist_ok=True)
+INPUT_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ============================================================================
 # ログ設定

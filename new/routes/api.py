@@ -13,7 +13,7 @@ from fastapi.responses import JSONResponse, FileResponse, Response
 from urllib.parse import quote
 from sqlalchemy.orm import Session
 
-from ..auth import get_current_user, require_admin, login_user, logout_user, User
+from ..auth import get_current_user, require_admin, get_optional_user
 from ..database import get_db
 from ..models import File
 from ..services.file_service import FileService
@@ -56,19 +56,23 @@ async def login(
     username: str = Form(...),
     password: str = Form(...)
 ):
-    """ユーザーログイン"""
+    """ユーザーログイン（スタブ実装）"""
     try:
-        user = login_user(request, username, password)
-        if user:
+        # スタブ認証: admin/admin または user/user
+        if (username == "admin" and password == "admin") or (username == "user" and password == "user"):
+            # セッションにユーザー情報を保存
+            user_info = {
+                "id": 1 if username == "admin" else 2,
+                "username": username,
+                "role": "admin" if username == "admin" else "user",
+                "is_active": True
+            }
+            request.session["user"] = user_info
+            
             return {
                 "success": True,
                 "message": "ログインに成功しました",
-                "user": {
-                    "id": user.id,
-                    "username": user.username,
-                    "email": user.email,
-                    "role": user.role
-                }
+                "user": user_info
             }
         else:
             raise HTTPException(status_code=401, detail="ユーザー名またはパスワードが正しくありません")
@@ -567,7 +571,7 @@ async def get_user_profile(
                 "id": current_user.id,
                 "username": current_user.username,
                 "email": current_user.email,
-                "role": current_user.role
+                "role": current_user.get('role')
             }
         }
     except Exception as e:

@@ -6,7 +6,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from .models import metadata, files_blob, files_meta, files_text
-from config import DB_ENGINE, DEBUG_MODE
+from new.config import DB_ENGINE, DEBUG_MODE
 
 
 def init_schema(engine: Engine = DB_ENGINE) -> bool:

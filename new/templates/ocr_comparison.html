@@ -1,8 +1,8 @@
 <!-- new/templates/ocr_comparison.html -->
 <!-- OCR比較検証ページ -->
-{% extends "base.html" %}
+{% extends "base_new.html" %}
 
-{% block head %}
+{% block extra_css %}
 <!-- 専用CSS -->
 <link rel="stylesheet" href="{{ url_for('static', path='css/ocr_comparison.css') }}">
 <!-- データ登録のファイル選択スタイル流用 -->

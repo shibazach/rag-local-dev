@@ -8,8 +8,8 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 from pydantic import BaseModel
 
-from database.connection import get_db_connection
-from config import LOGGER
+from new.database.connection import get_db_connection
+from new.config import LOGGER
 
 router = APIRouter(prefix="/file-selection", tags=["file-selection"])
 

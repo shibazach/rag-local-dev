@@ -3,10 +3,9 @@
 
 from fastapi import APIRouter
 
-# 各ルーターをインポート
-from .api import router as api_router
-from .ui import router as ui_router
-from .ingest import router as ingest_router
+# UIルーター以外は使用しないためコメントアウト
+# from .api import router as api_router      # ← 相対インポートエラーの原因
+# from .ingest import router as ingest_router # ← main.pyで直接管理
 
 # ルーターをエクスポート
-__all__ = ["api_router", "ui_router", "ingest_router"] 
+__all__ = [] 

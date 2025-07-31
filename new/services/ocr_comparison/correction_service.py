@@ -9,8 +9,7 @@ import csv
 from typing import Dict, List, Tuple
 from pathlib import Path
 
-from config import LOGGER
-
+from new.config import LOGGER
 
 class CorrectionService:
     """誤字修正・正規化処理サービス"""

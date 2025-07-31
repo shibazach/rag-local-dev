@@ -9,9 +9,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, AsyncGenerator
 import uuid
 
-from services.ocr import OCREngineFactory
-from database.connection import get_db_connection
-from config import LOGGER, DB_ENGINE
+from new.services.ocr.factory import OCREngineFactory
+from new.database.connection import get_db_connection
+from new.config import LOGGER, DB_ENGINE
 
 class FileProcessor:
     """新系ファイル処理プロセッサ"""

@@ -15,6 +15,15 @@ def get_current_user():
         "is_active": True
     }
 
+def get_optional_user(request):
+    """
+    リクエストからオプショナルでユーザーを取得する（セッションベース）
+    """
+    try:
+        return request.session.get("user")
+    except:
+        return None
+
 def require_admin():
     """
     管理者権限を要求する

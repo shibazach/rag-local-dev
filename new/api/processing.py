@@ -6,9 +6,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from sqlalchemy.engine import Connection
 
-from database.connection import get_db_connection
-from services.ocr import OCREngineFactory
-from config import LOGGER
+from new.database.connection import get_db_connection
+from new.services.ocr import OCREngineFactory
+from new.config import LOGGER
 
 router = APIRouter(prefix="/processing", tags=["processing"])
 

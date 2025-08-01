@@ -42,6 +42,67 @@ RAGシステム全体で統一された表（テーブル）の標準仕様で�
 </div>
 ```
 
+## スクロールバー完璧設定法
+
+### 核心となる設定思想
+**値行のみをスクロール対象とし、ヘッダーとページネーションは固定表示する**
+
+#### 1. ダイアログ全体のスクロール無効化
+```css
+.modal-large .modal-body {
+    overflow: hidden; /* ダイアログ全体のスクロールを無効化 */
+    padding: 12px;
+}
+```
+
+#### 2. テーブルコンテナの固定高さ設定
+```css
+.file-list-container {
+    height: 500px; /* 固定高さでダイアログ内スクロール制御 */
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+```
+
+#### 3. tbodyのスクロール制御（★最重要★）
+```css
+.file-table tbody {
+    display: block;
+    overflow-y: scroll; /* 強制的にスクロールバーを表示 */
+    overflow-x: hidden;
+    flex: 1;
+    width: calc(100% - 2px); /* スクロールバー分の調整 */
+    height: 400px; /* または適切な固定高さ */
+    position: relative;
+    /* スクロールバーを表の右端に固定 */
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+```
+
+#### 4. ヘッダーとデータ行の幅完全一致
+```css
+.file-table thead {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.file-table tbody tr {
+    display: table;
+    width: 100%; /* ヘッダーと完全一致 */
+    table-layout: fixed;
+    box-sizing: border-box;
+}
+```
+
+### 成功のポイント
+- **overflow-y: scroll**（autoではなくscroll）で常にスクロールバー表示
+- **width: calc(100% - 2px)**でスクロールバー分を考慮
+- **固定高さ**でコンテナを制御
+- **table-layout: fixed**で正確な列幅制御
+
 ## CSS仕様
 
 ### 1. テーブル基本構造

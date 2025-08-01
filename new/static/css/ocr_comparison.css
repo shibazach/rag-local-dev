@@ -477,8 +477,16 @@
 .modal-body {
     flex: 1;
     padding: 20px;
-    overflow-y: auto;
+    overflow-y: hidden; /* ダイアログ全体のスクロール無効化 */
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* OCR比較ダイアログ専用の.modal-body */
+.modal-large .modal-body {
+    padding: 12px;
+    overflow: hidden;
 }
 
 .modal-footer {
@@ -541,12 +549,14 @@
 
 .file-table thead {
     display: table;
-    width: 100%;
+    width: calc(100% - 15px); /* テスト調整 */
     table-layout: fixed;
     background: #f8f9fa;
     position: sticky;
     top: 0;
     z-index: 10;
+    margin-left: 0;
+    border: 3px solid #ff00ff !important; /* マゼンタ色ボーダーで確認 */
 }
 
 .file-table thead th {
@@ -570,10 +580,10 @@
 }
 
 /* カラム幅設定 - ステータス見切れ防止 */
-.file-table th:nth-child(1) { width: calc(100% - 280px); } /* ファイル名: 残り全幅 */
+.file-table th:nth-child(1) { width: calc(100% - 260px); } /* ファイル名: 残り全幅 */
 .file-table th:nth-child(2) { width: 50px; }                /* 頁数: 固定 */
 .file-table th:nth-child(3) { width: 140px; }               /* ステータス: さらに拡張して見切れ完全防止 */
-.file-table th:nth-child(4) { width: 90px; }                /* サイズ: 固定 */
+.file-table th:nth-child(4) { width: 70px; }                /* サイズ: 縮小 */
 
 .file-table tbody {
     display: block;
@@ -625,11 +635,20 @@
     border-right: none;
 }
 
-/* データ行のカラム幅統一 */
-.file-table tbody tr td:nth-child(1) { width: calc(100% - 280px); }
-.file-table tbody tr td:nth-child(2) { width: 50px; }
-.file-table tbody tr td:nth-child(3) { width: 140px; }
-.file-table tbody tr td:nth-child(4) { width: 90px; }
+/* データ行のカラム幅統一 - ヘッダーと完全一致 */
+.file-table tbody tr td:nth-child(1) { width: calc(100% - 260px) !important; }
+.file-table tbody tr td:nth-child(2) { width: 50px !important; }
+.file-table tbody tr td:nth-child(3) { width: 140px !important; }
+.file-table tbody tr td:nth-child(4) { width: 70px !important; }
+
+/* データ行のセル境界を表示 */
+.file-table tbody tr td {
+    border-right: 1px solid #e9ecef;
+}
+
+.file-table tbody tr td:last-child {
+    border-right: none;
+}
 
 /* テキスト配置 */
 .file-table td:nth-child(1) { text-align: left; }    /* ファイル名: 左寄せ */
@@ -791,16 +810,20 @@
     padding: 8px 12px;
     border: 1px solid #ced4da;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: 0.85rem; /* 文字サイズ縮小 */
+    line-height: 1.2; /* 行高調整 */
+    height: 36px; /* 高さ固定でセンタリング */
+    box-sizing: border-box;
 }
 
 .file-list-container {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     overflow: hidden;
-    height: 100%;
+    height: 500px; /* 固定高さでダイアログ内スクロール制御 */
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .file-list-header {

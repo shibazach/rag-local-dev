@@ -528,21 +528,23 @@ select option:disabled {
 
 .data-registration-container .file-table thead {
     display: table !important;
-    width: 100% !important;
+    width: calc(100% - 15px) !important; /* より大きく調整してテスト */
     table-layout: fixed !important;
+    background: #f8f9fa !important; /* 通常の背景色に戻す */
+    border: 2px solid #0000ff !important; /* 青色ボーダーで確認 */
 }
 
 .data-registration-container .file-table tbody {
     display: block !important;
-    overflow-y: auto !important;
+    overflow-y: scroll !important; /* 強制スクロールバー表示 */
     flex: 1 !important;
-    width: 100% !important;
+    width: calc(100% - 8px) !important; /* スクロールバー分差し引き */
     max-height: calc(100vh - 230px) !important; /* さらに5px伸ばす */
 }
 
 .data-registration-container .file-table tbody tr {
     display: table !important;
-    width: calc(100% - 8px) !important; /* スクロールバー分を差し引いてヘッダーと完全一致 */
+    width: 100% !important; /* ヘッダーと完全一致 */
     table-layout: fixed !important;
 }
 
@@ -552,6 +554,17 @@ select option:disabled {
 .data-registration-container .file-table tbody tr td:nth-child(3) { width: 50px !important; }
 .data-registration-container .file-table tbody tr td:nth-child(4) { width: 90px !important; }
 .data-registration-container .file-table tbody tr td:nth-child(5) { width: 90px !important; }
+
+/* データ行のセル境界を表示 */
+.data-registration-container .file-table tbody tr td {
+    border-right: 1px solid #e9ecef !important;
+    vertical-align: middle !important;
+    height: 32px !important;
+}
+
+.data-registration-container .file-table tbody tr td:last-child {
+    border-right: none !important;
+}
 
 /* スクロールバーのスタイル調整 */
 .file-table tbody::-webkit-scrollbar {

@@ -1,181 +1,207 @@
-# new/config.py
-# 新系RAGシステム設定ファイル
+# REM: config.py @2024-12-19
+# REM: アプリケーション設定統一管理（Pydantic BaseSettings採用）
 
+# ── 標準ライブラリ ──
 import os
-import torch
-from pathlib import Path
-from sqlalchemy import create_engine
-from sqlalchemy.engine import Engine
-from typing import Dict, Any
-
-# ============================================================================
-# 基本設定
-# ============================================================================
-
-# デバッグ・開発モード設定
-DEBUG_MODE = True
-DEVELOPMENT_MODE = os.getenv("DEVELOPMENT_MODE", "false").lower() == "true"
-
-# GPU・マルチモーダル設定
-CUDA_AVAILABLE = torch.cuda.is_available()
-MULTIMODAL_ENABLED = CUDA_AVAILABLE
-MULTIMODAL_MODEL = "Qwen/Qwen-VL-Chat" if CUDA_AVAILABLE else None
-
-print(f"[config.py] CUDA_AVAILABLE = {CUDA_AVAILABLE}")
-print(f"[config.py] MULTIMODAL_ENABLED = {MULTIMODAL_ENABLED}")
-
-# ============================================================================
-# LLM設定（Ollama）
-# ============================================================================
-
-OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434")
-OLLAMA_MODEL = "gemma3" if CUDA_AVAILABLE else "phi4-mini"
-LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "300"))
-
-print(f"[config.py] LLM_MODEL = {OLLAMA_MODEL}")
-
-# ============================================================================
-# 処理設定
-# ============================================================================
-
-# ファイル処理設定
-SUPPORTED_EXTENSIONS = {".pdf", ".txt", ".docx", ".csv", ".json", ".eml", ".png", ".jpg", ".jpeg", ".tiff", ".bmp"}
-DEFAULT_OCR_ENGINE = os.getenv("DEFAULT_OCR_ENGINE", "ocrmypdf")
-DEFAULT_EMBEDDING_MODELS = ["intfloat-e5-large-v2"]
-DEFAULT_QUALITY_THRESHOLD = 0.0
-
-# ============================================================================
-# データベース設定
-# ============================================================================
-
-# PostgreSQL接続設定
-DB_HOST = os.getenv("DB_HOST", "ragdb")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_USER = os.getenv("DB_USER", "raguser")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "ragpass")
-DB_NAME = os.getenv("DB_NAME", "rag")
-
-# 接続URL構築
-DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-
-# SQLAlchemyエンジン作成
-DB_ENGINE: Engine = create_engine(
-    DATABASE_URL,
-    echo=DEBUG_MODE,  # デバッグモード時にSQL文を出力
-    pool_size=10,
-    max_overflow=20,
-    pool_pre_ping=True,  # 接続確認
-    pool_recycle=3600,   # 1時間で接続リサイクル
-)
-
-print(f"[config.py] Database URL: {DATABASE_URL}")
-
-# ============================================================================
-# ファイル処理設定
-# ============================================================================
-
-# サポートする拡張子
-SUPPORTED_EXTENSIONS = {".txt", ".pdf", ".docx", ".csv", ".json", ".eml"}
-
-# ファイルサイズ制限（100MB）
-MAX_FILE_SIZE = 100 * 1024 * 1024
-
-# アップロード一時ディレクトリ
-UPLOAD_TEMP_DIR = os.getenv("UPLOAD_TEMP_DIR", "/tmp/rag_uploads")
-os.makedirs(UPLOAD_TEMP_DIR, exist_ok=True)
-
-# ============================================================================
-# 埋め込みモデル設定
-# ============================================================================
-
-EMBEDDING_OPTIONS: Dict[str, Dict[str, Any]] = {
-    "1": {
-        "name": "intfloat/multilingual-e5-large",
-        "description": "多言語対応・高精度",
-        "model_path": "intfloat/multilingual-e5-large",
-        "dimensions": 1024,
-    },
-    "2": {
-        "name": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2", 
-        "description": "軽量・多言語対応",
-        "model_path": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-        "dimensions": 384,
-    },
-    "3": {
-        "name": "cl-tohoku/shioriha-large-pt",
-        "description": "日本語特化・高精度",
-        "model_path": "cl-tohoku/shioriha-large-pt", 
-        "dimensions": 768,
-    },
-}
-
-# ============================================================================
-# ログ設定
-# ============================================================================
-
-LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
-LOG_DIR = "logs"
-os.makedirs(LOG_DIR, exist_ok=True)
-
-# ============================================================================
-# セキュリティ設定
-# ============================================================================
-
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-
-# セッション設定
-SESSION_COOKIE_NAME = "rag_session"
-SESSION_COOKIE_SECURE = False  # HTTPSの場合はTrue
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "lax"
-
-# CORS設定
-CORS_ORIGINS = [
-    "http://localhost:3000",
-    "http://localhost:8000", 
-    "http://localhost:8001",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:8001",
-]
-
-# ============================================================================
-# API・ディレクトリ設定
-# ============================================================================
-
-# API設定
-API_PREFIX = "/api"
-
-# ディレクトリ設定
-BASE_DIR = Path(__file__).parent
-STATIC_DIR = BASE_DIR / "static"
-TEMPLATES_DIR = BASE_DIR / "templates" 
-
-# 入出力ディレクトリ
-INPUT_DIR = Path("ignored/input_files")
-OUTPUT_DIR = Path("ignored/output_files")
-
-# ディレクトリ作成
-INPUT_DIR.mkdir(parents=True, exist_ok=True)
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-# ============================================================================
-# ログ設定
-# ============================================================================
-
 import logging
+from pathlib import Path
+from typing import Optional, List, Dict, Any
 
-# ロガー設定
-LOGGER = logging.getLogger("rag_system")
-LOGGER.setLevel(getattr(logging, LOG_LEVEL))
+# ── サードパーティ ──
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
-# ハンドラー設定
-if not LOGGER.handlers:
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+# ──────────────────────────────────────────────────────────
+# 設定クラス定義（Pydantic BaseSettings）
+# ──────────────────────────────────────────────────────────
+class Settings(BaseSettings):
+    """アプリケーション設定（環境変数とデフォルト値の統合管理）"""
+    
+    # ──── デバッグ・開発設定 ────
+    DEBUG_MODE: bool = Field(True, description="デバッグモード有効化")
+    DEBUG_PRINT_ENABLED: bool = Field(True, description="デバッグ出力有効化")
+    DEVELOPMENT_MODE: bool = Field(True, description="開発モード有効化")
+    
+    # ──── データベース設定 ────
+    DATABASE_URL: str = Field(
+        "postgresql://raguser:ragpass@ragdb:5432/rag",
+        description="PostgreSQL接続URL"
     )
-    handler.setFormatter(formatter)
-    LOGGER.addHandler(handler)
+    
+    # ──── LLM・AI設定 ────
+    LLM_MODEL: str = Field("phi4-mini", description="使用LLMモデル名")
+    OLLAMA_MODEL: str = Field("phi4-mini", description="Ollama使用モデル名")
+    LLM_TIMEOUT: int = Field(300, description="LLMタイムアウト秒数")
+    OLLAMA_BASE_URL: str = Field("http://localhost:11434", description="Ollama API URL")
+    
+    # ──── ファイル・OCR設定 ────
+    DEFAULT_OCR_ENGINE: str = Field("ocrmypdf", description="デフォルトOCRエンジン")
+    SUPPORTED_EXTENSIONS: List[str] = Field(
+        [".pdf", ".docx", ".txt", ".csv", ".json", ".eml"],
+        description="サポート対象ファイル拡張子"
+    )
+    MAX_FILE_SIZE: int = Field(100 * 1024 * 1024, description="最大ファイルサイズ（バイト）")
+    UPLOAD_TEMP_DIR: Optional[str] = Field(None, description="アップロード一時ディレクトリ")
+    
+    # ──── 埋め込み・ベクトル設定 ────
+    DEFAULT_EMBEDDING_MODELS: List[str] = Field(
+        ["intfloat/e5-large-v2"],
+        description="デフォルト埋め込みモデル"
+    )
+    DEFAULT_QUALITY_THRESHOLD: float = Field(0.7, description="品質スコア閾値")
+    
+    # ──── 埋め込みオプション設定（OLD系互換） ────
+    EMBEDDING_OPTIONS: Dict[str, Dict[str, Any]] = Field(
+        {
+            "1": {
+                "embedder": "SentenceTransformer",
+                "model_name": "intfloat/e5-large-v2",
+                "dimension": 1024
+            },
+            "2": {
+                "embedder": "SentenceTransformer",
+                "model_name": "intfloat/e5-small-v2",
+                "dimension": 384
+            },
+            "3": {
+                "embedder": "OllamaEmbeddings",
+                "model_name": "nomic-embed-text",
+                "dimension": 768
+            }
+        },
+        description="埋め込みモデルオプション"
+    )
+    DEFAULT_EMBEDDING_OPTION: str = Field("1", description="デフォルト埋め込みオプション")
+    
+    # ──── パス設定 ────
+    BASE_DIR: Path = Field(Path(__file__).parent, description="アプリケーションベースディレクトリ")
+    
+    @property
+    def INPUT_DIR(self) -> Path:
+        """入力ファイルディレクトリ"""
+        path = self.BASE_DIR / "ignored/input_files"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    
+    @property 
+    def OUTPUT_DIR(self) -> Path:
+        """出力ファイルディレクトリ"""
+        path = self.BASE_DIR / "ignored/output_files"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+    
+    @property
+    def STATIC_DIR(self) -> Path:
+        """静的ファイルディレクトリ"""
+        return self.BASE_DIR / "static"
+    
+    @property
+    def TEMPLATES_DIR(self) -> Path:
+        """テンプレートディレクトリ"""
+        return self.BASE_DIR / "templates"
+    
+    # ──── セキュリティ設定 ────
+    SECRET_KEY: str = Field(
+        "your-secret-key-change-in-production",
+        description="セッション暗号化キー"
+    )
+    SESSION_COOKIE_NAME: str = Field("rag_session", description="セッションクッキー名")
+    SESSION_COOKIE_SECURE: bool = Field(False, description="セキュアクッキー使用")
+    SESSION_COOKIE_HTTPONLY: bool = Field(True, description="HTTPOnlyクッキー使用")
+    SESSION_COOKIE_SAMESITE: str = Field("lax", description="SameSiteクッキー設定")
+    
+    # ──── API設定 ────
+    API_PREFIX: str = Field("/api", description="API URLプレフィックス")
+    CORS_ORIGINS: List[str] = Field(
+        ["http://localhost:8000", "http://127.0.0.1:8000"],
+        description="CORS許可オリジン"
+    )
+    
+    # ──── ハードウェア設定 ────
+    @property
+    def CUDA_AVAILABLE(self) -> bool:
+        """CUDA利用可能性"""
+        try:
+            import torch
+            return torch.cuda.is_available()
+        except ImportError:
+            return False
+    
+    @property
+    def MULTIMODAL_ENABLED(self) -> bool:
+        """マルチモーダル機能有効性"""
+        return self.CUDA_AVAILABLE
+    
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+
+# ──────────────────────────────────────────────────────────
+# 設定インスタンス（シングルトン）
+# ──────────────────────────────────────────────────────────
+settings = Settings()
+
+# ──────────────────────────────────────────────────────────
+# 後方互換性のための別名定義
+# ──────────────────────────────────────────────────────────
+DEBUG_MODE = settings.DEBUG_MODE
+DEBUG_PRINT_ENABLED = settings.DEBUG_PRINT_ENABLED
+DEVELOPMENT_MODE = settings.DEVELOPMENT_MODE
+DATABASE_URL = settings.DATABASE_URL
+LLM_MODEL = settings.LLM_MODEL
+LLM_TIMEOUT = settings.LLM_TIMEOUT
+DEFAULT_OCR_ENGINE = settings.DEFAULT_OCR_ENGINE
+SUPPORTED_EXTENSIONS = settings.SUPPORTED_EXTENSIONS
+MAX_FILE_SIZE = settings.MAX_FILE_SIZE
+UPLOAD_TEMP_DIR = settings.UPLOAD_TEMP_DIR
+DEFAULT_EMBEDDING_MODELS = settings.DEFAULT_EMBEDDING_MODELS
+DEFAULT_QUALITY_THRESHOLD = settings.DEFAULT_QUALITY_THRESHOLD
+EMBEDDING_OPTIONS = settings.EMBEDDING_OPTIONS
+DEFAULT_EMBEDDING_OPTION = settings.DEFAULT_EMBEDDING_OPTION
+BASE_DIR = settings.BASE_DIR
+INPUT_DIR = settings.INPUT_DIR
+OUTPUT_DIR = settings.OUTPUT_DIR
+STATIC_DIR = settings.STATIC_DIR
+TEMPLATES_DIR = settings.TEMPLATES_DIR
+SECRET_KEY = settings.SECRET_KEY
+SESSION_COOKIE_NAME = settings.SESSION_COOKIE_NAME
+SESSION_COOKIE_SECURE = settings.SESSION_COOKIE_SECURE
+SESSION_COOKIE_HTTPONLY = settings.SESSION_COOKIE_HTTPONLY
+SESSION_COOKIE_SAMESITE = settings.SESSION_COOKIE_SAMESITE
+API_PREFIX = settings.API_PREFIX
+CORS_ORIGINS = settings.CORS_ORIGINS
+CUDA_AVAILABLE = settings.CUDA_AVAILABLE
+MULTIMODAL_ENABLED = settings.MULTIMODAL_ENABLED
+
+# ──────────────────────────────────────────────────────────
+# ロガー設定
+# ──────────────────────────────────────────────────────────
+logging.basicConfig(
+    level=logging.DEBUG if DEBUG_MODE else logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+LOGGER = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────────────────
+# SQLAlchemy エンジン設定
+# ──────────────────────────────────────────────────────────
+try:
+    from sqlalchemy import create_engine
+    DB_ENGINE = create_engine(
+        DATABASE_URL,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        echo=False  # SQLログを無効化（パフォーマンス重視）
+    )
+except ImportError:
+    LOGGER.warning("SQLAlchemy未インストール: DB_ENGINEは使用不可")
+    DB_ENGINE = None
+
+# ──────────────────────────────────────────────────────────
+# 初期化確認ログ
+# ──────────────────────────────────────────────────────────
+if DEBUG_PRINT_ENABLED:
+    print(f"[config.py] LLM_MODEL = {LLM_MODEL}")
+    print(f"[config.py] CUDA_AVAILABLE = {CUDA_AVAILABLE}")
+    print(f"[config.py] MULTIMODAL_ENABLED = {MULTIMODAL_ENABLED}")
+    print(f"[config.py] Database URL: {DATABASE_URL}")

@@ -9,11 +9,6 @@ body.home-page .main-content {
     padding-top: 0;
 }
 
-/* ホームページでは上部ヘッダーを非表示 */
-body.home-page .app-header {
-    display:none;
-}
-
 body.home-page .hero {
     background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #455a64 100%);
     color: white;
@@ -395,52 +390,40 @@ function logout() {
 
 {% block content %}
 <div class="hero">
-    <div class="container">
+    <div class="container" style="position: relative;">
         <h1 class="hero-title">R&D RAGシステム</h1>
         <p class="hero-subtitle">AIブーストされた新世代ドキュメント検索プラットフォーム✨</p>
-        <!-- ログインボタンを右上に配置 -->
-        <div class="hero-auth-container">
-            <button id="login-button" class="hero-login-button" onclick="showLoginModal()" style="display: none;">ログイン</button>
-            <div id="user-menu" class="hero-user-menu" style="display: none;">
-                <span id="user-name"></span>
-                <button id="logout-button" class="btn btn-sm btn-outline" onclick="logout()">ログアウト</button>
-            </div>
+        <div class="hero-auth-absolute">
+            {% if show_auth_ui %}
+                {% if user and user.get('username') %}
+                    <span class="user-avatar">◉</span>
+                    <span class="username">{{ user.get('username') }}</span>
+                    <a href="/logout" class="btn btn-logout">ログアウト</a>
+                {% else %}
+                    <a href="/login" class="btn btn-login">ログイン</a>
+                {% endif %}
+            {% endif %}
         </div>
     </div>
 </div>
-
-<!-- メインナビゲーション -->
-<div class="main-navigation">
-    <div class="container">
-        <div class="nav-buttons">
-            <a href="/chat" class="nav-button">チャット</a>
-            <a href="/files" class="nav-button">ファイル</a>
+<!-- メインメニュー行 -->
+<div class="home-main-menu-row">
+    <div class="home-main-menu-center">
+        <div class="nav-parent nav-utilization">
+            <span class="nav-parent-label">利用</span>
+            <ul class="nav-dropdown">
+                <li><a href="/chat" class="nav-item" data-page="chat"><span class="nav-icon">⎘</span><span class="nav-text">チャット</span></a></li>
+                <li><a href="/files" class="nav-item" data-page="files"><span class="nav-icon">≡</span><span class="nav-text">ファイル</span></a></li>
+            </ul>
         </div>
-        
-        <!-- 認証後メニュー -->
-        <div id="authenticated-menu" class="authenticated-menu" style="display: none;">
-            <div class="menu-grid">
-                <a href="/files" class="menu-item">
-                    <span class="menu-icon">≡</span>
-                    <span class="menu-text">ファイル</span>
-                </a>
-                <a href="/upload" class="menu-item admin-only" style="display: none;">
-                    <span class="menu-icon">↗</span>
-                    <span class="menu-text">アップロード</span>
-                </a>
-                <a href="/ocr-comparison" class="menu-item admin-only" style="display: none;">
-                    <span class="menu-icon">📊</span>
-                    <span class="menu-text">OCR比較検証</span>
-                </a>
-                <a href="/data-registration" class="menu-item admin-only" style="display: none;">
-                    <span class="menu-icon">⚙</span>
-                    <span class="menu-text">データ登録</span>
-                </a>
-                <a href="/admin" class="menu-item admin-only" style="display: none;">
-                    <span class="menu-icon">⚡</span>
-                    <span class="menu-text">管理</span>
-                </a>
-            </div>
+        <div class="nav-parent nav-admin">
+            <span class="nav-parent-label">管理</span>
+            <ul class="nav-dropdown">
+                <li><a href="/upload" class="nav-item admin-only" data-page="upload"><span class="nav-icon">↗</span><span class="nav-text">アップロード</span></a></li>
+                <li><a href="/ocr-comparison" class="nav-item admin-only" data-page="ocr-comparison"><span class="nav-icon">📊</span><span class="nav-text">OCR検証</span></a></li>
+                <li><a href="/data-registration" class="nav-item admin-only" data-page="data-registration"><span class="nav-icon">⚙</span><span class="nav-text">データ登録</span></a></li>
+                <li><a href="/admin" class="nav-item admin-only" data-page="admin"><span class="nav-icon">⚡</span><span class="nav-text">監視</span></a></li>
+            </ul>
         </div>
     </div>
 </div>

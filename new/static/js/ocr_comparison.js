@@ -23,6 +23,9 @@ class OCRComparisonManager {
         // イベントリスナー設定
         this.setupEventListeners();
         
+        // ドラッグ可能境界線初期化
+        this.initializeResizablePanels();
+        
         console.log('OCR比較検証ページ初期化完了');
     }
 
@@ -469,6 +472,240 @@ class OCRComparisonManager {
         } else {
             alert('情報: ' + message);
         }
+    }
+
+    async loadFileList() {
+        try {
+            const response = await fetch('/api/files', {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.displayFileList(data.files || []);
+            } else {
+                console.error('ファイル一覧の取得に失敗しました');
+                this.showError('ファイル一覧の取得に失敗しました');
+            }
+        } catch (error) {
+            console.error('ファイル一覧取得エラー:', error);
+            this.showError(`ファイル一覧取得エラー: ${error.message}`);
+        }
+    }
+
+    displayFileList(files) {
+        const tbody = document.getElementById('file-dialog-list');
+        tbody.innerHTML = '';
+        
+        // デフォルトで未処理に絞り込み
+        const statusFilter = document.getElementById('status-filter').value || 'pending_processing';
+        const filteredFiles = files.filter(file => 
+            !statusFilter || file.status === statusFilter
+        );
+        
+        if (filteredFiles.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="loading-state">
+                        該当するファイルがありません
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
+        filteredFiles.forEach(file => {
+            const row = document.createElement('tr');
+            row.dataset.fileId = file.id;
+            row.dataset.status = file.status;
+            row.dataset.fileName = file.file_name;
+            
+            const pageCount = file.page_count || '-';
+            const fileSize = this.formatFileSize(file.file_size || 0);
+            const statusText = this.getStatusText(file.status);
+            
+            row.innerHTML = `
+                <td class="file-name" title="${file.file_name}">${file.file_name}</td>
+                <td>${pageCount}</td>
+                <td>
+                    <span class="status-badge status-${file.status}">
+                        ${statusText}
+                    </span>
+                </td>
+                <td>${fileSize}</td>
+            `;
+            
+            tbody.appendChild(row);
+            
+            // 行クリックイベント
+            row.addEventListener('click', () => {
+                // 他の選択を解除
+                document.querySelectorAll('.file-table tbody tr').forEach(tr => {
+                    tr.classList.remove('selected');
+                });
+                row.classList.add('selected');
+                
+                // 選択ボタンを有効化
+                document.getElementById('file-dialog-select').disabled = false;
+                
+                // 選択されたファイル情報を保存
+                this.selectedFileId = file.id;
+                this.selectedFileInfo = { id: file.id, file_name: file.file_name };
+            });
+            
+            // ダブルクリックで選択完了
+            row.addEventListener('dblclick', () => {
+                this.selectFile(file.id, file.file_name);
+            });
+        });
+        
+        // フィルター処理の設定
+        this.setupFileFilters();
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    getStatusText(status) {
+        const statusMap = {
+            'pending_processing': '未処理',
+            'processing': '処理中',
+            'text_extracted': '未整形',
+            'text_refined': '未ベクトル化',
+            'processed': '処理完了',
+            'error': 'エラー'
+        };
+        return statusMap[status] || status;
+    }
+
+    setupFileFilters() {
+        const statusFilter = document.getElementById('status-filter');
+        const searchInput = document.getElementById('file-search');
+        
+        statusFilter.addEventListener('change', () => this.filterFiles());
+        searchInput.addEventListener('input', () => this.filterFiles());
+    }
+
+    filterFiles() {
+        const statusFilter = document.getElementById('status-filter').value;
+        const searchTerm = document.getElementById('file-search').value.toLowerCase();
+        const rows = document.querySelectorAll('.file-table tbody tr');
+        
+        rows.forEach(row => {
+            if (!row.dataset.fileId) return; // Skip loading state row
+            
+            const status = row.dataset.status;
+            const fileName = row.dataset.fileName.toLowerCase();
+            
+            const matchesStatus = !statusFilter || status === statusFilter;
+            const matchesSearch = !searchTerm || fileName.includes(searchTerm);
+            
+            row.style.display = matchesStatus && matchesSearch ? '' : 'none';
+        });
+    }
+
+    selectFile(fileId, fileName) {
+        // 選択されたファイル情報を更新
+        document.getElementById('selected-file-name').textContent = fileName;
+        this.selectedFileId = fileId;
+        this.selectedFileInfo = { id: fileId, file_name: fileName };
+        
+        // OCR実行ボタンを有効化
+        document.getElementById('start-ocr-btn').disabled = false;
+        
+        // ダイアログを閉じる
+        document.getElementById('file-dialog').style.display = 'none';
+        
+        console.log('[OCR] ファイル選択完了:', fileName);
+    }
+
+    initializeResizablePanels() {
+        // 縦の境界線（左右分割）
+        const verticalSplitter = document.querySelector('.vertical-splitter');
+        if (verticalSplitter) {
+            this.makeDraggable(verticalSplitter, 'vertical');
+        }
+
+        // 横の境界線（上下分割）
+        const horizontalSplitterLeft = document.querySelector('.horizontal-splitter-left');
+        const horizontalSplitterRight = document.querySelector('.horizontal-splitter-right');
+        
+        if (horizontalSplitterLeft) {
+            this.makeDraggable(horizontalSplitterLeft, 'horizontal-left');
+        }
+        if (horizontalSplitterRight) {
+            this.makeDraggable(horizontalSplitterRight, 'horizontal-right');
+        }
+    }
+
+    makeDraggable(splitter, type) {
+        let isResizing = false;
+        let startX, startY;
+        const mainContent = document.querySelector('.ocr-main-content');
+
+        splitter.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            document.body.style.cursor = type === 'vertical' ? 'col-resize' : 'row-resize';
+            document.body.style.userSelect = 'none';
+            
+            // PDFプレビューのポインターイベントを無効化
+            const pdfFrame = document.getElementById('pdf-preview');
+            if (pdfFrame) {
+                pdfFrame.style.pointerEvents = 'none';
+            }
+            
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            const rect = mainContent.getBoundingClientRect();
+            
+            if (type === 'vertical') {
+                // 縦分割の処理
+                const percentage = ((e.clientX - rect.left) / rect.width) * 100;
+                const clampedPercentage = Math.min(Math.max(percentage, 20), 80); // 20%-80%の範囲
+                
+                mainContent.style.gridTemplateColumns = `${clampedPercentage}% 6px ${100 - clampedPercentage}%`;
+            } else if (type === 'horizontal-left') {
+                // 左側の横分割
+                const percentage = ((e.clientY - rect.top) / rect.height) * 100;
+                const clampedPercentage = Math.min(Math.max(percentage, 15), 70); // 15%-70%の範囲
+                
+                mainContent.style.gridTemplateRows = `${clampedPercentage}% 6px ${100 - clampedPercentage}%`;
+            } else if (type === 'horizontal-right') {
+                // 右側の横分割（Grid Template Rows調整）
+                const percentage = ((e.clientY - rect.top) / rect.height) * 100;
+                const clampedPercentage = Math.min(Math.max(percentage, 15), 70); // 15%-70%の範囲
+                
+                // 右側のグリッド行比率を調整
+                const currentCols = mainContent.style.gridTemplateColumns || '1fr 6px 1fr';
+                mainContent.style.gridTemplateColumns = currentCols;
+                mainContent.style.gridTemplateRows = `${clampedPercentage}% 6px ${100 - clampedPercentage}%`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+                
+                // PDFプレビューのポインターイベントを復元
+                const pdfFrame = document.getElementById('pdf-preview');
+                if (pdfFrame) {
+                    pdfFrame.style.pointerEvents = '';
+                }
+            }
+        });
     }
 }
 

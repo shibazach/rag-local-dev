@@ -10,12 +10,12 @@ from sqlalchemy.engine import Connection
 from new.database.connection import get_db_connection
 from new.database.models import files_meta, files_blob, files_text, FILE_STATUS
 from new.config import LOGGER
-from new.schemas import FileListResponse, FileDetailResponse, FileStatusUpdate
+from new.schemas import FileListResponse, FileResponse, FileStatusUpdate
 
 router = APIRouter(prefix="/files", tags=["files"])
 
 
-@router.get("", response_model=FileListResponse)
+@router.get("")
 def get_files_list(
     page: int = Query(1, ge=1, description="ページ番号"),
     page_size: int = Query(100, ge=1, le=500, description="1ページあたりの件数"),
@@ -110,7 +110,7 @@ def get_files_list(
         raise HTTPException(status_code=500, detail="ファイル一覧の取得に失敗しました")
 
 
-@router.get("/{file_id}", response_model=FileDetailResponse)
+@router.get("/{file_id}")
 def get_file_detail(
     file_id: str,
     connection: Connection = Depends(get_db_connection)

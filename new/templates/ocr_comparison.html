@@ -1,193 +1,204 @@
 <!-- new/templates/ocr_comparison.html -->
-<!-- OCR比較検証ページ -->
+<!-- OCR検証ページ -->
 {% extends "base_new.html" %}
 
+{% block title %}OCR検証{% endblock %}
+
 {% block extra_css %}
-<!-- 専用CSS -->
 <link rel="stylesheet" href="{{ url_for('static', path='css/ocr_comparison.css') }}">
-<!-- データ登録のファイル選択スタイル流用 -->
-<link rel="stylesheet" href="{{ url_for('static', path='css/data_registration.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="page-container">
-    <!-- ページヘッダー -->
-    <div class="page-header">
-        <div class="page-title">
-            <h1>📊 OCR比較検証</h1>
-            <p class="page-description">複数のOCRエンジンでファイルを処理し、結果を比較検証します</p>
-        </div>
-        <div class="page-actions">
-            <button id="help-btn" class="btn btn-outline">
-                <i class="icon">❓</i>
-                ヘルプ
-            </button>
-        </div>
-    </div>
-
-    <!-- メインコンテンツ -->
-    <div class="main-content">
-        <!-- 上部ペイン: 設定エリア -->
-        <div class="settings-pane">
-            <!-- 左上: ファイル選択 -->
-            <div class="file-selection-panel">
-                <div class="panel-header">
-                    <h3>📁 ファイル選択</h3>
-                    <div class="selection-info">
-                        <span id="file-count">0</span> ファイル選択済み
-                    </div>
-                </div>
-                <div class="panel-content">
-                    <!-- ファイル検索・フィルター -->
-                    <div class="filter-section">
-                        <div class="filter-row">
-                            <div class="filter-group">
-                                <label for="file-search">🔍 ファイル名検索</label>
-                                <input type="text" id="file-search" placeholder="ファイル名で検索...">
-                            </div>
-                            <div class="filter-group">
-                                <label for="status-filter">📊 ステータス</label>
-                                <select id="status-filter">
-                                    <option value="">すべて</option>
-                                    <option value="uploaded">アップロード済み</option>
-                                    <option value="processed">処理済み</option>
-                                    <option value="error">エラー</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ファイル一覧 -->
-                    <div class="file-list-container">
-                        <div class="file-list-header">
-                            <span class="col-select">選択</span>
-                            <span class="col-name">ファイル名</span>
-                            <span class="col-type">種別</span>
-                            <span class="col-size">サイズ</span>
-                            <span class="col-pages">ページ数</span>
-                            <span class="col-status">ステータス</span>
-                        </div>
-                        <div class="file-list" id="file-list">
-                            <!-- ファイル一覧がここに動的に表示される -->
-                            <div class="loading-state">
-                                <div class="spinner"></div>
-                                <span>ファイル一覧を読み込み中...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 選択されたファイル情報 -->
-                    <div class="selected-file-info" id="selected-file-info" style="display: none;">
-                        <h4>選択ファイル</h4>
-                        <div class="file-details">
-                            <div class="detail-row">
-                                <span class="detail-label">ファイル名:</span>
-                                <span class="detail-value" id="selected-file-name">-</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">ファイルサイズ:</span>
-                                <span class="detail-value" id="selected-file-size">-</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">ページ数:</span>
-                                <span class="detail-value" id="selected-file-pages">-</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="detail-label">ファイル形式:</span>
-                                <span class="detail-value" id="selected-file-type">-</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 右上: OCR設定 -->
-            <div class="ocr-settings-panel">
-                <div class="panel-header">
-                    <h3>⚙️ OCR設定</h3>
-                </div>
-                <div class="panel-content">
-                    <!-- OCRエンジン選択 -->
-                    <div class="setting-group">
-                        <label>🔧 使用するOCRエンジン</label>
-                        <div class="engine-selection" id="engine-selection">
-                            <!-- OCRエンジン選択チェックボックスが動的に表示される -->
-                            <div class="loading-state">
-                                <span>エンジン一覧を読み込み中...</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ページ設定 -->
-                    <div class="setting-group">
-                        <label for="page-number">📄 処理ページ</label>
-                        <div class="page-setting">
-                            <input type="number" id="page-number" min="0" value="1" step="1">
-                            <span class="setting-note">0 = 全ページ, 1以上 = 指定ページ</span>
-                        </div>
-                    </div>
-
-                    <!-- 誤字修正設定 -->
-                    <div class="setting-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="use-correction" checked>
-                            <span class="checkmark"></span>
-                            🔤 誤字修正・正規化を有効にする
-                        </label>
-                        <div class="setting-note">OCR結果に対して辞書ベースの誤字修正と全角→半角変換を適用します</div>
-                    </div>
-
-                    <!-- 実行ボタン -->
-                    <div class="action-buttons">
-                        <button id="start-comparison" class="btn btn-primary" disabled>
-                            <i class="icon">🚀</i>
-                            OCR比較実行
-                        </button>
-                        <button id="cancel-comparison" class="btn btn-secondary" disabled>
-                            <i class="icon">⏹️</i>
-                            キャンセル
-                        </button>
-                    </div>
-
-                    <!-- 処理状態表示 -->
-                    <div class="processing-status" id="processing-status" style="display: none;">
-                        <div class="status-icon">⏳</div>
-                        <div class="status-text">OCR処理中...</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="processing-progress"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 下部ペイン: 結果表示 -->
-        <div class="results-pane">
+<div class="ocr-container">
+    <!-- 4ペイン構成のメインコンテンツ -->
+    <div class="ocr-main-content">
+        <!-- 左上ペイン: OCR設定 -->
+        <div class="top-left-pane">
             <div class="panel-header">
-                <h3>📋 比較結果</h3>
-                <div class="result-actions">
-                    <button id="export-results" class="btn btn-outline" disabled>
-                        <i class="icon">📄</i>
-                        結果をエクスポート
+                <h3>⚙️ OCR設定</h3>
+                <div class="header-actions">
+                    <button id="file-select-btn" class="btn btn-primary">
+                        <span class="btn-icon">📁</span>
+                        ファイル選択
                     </button>
-                    <button id="clear-results" class="btn btn-outline" disabled>
-                        <i class="icon">🗑️</i>
-                        結果をクリア
+                    <button id="start-ocr-btn" class="btn btn-success" disabled>
+                        <span class="btn-icon">🚀</span>
+                        OCR実行
                     </button>
                 </div>
             </div>
             <div class="panel-content">
-                <!-- 結果表示エリア -->
-                <div class="results-container" id="results-container">
+                <!-- 選択されたファイル情報 -->
+                <div class="selected-file-info" id="selected-file-info">
+                    <div class="file-info-row">
+                        <span class="file-info-label">ファイル:</span>
+                        <span class="file-info-value" id="selected-file-name">未選択</span>
+                    </div>
+                </div>
+
+                <!-- OCRエンジン選択 -->
+                <div class="setting-group">
+                    <label for="ocr-engine-select">🔧 OCRエンジン</label>
+                    <select id="ocr-engine-select" class="form-select">
+                        <option value="ocrmypdf">OCRmyPDF (推奨)</option>
+                        <option value="tesseract">Tesseract</option>
+                        <option value="easyocr">EasyOCR</option>
+                        <option value="paddleocr">PaddleOCR</option>
+                    </select>
+                </div>
+
+                <!-- ページ設定と誤字修正（コンパクト表示） -->
+                <div class="setting-group compact-row">
+                    <div class="setting-item">
+                        <label for="page-number">📄 処理ページ</label>
+                        <input type="number" id="page-number" min="0" value="1" step="1" class="form-input-small">
+                        <span class="setting-note">0=全て</span>
+                    </div>
+                    <div class="setting-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="use-correction" checked>
+                            <span class="checkmark"></span>
+                            🔤 誤字修正
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 縦の境界線 -->
+        <div class="vertical-splitter"></div>
+
+        <!-- 右上ペイン: エンジン詳細設定 -->
+        <div class="top-right-pane">
+            <div class="panel-header">
+                <h3>🔧 詳細設定</h3>
+            </div>
+            <div class="panel-content">
+                <div class="engine-details" id="engine-details">
                     <div class="empty-state">
-                        <div class="empty-icon">📊</div>
                         <div class="empty-text">
-                            <h4>OCR比較結果がここに表示されます</h4>
-                            <p>ファイルを選択してOCRエンジンを指定し、「OCR比較実行」ボタンをクリックしてください。</p>
+                            OCRエンジンを選択すると詳細設定が表示されます
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- 左側の横境界線 -->
+        <div class="horizontal-splitter-left"></div>
+
+        <!-- 右側の横境界線 -->
+        <div class="horizontal-splitter-right"></div>
+
+        <!-- 左下ペイン: OCR結果 -->
+        <div class="bottom-left-pane">
+            <div class="panel-header">
+                <h3>📋 OCR結果</h3>
+                <div class="result-actions">
+                    <button id="export-results" class="btn btn-sm btn-outline" disabled>
+                        📄 エクスポート
+                    </button>
+                    <button id="clear-results" class="btn btn-sm btn-outline" disabled>
+                        🗑️ クリア
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="results-container" id="results-container">
+                    <div class="empty-state">
+                        <div class="empty-text">
+                            OCR結果がここに表示されます
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右下ペイン: PDFプレビュー -->
+        <div class="bottom-right-pane">
+            <div class="panel-header">
+                <h3>📄 PDFプレビュー</h3>
+            </div>
+            <div class="panel-content">
+                <div class="pdf-preview-container">
+                    <iframe id="pdf-preview" src=""></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ファイル選択ダイアログ -->
+<div id="file-dialog" class="modal" style="display: none;">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-large">
+        <div class="modal-header modal-header-compact">
+            <h3>📁 ファイル選択</h3>
+            <button class="modal-close" id="file-dialog-close">&times;</button>
+        </div>
+        <div class="modal-body">
+            <!-- ファイル検索・フィルター（データ登録と統一） -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <select id="status-filter" class="form-control compact-select">
+                            <option value="">すべてのステータス</option>
+                            <option value="pending_processing" data-status="未処理" selected>未処理</option>
+                            <option value="processing" data-status="処理中">処理中</option>
+                            <option value="text_extracted" data-status="未整形">未整形</option>
+                            <option value="text_refined" data-status="未ベクトル化">未ベクトル化</option>
+                            <option value="processed" data-status="処理完了">処理完了</option>
+                            <option value="error" data-status="エラー">エラー</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <input type="text" id="file-search" class="form-control compact-input" placeholder="ファイル名で検索...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ファイル一覧テーブル（データ登録と統一） -->
+            <div class="file-list-container">
+                <table class="file-table">
+                    <thead>
+                        <tr>
+                            <th>ファイル名</th>
+                            <th>頁数</th>
+                            <th>ステータス</th>
+                            <th>サイズ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="file-dialog-list">
+                        <tr>
+                            <td colspan="4" class="loading-state">
+                                <div class="spinner"></div>
+                                <span>ファイル一覧を読み込み中...</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- ページネーション -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        <span id="file-count-info">0件のファイル</span>
+                        <select id="page-size" class="form-control pagination-select">
+                            <option value="50">50件/ページ</option>
+                            <option value="100" selected>100件/ページ</option>
+                            <option value="200">200件/ページ</option>
+                            <option value="500">500件/ページ</option>
+                        </select>
+                    </div>
+                    <div class="pagination-nav">
+                        <button id="prev-page" class="btn btn-sm btn-outline" disabled>◀</button>
+                        <span id="page-info">1 / 1</span>
+                        <button id="next-page" class="btn btn-sm btn-outline" disabled>▶</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="file-dialog-cancel" class="btn btn-secondary">キャンセル</button>
+            <button id="file-dialog-select" class="btn btn-primary" disabled>選択</button>
         </div>
     </div>
 </div>
@@ -200,43 +211,44 @@
         <div class="overlay-details" id="overlay-details">準備中...</div>
     </div>
 </div>
-
-<!-- ヘルプモーダル -->
-<div id="help-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>OCR比較検証 ヘルプ</h3>
-            <button class="modal-close" onclick="closeHelpModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <h4>📁 ファイル選択</h4>
-            <ul>
-                <li>データベースに登録済みのファイルから1つを選択します</li>
-                <li>PDF、PNG、JPEGなどの画像ファイルに対応しています</li>
-                <li>検索・フィルター機能を使って目的のファイルを見つけてください</li>
-            </ul>
-
-            <h4>⚙️ OCR設定</h4>
-            <ul>
-                <li><strong>OCRエンジン:</strong> 比較したいエンジンを複数選択できます</li>
-                <li><strong>処理ページ:</strong> 0=全ページ、1以上=指定ページを処理</li>
-                <li><strong>誤字修正:</strong> OCR結果の誤字修正と全角→半角変換を行います</li>
-            </ul>
-
-            <h4>📋 結果表示</h4>
-            <ul>
-                <li>各エンジンの処理結果が比較表示されます</li>
-                <li>処理時間、信頼度、テキスト長などの統計情報も表示されます</li>
-                <li>誤字修正がある場合は色分けでハイライト表示されます</li>
-            </ul>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- ファイル選択機能 -->
-<script src="{{ url_for('static', path='/js/file_selection.js') }}?v=1" defer></script>
-<!-- OCR比較機能 -->
-<script src="{{ url_for('static', path='/js/ocr_comparison.js') }}?v=1" defer></script>
+<!-- OCR検証機能 -->
+<script src="{{ url_for('static', path='/js/ocr_comparison.js') }}?v=2" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ファイル選択ボタンのイベント
+    document.getElementById('file-select-btn').addEventListener('click', function() {
+        document.getElementById('file-dialog').style.display = 'flex';
+        // ファイル一覧を読み込み
+        window.ocrManager.loadFileList();
+        console.log('[OCR] ファイル選択ダイアログを表示');
+    });
+
+    // ダイアログの閉じるボタン
+    document.getElementById('file-dialog-close').addEventListener('click', function() {
+        document.getElementById('file-dialog').style.display = 'none';
+    });
+
+    document.getElementById('file-dialog-cancel').addEventListener('click', function() {
+        document.getElementById('file-dialog').style.display = 'none';
+    });
+
+    // ファイル選択完了ボタン
+    document.getElementById('file-dialog-select').addEventListener('click', function() {
+        if (window.ocrManager.selectedFileId && window.ocrManager.selectedFileInfo) {
+            window.ocrManager.selectFile(window.ocrManager.selectedFileId, window.ocrManager.selectedFileInfo.file_name);
+        }
+    });
+
+    // OCR実行ボタン
+    document.getElementById('start-ocr-btn').addEventListener('click', function() {
+        console.log('[OCR] OCR実行開始');
+        // OCR処理のスタブ
+    });
+
+    console.log('[OCR] OCR検証ページが初期化されました');
+});
+</script>
 {% endblock %}

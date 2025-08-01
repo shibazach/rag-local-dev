@@ -24,7 +24,9 @@
 </head>
 <body>
     <!-- 共通ヘッダー -->
-    {% include "components/header.html" %}
+    {% if not is_home %}
+        {% include "components/header.html" %}
+    {% endif %}
 
     <!-- メインコンテンツ -->
     <main class="main-content">

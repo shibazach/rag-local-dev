@@ -17,16 +17,16 @@ from typing import Dict, Any
 from new.auth import get_current_user, require_admin, get_optional_user
 from new.config import INPUT_DIR, LOGGER
 from new.database import get_db
-# from new.models import File  # 現在未使用のためコメントアウト  
-# from new.services.file_service import FileService  # 現在未使用のためコメントアウト
-# from new.services.chat_service import ChatService  # 現在未使用のためコメントアウト
-# from new.services.search_service import SearchService  # 現在未使用のためコメントアウト
-# from new.db_handler import (  # 現在未使用のためコメントアウト
-#     insert_file_blob_only, insert_file_blob_with_details, get_all_files, get_file_blob, 
-#     get_file_meta, get_file_text, delete_file, get_file_path
-# )
-# from new.services.queue_service import QueueService  # 現在未使用のためコメントアウト
-# from new.debug import debug_print, debug_error, debug_function, debug_return, debug_js_error  # 現在未使用のためコメントアウト
+from new.services.file_service import FileService
+from new.services.chat_service import ChatService  
+from new.services.search_service import SearchService
+from new.db_handler import (
+    insert_file_blob_only, insert_file_blob_with_details, get_all_files, get_file_blob, 
+    get_file_meta, get_file_text, delete_file, get_file_path
+)
+from new.services.queue_service import QueueService
+from new.debug import debug_print, debug_error, debug_function, debug_return, debug_js_error
+from new.auth_functions import validate_credentials, create_user_session, require_authentication, require_admin_role
 
 def get_file_status(file_text_data):
     """ファイルの実際の処理状況に基づいてステータスを判定"""
@@ -57,26 +57,27 @@ async def login(
     username: str = Form(...),
     password: str = Form(...)
 ):
-    """ユーザーログイン（スタブ実装）"""
+    """ユーザーログイン（関数型実装）"""
+    # ガードクローズ: 入力検証
+    if not username or not password:
+        raise HTTPException(400, "ユーザー名とパスワードが必要です")
+    
     try:
-        # スタブ認証: admin/admin または user/user
-        if (username == "admin" and password == "admin") or (username == "user" and password == "user"):
-            # セッションにユーザー情報を保存
-            user_info = {
-                "id": 1 if username == "admin" else 2,
-                "username": username,
-                "role": "admin" if username == "admin" else "user",
-                "is_active": True
-            }
-            request.session["user"] = user_info
-            
-            return {
-                "success": True,
-                "message": "ログインに成功しました",
-                "user": user_info
-            }
-        else:
-            raise HTTPException(status_code=401, detail="ユーザー名またはパスワードが正しくありません")
+        # 認証処理（純粋関数）
+        user = validate_credentials(username, password)
+        if not user:
+            raise HTTPException(401, "認証に失敗しました")
+        
+        # セッション作成（副作用を分離）
+        create_user_session(request, user)
+        
+        # 成功レスポンス（ハッピーパス）
+        return {
+            "success": True,
+            "message": "ログインに成功しました",
+            "user": user.dict()
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
@@ -220,7 +221,7 @@ async def delete_file_endpoint(
 ):
     """ファイル削除 - 新DB設計対応"""
     try:
-        debug_function("delete_file", file_id=file_id, user_id=current_user.id)
+        debug_function("delete_file", file_id=file_id, user_id=current_user.get('id'))
         
         # 新しいDBハンドラーでファイル削除
         success = delete_file(file_id)
@@ -244,7 +245,7 @@ async def upload_files(
 ):
     """ファイルアップロード処理 - DBにblobとして保存"""
     try:
-        debug_function("upload_files", file_count=len(files), user_id=current_user.id)
+        debug_function("upload_files", file_count=len(files), user_id=current_user.get('id'))
         
         # アップロード結果を格納するリスト
         upload_results = []
@@ -299,7 +300,7 @@ async def upload_folder(
     """フォルダアップロード"""
     try:
         file_service = FileService()
-        results = file_service.upload_folder(db, folder_path, include_subfolders, current_user.id)
+        results = file_service.upload_folder(db, folder_path, include_subfolders, current_user.get('id'))
         return {"results": results}
     except Exception as e:
         LOGGER.error(f"フォルダアップロードエラー: {e}")
@@ -311,7 +312,7 @@ async def preview_file(
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """ファイルプレビュー（PDF用）- 新DB設計対応"""
-    debug_function("preview_file", file_id=file_id, user_id=current_user.id)
+    debug_function("preview_file", file_id=file_id, user_id=current_user.get('id'))
     try:
         # DBからファイルデータを取得
         file_meta = get_file_meta(file_id)
@@ -487,7 +488,7 @@ async def get_chat_sessions(
     """チャットセッション一覧取得"""
     try:
         chat_service = ChatService()
-        sessions = chat_service.get_sessions(db, current_user.id)
+        sessions = chat_service.get_sessions(db, current_user.get('id'))
         return {"sessions": sessions}
     except Exception as e:
         LOGGER.error(f"チャットセッション取得エラー: {e}")
@@ -502,7 +503,7 @@ async def create_chat_session(
     """チャットセッション作成"""
     try:
         chat_service = ChatService()
-        session = chat_service.create_session(db, current_user.id, title)
+        session = chat_service.create_session(db, current_user.get('id'), title)
         return {"session": session}
     except Exception as e:
         LOGGER.error(f"チャットセッション作成エラー: {e}")
@@ -533,7 +534,7 @@ async def send_message(
     """チャットメッセージ送信"""
     try:
         chat_service = ChatService()
-        response = chat_service.send_message(db, session_id, current_user.id, message)
+        response = chat_service.send_message(db, session_id, current_user.get('id'), message)
         return {"response": response}
     except Exception as e:
         LOGGER.error(f"チャットメッセージ送信エラー: {e}")
@@ -569,9 +570,9 @@ async def get_user_profile(
     try:
         return {
             "data": {
-                "id": current_user.id,
-                "username": current_user.username,
-                "email": current_user.email,
+                "id": current_user.get('id'),
+                "username": current_user.get('username'),
+                "email": current_user.get('email'),
                 "role": current_user.get('role')
             }
         }

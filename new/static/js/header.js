@@ -10,6 +10,33 @@ function initializeHeader() {
     setActiveNavigation();
     checkAuthStatus();
     setupEventListeners();
+    setCurrentPageTitle();
+}
+
+function setCurrentPageTitle() {
+    const path = window.location.pathname;
+    const titleMap = {
+        '/': 'ホーム',
+        '/chat': 'チャット',
+        '/files': 'ファイル',
+        '/upload': 'アップロード',
+        '/ocr-comparison': 'OCR検証',
+        '/data-registration': 'データ登録',
+        '/admin': '監視',
+    };
+    let pageTitle = '';
+    // 完全一致 or パス先頭一致
+    for (const key in titleMap) {
+        if (path === key || (key !== '/' && path.startsWith(key))) {
+            pageTitle = titleMap[key];
+            break;
+        }
+    }
+    if (!pageTitle) pageTitle = 'ページ';
+    const titleElem = document.getElementById('current-page-title');
+    if (titleElem) {
+        titleElem.textContent = `| ${pageTitle}`;
+    }
 }
 
 // 現在のページに応じてナビゲーションをアクティブにする
@@ -86,11 +113,10 @@ function showUnauthenticatedState() {
 
 // ユーザー権限に応じてナビゲーションを更新
 function updateNavigationByRole(role) {
-    const adminNavItems = document.querySelectorAll('.nav-admin-only');
-    
+    const adminNavItems = document.querySelectorAll('.admin-only');
     if (role === 'admin') {
         adminNavItems.forEach(item => {
-            item.style.display = 'flex';
+            item.style.display = '';
         });
     } else {
         hideAdminNavigation();
@@ -99,7 +125,7 @@ function updateNavigationByRole(role) {
 
 // 管理者ナビゲーションを非表示
 function hideAdminNavigation() {
-    const adminNavItems = document.querySelectorAll('.nav-admin-only');
+    const adminNavItems = document.querySelectorAll('.admin-only');
     adminNavItems.forEach(item => {
         item.style.display = 'none';
     });
@@ -108,9 +134,46 @@ function hideAdminNavigation() {
 // イベントリスナーの設定
 function setupEventListeners() {
     const logoutBtn = document.getElementById('logout-btn');
-    
     if (logoutBtn) {
         logoutBtn.addEventListener('click', handleLogout);
+    }
+
+    // サブメニューの権限制御
+    const navMenu = document.querySelector('.nav-menu');
+    let userRole = null;
+    let isLoggedIn = false;
+    // 認証状態を取得
+    fetch('/api/user/profile', { credentials: 'include' })
+        .then(res => {
+            if (res.ok) return res.json();
+            throw new Error('not logged in');
+        })
+        .then(data => {
+            userRole = data.data.role;
+            isLoggedIn = true;
+        })
+        .catch(() => {
+            userRole = null;
+            isLoggedIn = false;
+        });
+    // サブメニュークリック時の権限制御
+    if (navMenu) {
+        navMenu.addEventListener('click', function(e) {
+            const target = e.target.closest('a.nav-item');
+            if (!target) return;
+            if (target.classList.contains('admin-only')) {
+                if (!isLoggedIn) {
+                    e.preventDefault();
+                    window.location.href = '/login';
+                    return;
+                }
+                if (userRole !== 'admin') {
+                    e.preventDefault();
+                    window.location.href = '/chat';
+                    return;
+                }
+            }
+        });
     }
 }
 

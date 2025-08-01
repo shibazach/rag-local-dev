@@ -42,3 +42,15 @@ def is_admin_user(user):
         bool: admin権限の有無
     """
     return user and user.get('role') == 'admin'
+
+def get_current_user_from_session(request: Request):
+    """
+    セッションから現在のユーザー情報を取得
+    
+    Args:
+        request: FastAPI Request
+        
+    Returns:
+        dict: ユーザー情報（辞書）またはNone
+    """
+    return get_optional_user(request)

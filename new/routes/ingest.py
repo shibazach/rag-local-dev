@@ -55,7 +55,7 @@ async def process_ingest(
 ):
     """ファイルインジェスト処理"""
     try:
-        debug_function("process_ingest", file_count=len(files), user_id=current_user.id)
+        debug_function("process_ingest", file_count=len(files), user_id=current_user.get('id'))
         
         # 一時ディレクトリ作成
         tmpdir = tempfile.mkdtemp(prefix="ingest_")
@@ -77,7 +77,7 @@ async def process_ingest(
             overwrite_existing=overwrite_existing,
             quality_threshold=quality_threshold,
             llm_timeout=llm_timeout,
-            user_id=current_user.id,
+            user_id=current_user.get('id'),
             tmpdir=tmpdir
         ))
         

@@ -215,7 +215,7 @@ const DataRegistration = {
             if (response.ok) {
                 const result = await response.json();
                 console.log('[DataRegistration] ファイル一覧取得成功:', result);
-                this.renderFileList(result.data?.files || []);
+                this.renderFileList(result.files || []);
             } else if (response.status === 401) {
                 console.warn('[DataRegistration] 認証が必要です');
                 this.showError('認証が必要です。ログインしてください。');
@@ -254,12 +254,12 @@ const DataRegistration = {
                        ${this.selectedFiles.has(file.file_id) ? 'checked' : ''}>
             </td>
             <td>${file.file_name || 'Unknown'}</td>
+            <td>${file.page_count || '-'}</td>
             <td>
                 <span class="status-badge status-${file.status || 'unknown'}">
                     ${this.getStatusText(file.status)}
                 </span>
             </td>
-            <td>${this.formatDate(file.created_at)}</td>
             <td>${this.formatFileSize(file.file_size || 0)}</td>
         `;
 

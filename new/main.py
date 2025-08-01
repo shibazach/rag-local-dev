@@ -113,6 +113,7 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # ルーター登録  
 from new.api import files_router, upload_router
+from new.api.chat import router as chat_router
 
 # 認証APIルーター（api.py）
 from new.routes.api import router as api_router
@@ -137,6 +138,9 @@ app.include_router(file_selection_router, prefix=API_PREFIX, tags=["File Selecti
 # OCR Comparison API (OCR比較検証)
 from new.api.ocr_comparison import router as ocr_comparison_router
 app.include_router(ocr_comparison_router, prefix=API_PREFIX, tags=["OCR Comparison"])
+
+# Chat API (チャット検索)
+app.include_router(chat_router, prefix=API_PREFIX, tags=["Chat"])
 
 # UI Routes (UIルーター)
 from new.routes.ui import router as ui_router

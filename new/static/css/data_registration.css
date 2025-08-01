@@ -542,16 +542,16 @@ select option:disabled {
 
 .data-registration-container .file-table tbody tr {
     display: table !important;
-    width: 100% !important;
+    width: calc(100% - 8px) !important; /* スクロールバー分を差し引いてヘッダーと完全一致 */
     table-layout: fixed !important;
 }
 
 /* データ行のカラム幅統一 - ヘッダーと完全一致 */
 .data-registration-container .file-table tbody tr td:nth-child(1) { width: 40px !important; }
-.data-registration-container .file-table tbody tr td:nth-child(2) { width: calc(100% - 290px) !important; }
+.data-registration-container .file-table tbody tr td:nth-child(2) { width: calc(100% - 270px) !important; }
 .data-registration-container .file-table tbody tr td:nth-child(3) { width: 50px !important; }
 .data-registration-container .file-table tbody tr td:nth-child(4) { width: 90px !important; }
-.data-registration-container .file-table tbody tr td:nth-child(5) { width: 110px !important; }
+.data-registration-container .file-table tbody tr td:nth-child(5) { width: 90px !important; }
 
 /* スクロールバーのスタイル調整 */
 .file-table tbody::-webkit-scrollbar {
@@ -605,19 +605,20 @@ select option:disabled {
     background: #007bff;
 }
 
-/* データ登録専用ページのカラム幅設定 - ステータス幅調整 */
+/* データ登録専用ページのカラム幅設定 - 標準表統一 */
 .data-registration-container .file-table th:nth-child(1) { width: 40px !important; }                     /* チェックボックス: 固定 */
-.data-registration-container .file-table th:nth-child(2) { width: calc(100% - 290px) !important; }      /* ファイル名: 残り全幅 */
+.data-registration-container .file-table th:nth-child(2) { width: calc(100% - 270px) !important; }      /* ファイル名: 残り全幅 */
 .data-registration-container .file-table th:nth-child(3) { width: 50px !important; }                     /* 頁数: 固定 */
 .data-registration-container .file-table th:nth-child(4) { width: 90px !important; }                     /* ステータス: 拡張 */
-.data-registration-container .file-table th:nth-child(5) { width: 110px !important; }                    /* サイズ: 拡張 */
+.data-registration-container .file-table th:nth-child(5) { width: 90px !important; }                     /* サイズ: 統一 */
 
 .data-registration-container .file-table td {
     padding: 4px 8px !important;
     border-bottom: 1px solid #eee !important;
-    vertical-align: top !important;
+    vertical-align: middle !important; /* センタリング完璧実装 */
     line-height: 1.3 !important;
     font-size: 11px !important;
+    height: 32px !important; /* 固定高さでセンタリング安定化 */
 }
 
 .file-table td:nth-child(4) {

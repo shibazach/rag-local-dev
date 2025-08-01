@@ -1,0 +1,579 @@
+/* app/static/css/chat.css */
+
+/* ===== レイアウト切り替えボタン ===== */
+#layout-controls {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 1000;
+    display: none; /* デフォルトは非表示 */
+    gap: 5px;
+}
+
+/* 設定パネルを相対位置指定にしてボタンの基準点とする */
+#settings-panel {
+    position: relative;
+}
+
+/* PDFプレビューなしの時はボタンを非表示 */
+.layout-no-preview #layout-controls {
+    display: none;
+}
+
+/* 第1パターンの時は>>ボタンのみ表示 */
+.layout-pattern1 #layout-controls {
+    display: flex !important;
+}
+.layout-pattern1 #pattern1-btn {
+    display: none !important;
+}
+.layout-pattern1 #pattern2-btn {
+    display: inline-block !important;
+}
+
+/* 第2パターンの時は<<ボタンのみ表示 */
+.layout-pattern2 #layout-controls {
+    display: flex !important;
+}
+.layout-pattern2 #pattern1-btn {
+    display: inline-block !important;
+}
+.layout-pattern2 #pattern2-btn {
+    display: none !important;
+}
+
+.layout-btn {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.layout-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.layout-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* ===== 基本レイアウト ===== */
+#app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    position: relative;
+}
+
+/* アプリコンテナの背景オーバーレイ */
+#app-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(248, 249, 250, 0.02) 100%);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+#bottom-container {
+    display: flex;
+    flex: 1;
+}
+
+#left-pane {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* ===== パネル共通スタイル ===== */
+.panel {
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* 設定パネル - base.htmlと同じグラスモーフィズム効果 */
+#settings-panel {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+    position: relative;
+}
+
+#settings-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+/* 検索結果パネル - グラスモーフィズム効果 */
+#log-panel {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+    position: relative;
+}
+
+#log-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+/* PDFパネル - グラスモーフィズム効果 */
+#pdf-panel {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(15px);
+    position: relative;
+}
+
+#pdf-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
+    border-radius: inherit;
+    z-index: -1;
+}
+
+.panel-header {
+    background: rgba(248, 249, 250, 0.8);
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(222, 226, 230, 0.8);
+    font-weight: normal;
+    font-size: 14px;
+}
+
+.panel-content {
+    padding: 12px;
+    flex: 1;
+    overflow-y: auto;
+    height: 100%;
+}
+
+/* 設定パネルのコンテンツは透明背景 */
+#settings-panel .panel-content {
+    background: transparent;
+}
+
+/* 検索結果パネルのコンテンツは白背景 */
+#log-panel .panel-content {
+    background: white;
+    margin: 0;
+    padding: 0;
+}
+
+/* 検索結果コンテンツエリアを完全に白背景で覆う */
+#log-content {
+    background: white !important;
+    margin: 0;
+    padding: 8px;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+#pdf-frame {
+    width: 100%;
+    height: 100%;
+    border: none;
+    overflow: hidden;
+}
+
+/* PDFパネルのコンテンツエリアのスクロールを無効化 */
+#pdf-panel .panel-content {
+    overflow: hidden;
+    padding: 0;
+}
+
+/* ===== リサイザー ===== */
+.resizer {
+    background: #dee2e6;
+    transition: background-color 0.2s;
+}
+
+.resizer:hover {
+    background: #adb5bd;
+}
+
+.horizontal-resizer {
+    height: 5px;
+    cursor: row-resize;
+}
+
+.vertical-resizer {
+    width: 5px;
+    cursor: col-resize;
+}
+
+/* ===== フォーム要素（ingestと統一） ===== */
+.page-title {
+    margin: 0 0 8px;
+    font-size: 1.2em;
+    font-weight: normal; /* 太字を削除 */
+    line-height: 1.3em;
+}
+
+.form-section {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.3em; /* 行間を狭く */
+    line-height: 1.1;
+    width: 100%;
+}
+
+.form-section label {
+    min-width: 120px;
+    flex-shrink: 0;
+    font-weight: normal; /* 太字を削除 */
+    font-size: 14px;
+}
+
+.form-section input,
+.form-section select,
+.form-section textarea {
+    padding: var(--control-padding);
+    font-size: var(--control-font-size) !important;
+    height: var(--control-height) !important;
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--border-radius);
+}
+
+.form-section input,
+.form-section select {
+    height: 28px !important; /* 高さを統一 */
+}
+
+.form-section textarea {
+    min-height: 60px; /* textareaの最小高さ */
+    resize: vertical;
+}
+
+/* chat固有のスタイル（共通CSSで定義されたものは削除） */
+
+/* chat固有のスタイル（共通CSSで定義されたものは削除） */
+
+/* ===== 検索結果表示 ===== */
+/* 結果カード */
+.card {
+    border: 1px solid #ddd;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 4px;
+    background: #fafafa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.card:hover {
+    background: #f0f0f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.card h3 {
+    margin: 0 0 6px;
+    font-size: 1.1em;
+}
+
+.card pre {
+    white-space: pre-wrap;
+    background: #f5f5f5;
+    padding: 8px;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.card button {
+    margin-top: 6px;
+    padding: 4px 8px;
+}
+
+/* ===== 設定パネルコンテナ ===== */
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* ===== レイアウトパターン ===== */
+
+/* PDFプレビューなし（デフォルト）- 縦2分割 */
+.layout-no-preview #top-container {
+    flex: 0 0 220px;
+    display: flex;
+    flex-direction: column;
+}
+
+#settings-panel {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    min-height: 100px !important;
+}
+
+.layout-no-preview #settings-panel {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+}
+
+.layout-no-preview #top-resizer {
+    flex: 0 0 5px;
+    display: block;
+    background: #dee2e6;
+    cursor: row-resize;
+}
+
+.layout-no-preview #left-container {
+    display: none !important;
+}
+
+.layout-no-preview #left-resizer {
+    display: none !important;
+}
+
+.layout-no-preview #log-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout-no-preview #left-pane {
+    flex: 1;
+}
+
+.layout-no-preview #vertical-resizer {
+    display: none !important;
+}
+
+.layout-no-preview #pdf-panel {
+    display: none !important;
+}
+
+/* レイアウトボタンの表示制御を強化 */
+.layout-no-preview #layout-controls {
+    display: none !important;
+}
+
+/* 第1パターン：上部設定、下部に検索結果とPDFの横分割 */
+.layout-pattern1 #top-container {
+    flex: 0 0 200px;
+    display: flex;
+}
+
+.layout-pattern1 #top-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern1 #left-container {
+    display: none;
+}
+
+.layout-pattern1 #left-resizer {
+    display: none;
+}
+
+.layout-pattern1 #log-panel {
+    flex: 1;
+}
+
+.layout-pattern1 #left-pane {
+    flex: 1;
+}
+
+.layout-pattern1 #vertical-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern1 #pdf-panel {
+    flex: 1;
+    display: flex;
+}
+
+/* 第2パターン：左側に設定と検索結果の縦分割、右側にPDF */
+.layout-pattern2 #top-container {
+    display: none;
+}
+
+.layout-pattern2 #top-resizer {
+    display: none;
+}
+
+.layout-pattern2 #left-container {
+    flex: 0 0 200px;
+    display: flex;
+}
+
+.layout-pattern2 #left-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern2 #log-panel {
+    flex: 1;
+}
+
+.layout-pattern2 #left-pane {
+    flex: 1;
+}
+
+.layout-pattern2 #vertical-resizer {
+    flex: 0 0 5px;
+    display: block;
+}
+
+.layout-pattern2 #pdf-panel {
+    flex: 1;
+    display: flex;
+}
+
+/* ===== 処理中のナビゲーション警告 ===== */
+#nav-warning {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 193, 7, 0.95);
+    color: #856404;
+    padding: 1em 1.5em;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 10001;
+    font-weight: normal;
+    text-align: center;
+    border: 2px solid #ffc107;
+}
+
+/* ===== 検索中オーバーレイ ===== */
+#search-overlay {
+  display: none;
+}
+
+.search-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1em;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#search-cancel-overlay-btn:hover {
+  background: #5a6268 !important;
+  transform: scale(1.05);
+}
+
+/* ===== 履歴モーダル ===== */
+.history-item {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    padding: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    background: #f8f9fa;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.history-item.selected {
+    background: #e3f2fd;
+    border-color: #2196f3;
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.history-item-query {
+    font-weight: normal;
+    color: #333;
+    flex: 1;
+    margin-right: 12px;
+}
+
+.history-item-meta {
+    font-size: 0.8em;
+    color: #666;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.history-item-meta span {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.history-item-preview {
+    color: #555;
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+
+.history-item-expanded {
+    display: none;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #eee;
+}
+
+.history-item-expanded.show {
+    display: block;
+}
+
+.history-item-result {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.85em;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+}

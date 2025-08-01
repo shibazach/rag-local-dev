@@ -7,8 +7,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', path='/js/data_registration.js') }}?v=1" defer></script>
-<script src="{{ url_for('static', path='/js/file_selection.js') }}?v=1" defer></script>
+<script src="{{ url_for('static', path='/js/data_registration.js') }}?v=2" defer></script>
 {% endblock %}
 
 {% block content %}
@@ -51,13 +50,12 @@
                 <div class="model-group">
                     <div class="model-category">
                         <div class="checkbox-group">
-                            <label><input type="checkbox" id="intfloat-e5-large-v2" checked> <span class="category-inline">Sentence Transformers:</span> intfloat/e5-large-v2</label>
-                            <label><input type="checkbox" id="intfloat-e5-small-v2"> <span class="category-inline">Sentence Transformers:</span> intfloat/e5-small-v2</label>
-                        </div>
-                    </div>
-                    <div class="model-category">
-                        <div class="checkbox-group">
-                            <label><input type="checkbox" id="nomic-embed-text"> <span class="category-inline">Ollama:</span> nomic-embed-text</label>
+                            {% for key, config in embedding_options.items() %}
+                            <label>
+                                <input type="checkbox" id="{{ key }}" {% if key == "1" %}checked{% endif %}> 
+                                <span class="category-inline">{{ config["embedder"] }}:</span> {{ config["model_name"] }}
+                            </label>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -807,5 +805,11 @@ function adjustFileNameColumn() {
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    DataRegistration.init();
+});
+</script>
 
 {% endblock %}

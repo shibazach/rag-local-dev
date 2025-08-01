@@ -1,170 +1,153 @@
-# UI設計標準 - R&D RAGシステム
+# UI Design Standards
 
-## 基本方針
+本システムにおけるUI設計の統一基準を定義します。
 
-### 1. 統一されたレイアウト構造
-- **Flexboxベースの設計**: 全てのレイアウトはFlexboxを基本とする
-- **固定高さ設定**: `height: 100%`を使用してコンテナの高さを明確に定義
-- **ブラウザ間互換性**: Chrome、Edge等での表示差異を防ぐ統一構造
+## 基本設計原則
 
-### 2. 表（テーブル）設計標準
+### 1. レイアウト統一
+- **高さ**: `height: calc(100vh - 95px)` - ヘッダー60px + マージン35pxを除いた画面全体
+- **パディング**: `padding: 8px` - 全ページ共通の外側余白
+- **ギャップ**: `gap: 6px` - ペイン間の統一間隔
+- **overflow**: `overflow: hidden` - 全体スクロール禁止、個別ペインでスクロール制御
 
-#### 共通CSS設定
+### 2. ペイン設計
+#### 共通スタイル
 ```css
-/* 表コンテナ */
-.file-list-container {
-    flex: 1;
+.panel {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
     height: 100%;
-    margin: 0;
-    padding: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+```
 
-/* 表本体 */
-.file-table {
-    width: 100%;
-    border-collapse: collapse;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    margin: 0;
-    border-spacing: 0;
-}
-
-/* 固定ヘッダー */
-.file-table thead {
+#### ヘッダー統一
+```css
+.panel-header {
     background: #f8f9fa;
-    display: table;
-    width: 100%;
-    table-layout: fixed;
+    padding: 8px 12px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
 }
 
-/* スクロール可能な本体 */
-.file-table tbody {
-    overflow-y: auto;
-    display: block;
+.panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+```
+
+#### コンテンツエリア
+```css
+.panel-content {
     flex: 1;
+    padding: 8px;
+    overflow-y: auto;
+    min-height: 0;
 }
+```
 
-/* 行レイアウト */
-.file-table tbody tr {
-    display: table;
+### 3. フォーム要素統一
+
+#### 基本入力
+```css
+.form-control {
     width: 100%;
-    table-layout: fixed;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.form-select {
+    padding: 6px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    min-width: 180px;
 }
 ```
 
-#### 統一クラス名
-- `.file-table`: メイン表クラス（全ページ共通）
-- `.files-table`: 代替表クラス（後方互換性）
-- `.results-table`: 結果表示用クラス（アップロード結果等）
+#### コンパクト要素
+```css
+.compact-select {
+    height: 32px;
+    font-size: 12px;
+    min-width: 180px;
+}
 
-### 3. ページネーション設計
-
-#### 配置原則
-- **表の直下に配置**: `.file-list-container`内の最下部
-- **固定高さ**: `min-height: 32px`
-- **余白なし**: `margin: 0`でギャップを排除
-
-#### 標準構造
-```html
-<div class="file-list-container">
-    <table class="file-table">
-        <!-- 表内容 -->
-    </table>
-    <div class="pagination-container">
-        <!-- ページネーション内容 -->
-    </div>
-</div>
+.compact-input {
+    height: 32px;
+    font-size: 12px;
+}
 ```
 
-### 4. CSS組織化方針
+### 4. ドラッグ可能境界線
 
-#### ファイル構成
-- `main.css`: 共通スタイル・基本設定
-- `[page].css`: ページ固有のスタイル
-- `components.css`: 再利用可能コンポーネント
+#### 実装パターン
+```css
+.splitter {
+    background: #dee2e6;
+    cursor: col-resize; /* または row-resize */
+}
 
-#### CSS優先順位
-1. **!importantの回避**: 可能な限り使用しない
-2. **詳細度による制御**: クラス名の組み合わせで優先度調整
-3. **読み込み順序**: 共通CSS → ページ固有CSS
+.splitter:hover {
+    background: #007bff;
+}
+```
 
-### 5. レスポンシブ対応
+#### Grid配置での注意点
+- 縦分割: `grid-column: 2; grid-row: 1 / span;`
+- 横分割: `grid-row: 2; grid-column: 1;`
 
-#### ブレークポイント
-- デスクトップ: 1200px以上
-- タブレット: 768px - 1199px
-- モバイル: 767px以下
+### 5. スクロールバー制御
 
-#### パネルレイアウト
-- デスクトップ: 左右分割表示
-- タブレット以下: 縦積み表示
+#### 不要なスクロールバー防止
+```css
+.container {
+    overflow: hidden; /* 全体レベル */
+}
 
-### 6. 色彩・タイポグラフィ
+.scrollable-content {
+    overflow-y: auto; /* 必要な部分のみ */
+    overflow-x: hidden; /* 横スクロール防止 */
+}
+```
 
-#### 基本色
-- プライマリ: `#007bff`
-- 背景: `#f8f9fa`
-- 境界線: `#e9ecef`、`#ddd`
-- テキスト: `#333`、`#666`
+## ページ別適用例
 
-#### フォント
-- 基本: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`
-- サイズ: 12px（表内）、13-16px（一般UI）
+### ファイル管理ページ
+- 左右2分割レイアウト
+- リサイズ可能境界線
+- 左: ファイル一覧、右: プレビュー
 
-### 7. 状態表示
+### データ登録ページ
+- 3列×2行グリッドレイアウト
+- 設定（左上）、ログ（中央全体）、ファイル選択（右全体）
 
-#### ステータスバッジ
-- 統一パディング: `2px 8px`
-- 角丸: `border-radius: 12px`
-- 最小幅: `60px`
-- フォントサイズ: `11px`
+### OCR検証ページ
+- 2×2グリッドレイアウト + ドラッグ可能境界線
+- 左右独立の上下分割制御
 
-#### ホバー効果
-- 背景色変更: `#f8f9fa`
-- トランジション: `all 0.2s ease`
+## 実装時の注意点
 
-### 8. アクセシビリティ
+1. **CSS詳細度**: ページ固有CSSは `!important` を最小限に抑制
+2. **レスポンシブ**: モバイル対応時は `gap` を `4px` に縮小
+3. **ブラウザ互換性**: Grid + Flexbox の組み合わせでIE11対応は考慮しない
+4. **パフォーマンス**: `transform` や `opacity` でアニメーション実装
+5. **アクセシビリティ**: フォーカス可能要素にはキーボードナビゲーション対応
 
-#### 基本要件
-- キーボードナビゲーション対応
-- 適切なコントラスト比確保
-- スクリーンリーダー対応のラベル
+## 品質チェックリスト
 
-#### フォーカス管理
-- 可視的なフォーカスインジケーター
-- 論理的なタブオーダー
-
-### 9. パフォーマンス考慮
-
-#### CSS最適化
-- 不要なセレクターの削除
-- 効率的なセレクター使用
-- CSS Minificationの適用
-
-#### 画像・アイコン
-- SVGアイコンの使用
-- 適切なサイズ設定
-- 遅延読み込み対応
-
-### 10. 実装時の注意点
-
-#### 共通ルール
-1. **データ登録ページとファイル管理ページの統一**: 同じ構造・スタイルを使用
-2. **マージン・パディングの統一**: `0`を基本とし、必要な箇所のみ設定
-3. **Flexboxの適切な使用**: `flex: 1`で可変領域、`flex-shrink: 0`で固定領域
-4. **ブラウザテスト**: Chrome、Edge、Firefox での動作確認必須
-
-#### 避けるべき事項
-- `!important`の多用
-- インラインスタイルの使用
-- 固定ピクセル値での高さ指定（calc()は除く）
-- ブラウザ固有のプレフィックス依存
-
----
-
-## 更新履歴
-- 2024/01/XX: 初版作成（表レイアウト標準化対応）
+- [ ] ペイン間ギャップが6pxで統一されているか
+- [ ] 角丸が8pxで統一されているか
+- [ ] 不要な横スクロールバーが出現していないか
+- [ ] ドラッグ境界線が正常に動作するか
+- [ ] レスポンシブ時に要素が重複していないか

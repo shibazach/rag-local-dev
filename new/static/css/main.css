@@ -35,22 +35,6 @@ body {
     height: 60px;
 }
 
-/* ホームページでのナビゲーション調整 */
-body.home-page .nav-brand {
-    display: none;
-}
-
-body.home-page .nav-menu {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-body.home-page .nav-auth {
-    justify-content: flex-end;
-    margin-left: auto;
-}
-
 /* メインコンテンツ */
 .main {
     min-height: calc(100vh - 120px);
@@ -756,5 +740,53 @@ body.home-page .feature-list {
     .login-card {
         padding: 2rem;
     }
+} 
+
+.home-main-menu-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: none;
+    margin: 0 0 24px 0;
+    padding: 16px 24px;
+    gap: 32px;
+    min-height: 56px;
+    background: linear-gradient(135deg, #34495e 0%, #455a64 50%, #546e7a 100%);
+    border-bottom: none;
+}
+.home-main-menu-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+}
+.home-main-menu-center .nav-parent-label {
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 700;
+    font-size: 1.1em;
+    letter-spacing: 0.02em;
+}
+.home-main-menu-center .nav-item {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    font-size: 1em;
+    background: none;
+    border: none;
+    padding: 8px 12px;
+    text-decoration: none;
+}
+.home-main-menu-center .nav-item:hover {
+    color: #ffffff;
+    text-decoration: underline;
+}
+.hero-auth-absolute {
+    position: absolute;
+    top: 24px;
+    right: 32px;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 } 
 

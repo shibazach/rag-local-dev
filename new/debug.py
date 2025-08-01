@@ -4,7 +4,7 @@
 import logging
 import traceback
 from typing import Any, Optional
-from .config import DEBUG_PRINT_ENABLED, LOGGER
+from new.config import DEBUG_PRINT_ENABLED, LOGGER
 
 def debug_print(*args, **kwargs):
     """

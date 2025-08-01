@@ -114,7 +114,7 @@ async def start_processing(
 @router.post("/cancel")
 async def cancel_processing() -> JSONResponse:
     """処理をキャンセル"""
-    global current_job, cancel_event
+    global current_job, cancel_event, processing_pipeline
     
     if not current_job or current_job.get("status") != "running":
         raise HTTPException(status_code=404, detail="実行中の処理がありません")
@@ -123,9 +123,35 @@ async def cancel_processing() -> JSONResponse:
         cancel_event.set()
         LOGGER.info("処理キャンセル要求")
     
+    # パイプラインキャンセル
+    if processing_pipeline:
+        processing_pipeline.cancel_processing()
+    
+    # 状態をリセット
+    current_job = None
+    cancel_event = None
+    processing_pipeline = None
+    LOGGER.info("処理状態リセット完了")
+    
     return JSONResponse({
         "success": True,
-        "message": "処理のキャンセルを要求しました"
+        "message": "処理をキャンセルし、状態をリセットしました"
+    })
+
+@router.post("/reset")
+async def reset_processing_state() -> JSONResponse:
+    """処理状態を強制リセット"""
+    global current_job, cancel_event, processing_pipeline
+    
+    current_job = None
+    cancel_event = None
+    processing_pipeline = None
+    
+    LOGGER.info("処理状態を強制リセット")
+    
+    return JSONResponse({
+        "success": True,
+        "message": "処理状態をリセットしました"
     })
 
 @router.get("/status")
@@ -157,10 +183,12 @@ async def progress_stream(request: Request) -> StreamingResponse:
     LOGGER.info(f"SSE接続開始: {request.client.host}")
     
     async def event_generator() -> AsyncGenerator[str, None]:
+        nonlocal processing_pipeline
+        
         try:
             # 処理パイプライン初期化
-            if not processing_pipeline:
-                processing_pipeline = ProcessingPipeline()
+            processing_pipeline = ProcessingPipeline()
+            LOGGER.info("処理パイプライン初期化完了")
             
             # クライアント切断監視
             async def monitor_disconnect():
@@ -191,6 +219,7 @@ async def progress_stream(request: Request) -> StreamingResponse:
             settings = current_job["settings"]
             current_job["results"] = []
             
+            LOGGER.info(f"ファイル処理開始: {len(files)}件")
             async for event in processing_pipeline.process_files(files, settings):
                 # キャンセル・切断チェック
                 if (cancel_event and cancel_event.is_set()) or \

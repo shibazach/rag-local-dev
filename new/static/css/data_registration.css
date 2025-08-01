@@ -528,10 +528,9 @@ select option:disabled {
 
 .data-registration-container .file-table thead {
     display: table !important;
-    width: calc(100% - 15px) !important; /* より大きく調整してテスト */
+    width: calc(100% - 8px) !important; /* パネル全幅 - 縦スクロールバー幅 */
     table-layout: fixed !important;
-    background: #f8f9fa !important; /* 通常の背景色に戻す */
-    border: 2px solid #0000ff !important; /* 青色ボーダーで確認 */
+    background: #f8f9fa !important;
 }
 
 .data-registration-container .file-table tbody {
@@ -609,13 +608,7 @@ select option:disabled {
     width: 4px;
     height: 100%;
     background: transparent;
-    cursor: col-resize;
     z-index: 999;
-}
-
-.data-registration-container .file-table th .column-resizer:hover,
-.data-registration-container .file-table th .column-resizer.active {
-    background: #007bff;
 }
 
 /* データ登録専用ページのカラム幅設定 - 標準表統一 */
@@ -623,7 +616,7 @@ select option:disabled {
 .data-registration-container .file-table th:nth-child(2) { width: calc(100% - 270px) !important; }      /* ファイル名: 残り全幅 */
 .data-registration-container .file-table th:nth-child(3) { width: 50px !important; }                     /* 頁数: 固定 */
 .data-registration-container .file-table th:nth-child(4) { width: 90px !important; }                     /* ステータス: 拡張 */
-.data-registration-container .file-table th:nth-child(5) { width: 90px !important; }                     /* サイズ: 統一 */
+.data-registration-container .file-table th:nth-child(5) { width: 98px !important; }                     /* サイズ: 値セル90px + スクロールバー8px */
 
 .data-registration-container .file-table td {
     padding: 4px 8px !important;

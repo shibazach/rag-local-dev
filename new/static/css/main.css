@@ -406,13 +406,7 @@ body.home-page .feature-list {
 
 .resize-handle {
     width: 4px;
-    background: #e9ecef;
-    cursor: col-resize;
     z-index: 1000;
-}
-
-.resize-handle:hover {
-    background: #007bff;
 }
 
 .files-container {

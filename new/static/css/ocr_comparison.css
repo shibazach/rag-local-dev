@@ -122,31 +122,16 @@
 .vertical-splitter {
     grid-column: 2;
     grid-row: 1 / 4;
-    background: #dee2e6;
-    cursor: col-resize;
-    border-radius: 3px;
 }
 
 .horizontal-splitter-left {
     grid-column: 1;
     grid-row: 2;
-    background: #dee2e6;
-    cursor: row-resize;
-    border-radius: 3px;
 }
 
 .horizontal-splitter-right {
     grid-column: 3;
     grid-row: 2;
-    background: #dee2e6;
-    cursor: row-resize;
-    border-radius: 3px;
-}
-
-.vertical-splitter:hover,
-.horizontal-splitter-left:hover,
-.horizontal-splitter-right:hover {
-    background: #007bff;
 }
 
 /* パネルヘッダー - UI_DESIGN_STANDARDS準拠 */
@@ -549,14 +534,13 @@
 
 .file-table thead {
     display: table;
-    width: calc(100% - 15px); /* テスト調整 */
+    width: calc(100% - 2px); /* パネル全幅 - 縦スクロールバー幅 */
     table-layout: fixed;
     background: #f8f9fa;
     position: sticky;
     top: 0;
     z-index: 10;
     margin-left: 0;
-    border: 3px solid #ff00ff !important; /* マゼンタ色ボーダーで確認 */
 }
 
 .file-table thead th {
@@ -579,11 +563,11 @@
     border-right: none;
 }
 
-/* カラム幅設定 - ステータス見切れ防止 */
+/* カラム幅設定 - 右端カラムのみスクロールバー分拡張 */
 .file-table th:nth-child(1) { width: calc(100% - 260px); } /* ファイル名: 残り全幅 */
 .file-table th:nth-child(2) { width: 50px; }                /* 頁数: 固定 */
-.file-table th:nth-child(3) { width: 140px; }               /* ステータス: さらに拡張して見切れ完全防止 */
-.file-table th:nth-child(4) { width: 70px; }                /* サイズ: 縮小 */
+.file-table th:nth-child(3) { width: 140px; }               /* ステータス: 固定 */
+.file-table th:nth-child(4) { width: 72px; }                /* サイズ: 値セル70px + スクロールバー2px */
 
 .file-table tbody {
     display: block;

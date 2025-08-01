@@ -2,23 +2,25 @@
 inclusion: always
 ---
 
-# テスト・デプロイメントガイドライン
+# テスト・デプロイメントガイドライン（新アーキテクチャ対応）
 
 ## テスト戦略
 
 ### テスト分類
-- **単体テスト**: 個別関数・クラスのテスト
-- **統合テスト**: モジュール間連携のテスト
-- **E2Eテスト**: エンドツーエンドの動作確認
+- **単体テスト**: 個別関数・クラスのテスト（new/services/配下）
+- **統合テスト**: モジュール間連携のテスト（new/simple_integration_test.py）
+- **システムテスト**: エンドツーエンドの動作確認（new/system_integration_test.py）
 - **パフォーマンステスト**: 処理速度・メモリ使用量の検証
 
-### pytest設定
+### pytest設定（新アーキテクチャ対応）
 ```python
 # conftest.py - テスト共通設定
 import pytest
 import tempfile
 import os
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
+from new.config import settings
+from new.database.connection import get_db_connection
 
 @pytest.fixture
 def temp_pdf_file():
@@ -29,15 +31,25 @@ def temp_pdf_file():
     os.unlink(f.name)
 
 @pytest.fixture
-def mock_ocr_factory():
-    """OCRファクトリのモック"""
-    mock = Mock()
-    mock.process_with_settings.return_value = {
+def mock_file_processor():
+    """FileProcessorのモック（新アーキテクチャ対応）"""
+    mock = AsyncMock()
+    mock.process_file.return_value = {
         "success": True,
-        "text": "テスト用OCRテキスト",
-        "processing_time": 1.5
+        "file_id": "test-uuid",
+        "status": "completed",
+        "text_length": 1000,
+        "processing_time": 2.5,
+        "ocr_result": {"text": "テスト用OCRテキスト", "success": True},
+        "llm_refined_text": "整形済みテキスト"
     }
     return mock
+
+@pytest.fixture
+def db_connection():
+    """テスト用データベース接続"""
+    with get_db_connection() as conn:
+        yield conn
 ```
 
 ### OCR処理のテスト

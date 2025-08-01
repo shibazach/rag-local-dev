@@ -4,23 +4,38 @@ inclusion: always
 
 # API・データベース設計ガイドライン
 
-## FastAPI設計原則
+## FastAPI設計原則（新アーキテクチャ対応）
 
 ### ルーター構造
 ```python
-# ルーター定義の標準形式
-router = APIRouter(prefix="/ingest", tags=["ingest"])
+# new/api/ 配下のルーター定義標準形式
+from fastapi import APIRouter, Depends, HTTPException
+from new.auth import get_current_user
+from new.schemas import SuccessResponse, ErrorResponse
 
-@router.get("", response_class=HTMLResponse)
-def ingest_page(request: Request):
-    """管理者モードのデータ整形／登録画面を返す"""
-    return templates.TemplateResponse("ingest.html", {
-        "request": request,
-        "llm_model": OLLAMA_MODEL,
-        "prompt_keys": list(EMBEDDING_OPTIONS.keys()),
-        "embedding_options": EMBEDDING_OPTIONS,
-    })
+router = APIRouter(prefix="/api/ingest", tags=["ingest"])
+
+@router.post("/start", response_model=SuccessResponse)
+async def start_processing(
+    request_data: ProcessingRequest,
+    current_user = Depends(get_current_user)
+):
+    """データ登録処理を開始"""
+    try:
+        # 処理ロジック
+        result = await processing_service.start(request_data)
+        return SuccessResponse(
+            message="処理を開始しました",
+            data=result
+        )
+    except Exception as e:
+        raise HTTPException(500, f"処理開始エラー: {str(e)}")
 ```
+
+### 新アーキテクチャでのAPI分離
+- **UI Routes** (`new/routes/ui.py`): HTMLテンプレート返却
+- **API Routes** (`new/api/*.py`): JSON API エンドポイント
+- **認証統合**: 全APIで `Depends(get_current_user)` による統一認証
 
 ### エンドポイント命名規則
 - **GET /resource**: 一覧・詳細取得
@@ -81,30 +96,41 @@ return StreamingResponse(event_generator(), media_type="text/event-stream")
 }
 ```
 
-## データベース設計
+## データベース設計（新3テーブル構成）
 
 ### テーブル設計原則
 ```sql
--- ファイル管理テーブル
-CREATE TABLE files (
-    id SERIAL PRIMARY KEY,
-    file_path TEXT NOT NULL UNIQUE,
-    file_name TEXT NOT NULL,
-    file_size BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status TEXT DEFAULT 'pending',
-    note TEXT
+-- ファイルバイナリ格納テーブル（主テーブル）
+CREATE TABLE files_blob (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    checksum VARCHAR(64) NOT NULL UNIQUE,
+    blob_data BYTEA NOT NULL,
+    stored_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- テキスト管理テーブル
-CREATE TABLE file_texts (
-    file_id INTEGER PRIMARY KEY REFERENCES files(id),
+-- ファイルメタ情報テーブル（1:1対応）
+CREATE TABLE files_meta (
+    blob_id UUID PRIMARY KEY REFERENCES files_blob(id) ON DELETE CASCADE,
+    file_name VARCHAR(255) NOT NULL,
+    mime_type VARCHAR(100) NOT NULL,
+    size INTEGER NOT NULL,
+    page_count INTEGER,
+    status VARCHAR(50) DEFAULT 'uploaded',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ファイルテキスト格納テーブル（1:1対応）
+CREATE TABLE files_text (
+    blob_id UUID PRIMARY KEY REFERENCES files_blob(id) ON DELETE CASCADE,
     raw_text TEXT,
     refined_text TEXT,
-    quality_score REAL DEFAULT 0.0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    quality_score REAL,
+    tags TEXT[],
+    processing_log TEXT,
+    ocr_engine VARCHAR(50),
+    llm_model VARCHAR(100),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 

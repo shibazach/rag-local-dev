@@ -2,25 +2,27 @@
 inclusion: always
 ---
 
-# RAGシステム開発におけるセキュリティ設計と導入戦略
+# RAGシステム開発におけるセキュリティ設計と導入戦略（新アーキテクチャ対応）
 
-本ドキュメントでは、開発中のFastAPIベースRAGシステムにおいて、
-後々導入すべき以下の要素をどのタイミングで組み込むべきかを整理する：
+本ドキュメントでは、new/フォルダ以下で構築された新FastAPIベースRAGシステムにおいて、
+セキュリティ要素の導入状況と今後の強化戦略を整理する：
 
-- HTTPS対応
-- SAML認証（またはOIDC連携）
-- API経由のフロントエンドデータ取得
+- ✅ **HTTPS対応**: セキュリティヘッダー・CSP設定済み
+- ✅ **認証基盤**: get_current_user()による統一認証導入済み
+- ✅ **API分離**: /api/**による明確なAPI設計
+- 🔄 **SAML/OIDC認証**: 準備完了、実装待ち
+- 🔄 **本格的なセッション管理**: 現在は仮実装
 
 ---
 
-## ✅ 優先方針（先にやるべきこと）
+## ✅ 実装済み優先方針
 
-| 方針 | 理由 | 影響 |
-|------|------|------|
-| APIベース設計に統一 | HTML埋め込みデータを排除 | UIとロジックの分離が明確化 |
-| `get_current_user()` を導入 | 認証を後で差し替えしやすくする | 認証導入が1関数で済む |
-| HTMLは構造のみ／JSでデータ取得 | 「ソースの可視化」を防ぐ | 後でSSO認証やセキュアAPIへ移行しやすい |
-| HTTPS前提で構成 | Cookie/SameSite/CORS制御に影響 | 後からHTTPS化するのは面倒 |
+| 方針 | 実装状況 | 新アーキテクチャでの対応 |
+|------|----------|------------------------|
+| APIベース設計に統一 | ✅ 完了 | new/api/**による完全分離 |
+| `get_current_user()` を導入 | ✅ 完了 | new/auth.py で統一認証実装 |
+| HTMLは構造のみ／JSでデータ取得 | ✅ 完了 | new/templates/ + new/static/js/ 分離 |
+| HTTPS前提で構成 | ✅ 完了 | セキュリティヘッダー・CSP設定済み |
 
 ---
 
@@ -73,3 +75,53 @@ inclusion: always
 - api/
     └── routes.py       # 認証付きAPI群
 - auth.py               # get_current_user定義
+
+## ✅ 新アーキテクチャ構成（実装済み）
+
+```plaintext
+new/
+├── main.py                    # FastAPIアプリケーションエントリーポイント
+├── config.py                  # Pydantic BaseSettings統一設定
+├── auth.py                    # get_current_user統一認証（SAML/OIDC準備済み）
+├── models.py                  # SQLAlchemyデータベースモデル
+├── schemas.py                 # Pydantic型定義（API入出力）
+├── database/
+│   ├── connection.py          # データベース接続管理
+│   └── models.py              # テーブル定義（3テーブル構成）
+├── api/                       # API エンドポイント群（/api/**）
+│   ├── ingest.py              # データ登録・SSE処理
+│   ├── chat.py                # チャット・検索API
+│   ├── files.py               # ファイル管理API
+│   └── ocr_comparison.py      # OCR比較API
+├── services/                  # ビジネスロジック・サービス層
+│   ├── processing/            # ファイル処理パイプライン
+│   ├── ocr/                   # OCR統合サービス
+│   └── llm/                   # LLM統合サービス
+├── routes/                    # UIルーティング
+│   └── ui.py                  # HTMLテンプレート返却
+├── templates/                 # Jinja2テンプレート（構造のみ）
+│   ├── base.html              # ベーステンプレート
+│   ├── chat.html              # チャット画面
+│   └── data_registration.html # データ登録画面
+└── static/                    # 静的ファイル（セキュア分離）
+    ├── css/                   # スタイルシート
+    └── js/                    # JavaScript（API経由データ取得）
+        ├── main.js            # 共通処理
+        ├── sse_client.js      # SSE統一クライアント
+        └── data_registration.js # データ登録制御
+```
+
+## 🔒 セキュリティ実装状況
+
+### ✅ 実装済みセキュリティ機能
+- **セキュリティヘッダー**: CSP, X-Content-Type-Options, X-XSS-Protection
+- **CORS設定**: 適切なオリジン制限
+- **セッション管理**: セキュアクッキー設定
+- **API認証**: 全エンドポイントでDepends(get_current_user)
+- **入力検証**: Pydantic v2による型安全性
+
+### 🔄 次期実装予定
+- **SAML/OIDC認証**: auth.pyの差し替えのみで対応可能
+- **JWT トークン**: セッションからJWTへの移行
+- **ロールベースアクセス制御**: 管理者・一般ユーザー権限分離
+- **監査ログ**: ユーザー操作・API呼び出しログ

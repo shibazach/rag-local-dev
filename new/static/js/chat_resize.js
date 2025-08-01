@@ -125,6 +125,11 @@ class ChatResize {
       this.removeResizeOverlay();
     }
   }
+
+  adjustTextareaHeight(containerHeight) {
+    // テキストエリアは固定高さ（80px）に設定済みのため、動的調整は無効化
+    return;
+  }
 }
 
 // グローバルに公開

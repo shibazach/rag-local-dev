@@ -22,6 +22,15 @@ const DataRegistration = {
     async init() {
         console.log('[DataRegistration] 初期化開始');
         
+        // SSEProgressClientクラスの存在確認
+        if (typeof SSEProgressClient === 'undefined') {
+            console.error('[DataRegistration] SSEProgressClientクラスが定義されていません');
+            this.showError('SSEクライアントの読み込みに失敗しました。ページを再読み込みしてください。');
+            return;
+        } else {
+            console.log('[DataRegistration] SSEProgressClientクラス確認: OK');
+        }
+        
         await this.loadAvailableConfig();
         this.setupEventListeners();
         await this.loadFileList();
@@ -166,10 +175,12 @@ const DataRegistration = {
             searchInput.addEventListener('input', () => this.filterFiles());
         }
 
-        // 全選択/全解除
-        const selectAllBtn = document.getElementById('select-all');
-        if (selectAllBtn) {
-            selectAllBtn.addEventListener('click', () => this.toggleSelectAll());
+            // ヘッダーチェックボックス（全選択/全解除）
+        const headerCheckbox = document.getElementById('header-checkbox');
+        if (headerCheckbox) {
+            headerCheckbox.addEventListener('change', () => {
+                this.handleHeaderCheckboxChange();
+            });
         }
 
         // 設定変更
@@ -216,6 +227,10 @@ const DataRegistration = {
                 const result = await response.json();
                 console.log('[DataRegistration] ファイル一覧取得成功:', result);
                 this.renderFileList(result.files || []);
+                // 初期読み込み時は全ファイル数を取得
+                if (result.total) {
+                    this.updateTotalCount(result.total);
+                }
             } else if (response.status === 401) {
                 console.warn('[DataRegistration] 認証が必要です');
                 this.showError('認証が必要です。ログインしてください。');
@@ -242,36 +257,59 @@ const DataRegistration = {
         });
 
         this.updateProcessButtonState();
+        this.updateSelectedCount();
+        this.updateTotalCount(files.length);
+    },
+    
+    // フィルタリング結果をレンダリング
+    renderFilteredFileList(files, totalCount) {
+        const tbody = document.getElementById('file-list-tbody');
+        if (!tbody) return;
+
+        tbody.innerHTML = '';
+
+        files.forEach(file => {
+            const row = this.createFileRow(file);
+            tbody.appendChild(row);
+        });
+
+        this.updateProcessButtonState();
+        this.updateSelectedCount();
+        this.updateTotalCount(totalCount);
+        this.updateHeaderCheckboxState();
     },
 
     // ファイル行を作成
     createFileRow(file) {
+        // ファイルIDの確実な取得
+        const fileId = file.file_id || file.id || file.fileName || `file_${Date.now()}_${Math.random()}`;
+        
+        console.log('[DataRegistration] createFileRow:', {
+            originalFile: file,
+            extractedFileId: fileId
+        });
+        
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>
                 <input type="checkbox" class="file-checkbox" 
-                       data-file-id="${file.file_id}" 
-                       ${this.selectedFiles.has(file.file_id) ? 'checked' : ''}>
+                       data-file-id="${fileId}" 
+                       ${this.selectedFiles.has(fileId) ? 'checked' : ''}>
             </td>
-            <td>${file.file_name || 'Unknown'}</td>
-            <td>${file.page_count || '-'}</td>
+            <td>${file.file_name || file.fileName || 'Unknown'}</td>
+            <td>${file.page_count || file.pages || '-'}</td>
             <td>
                 <span class="status-badge status-${file.status || 'unknown'}">
                     ${this.getStatusText(file.status)}
                 </span>
             </td>
-            <td>${this.formatFileSize(file.file_size || 0)}</td>
+            <td>${this.formatFileSize(file.file_size || file.size || 0)}</td>
         `;
 
         // チェックボックスイベント
         const checkbox = row.querySelector('.file-checkbox');
         checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                this.selectedFiles.add(file.file_id);
-            } else {
-                this.selectedFiles.delete(file.file_id);
-            }
-            this.updateProcessButtonState();
+            this.handleFileCheckboxChange(e);
         });
 
         return row;
@@ -313,28 +351,171 @@ const DataRegistration = {
         }
     },
 
-    // 全選択/全解除切り替え
-    toggleSelectAll() {
-        const checkboxes = document.querySelectorAll('.file-checkbox');
-        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    // 選択件数表示更新
+    updateSelectedCount() {
+        const selectedCountSpan = document.getElementById('selected-count');
+        if (selectedCountSpan) {
+            const count = this.selectedFiles.size;
+            selectedCountSpan.textContent = count;
+            console.log('[DataRegistration] updateSelectedCount:', {
+                displayedCount: count,
+                actualSelectedFiles: Array.from(this.selectedFiles)
+            });
+        } else {
+            console.warn('[DataRegistration] updateSelectedCount: selected-count element not found');
+        }
+    },
 
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = !allChecked;
-            const fileId = checkbox.dataset.fileId;
-            if (checkbox.checked) {
-                this.selectedFiles.add(fileId);
-            } else {
-                this.selectedFiles.delete(fileId);
-            }
+    // 総件数表示更新
+    updateTotalCount(count) {
+        const fileCountInfo = document.getElementById('file-count-info');
+        if (fileCountInfo) {
+            fileCountInfo.textContent = `${count}件のファイル`;
+        }
+    },
+
+    // ヘッダーチェックボックス状態更新
+    updateHeaderCheckboxState() {
+        const headerCheckbox = document.getElementById('header-checkbox');
+        const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+        
+        if (!headerCheckbox || fileCheckboxes.length === 0) return;
+        
+        const checkedCount = Array.from(fileCheckboxes).filter(cb => cb.checked).length;
+        const totalCount = fileCheckboxes.length;
+        
+        if (checkedCount === 0) {
+            // 未選択
+            headerCheckbox.checked = false;
+            headerCheckbox.indeterminate = false;
+        } else if (checkedCount === totalCount) {
+            // 全選択
+            headerCheckbox.checked = true;
+            headerCheckbox.indeterminate = false;
+        } else {
+            // 一部選択
+            headerCheckbox.checked = false;
+            headerCheckbox.indeterminate = true;
+        }
+        
+        console.log('[DataRegistration] Header state updated:', {
+            checkedCount: checkedCount,
+            totalCount: totalCount,
+            headerChecked: headerCheckbox.checked,
+            headerIndeterminate: headerCheckbox.indeterminate
         });
+    },
 
+    // ヘッダーチェックボックス変更処理
+    handleHeaderCheckboxChange() {
+        const headerCheckbox = document.getElementById('header-checkbox');
+        const fileCheckboxes = document.querySelectorAll('.file-checkbox');
+        
+        if (!headerCheckbox || fileCheckboxes.length === 0) return;
+        
+        const isChecked = headerCheckbox.checked;
+        console.log('[DataRegistration] Header checkbox changed:', isChecked);
+        
+        // 全ファイルチェックボックスを統一
+        fileCheckboxes.forEach(checkbox => {
+            checkbox.checked = isChecked;
+        });
+        
+        // selectedFilesを更新
+        this.selectedFiles.clear();
+        if (isChecked) {
+            fileCheckboxes.forEach(checkbox => {
+                const fileId = checkbox.getAttribute('data-file-id');
+                if (fileId) {
+                    this.selectedFiles.add(fileId);
+                }
+            });
+        }
+        
+        // UI更新
+        this.updateSelectedCount();
+        this.updateProcessButtonState();
+        
+        // indeterminateを無効化
+        headerCheckbox.indeterminate = false;
+        
+        console.log('[DataRegistration] Header change complete:', {
+            checked: isChecked,
+            selectedCount: this.selectedFiles.size
+        });
+    },
+
+    // ファイルチェックボックス変更処理
+    handleFileCheckboxChange(event) {
+        const checkbox = event.target;
+        const fileId = checkbox.getAttribute('data-file-id');
+        
+        if (!fileId) return;
+        
+        // selectedFilesを更新
+        if (checkbox.checked) {
+            this.selectedFiles.add(fileId);
+        } else {
+            this.selectedFiles.delete(fileId);
+        }
+        
+        console.log('[DataRegistration] File checkbox changed:', {
+            fileId: fileId,
+            checked: checkbox.checked,
+            selectedCount: this.selectedFiles.size
+        });
+        
+        // ヘッダーチェックボックス状態を計算
+        this.updateHeaderCheckboxState();
+        
+        // UI更新
+        this.updateSelectedCount();
         this.updateProcessButtonState();
     },
 
     // ファイルフィルタリング
-    filterFiles() {
-        // TODO: フィルタリング実装
-        console.log('[DataRegistration] フィルタリング機能は未実装');
+    async filterFiles() {
+        const statusFilter = document.getElementById('status-filter');
+        const searchInput = document.getElementById('search-input');
+        
+        const status = statusFilter?.value || '';
+        const searchTerm = searchInput?.value.trim() || '';
+        
+        console.log('[DataRegistration] フィルタリング実行:', { status, searchTerm });
+        
+        try {
+            // APIパラメータ構築
+            const params = new URLSearchParams({
+                page: '1',
+                page_size: '1000' // フィルタリング用に多めに取得
+            });
+            
+            if (status) {
+                params.append('status', status);
+            }
+            
+            if (searchTerm) {
+                params.append('filename', searchTerm); // ファイル名検索パラメータ
+            }
+            
+            const response = await fetch(`/api/files?${params.toString()}`, {
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('[DataRegistration] フィルター結果:', result);
+                
+                // フィルタリング結果を表示
+                this.renderFilteredFileList(result.files || [], result.total || 0);
+            } else {
+                console.error('[DataRegistration] フィルタリング失敗:', response.status);
+                this.showError('ファイルのフィルタリングに失敗しました。');
+            }
+        } catch (error) {
+            console.error('[DataRegistration] フィルタリングエラー:', error);
+            this.showError('フィルタリング中にエラーが発生しました。');
+        }
     },
 
     // 処理開始
@@ -344,16 +525,28 @@ const DataRegistration = {
             return;
         }
 
-        console.log('[DataRegistration] 処理開始:', Array.from(this.selectedFiles));
+        console.log('[DataRegistration] 処理開始:', {
+            selectedFiles: Array.from(this.selectedFiles),
+            settings: this.settings,
+            sseClientExists: !!this.sseClient
+        });
+        
         this.setProcessingState(true);
         
         try {
             // SSEクライアント初期化
             if (!this.sseClient) {
+                console.log('[DataRegistration] SSEクライアントを初期化中...');
                 this.initializeSSEClient();
+                
+                if (!this.sseClient) {
+                    throw new Error('SSEクライアントの初期化に失敗しました');
+                }
+                console.log('[DataRegistration] SSEクライアント初期化完了');
             }
             
             // 処理開始
+            console.log('[DataRegistration] SSEクライアントで処理開始中...');
             await this.sseClient.startProcessing(this.selectedFiles, this.settings);
             
         } catch (error) {
@@ -398,6 +591,9 @@ const DataRegistration = {
         
         // メッセージ表示
         this.updateProgressMessage(event.message);
+        
+        // 処理ログに詳細を追加
+        this.addToProcessingLog('INFO', event.message || 'イベント受信', event);
         
         // ファイル別進捗
         if (event.fileName) {
@@ -542,6 +738,54 @@ const DataRegistration = {
             Utils.showNotification(message, type);
         } else {
             console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+    },
+
+    // 処理ログに追加
+    addToProcessingLog(level, message, data = null) {
+        const logContainer = document.querySelector('.log-content');
+        if (!logContainer) return;
+
+        const timestamp = new Date().toLocaleTimeString('ja-JP');
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-entry log-${level.toLowerCase()}`;
+        
+        let logMessage = `[${timestamp}] ${level} ${message}`;
+        if (data && typeof data === 'object') {
+            logMessage += ` ${JSON.stringify(data, null, 2)}`;
+        }
+        
+        logEntry.textContent = logMessage;
+        logContainer.appendChild(logEntry);
+        
+        // 自動スクロール
+        logContainer.scrollTop = logContainer.scrollHeight;
+        
+        console.log(`[LOG] ${logMessage}`);
+    },
+
+    // 状態リセット機能
+    async resetProcessingState() {
+        try {
+            console.log('[DataRegistration] 処理状態をリセット中...');
+            
+            const response = await fetch('/api/ingest/reset', {
+                method: 'POST',
+                credentials: 'include'
+            });
+            
+            if (response.ok) {
+                this.addToProcessingLog('INFO', '処理状態をリセットしました');
+                this.setProcessingState(false);
+                this.selectedFiles.clear();
+                this.updateSelectedCount();
+                this.updateHeaderCheckboxState();
+                console.log('[DataRegistration] リセット完了');
+            } else {
+                console.error('[DataRegistration] リセット失敗:', response.status);
+            }
+        } catch (error) {
+            console.error('[DataRegistration] リセットエラー:', error);
         }
     }
 };

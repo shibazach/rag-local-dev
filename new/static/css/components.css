@@ -207,6 +207,60 @@
     width: 100%;
 }
 
+/* ===== 統一フォームコントロール ===== */
+.form-control {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.compact-select {
+    height: 32px;
+    font-size: 12px;
+    min-width: 180px;
+    padding: 6px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.compact-input {
+    height: 32px;
+    font-size: 12px;
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* ===== 統一リサイザースタイル ===== */
+.resizer, .resize-handle, .splitter, 
+.vertical-splitter, .horizontal-splitter-left, .horizontal-splitter-right {
+    background: #dee2e6;
+    transition: background-color 0.2s;
+    border-radius: 3px;
+}
+
+.resizer:hover, .resize-handle:hover, .splitter:hover,
+.vertical-splitter:hover, .horizontal-splitter-left:hover, .horizontal-splitter-right:hover {
+    background: #007bff;
+}
+
+.resizer.horizontal-resizer, .horizontal-splitter-left, .horizontal-splitter-right {
+    cursor: row-resize;
+}
+
+.resizer.vertical-resizer, .resize-handle, .vertical-splitter {
+    cursor: col-resize;
+}
+
 /* ===== レスポンシブ対応 ===== */
 @media (max-width: 768px) {
     .nav {

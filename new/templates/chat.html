@@ -18,21 +18,22 @@
         <button id="pattern1-btn" class="layout-btn">▽</button>
         <button id="pattern2-btn" class="layout-btn">△</button>
       </div>
+      <div class="panel-header">
+        <h3>⚙️ 検索設定</h3>
+      </div>
       <div class="panel-content">
-        <h1 class="page-title">🔍 チャット検索</h1>
-        
         <div class="form-section">
-          <textarea id="query" rows="4" placeholder="質問を入力してください…" style="width: 100%; box-sizing: border-box; resize: vertical;"></textarea>
+          <textarea id="query" class="chat-query-textarea" rows="4" placeholder="質問を入力してください…"></textarea>
         </div>
         
         <div class="form-section">
           <label for="mode" style="min-width: 120px;">検索モード：</label>
-          <select id="mode">
+          <select id="mode" class="form-control compact-select">
             <option value="チャンク統合">チャンク統合</option>
             <option value="ファイル別（要約+一致度）" selected>ファイル別（要約+一致度）</option>
           </select>
           <label for="model_key" style="margin-left:1em;">埋め込みモデル：</label>
-          <select id="model_key">
+          <select id="model_key" class="form-control compact-select">
             {% for key, config in embedding_options.items() %}
             <option value="{{ key }}">{{ config["model_name"] }} ({{ config["embedder"] }})</option>
             {% endfor %}
@@ -41,17 +42,17 @@
         
         <div class="form-section">
           <label for="search_limit" style="min-width: 120px;">検索件数：</label>
-          <input type="number" id="search_limit" min="1" max="50" value="10" style="width:4em;">
+          <input type="number" id="search_limit" class="form-control compact-input" min="1" max="50" value="10" style="width:4em;">
           <span style="margin-left:0.5em; color:#666; font-size:0.9em;">件</span>
 
           <label for="min_score" style="margin-left:1em;">最小一致度：</label>
-          <input type="number" id="min_score" min="0" max="1" step="0.1" value="0.0" style="width:4em;">
+          <input type="number" id="min_score" class="form-control compact-input" min="0" max="1" step="0.1" value="0.0" style="width:4em;">
           <span style="margin-left:0.5em; color:#666; font-size:0.9em;">以上</span>
         </div>
         
         <div class="form-section">
           <label for="search_timeout">⏱️ 検索タイムアウト：</label>
-          <input id="search_timeout" type="number" min="0" max="3600" step="5" value="10" style="width:5em; text-align:center;">
+          <input id="search_timeout" class="form-control compact-input" type="number" min="0" max="3600" step="5" value="10" style="width:5em; text-align:center;">
           <label>秒（0でタイムアウトなし）</label>
         </div>
         
@@ -86,6 +87,9 @@
 
       <!-- 検索結果パネル -->
       <div id="log-panel" class="panel">
+        <div class="panel-header">
+          <h3>📋 検索結果</h3>
+        </div>
         <div class="panel-content">
           <div id="log-content">
             <div id="answer" style="display: none; margin: 12px 0; padding: 8px 12px; border: 1px solid #888; border-radius: 4px; background: #eef;">

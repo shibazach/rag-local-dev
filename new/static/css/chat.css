@@ -65,26 +65,16 @@
 
 /* ===== 基本レイアウト ===== */
 #app-container {
-    height: 100vh;
+    height: calc(100vh - 95px);
     display: flex;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(5px);
+    padding: 8px;
+    overflow: hidden;
+    background: transparent;
     position: relative;
 }
 
-/* アプリコンテナの背景オーバーレイ */
-#app-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(248, 249, 250, 0.02) 100%);
-    border-radius: inherit;
-    z-index: -1;
-}
+
 
 #bottom-container {
     display: flex;
@@ -99,80 +89,50 @@
 
 /* ===== パネル共通スタイル ===== */
 .panel {
-    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     display: flex;
     flex-direction: column;
     height: 100%;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* 設定パネル - base.htmlと同じグラスモーフィズム効果 */
+/* 設定パネル - 標準パネルスタイル */
 #settings-panel {
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
+    background: white;
     position: relative;
 }
 
-#settings-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
-    border-radius: inherit;
-    z-index: -1;
-}
-
-/* 検索結果パネル - グラスモーフィズム効果 */
+/* 検索結果パネル - 標準パネルスタイル */
 #log-panel {
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
+    background: white;
     position: relative;
 }
 
-#log-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
-    border-radius: inherit;
-    z-index: -1;
-}
-
-/* PDFパネル - グラスモーフィズム効果 */
+/* PDFパネル - 標準パネルスタイル */
 #pdf-panel {
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(15px);
+    background: white;
     position: relative;
-}
-
-#pdf-panel::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(248, 249, 250, 0.1) 100%);
-    border-radius: inherit;
-    z-index: -1;
 }
 
 .panel-header {
-    background: rgba(248, 249, 250, 0.8);
+    background: #f8f9fa;
     padding: 8px 12px;
-    border-bottom: 1px solid rgba(222, 226, 230, 0.8);
-    font-weight: normal;
-    font-size: 14px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
 }
 
 .panel-content {
-    padding: 12px;
+    padding: 8px;
     flex: 1;
     overflow-y: auto;
     height: 100%;
@@ -213,23 +173,12 @@
 }
 
 /* ===== リサイザー ===== */
-.resizer {
-    background: #dee2e6;
-    transition: background-color 0.2s;
-}
-
-.resizer:hover {
-    background: #adb5bd;
-}
-
 .horizontal-resizer {
     height: 5px;
-    cursor: row-resize;
 }
 
 .vertical-resizer {
     width: 5px;
-    cursor: col-resize;
 }
 
 /* ===== フォーム要素（ingestと統一） ===== */
@@ -275,9 +224,27 @@
     resize: vertical;
 }
 
-/* chat固有のスタイル（共通CSSで定義されたものは削除） */
+/* ===== チャット専用テキストエリア ===== */
+.chat-query-textarea {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    resize: none !important; /* ユーザーによる手動リサイズを無効化 */
+    border: 1px solid #d0d0d0 !important; /* 薄いグレーの縁取り */
+    padding: 8px 12px !important; /* 適切なpadding */
+    font-size: 14px !important;
+    line-height: 1.4 !important;
+    border-radius: 4px !important;
+    background: white !important;
+    transition: border-color 0.2s ease !important;
+    height: 80px !important; /* 固定高さ */
+    min-height: 80px !important;
+}
 
-/* chat固有のスタイル（共通CSSで定義されたものは削除） */
+.chat-query-textarea:focus {
+    outline: none !important;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25) !important;
+}
 
 /* ===== 検索結果表示 ===== */
 /* 結果カード */
@@ -325,7 +292,7 @@
 
 /* PDFプレビューなし（デフォルト）- 縦2分割 */
 .layout-no-preview #top-container {
-    flex: 0 0 220px;
+    flex: 0 0 180px;
     display: flex;
     flex-direction: column;
 }
@@ -351,8 +318,6 @@
 .layout-no-preview #top-resizer {
     flex: 0 0 5px;
     display: block;
-    background: #dee2e6;
-    cursor: row-resize;
 }
 
 .layout-no-preview #left-container {
@@ -388,13 +353,12 @@
 
 /* 第1パターン：上部設定、下部に検索結果とPDFの横分割 */
 .layout-pattern1 #top-container {
-    flex: 0 0 200px;
+    flex: 0 0 180px;
     display: flex;
 }
 
 .layout-pattern1 #top-resizer {
-    flex: 0 0 5px;
-    display: block;
+    display: none;
 }
 
 .layout-pattern1 #left-container {
@@ -414,8 +378,7 @@
 }
 
 .layout-pattern1 #vertical-resizer {
-    flex: 0 0 5px;
-    display: block;
+    display: none;
 }
 
 .layout-pattern1 #pdf-panel {
@@ -433,13 +396,12 @@
 }
 
 .layout-pattern2 #left-container {
-    flex: 0 0 200px;
+    flex: 0 0 180px;
     display: flex;
 }
 
 .layout-pattern2 #left-resizer {
-    flex: 0 0 5px;
-    display: block;
+    display: none;
 }
 
 .layout-pattern2 #log-panel {
@@ -451,8 +413,7 @@
 }
 
 .layout-pattern2 #vertical-resizer {
-    flex: 0 0 5px;
-    display: block;
+    display: none;
 }
 
 .layout-pattern2 #pdf-panel {

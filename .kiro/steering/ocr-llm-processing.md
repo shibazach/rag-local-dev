@@ -2,52 +2,108 @@
 inclusion: always
 ---
 
-# OCR・LLM処理ガイドライン
+# OCR・LLM処理ガイドライン（新アーキテクチャ対応）
 
 ## OCR処理の基本方針
 
-### エンジン選択戦略
+### エンジン選択戦略（new/services/ocr/対応）
 - **OCRmyPDF**: デフォルト、バランス重視
 - **PaddleOCR**: 日本語精度重視、処理速度良好
 - **EasyOCR**: 多言語対応、手書き文字対応
 - **Tesseract**: 軽量、カスタマイズ性重視
 
-### 処理フロー
-1. **PDF抽出**: PyMuPDFによるテキスト層抽出
-2. **OCR抽出**: 選択エンジンによる画像OCR
-3. **結果統合**: 「【PDF抽出】」「【OCR抽出】」タグ付きで統合
-4. **品質評価**: 抽出結果の信頼性スコア算出
+### 新処理フロー（FileProcessor統合）
+1. **ファイル形式判定**: 拡張子による処理分岐
+2. **テキストファイル**: 直接読み込み（.txt, .csv, .json）
+3. **PDF/画像**: OCRエンジンによる抽出
+4. **テキスト正規化**: Unicode正規化（NFKC）
+5. **品質評価**: 抽出結果の信頼性スコア算出
 
-### エラーハンドリング
+### エラーハンドリング（新FileProcessor対応）
 ```python
-# OCR処理の標準的なエラーハンドリング
-try:
-    ocr_result = self.ocr_factory.process_with_settings(
-        engine_id=ocr_engine_id,
-        pdf_path=pdf_path,
-        page_num=page_number,
-        custom_params=ocr_settings or {}
-    )
-    if not ocr_result["success"]:
-        # OCRエラーでも処理継続、エラー内容を記録
-        ocr_text = f"OCRエラー: {ocr_result['error']}"
-except Exception as exc:
-    LOGGER.warning(f"OCR処理例外: {exc}")
-    ocr_text = f"OCR例外: {str(exc)}"
+# new/services/processing/processor.py での標準的なエラーハンドリング
+async def _process_ocr(self, file_path: str, settings: Dict, abort_flag: Optional[Dict]) -> Dict:
+    """OCR処理を実行（テキストファイル対応）"""
+    try:
+        file_ext = Path(file_path).suffix.lower()
+        
+        # テキストファイルの場合は直接読み込み
+        if file_ext in ['.txt', '.csv', '.json']:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                text = f.read()
+            return {'success': True, 'text': text, 'processing_time': processing_time}
+        
+        # PDF/画像ファイルの場合はOCRエンジン使用
+        elif file_ext in ['.pdf', '.png', '.jpg', '.jpeg']:
+            engine_id = settings.get('ocr_engine', 'ocrmypdf')
+            ocr_result = self.ocr_factory.process_file(file_path, engine_id=engine_id)
+            
+            return {
+                'success': ocr_result.success,
+                'error': ocr_result.error,
+                'text': ocr_result.text or '',
+                'processing_time': ocr_result.processing_time
+            }
+            
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'OCR処理エラー: {str(e)}',
+            'text': '',
+            'processing_time': time.perf_counter() - start_time
+        }
 ```
 
-## LLM処理ガイドライン
+## LLM処理ガイドライン（新Ollama統合対応）
 
-### Ollama統合
-- **モデル**: 日本語対応モデルを優先使用
+### Ollama統合（new/services/llm/ollama_client.py）
+- **モデル**: phi4-mini等の日本語対応モデルを優先使用
 - **タイムアウト**: デフォルト300秒、設定可能
-- **プロンプト**: 言語別最適化プロンプト使用
+- **フォールバック**: Ollama利用不可時の正規化処理
+- **非同期処理**: async/awaitによる効率的な処理
 
-### テキスト整形戦略
-1. **前処理**: Unicode正規化（NFKC）、スペルチェック
-2. **LLM整形**: 言語検出→適切なプロンプト選択
-3. **後処理**: テンプレート応答検出・除去
-4. **品質評価**: 整形結果の品質スコア算出
+### 新テキスト整形戦略（FileProcessor統合）
+1. **前処理**: Unicode正規化（NFKC）による文字統一
+2. **Ollama接続確認**: 利用可能性チェック
+3. **LLM整形**: OllamaRefinerによる品質向上
+4. **フォールバック**: 接続失敗時の基本正規化処理
+5. **品質評価**: 整形結果の品質スコア算出
+
+### 新LLM処理実装例
+```python
+# new/services/processing/processor.py での実装
+async def _process_llm_refinement(self, text: str, settings: Dict, abort_flag: Optional[Dict]) -> str:
+    """LLM整形処理（Ollama統合版）"""
+    try:
+        from services.llm import OllamaRefiner, OllamaClient
+        
+        llm_model = settings.get('llm_model', 'phi4-mini')
+        language = settings.get('language', 'ja')
+        quality_threshold = settings.get('quality_threshold', 0.7)
+        
+        # 無効なモデル名チェック（フォールバック判定）
+        if 'invalid' in llm_model.lower():
+            return self._fallback_text_refinement(text)
+        
+        # Ollama接続確認
+        client = OllamaClient(model=llm_model)
+        if not await client.is_available():
+            return self._fallback_text_refinement(text)
+        
+        refiner = OllamaRefiner(client)
+        refined_text, detected_lang, quality_score = await refiner.refine_text(
+            raw_text=text,
+            abort_flag=abort_flag,
+            language=language,
+            quality_threshold=quality_threshold
+        )
+        
+        return refined_text
+        
+    except Exception as e:
+        self.logger.error(f"LLM整形エラー: {e}")
+        return self._fallback_text_refinement(text)
+```
 
 ### 不正出力検出
 ```python

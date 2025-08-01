@@ -176,7 +176,7 @@
 .file-table thead {
     background: #f8f9fa;
     display: table;
-    width: 100%; /* 元の幅に戻す */
+    width: calc(100% - 2px); /* パネル全幅 - 縦スクロールバー幅 */
     table-layout: fixed;
 }
 
@@ -232,7 +232,7 @@
 .file-table th:nth-child(1) { width: calc(100% - 300px) !important; }    /* ファイル名: 残り全幅 */
 .file-table th:nth-child(2) { width: 50px !important; }                  /* 頁数: 固定 */
 .file-table th:nth-child(3) { width: 130px !important; }                 /* ステータス: 拡張 */
-.file-table th:nth-child(4) { width: 120px !important; }                 /* 操作: さらに拡張 */
+.file-table th:nth-child(4) { width: 122px !important; }                 /* 操作: 値セル120px + スクロールバー2px */
 
 /* データ行も同じ幅で統一 */
 .file-table tbody tr td:nth-child(1) { width: calc(100% - 300px) !important; }
@@ -401,13 +401,6 @@
 /* リサイズハンドル */
 .resize-handle {
     width: 4px;
-    background: #ddd;
-    cursor: col-resize;
-    transition: background-color 0.2s;
-}
-
-.resize-handle:hover {
-    background: #999;
 }
 
 /* ページネーションスタイル - データ登録頁と統一 */

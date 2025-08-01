@@ -2,30 +2,36 @@
 inclusion: always
 ---
 
-# コーディング規約・開発標準
+# コーディング規約・開発標準（新アーキテクチャ対応）
 
 ## Python コーディング規約
 
 ### 基本方針
 - PEP 8に準拠した可読性重視のコード
 - 日本語コメントを積極的に活用
-- 型ヒントの必須使用
+- 型ヒントの必須使用（Pydantic v2対応）
 - docstringによる関数・クラス説明
+- 非同期処理（async/await）の積極活用
 
-### ファイル構造
+### ファイル構造（new/配下標準）
 ```python
-# REM: ファイル名 @更新日時
-# REM: ファイルの目的・役割の説明
+# new/services/example_service.py
+# サービス層の標準的な構造
 
 # ── 標準ライブラリ ──
-import os
+import asyncio
 import logging
+from typing import Dict, List, Optional, AsyncGenerator
+from pathlib import Path
 
 # ── サードパーティ ──
-from fastapi import APIRouter
+from fastapi import HTTPException
+from pydantic import BaseModel, Field
 
 # ── プロジェクト内 ──
-from app.services import SomeService
+from new.config import LOGGER, settings
+from new.database.connection import get_db_connection
+from new.schemas import SuccessResponse, ErrorResponse
 ```
 
 ### 命名規則

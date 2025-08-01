@@ -2,21 +2,23 @@
 inclusion: always
 ---
 
-# UI/UX設計ガイドライン
+# UI/UX設計ガイドライン（新アーキテクチャ対応）
 
 ## デザイン哲学
 
 ### 基本方針
 - **日本語ユーザー最優先**: 日本語UI、直感的な操作性
-- **リアルタイム性**: 処理進捗の即座な可視化
+- **リアルタイム性**: SSE（Server-Sent Events）による処理進捗の即座な可視化
 - **エラー耐性**: 処理中断・復旧への配慮
 - **アクセシビリティ**: 視覚的・操作的配慮
+- **セキュリティ**: API分離による安全なデータ取得
 
 ### 視覚デザイン
-- **グラスモーフィズム**: 半透明・ブラー効果による現代的UI
+- **モダンUI**: CSS Grid/Flexboxによるレスポンシブデザイン
 - **カラーパレット**: 落ち着いた色調、高コントラスト
 - **タイポグラフィ**: 日本語フォント最適化
 - **アイコン**: 絵文字活用による直感的表現
+- **コンポーネント化**: 再利用可能なUIコンポーネント設計
 
 ## レイアウト設計
 
@@ -95,15 +97,21 @@ function endProcessing() {
 
 ## リアルタイム更新
 
-### JavaScript モジュール構成
-現在のIngestシステムは以下の機能別モジュールで構成されています：
+### JavaScript モジュール構成（new/static/js/対応）
+新アーキテクチャでは以下の機能別モジュールで構成されています：
 
-- **ingest_main.js**: メイン統合・初期化処理
-- **ingest_layout.js**: レイアウト切り替え機能（3パターン対応）
-- **ingest_resize.js**: パネルリサイズ機能
-- **ingest_sse.js**: SSE（Server-Sent Events）処理
-- **ingest_processing.js**: 処理実行・フォーム制御
-- **ingest_ocr.js**: OCR設定・プリセット管理
+- **main.js**: 共通初期化・ユーティリティ関数
+- **header.js**: ヘッダーナビゲーション制御
+- **data_registration.js**: データ登録画面制御
+- **files.js**: ファイル管理画面制御
+- **chat_main.js**: チャット機能メイン処理
+- **chat_layout.js**: チャットレイアウト制御
+- **chat_resize.js**: チャットパネルリサイズ
+- **chat_search.js**: チャット検索機能
+- **chat_history.js**: チャット履歴管理
+- **ocr_comparison.js**: OCR比較検証機能
+- **sse_client.js**: SSE（Server-Sent Events）統一クライアント
+- **file_selection.js**: ファイル選択・フィルタリング
 
 ### SSE（Server-Sent Events）活用
 ```javascript

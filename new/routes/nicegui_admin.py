@@ -554,3 +554,297 @@ def init_nicegui_routes(app):
     """NiceGUIルートを初期化"""
     ui.run_with(app, mount_path='/nicegui')
     LOGGER.info("NiceGUIルート初期化完了: /admin/nicegui-table, /admin/nicegui-demo")
+@u
+i.page('/files/nicegui')
+async def nicegui_files():
+    """Files頁のNiceGUI版"""
+    
+    ui.page_title('R&D RAGシステム - ファイル管理')
+    
+    # ヘッダー
+    with ui.header().classes('bg-green-600 text-white'):
+        with ui.row().classes('w-full items-center justify-between px-4'):
+            ui.label('📁 R&D RAGシステム | ファイル管理').classes('text-xl font-bold')
+            with ui.row().classes('gap-2'):
+                ui.button('利用', on_click=lambda: ui.open('/')).classes('bg-blue-500 hover:bg-blue-400')
+                ui.button('管理', on_click=lambda: ui.open('/admin')).classes('bg-gray-600 hover:bg-gray-700')
+    
+    # メインレイアウト
+    with ui.splitter(value=25).classes('w-full h-screen') as splitter:
+        # 左サイドパネル（フィルタ・操作）
+        with splitter.before:
+            with ui.column().classes('w-full h-full p-4 bg-gray-50'):
+                ui.label('🔍 フィルタ・操作').classes('text-lg font-bold mb-4')
+                
+                # ファイルアップロード
+                with ui.expansion('📤 ファイルアップロード', icon='upload').classes('w-full mb-4'):
+                    with ui.column().classes('gap-3 p-2'):
+                        # ファイルアップロード
+                        upload_area = ui.upload(
+                            on_upload=lambda e: handle_file_upload_files(e),
+                            multiple=True,
+                            max_file_size=50_000_000  # 50MB
+                        ).props('accept=".pdf,.txt,.docx,.xlsx,.pptx,.jpg,.png"').classes('w-full')
+                        
+                        # アップロード統計
+                        with ui.card().classes('w-full'):
+                            ui.label('アップロード統計').classes('font-bold mb-2')
+                            upload_stats = ui.column().classes('gap-1')
+                            ui.label('今日: 0件').classes('text-sm')
+                            ui.label('今月: 0件').classes('text-sm')
+                            ui.label('総計: 0件').classes('text-sm')
+                
+                # フィルタ設定
+                with ui.expansion('🔍 フィルタ設定', icon='filter_list').classes('w-full mb-4'):
+                    with ui.column().classes('gap-3 p-2'):
+                        # ファイル種別フィルタ
+                        file_type_filter = ui.select(
+                            options=[
+                                {'label': '全ての種別', 'value': 'all'},
+                                {'label': 'PDF', 'value': 'pdf'},
+                                {'label': 'Word文書', 'value': 'docx'},
+                                {'label': 'Excel', 'value': 'xlsx'},
+                                {'label': 'PowerPoint', 'value': 'pptx'},
+                                {'label': 'テキスト', 'value': 'txt'},
+                                {'label': '画像', 'value': 'image'}
+                            ],
+                            value='all',
+                            label='ファイル種別'
+                        ).classes('w-full')
+                        
+                        # ステータスフィルタ
+                        status_filter = ui.select(
+                            options=[
+                                {'label': '全てのステータス', 'value': 'all'},
+                                {'label': '未処理', 'value': 'pending'},
+                                {'label': '処理中', 'value': 'processing'},
+                                {'label': '完了', 'value': 'completed'},
+                                {'label': 'エラー', 'value': 'error'}
+                            ],
+                            value='all',
+                            label='処理ステータス'
+                        ).classes('w-full')
+                        
+                        # 日付範囲フィルタ
+                        date_range = ui.select(
+                            options=[
+                                {'label': '全期間', 'value': 'all'},
+                                {'label': '今日', 'value': 'today'},
+                                {'label': '今週', 'value': 'week'},
+                                {'label': '今月', 'value': 'month'},
+                                {'label': '3ヶ月', 'value': '3months'}
+                            ],
+                            value='all',
+                            label='作成日時'
+                        ).classes('w-full')
+                        
+                        # フィルタ適用ボタン
+                        ui.button('🔍 フィルタ適用', on_click=lambda: apply_filters()).classes('w-full bg-blue-500 hover:bg-blue-600 text-white')
+                        ui.button('🔄 リセット', on_click=lambda: reset_filters()).classes('w-full bg-gray-500 hover:bg-gray-600 text-white')
+                
+                # ファイル操作
+                with ui.expansion('⚙️ ファイル操作', icon='settings').classes('w-full mb-4'):
+                    with ui.column().classes('gap-2 p-2'):
+                        ui.button('📥 選択ファイルダウンロード', on_click=lambda: download_selected()).classes('w-full bg-green-500 hover:bg-green-600 text-white')
+                        ui.button('🗑️ 選択ファイル削除', on_click=lambda: delete_selected()).classes('w-full bg-red-500 hover:bg-red-600 text-white')
+                        ui.button('🔄 選択ファイル再処理', on_click=lambda: reprocess_selected()).classes('w-full bg-orange-500 hover:bg-orange-600 text-white')
+                        
+                        ui.separator()
+                        
+                        # 一括操作
+                        ui.label('一括操作').classes('font-bold text-sm')
+                        ui.button('✅ 全て選択', on_click=lambda: select_all_files()).classes('w-full bg-blue-400 hover:bg-blue-500 text-white text-sm')
+                        ui.button('❌ 選択解除', on_click=lambda: deselect_all_files()).classes('w-full bg-gray-400 hover:bg-gray-500 text-white text-sm')
+                
+                # ファイル統計
+                with ui.expansion('📊 ファイル統計', icon='analytics').classes('w-full'):
+                    with ui.column().classes('gap-3 p-2'):
+                        # 統計カード
+                        with ui.row().classes('w-full gap-2'):
+                            with ui.card().classes('flex-1 text-center p-2'):
+                                ui.label('25').classes('text-lg font-bold text-blue-600')
+                                ui.label('総ファイル数').classes('text-xs')
+                            
+                            with ui.card().classes('flex-1 text-center p-2'):
+                                ui.label('15').classes('text-lg font-bold text-green-600')
+                                ui.label('処理済み').classes('text-xs')
+                        
+                        with ui.row().classes('w-full gap-2'):
+                            with ui.card().classes('flex-1 text-center p-2'):
+                                ui.label('8').classes('text-lg font-bold text-orange-600')
+                                ui.label('処理中').classes('text-xs')
+                            
+                            with ui.card().classes('flex-1 text-center p-2'):
+                                ui.label('2').classes('text-lg font-bold text-red-600')
+                                ui.label('エラー').classes('text-xs')
+        
+        # メインファイル一覧エリア
+        with splitter.after:
+            with ui.column().classes('w-full h-full p-4'):
+                # 検索バー
+                with ui.card().classes('w-full mb-4'):
+                    with ui.row().classes('w-full items-center gap-4 p-4'):
+                        search_input = ui.input(
+                            placeholder='ファイル名で検索...'
+                        ).classes('flex-1')
+                        ui.button('🔍 検索', on_click=lambda: search_files()).classes('bg-blue-500 hover:bg-blue-600 text-white')
+                        ui.button('🔄 更新', on_click=lambda: refresh_files()).classes('bg-green-500 hover:bg-green-600 text-white')
+                
+                # ファイル一覧テーブル（固定サイズ、ページネーション）
+                create_files_table()
+
+def create_files_table():
+    """ファイル一覧テーブルを作成（固定サイズ、ページネーション対応）"""
+    
+    # サンプルファイルデータ（25件）
+    files_data = []
+    file_types = ['pdf', 'docx', 'xlsx', 'pptx', 'txt', 'jpg', 'png']
+    statuses = ['未処理', '処理中', '完了', 'エラー']
+    
+    for i in range(1, 26):
+        files_data.append({
+            'id': i,
+            'file_name': f'document_{i:02d}.{file_types[(i-1) % len(file_types)]}',
+            'size': f'{(i * 123 + 500) // 1024} KB',
+            'created_at': f'2024-01-{(i % 30) + 1:02d} {10 + (i % 12)}:{(i * 7) % 60:02d}',
+            'status': statuses[(i-1) % len(statuses)],
+            'progress': (i * 17) % 101,
+            'file_type': file_types[(i-1) % len(file_types)]
+        })
+    
+    # テーブルカラム定義
+    columns = [
+        {'name': 'select', 'label': '', 'field': 'select', 'align': 'center'},
+        {'name': 'file_name', 'label': 'ファイル名', 'field': 'file_name', 'sortable': True, 'align': 'left'},
+        {'name': 'file_type', 'label': '種別', 'field': 'file_type', 'sortable': True, 'align': 'center'},
+        {'name': 'size', 'label': 'サイズ', 'field': 'size', 'sortable': True, 'align': 'center'},
+        {'name': 'status', 'label': 'ステータス', 'field': 'status', 'sortable': True, 'align': 'center'},
+        {'name': 'progress', 'label': '進捗', 'field': 'progress', 'sortable': True, 'align': 'center'},
+        {'name': 'created_at', 'label': '作成日時', 'field': 'created_at', 'sortable': True, 'align': 'center'},
+        {'name': 'actions', 'label': '操作', 'field': 'actions', 'align': 'center'},
+    ]
+    
+    # 固定サイズテーブル（高さ500px、10件/頁）
+    with ui.card().classes('w-full'):
+        ui.label('📁 ファイル一覧（25件中、10件/頁表示）').classes('text-lg font-bold mb-4')
+        
+        # テーブル作成（固定高さ、ページネーション10件）
+        table = ui.table(
+            columns=columns,
+            rows=files_data,
+            pagination={'rowsPerPage': 10, 'page': 1},
+            selection='multiple'
+        ).classes('w-full').style('height: 500px; overflow-y: auto;')
+        
+        # チェックボックス列のカスタムレンダリング
+        table.add_slot('body-cell-select', '''
+            <q-td :props="props">
+                <q-checkbox v-model="props.selected" />
+            </q-td>
+        ''')
+        
+        # ファイル種別のカスタムレンダリング
+        table.add_slot('body-cell-file_type', '''
+            <q-td :props="props">
+                <q-chip :class="props.value === 'pdf' ? 'bg-red text-white' : 
+                               props.value === 'docx' ? 'bg-blue text-white' :
+                               props.value === 'xlsx' ? 'bg-green text-white' :
+                               props.value === 'pptx' ? 'bg-orange text-white' :
+                               props.value === 'txt' ? 'bg-gray text-white' : 'bg-purple text-white'"
+                        size="sm">
+                    {{ props.value.toUpperCase() }}
+                </q-chip>
+            </q-td>
+        ''')
+        
+        # ステータスバッジのカスタムレンダリング
+        table.add_slot('body-cell-status', '''
+            <q-td :props="props">
+                <q-badge :class="props.value === '処理中' ? 'bg-blue text-white' : 
+                                props.value === '未処理' ? 'bg-yellow text-black' :
+                                props.value === '完了' ? 'bg-green text-white' : 'bg-red text-white'">
+                    {{ props.value }}
+                </q-badge>
+            </q-td>
+        ''')
+        
+        # 進捗バーのカスタムレンダリング
+        table.add_slot('body-cell-progress', '''
+            <q-td :props="props">
+                <q-linear-progress 
+                    :value="props.value / 100" 
+                    :color="props.value === 100 ? 'green' : props.value > 50 ? 'blue' : 'orange'"
+                    size="md"
+                    class="q-mt-sm"
+                />
+                <div class="text-center text-xs">{{ props.value }}%</div>
+            </q-td>
+        ''')
+        
+        # 操作ボタンのカスタムレンダリング
+        table.add_slot('body-cell-actions', '''
+            <q-td :props="props">
+                <q-btn-group>
+                    <q-btn size="sm" color="blue" icon="visibility" @click="previewFile(props.row)" />
+                    <q-btn size="sm" color="green" icon="download" @click="downloadFile(props.row)" />
+                    <q-btn size="sm" color="red" icon="delete" @click="deleteFile(props.row)" />
+                </q-btn-group>
+            </q-td>
+        ''')
+        
+        # 選択されたファイル数の表示
+        with ui.row().classes('w-full mt-4 justify-between items-center'):
+            selected_count = ui.label('選択: 0件').classes('text-sm text-gray-600')
+            
+            with ui.row().classes('gap-2'):
+                ui.button('📥 選択ファイルダウンロード', on_click=lambda: download_selected_files()).classes('bg-green-500 hover:bg-green-600 text-white')
+                ui.button('🗑️ 選択ファイル削除', on_click=lambda: delete_selected_files()).classes('bg-red-500 hover:bg-red-600 text-white')
+
+# ファイル操作関数群
+def handle_file_upload_files(event):
+    """ファイルアップロード処理（Files版）"""
+    ui.notify(f'ファイル「{event.name}」をアップロードしました', type='positive')
+
+def apply_filters():
+    """フィルタを適用"""
+    ui.notify('フィルタを適用しました', type='info')
+
+def reset_filters():
+    """フィルタをリセット"""
+    ui.notify('フィルタをリセットしました', type='warning')
+
+def download_selected():
+    """選択ファイルをダウンロード"""
+    ui.notify('選択されたファイルをダウンロードします', type='positive')
+
+def delete_selected():
+    """選択ファイルを削除"""
+    ui.notify('選択されたファイルを削除します', type='negative')
+
+def reprocess_selected():
+    """選択ファイルを再処理"""
+    ui.notify('選択されたファイルを再処理します', type='info')
+
+def select_all_files():
+    """全ファイルを選択"""
+    ui.notify('全てのファイルを選択しました', type='info')
+
+def deselect_all_files():
+    """全ファイル選択を解除"""
+    ui.notify('選択を解除しました', type='info')
+
+def search_files():
+    """ファイルを検索"""
+    ui.notify('ファイル検索を実行しました', type='info')
+
+def refresh_files():
+    """ファイル一覧を更新"""
+    ui.notify('ファイル一覧を更新しました', type='positive')
+
+def download_selected_files():
+    """選択されたファイルをダウンロード"""
+    ui.notify('選択されたファイルをダウンロードします', type='positive')
+
+def delete_selected_files():
+    """選択されたファイルを削除"""
+    ui.notify('選択されたファイルを削除します', type='negative')

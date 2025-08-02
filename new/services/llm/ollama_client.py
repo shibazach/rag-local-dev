@@ -126,10 +126,31 @@ class OllamaRefiner:
         return text.strip()
     
     def build_refinement_prompt(self, raw_text: str, language: str = "ja") -> str:
-        """整形用プロンプト構築"""
-        # 基本的な整形プロンプトテンプレート
-        if language == "ja":
-            template = """以下のテキストを読みやすく整形してください。
+        """整形用プロンプト構築（高品質プロンプト使用）"""
+        try:
+            from new.services.llm.prompt_loader import get_prompt_loader
+            
+            # 高品質プロンプトローダーから取得
+            prompt_loader = get_prompt_loader()
+            prompt_template = prompt_loader.load_prompt("refine_prompt_advanced", language)
+            
+            # テキスト正規化
+            normalized_text = self.normalize_text(raw_text)
+            
+            # プロンプトテンプレートをフォーマット
+            prompt = prompt_loader.format_prompt(prompt_template, TEXT=normalized_text)
+            
+            self.logger.info(f"高品質プロンプト使用: {len(prompt_template)}文字, 言語={language}")
+            return prompt
+            
+        except Exception as e:
+            self.logger.warning(f"高品質プロンプト読み込み失敗、フォールバック使用: {e}")
+            
+            # フォールバック：簡易プロンプト
+            normalized_text = self.normalize_text(raw_text)
+            
+            if language == "ja":
+                template = """以下のテキストを読みやすく整形してください。
 OCRで読み取ったテキストのため、誤字や改行の乱れがある可能性があります。
 内容を変更せず、読みやすい形に整えてください。
 
@@ -137,8 +158,8 @@ OCRで読み取ったテキストのため、誤字や改行の乱れがある�
 {TEXT}
 
 【整形後テキスト】"""
-        else:
-            template = """Please format the following text to make it more readable.
+            else:
+                template = """Please format the following text to make it more readable.
 This text was extracted using OCR, so there may be typos or irregular line breaks.
 Please organize it in a readable format without changing the content.
 
@@ -146,9 +167,8 @@ Please organize it in a readable format without changing the content.
 {TEXT}
 
 【Formatted text】"""
-        
-        normalized_text = self.normalize_text(raw_text)
-        return template.replace("{TEXT}", normalized_text)
+            
+            return template.replace("{TEXT}", normalized_text)
     
     async def refine_text(
         self,

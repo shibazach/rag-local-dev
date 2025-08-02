@@ -508,32 +508,9 @@ function initializeStatusDropdown() {
     });
 }
 
-function startProcessing() {
-    const selectedFiles = Array.from(document.querySelectorAll('.file-checkbox:checked'))
-        .map(cb => cb.dataset.fileId);
-    
-    if (selectedFiles.length === 0) {
-        addLogEntry('WARNING', '処理するファイルが選択されていません');
-        return;
-    }
-    
-    // UI状態変更
-    document.getElementById('start-processing').style.display = 'none';
-    document.getElementById('stop-processing').style.display = 'inline-flex';
-    
-    addLogEntry('INFO', `処理開始: ${selectedFiles.length}ファイル選択`);
-    
-    // TODO: 実際の処理ロジックを実装
-    simulateProcessing(selectedFiles);
-}
+// startProcessing関数は data_registration.js で定義済み
 
-function stopProcessing() {
-    // UI状態変更
-    document.getElementById('start-processing').style.display = 'inline-flex';
-    document.getElementById('stop-processing').style.display = 'none';
-    
-    addLogEntry('WARNING', '処理を停止しました');
-}
+// stopProcessing関数は data_registration.js で定義済み
 
 function simulateProcessing(fileIds) {
     // デモ用の疑似処理

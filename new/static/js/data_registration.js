@@ -994,11 +994,11 @@ const DataRegistration = {
             logEntry.innerHTML += `<br><span style="color: #999; margin-left: 20px;">→ ${JSON.stringify(data, null, 2)}</span>`;
         }
         
-        // 正しい順序：新しいログを末尾に追加
-        logContainer.appendChild(logEntry);
+        // 逆順表示：新しいログを先頭に挿入
+        logContainer.insertBefore(logEntry, logContainer.firstChild);
         
-        // 自動スクロール（下へ）
-        logContainer.scrollTop = logContainer.scrollHeight;
+        // 自動スクロール（上へ）
+        logContainer.scrollTop = 0;
         
         console.log(`[LOG] ${message}`);
     },
@@ -1024,11 +1024,11 @@ const DataRegistration = {
         logEntry.className = 'log-entry';
         logEntry.innerHTML = `<span class="log-time">[${timestamp}${elapsedText}]</span> <span class="log-message">${message}</span>`;
         
-        // 正しい順序：新しいログを末尾に追加
-        logContainer.appendChild(logEntry);
+        // 逆順表示：新しいログを先頭に挿入
+        logContainer.insertBefore(logEntry, logContainer.firstChild);
         
-        // 自動スクロール（下へ）
-        logContainer.scrollTop = logContainer.scrollHeight;
+        // 自動スクロール（上へ）
+        logContainer.scrollTop = 0;
         
         // 処理中の場合、リアルタイム更新開始
         if (isProcessing) {
@@ -1310,7 +1310,7 @@ const DataRegistration = {
             height: 1px;
         `;
         
-        // 正しい順序：新しいログを末尾に追加
+        // 逆順表示：新しいログを先頭に挿入
         logContainer.insertBefore(separator, logContainer.firstChild);
     },
 
@@ -1357,11 +1357,11 @@ const DataRegistration = {
             this.showPdfPreview(fileName, fileId);
         });
         
-        // 正しい順序：新しいログを末尾に追加
-        logContainer.appendChild(headerEntry);
+        // 逆順表示：新しいログを先頭に挿入
+        logContainer.insertBefore(headerEntry, logContainer.firstChild);
         
-        // 自動スクロール（下へ）
-        logContainer.scrollTop = logContainer.scrollHeight;
+        // 自動スクロール（上へ）
+        logContainer.scrollTop = 0;
         
         console.log(`[FILE-HEADER] ${fileName}`);
     },

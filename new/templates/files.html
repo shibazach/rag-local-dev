@@ -7,6 +7,21 @@
     <!-- 左ペイン：ファイル一覧 -->
     <div class="files-left-panel">
         <div class="files-panel">
+            <!-- NiceGUI版ファイル管理へのリンク -->
+            <div style="margin-bottom: 20px; padding: 15px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; color: white;">
+                <h4 style="margin: 0 0 10px 0; color: white;">🚀 NiceGUI版ファイル管理</h4>
+                <p style="margin: 0 0 12px 0; font-size: 13px; opacity: 0.9;">
+                    ファイル管理機能をNiceGUIで完全再構築しました。
+                </p>
+                <a href="/files/nicegui" target="_blank" 
+                   style="display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(255,255,255,0.2); color: white; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 500; transition: all 0.3s ease; backdrop-filter: blur(10px);"
+                   onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                   onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                    <span>📁</span>
+                    NiceGUIファイル管理を開く
+                </a>
+            </div>
+            
             <div class="panel-header horizontal-layout">
                 <h3>📁 ファイル一覧</h3>
                 <select id="status-filter" class="form-control compact-select">

@@ -314,7 +314,7 @@ class FileProcessor:
         """LLM整形処理（Ollama統合版）"""
         try:
             # Ollamaクライアント初期化
-            from services.llm import OllamaRefiner, OllamaClient
+            from new.services.llm import OllamaRefiner, OllamaClient
             
             # LLM設定取得
             llm_model = settings.get('llm_model', 'phi4-mini')
@@ -368,11 +368,30 @@ class FileProcessor:
             return self._fallback_text_refinement(text)
     
     def _create_llm_prompt(self, text: str, settings: Dict) -> str:
-        """LLMプロンプト作成"""
-        language = settings.get('language', 'ja')
-        quality_threshold = settings.get('quality_threshold', 0.7)
-        
-        prompt = f"""以下のテキストを品質向上してください。
+        """LLMプロンプト作成（高品質プロンプト使用）"""
+        try:
+            from new.services.llm.prompt_loader import get_prompt_loader
+            
+            language = settings.get('language', 'ja')
+            
+            # 高品質プロンプトローダーから取得
+            prompt_loader = get_prompt_loader()
+            prompt_template = prompt_loader.load_prompt("refine_prompt_advanced", language)
+            
+            # プロンプトテンプレートをフォーマット
+            prompt = prompt_loader.format_prompt(prompt_template, TEXT=text)
+            
+            self.logger.info(f"高品質プロンプト使用: {len(prompt_template)}文字, 言語={language}")
+            return prompt
+            
+        except Exception as e:
+            self.logger.warning(f"高品質プロンプト読み込み失敗、フォールバック使用: {e}")
+            
+            # フォールバック：簡易プロンプト
+            language = settings.get('language', 'ja')
+            quality_threshold = settings.get('quality_threshold', 0.7)
+            
+            prompt = f"""以下のテキストを品質向上してください。
 
 言語: {language}
 品質閾値: {quality_threshold}
@@ -387,8 +406,8 @@ class FileProcessor:
 - 意味を保持しつつ読みやすく整形
 
 修正後テキスト:"""
-        
-        return prompt
+            
+            return prompt
 
     def _fallback_text_refinement(self, text: str) -> str:
         """フォールバック用テキスト整形（実際の品質向上処理）"""

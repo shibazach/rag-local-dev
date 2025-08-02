@@ -255,10 +255,12 @@
 
 .resizer.horizontal-resizer, .horizontal-splitter-left, .horizontal-splitter-right {
     cursor: row-resize;
+    height: 5px;
 }
 
 .resizer.vertical-resizer, .resize-handle, .vertical-splitter {
     cursor: col-resize;
+    width: 5px;
 }
 
 /* ===== レスポンシブ対応 ===== */

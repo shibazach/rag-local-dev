@@ -39,13 +39,15 @@ class ProcessingPipeline:
         
         try:
             # 開始イベント
-            yield {
+            start_event = {
                 'type': 'start',
                 'data': {
                     'total_files': total_files,
                     'settings': settings
                 }
             }
+            self.logger.info(f"[DEBUG-PIPELINE] 開始イベント生成: {total_files}件")
+            yield start_event
             
             for idx, file_info in enumerate(files, 1):
                 # キャンセルチェック
@@ -57,9 +59,9 @@ class ProcessingPipeline:
                     break
                 
                 # ファイル処理開始
-                file_id = str(file_info.file_id)
-                file_name = file_info.file_name
-                file_path = file_info.file_path
+                file_id = str(file_info['file_id'])
+                file_name = file_info['file_name']
+                file_path = file_info['file_path']
                 
                 yield {
                     'type': 'file_start',
@@ -74,18 +76,88 @@ class ProcessingPipeline:
                 # 個別ファイル処理の進捗処理は後で実装
                 # 現在は直接処理実行
                 
-                # ファイル処理実行
+                # ファイル処理実行 + 詳細手順イベント送信（重複イベント削除）
+                
+                # 詳細手順を受信するコールバック作成
+                progress_events = []
+                
+                def progress_callback(event_data):
+                    """processor からの詳細手順を収集"""
+                    progress_events.append({
+                        'type': 'file_progress',
+                        'data': {
+                            'file_name': file_name,
+                            'file_index': idx,
+                            'step': event_data.get('step'),
+                            'detail': event_data.get('detail'),
+                            'progress': event_data.get('progress'),
+                            'ocr_text': event_data.get('ocr_text'),  # OCRテキスト
+                            'llm_prompt': event_data.get('llm_prompt'),  # LLMプロンプト
+                            'llm_result': event_data.get('llm_result')   # LLM結果
+                        }
+                    })
+                
                 result = await self.processor.process_file(
                     file_id=file_id,
                     file_name=file_name,
                     file_path=file_path,
                     settings=settings,
-                    progress_callback=None,  # 簡略化のため一時的にNone
+                    progress_callback=progress_callback,  # コールバック有効化
                     abort_flag=self.abort_flag
                 )
                 
+                # 収集した詳細手順イベントを送信
+                for progress_event in progress_events:
+                    yield progress_event
+                
+                # 各段階完了イベントを送信
+                if result.get('success'):
+                    yield {
+                        'type': 'file_progress',
+                        'data': {
+                            'file_name': file_name,
+                            'file_index': idx,
+                            'step': '📊 OCR処理完了',
+                            'detail': f"{result.get('text_length', 0)}文字抽出",
+                            'progress': 30
+                        }
+                    }
+                    
+                    yield {
+                        'type': 'file_progress',
+                        'data': {
+                            'file_name': file_name,
+                            'file_index': idx,
+                            'step': '🤖 LLM精緻化完了',
+                            'detail': 'テキスト品質向上処理',
+                            'progress': 60
+                        }
+                    }
+                    
+                    yield {
+                        'type': 'file_progress',
+                        'data': {
+                            'file_name': file_name,
+                            'file_index': idx,
+                            'step': '🧮 埋め込み生成完了',
+                            'detail': 'ベクトル化処理完了',
+                            'progress': 80
+                        }
+                    }
+                    
+                    yield {
+                        'type': 'file_progress',
+                        'data': {
+                            'file_name': file_name,
+                            'file_index': idx,
+                            'step': '🎉 処理完了',
+                            'detail': f'全段階完了',
+                            'progress': 100
+                        }
+                    }
+                
                 # ファイル完了イベント
-                yield {
+                event_data = {
                     'type': 'file_complete',
                     'data': {
                         'file_name': file_name,
@@ -95,6 +167,8 @@ class ProcessingPipeline:
                         'result': result
                     }
                 }
+                self.logger.info(f"[DEBUG-PIPELINE] イベント生成: {event_data['type']}, ファイル: {file_name}")
+                yield event_data
                 
                 # エラーチェック
                 if result['status'] == 'error':
@@ -105,13 +179,15 @@ class ProcessingPipeline:
             
             # 全体完了
             if not self.abort_flag['flag']:
-                yield {
+                complete_event = {
                     'type': 'complete',
                     'data': {
                         'total_files': total_files,
                         'message': 'すべての処理が完了しました'
                     }
                 }
+                self.logger.info(f"[DEBUG-PIPELINE] 完了イベント生成")
+                yield complete_event
             
         except Exception as e:
             self.logger.error(f"パイプライン処理エラー: {e}")

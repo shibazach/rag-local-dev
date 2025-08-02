@@ -6,6 +6,8 @@ import logging
 from .base import OCREngine, OCRResult
 from .engines.ocrmypdf import OCRMyPDFEngine
 from .engines.tesseract import TesseractEngine
+from .engines.paddleocr import PaddleOCREngine
+from .engines.easyocr import EasyOCREngine
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +18,8 @@ class OCREngineFactory:
         self._engines = {
             'ocrmypdf': OCRMyPDFEngine,
             'tesseract': TesseractEngine,
-            # 他のエンジンは段階的に追加
+            'paddleocr': PaddleOCREngine,
+            'easyocr': EasyOCREngine,
         }
         self._default_engine_id = 'ocrmypdf'
     

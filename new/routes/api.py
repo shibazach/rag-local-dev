@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, Request
 from fastapi.responses import JSONResponse, FileResponse, Response
 from urllib.parse import quote
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
 
 from new.auth import get_current_user, require_admin, get_optional_user
 from new.config import INPUT_DIR, LOGGER
@@ -130,7 +130,7 @@ async def get_files(
                     import fitz  # PyMuPDF
                     blob_data = get_file_blob(str(file["blob_id"]))
                     if blob_data:
-                        LOGGER.info(f"PDF処理中: {file['file_name']}, blob_size: {len(blob_data)}")
+                        # PDF処理ログを削除（うざいため）
                         # PyMuPDFの正しい呼び出し方法に修正
                         # memoryviewをbytesに変換
                         if isinstance(blob_data, memoryview):
@@ -138,7 +138,7 @@ async def get_files(
                         doc = fitz.open(stream=blob_data, filetype="pdf")
                         file_data["page_count"] = len(doc)
                         doc.close()
-                        LOGGER.info(f"PDF頁数取得成功: {file['file_name']} = {file_data['page_count']}頁")
+                        # PDF頁数ログを削除（うざいため）
                     else:
                         LOGGER.warning(f"PDFブロブデータなし: {file['file_name']}")
                         file_data["page_count"] = None

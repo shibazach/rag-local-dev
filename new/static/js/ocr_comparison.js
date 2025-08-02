@@ -23,6 +23,12 @@ class OCRComparisonManager {
         // イベントリスナー設定
         this.setupEventListeners();
         
+        // 初期選択エンジンの詳細設定を表示
+        const engineSelect = document.getElementById('ocr-engine-select');
+        if (engineSelect && engineSelect.value) {
+            await this.onEngineSelected(engineSelect.value);
+        }
+        
         // ドラッグ可能境界線初期化
         this.initializeResizablePanels();
         
@@ -80,7 +86,7 @@ class OCRComparisonManager {
             if (response.ok) {
                 const data = await response.json();
                 this.availableEngines = data.engines || [];
-                this.displayEngineSelection();
+                this.populateEngineDropdown();
                 console.log(`OCRエンジン ${this.availableEngines.length} 個読み込み完了`);
             } else {
                 throw new Error(`API Error: ${response.status}`);
@@ -88,6 +94,36 @@ class OCRComparisonManager {
         } catch (error) {
             console.error('OCRエンジン読み込みエラー:', error);
             this.showError('OCRエンジン一覧の読み込みに失敗しました');
+        }
+    }
+
+    populateEngineDropdown() {
+        const engineSelect = document.getElementById('ocr-engine-select');
+        if (!engineSelect) return;
+
+        // 既存のオプションをクリア（最初のプレースホルダーは残す）
+        while (engineSelect.children.length > 1) {
+            engineSelect.removeChild(engineSelect.lastChild);
+        }
+
+        // エンジンオプションを追加
+        this.availableEngines.forEach(engine => {
+            const option = document.createElement('option');
+            option.value = engine.id;
+            option.textContent = `${engine.name}${engine.available ? '' : ' (利用不可)'}`;
+            option.disabled = !engine.available;
+            
+            // デフォルトでOCRmyPDFを選択
+            if (engine.id === 'ocrmypdf' && engine.available) {
+                option.selected = true;
+            }
+            
+            engineSelect.appendChild(option);
+        });
+
+        // 初期選択エンジンの詳細設定を表示
+        if (engineSelect.value) {
+            this.onEngineSelected(engineSelect.value);
         }
     }
 
@@ -133,6 +169,12 @@ class OCRComparisonManager {
     }
 
     setupEventListeners() {
+        // OCRエンジン選択
+        const engineSelect = document.getElementById('ocr-engine-select');
+        if (engineSelect) {
+            engineSelect.addEventListener('change', (e) => this.onEngineSelected(e.target.value));
+        }
+
         // 実行ボタン
         const startBtn = document.getElementById('start-comparison');
         if (startBtn) {
@@ -162,6 +204,203 @@ class OCRComparisonManager {
         if (exportBtn) {
             exportBtn.addEventListener('click', () => this.exportResults());
         }
+    }
+
+    async onEngineSelected(engineId) {
+        console.log('OCRエンジン選択:', engineId);
+        
+        const detailsContainer = document.getElementById('engine-details');
+        if (!detailsContainer) return;
+
+        try {
+            // ローディング表示
+            detailsContainer.innerHTML = `
+                <div class="loading-state">
+                    <div class="spinner"></div>
+                    <div class="loading-text">設定項目を読み込み中...</div>
+                </div>
+            `;
+
+            // エンジンパラメータを取得
+            const response = await fetch(`/api/ocr-comparison/engines/${engineId}/parameters`, {
+                headers: {
+                    'Authorization': `Bearer ${Auth.getAuthToken()}`
+                },
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                this.displayEngineParameters(data.parameters, data.engine_name);
+            } else {
+                throw new Error(`パラメータ取得エラー: ${response.status}`);
+            }
+
+        } catch (error) {
+            console.error('エンジンパラメータ取得エラー:', error);
+            detailsContainer.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">⚠️</div>
+                    <div class="error-text">
+                        設定項目の読み込みに失敗しました<br>
+                        <small>${error.message}</small>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    displayEngineParameters(parameters, engineName) {
+        const detailsContainer = document.getElementById('engine-details');
+        if (!detailsContainer) return;
+
+        // パラメータの型チェックと正規化
+        if (!Array.isArray(parameters)) {
+            console.warn('Parameters is not an array:', parameters);
+            parameters = [];
+        }
+
+        if (parameters.length === 0) {
+            detailsContainer.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-text">
+                        ${engineName} には設定可能なパラメータがありません
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        // カテゴリ別にパラメータをグループ化
+        const categorizedParams = this.categorizeParameters(parameters);
+        
+        let parametersHtml = `
+            <div class="engine-parameters">
+        `;
+
+        // カテゴリごとに設定項目を生成
+        Object.entries(categorizedParams).forEach(([category, params]) => {
+            parametersHtml += `
+                <div class="parameter-category">
+                    <div class="category-header" onclick="this.parentElement.querySelector('.category-content').classList.toggle('collapsed'); this.classList.toggle('collapsed');">
+                        ${category}
+                        <span class="toggle-icon">▼</span>
+                    </div>
+                    <div class="category-content">
+            `;
+
+            params.forEach(param => {
+                parametersHtml += this.generateParameterHtml(param);
+            });
+
+            parametersHtml += `
+                    </div>
+                </div>
+            `;
+        });
+
+        parametersHtml += `
+            </div>
+        `;
+
+        detailsContainer.innerHTML = parametersHtml;
+        
+        // パラメータ変更イベントリスナーを設定
+        this.setupParameterEventListeners();
+    }
+
+    categorizeParameters(parameters) {
+        const categorized = {};
+        
+        parameters.forEach(param => {
+            const category = param.category || '基本設定';
+            if (!categorized[category]) {
+                categorized[category] = [];
+            }
+            categorized[category].push(param);
+        });
+
+        return categorized;
+    }
+
+    generateParameterHtml(param) {
+        const { name, label, type, default: defaultValue, description, options, min, max, step } = param;
+        
+        let inputHtml = '';
+        
+        switch (type) {
+            case 'select':
+                const optionsHtml = options.map(opt => 
+                    `<option value="${opt.value}" ${opt.value === defaultValue ? 'selected' : ''}>${opt.label}</option>`
+                ).join('');
+                inputHtml = `
+                    <select id="param-${name}" class="form-select parameter-input" data-param="${name}">
+                        ${optionsHtml}
+                    </select>
+                `;
+                break;
+                
+            case 'number':
+                inputHtml = `
+                    <input type="number" 
+                           id="param-${name}" 
+                           class="form-input-small parameter-input" 
+                           data-param="${name}"
+                           value="${defaultValue}"
+                           ${min !== undefined ? `min="${min}"` : ''}
+                           ${max !== undefined ? `max="${max}"` : ''}
+                           ${step !== undefined ? `step="${step}"` : ''}>
+                `;
+                break;
+                
+            case 'boolean':
+            case 'checkbox':
+                inputHtml = `
+                    <label class="checkbox-label">
+                        <input type="checkbox" 
+                               id="param-${name}" 
+                               class="parameter-input" 
+                               data-param="${name}"
+                               ${defaultValue ? 'checked' : ''}>
+                        ${description}
+                    </label>
+                `;
+                break;
+                
+            case 'text':
+            default:
+                inputHtml = `
+                    <input type="text" 
+                           id="param-${name}" 
+                           class="form-input parameter-input" 
+                           data-param="${name}"
+                           value="${defaultValue || ''}"
+                           placeholder="${description || ''}">
+                `;
+                break;
+        }
+
+        return `
+            <div class="parameter-item">
+                <span class="parameter-label">${label}:</span>
+                <div class="parameter-control">
+                    ${inputHtml}
+                </div>
+                ${description ? `<span class="parameter-description">${description}</span>` : ''}
+            </div>
+        `;
+    }
+
+    setupParameterEventListeners() {
+        const parameterInputs = document.querySelectorAll('.parameter-input');
+        parameterInputs.forEach(input => {
+            input.addEventListener('change', (e) => {
+                const paramName = e.target.dataset.param;
+                const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+                console.log(`パラメータ変更: ${paramName} = ${value}`);
+                // パラメータ値を保存（今後の実装で使用）
+            });
+        });
     }
 
     onFileSelected(fileId) {

@@ -51,6 +51,34 @@ async def get_available_engines():
         raise HTTPException(status_code=500, detail=f"エンジン一覧取得エラー: {str(e)}")
 
 
+@router.get("/engines/{engine_id}/parameters")
+async def get_engine_parameters(engine_id: str):
+    """指定されたOCRエンジンのパラメータ定義を取得"""
+    try:
+        ocr_factory = OCREngineFactory()
+        available_engines = ocr_factory.get_available_engines()
+        
+        if engine_id not in available_engines:
+            raise HTTPException(status_code=404, detail=f"OCRエンジン '{engine_id}' が見つかりません")
+        
+        engine_info = available_engines[engine_id]
+        if not engine_info['available']:
+            raise HTTPException(status_code=400, detail=f"OCRエンジン '{engine_id}' は利用できません")
+        
+        return {
+            "engine_id": engine_id,
+            "engine_name": engine_info['name'],
+            "parameters": engine_info.get('parameters', [])
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        LOGGER.error(f"OCRエンジンパラメータ取得エラー: {e}")
+        raise HTTPException(status_code=500, detail=f"パラメータ取得エラー: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"エンジン一覧取得エラー: {str(e)}")
+
+
 @router.get("/file/{file_id}/info")
 async def get_file_info(
     file_id: str,

@@ -31,29 +31,70 @@ class TesseractEngine(OCREngine):
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
     
-    def get_parameters(self) -> Dict:
-        """Tesseract固有のパラメータ定義"""
-        return {
-            'language': {
-                'type': 'string',
-                'default': 'jpn+eng',
-                'description': 'Tesseract言語コード'
+    def get_parameters(self) -> list:
+        """Tesseract固有のパラメータ定義（UI表示情報含む）"""
+        return [
+            {
+                "name": "psm",
+                "label": "ページセグメンテーションモード",
+                "type": "select",
+                "default": 6,
+                "options": [
+                    {"value": 0, "label": "0: 向きとスクリプト検出のみ"},
+                    {"value": 1, "label": "1: 自動ページセグメンテーション（OSD付き）"},
+                    {"value": 3, "label": "3: 完全自動ページセグメンテーション"},
+                    {"value": 6, "label": "6: 単一の均一テキストブロック"},
+                    {"value": 7, "label": "7: 単一テキスト行"},
+                    {"value": 8, "label": "8: 単一単語"},
+                    {"value": 13, "label": "13: 生の行（文字分割なし）"}
+                ],
+                "description": "テキスト認識のセグメンテーション方法",
+                "category": "基本設定"
             },
-            'psm': {
-                'type': 'integer',
-                'default': 6,
-                'min': 0,
-                'max': 13,
-                'description': 'ページセグメンテーションモード'
+            {
+                "name": "oem",
+                "label": "OCRエンジンモード",
+                "type": "select",
+                "default": 3,
+                "options": [
+                    {"value": 0, "label": "0: レガシーエンジンのみ"},
+                    {"value": 1, "label": "1: ニューラルネットワークLSTMエンジンのみ"},
+                    {"value": 2, "label": "2: レガシー + LSTMエンジン"},
+                    {"value": 3, "label": "3: デフォルト（利用可能なものを使用）"}
+                ],
+                "description": "使用するOCRエンジンの種類",
+                "category": "基本設定"
             },
-            'oem': {
-                'type': 'integer',
-                'default': 3,
-                'min': 0,
-                'max': 3,
-                'description': 'OCRエンジンモード'
+            {
+                "name": "language",
+                "label": "認識言語",
+                "type": "select",
+                "default": "jpn+eng",
+                "options": [
+                    {"value": "jpn", "label": "日本語のみ"},
+                    {"value": "eng", "label": "英語のみ"},
+                    {"value": "jpn+eng", "label": "日本語 + 英語"},
+                    {"value": "chi_sim", "label": "中国語（簡体字）"},
+                    {"value": "chi_tra", "label": "中国語（繁体字）"},
+                    {"value": "kor", "label": "韓国語"},
+                    {"value": "deu", "label": "ドイツ語"},
+                    {"value": "fra", "label": "フランス語"}
+                ],
+                "description": "OCR認識対象言語",
+                "category": "基本設定"
+            },
+            {
+                "name": "dpi",
+                "label": "DPI設定",
+                "type": "number",
+                "default": 300,
+                "min": 150,
+                "max": 600,
+                "step": 50,
+                "description": "画像解像度（高いほど精度向上、処理時間増加）",
+                "category": "基本設定"
             }
-        }
+        ]
     
     def process_file(self, file_path: str, **kwargs) -> OCRResult:
         """ファイルをOCR処理"""

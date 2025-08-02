@@ -30,8 +30,8 @@ class OCREngine(ABC):
         pass
     
     @abstractmethod
-    def get_parameters(self) -> Dict:
-        """エンジン固有のパラメータ定義を取得"""
+    def get_parameters(self) -> List[Dict]:
+        """エンジン固有のパラメータ定義を取得（UI表示情報含む配列形式）"""
         pass
     
     @abstractmethod

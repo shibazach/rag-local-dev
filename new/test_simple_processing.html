@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>シンプル処理テスト</title>
+</head>
+<body>
+    <h1>シンプル処理テスト</h1>
+    <button id="testBtn">テスト処理実行</button>
+    <div id="logs"></div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            const logs = document.getElementById('logs');
+            logs.innerHTML = '<p>処理開始...</p>';
+            
+            try {
+                // 1. ステータス確認
+                const statusResponse = await fetch('/api/ingest/status');
+                const status = await statusResponse.json();
+                logs.innerHTML += `<p>ステータス: ${JSON.stringify(status)}</p>`;
+                
+                // 2. 処理開始
+                const startResponse = await fetch('/api/ingest/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        files: [{ file_id: '3570(2025.3)', file_name: 'test.pdf', file_path: '/tmp/test.pdf' }],
+                        settings: { ocr_engine: 'ocrmypdf' }
+                    })
+                });
+                
+                if (startResponse.ok) {
+                    const result = await startResponse.json();
+                    logs.innerHTML += `<p>処理開始成功: ${JSON.stringify(result)}</p>`;
+                    
+                    // 3. SSE接続
+                    const eventSource = new EventSource('/api/ingest/stream');
+                    eventSource.onmessage = (event) => {
+                        const data = JSON.parse(event.data);
+                        logs.innerHTML += `<p>イベント: ${JSON.stringify(data)}</p>`;
+                    };
+                    
+                    eventSource.onerror = (error) => {
+                        logs.innerHTML += `<p>SSEエラー: ${error}</p>`;
+                    };
+                    
+                } else {
+                    logs.innerHTML += `<p>処理開始失敗: ${startResponse.status}</p>`;
+                }
+                
+            } catch (error) {
+                logs.innerHTML += `<p>エラー: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

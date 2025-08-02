@@ -69,6 +69,7 @@
     display: flex;
     flex-direction: column;
     padding: 8px;
+    gap: 6px;
     overflow: hidden;
     background: transparent;
     position: relative;
@@ -79,12 +80,14 @@
 #bottom-container {
     display: flex;
     flex: 1;
+    gap: 6px;
 }
 
 #left-pane {
     display: flex;
     flex-direction: column;
     flex: 1;
+    gap: 6px;
 }
 
 /* ===== パネル共通スタイル ===== */
@@ -173,13 +176,7 @@
 }
 
 /* ===== リサイザー ===== */
-.horizontal-resizer {
-    height: 5px;
-}
-
-.vertical-resizer {
-    width: 5px;
-}
+/* 幅・高さは components.css の共通設定を使用 */
 
 /* ===== フォーム要素（ingestと統一） ===== */
 .page-title {
@@ -236,8 +233,7 @@
     border-radius: 4px !important;
     background: white !important;
     transition: border-color 0.2s ease !important;
-    height: 80px !important; /* 固定高さ */
-    min-height: 80px !important;
+    min-height: 60px !important; /* 最小高さのみ設定 */
 }
 
 .chat-query-textarea:focus {
@@ -358,7 +354,8 @@
 }
 
 .layout-pattern1 #top-resizer {
-    display: none;
+    flex: 0 0 5px;
+    display: block;
 }
 
 .layout-pattern1 #left-container {
@@ -378,7 +375,8 @@
 }
 
 .layout-pattern1 #vertical-resizer {
-    display: none;
+    flex: 0 0 5px;
+    display: block;
 }
 
 .layout-pattern1 #pdf-panel {
@@ -401,7 +399,8 @@
 }
 
 .layout-pattern2 #left-resizer {
-    display: none;
+    flex: 0 0 5px;
+    display: block;
 }
 
 .layout-pattern2 #log-panel {
@@ -413,7 +412,8 @@
 }
 
 .layout-pattern2 #vertical-resizer {
-    display: none;
+    flex: 0 0 5px;
+    display: block;
 }
 
 .layout-pattern2 #pdf-panel {

@@ -269,10 +269,9 @@
 
 /* エンジン詳細設定 */
 .engine-details {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 16px;
+    background: transparent;
+    border: none;
+    padding: 0;
     height: 100%;
     overflow-y: auto;
 }
@@ -921,4 +920,222 @@
 .overlay-details {
     font-size: 0.9rem;
     color: #6c757d;
+}/
+* ===== エンジン詳細設定スタイル ===== */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    font-size: 14px;
+    color: #666;
+}
+
+.error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #dc3545;
+}
+
+.error-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.error-text {
+    text-align: center;
+    font-size: 14px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #666;
+}
+
+.empty-text {
+    text-align: center;
+    font-size: 14px;
+}
+
+.engine-parameters {
+    padding: 0;
+}
+
+.parameters-header {
+    margin-bottom: 8px;
+    padding-bottom: 0;
+}
+
+.parameters-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.parameter-category {
+    margin-bottom: 1rem;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.category-header {
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.category-header:hover {
+    background: #e9ecef;
+}
+
+.category-header .toggle-icon {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.category-header.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.category-content {
+    padding: 12px;
+    background: white;
+    display: block;
+}
+
+.category-content.collapsed {
+    display: none;
+}
+
+.parameter-item {
+    margin-bottom: 8px;
+    padding-left: 1em; /* 字下げ一文字 */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 32px;
+}
+
+.parameter-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.parameter-control {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.parameter-description {
+    font-size: 11px;
+    color: #6c757d;
+    font-style: italic;
+    line-height: 1.2;
+    flex: 1;
+    margin-left: 8px;
+}
+
+.parameter-input {
+    max-width: 300px;
+    font-size: 11px;
+}
+
+.parameter-input.form-select {
+    min-width: 200px;
+    font-size: 11px;
+    padding: 4px 8px;
+    height: 28px;
+}
+
+.parameter-input.form-input-small {
+    width: 100px;
+    font-size: 11px;
+    padding: 4px 8px;
+    height: 28px;
+}
+
+.parameter-input.form-input {
+    width: 250px;
+    font-size: 11px;
+    padding: 4px 8px;
+    height: 28px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin: 0;
+}
+
+.checkmark {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    position: relative;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.checkbox-label input[type="checkbox"]:checked + .checkmark::after {
+    content: '✓';
+    position: absolute;
+    top: -2px;
+    left: 2px;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
 }

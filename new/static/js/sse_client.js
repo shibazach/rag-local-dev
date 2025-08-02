@@ -18,6 +18,8 @@ class SSEProgressClient {
     async startProcessing(selectedFiles, settings) {
         try {
             console.log('[SSE] 処理開始要求:', { files: selectedFiles.length, settings });
+            console.log('[DEBUG-SSE] 選択ファイル詳細:', Array.from(selectedFiles));
+            console.log('[DEBUG-SSE] API URL:', `${this.baseUrl}/api/ingest/start`);
             
             // 1. 処理開始API呼び出し
             const response = await fetch(`${this.baseUrl}/api/ingest/start`, {
@@ -32,12 +34,61 @@ class SSEProgressClient {
                 })
             });
 
+            console.log('[DEBUG-SSE] レスポンス受信:', { status: response.status, ok: response.ok });
+
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorText = await response.text();
+                console.error('[DEBUG-SSE] エラーレスポンス:', errorText);
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText);
+                } catch (e) {
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                // 409 Conflictの場合は自動リセットして再試行
+                if (response.status === 409 && errorData.detail?.includes('処理が既に実行中です')) {
+                    console.log('[SSE] 409エラー検出、自動リセット実行中...');
+                    
+                    try {
+                        // 状態リセット
+                        const resetResponse = await fetch(`${this.baseUrl}/api/ingest/reset`, {
+                            method: 'POST',
+                            credentials: 'include'
+                        });
+                        
+                        if (resetResponse.ok) {
+                            console.log('[SSE] 状態リセット成功、再試行中...');
+                            
+                            // 再試行
+                            const retryResponse = await fetch(`${this.baseUrl}/api/ingest/start`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify({
+                                    selected_files: Array.from(selectedFiles),
+                                    settings: settings
+                                })
+                            });
+                            
+                            if (retryResponse.ok) {
+                                const retryResult = await retryResponse.json();
+                                console.log('[SSE] 再試行成功:', retryResult);
+                                return retryResult.data;
+                            }
+                        }
+                    } catch (retryError) {
+                        console.error('[SSE] 再試行失敗:', retryError);
+                    }
+                }
+                
                 throw new Error(errorData.detail || `HTTP ${response.status}`);
             }
 
             const result = await response.json();
+            console.log('[DEBUG-SSE] 成功レスポンス:', result);
             this.currentJobId = result.data.job_id;
             
             console.log('[SSE] 処理開始成功:', result.data);
@@ -91,6 +142,7 @@ class SSEProgressClient {
     // 進捗イベント処理
     handleProgressEvent(data) {
         console.log('[SSE] 進捗イベント:', data);
+        console.log('[DEBUG-SSE] イベントタイプ:', data.type, 'データ:', data.data || data.message);
         
         switch (data.type) {
             case 'start':
@@ -143,6 +195,22 @@ class SSEProgressClient {
                 });
                 break;
 
+            case 'file_progress':
+                console.log('[SSE] 🔥 file_progress イベント処理:', data.data);
+                console.log('[SSE] 🔥 onProgress関数:', typeof this.onProgress);
+                console.log('[SSE] 🔥 onProgress呼び出し前');
+                
+                if (this.onProgress) {
+                    this.onProgress({
+                        type: 'file_progress',
+                        data: data.data  // 詳細データをそのまま渡す
+                    });
+                    console.log('[SSE] 🔥 onProgress呼び出し完了');
+                } else {
+                    console.error('[SSE] 🚨 onProgress が存在しません!');
+                }
+                break;
+
             case 'file_complete':
                 this.onProgress({
                     type: 'file_complete',
@@ -171,6 +239,11 @@ class SSEProgressClient {
                 break;
 
             case 'error':
+                console.error('[SSE] サーバーエラー受信:', data);
+                // デバッグ用：強制的にアラート表示
+                if (window.DEBUG_DATA_REGISTRATION) {
+                    alert(`SERVER ERROR: ${data.message || '処理エラーが発生しました'}`);
+                }
                 this.onError(data.message || '処理エラーが発生しました');
                 this.disconnect();
                 break;
@@ -191,11 +264,29 @@ class SSEProgressClient {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || `HTTP ${response.status}`);
+                let errorMessage = `HTTP ${response.status}`;
+                try {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorMessage;
+                    } else {
+                        const errorText = await response.text();
+                        console.log('[SSE] サーバーエラー（HTML）:', errorText.substring(0, 200));
+                    }
+                } catch (parseError) {
+                    console.log('[SSE] レスポンス解析エラー:', parseError);
+                }
+                throw new Error(errorMessage);
             }
 
-            const result = await response.json();
+            const contentType = response.headers.get('content-type');
+            let result;
+            if (contentType && contentType.includes('application/json')) {
+                result = await response.json();
+            } else {
+                result = { message: 'キャンセル要求送信済み' };
+            }
             console.log('[SSE] キャンセル要求送信済み:', result);
             
             return result;

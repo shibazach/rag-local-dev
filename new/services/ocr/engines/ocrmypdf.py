@@ -32,29 +32,61 @@ class OCRMyPDFEngine(OCREngine):
         except (subprocess.TimeoutExpired, FileNotFoundError):
             return False
     
-    def get_parameters(self) -> Dict:
-        """OCRMyPDF固有のパラメータ定義"""
-        return {
-            'language': {
-                'type': 'string',
-                'default': 'jpn+eng',
-                'description': 'Tesseract言語コード'
+    def get_parameters(self) -> list:
+        """OCRMyPDF固有のパラメータ定義（UI表示情報含む）"""
+        return [
+            {
+                "name": "language",
+                "label": "認識言語",
+                "type": "select",
+                "default": "jpn+eng",
+                "options": [
+                    {"value": "jpn", "label": "日本語のみ"},
+                    {"value": "eng", "label": "英語のみ"},
+                    {"value": "jpn+eng", "label": "日本語 + 英語"},
+                    {"value": "chi_sim", "label": "中国語（簡体字）"},
+                    {"value": "chi_tra", "label": "中国語（繁体字）"},
+                    {"value": "kor", "label": "韓国語"},
+                    {"value": "deu", "label": "ドイツ語"},
+                    {"value": "fra", "label": "フランス語"}
+                ],
+                "description": "OCR認識対象言語",
+                "category": "基本設定"
             },
-            'dpi': {
-                'type': 'integer',
-                'default': 300,
-                'min': 150,
-                'max': 600,
-                'description': 'DPI解像度'
+            {
+                "name": "dpi",
+                "label": "DPI設定",
+                "type": "number",
+                "default": 300,
+                "min": 150,
+                "max": 600,
+                "step": 50,
+                "description": "画像解像度（高いほど精度向上、処理時間増加）",
+                "category": "基本設定"
             },
-            'optimize': {
-                'type': 'integer',
-                'default': 1,
-                'min': 0,
-                'max': 3,
-                'description': 'PDF最適化レベル'
+            {
+                "name": "optimize",
+                "label": "PDF最適化レベル",
+                "type": "select",
+                "default": 1,
+                "options": [
+                    {"value": 0, "label": "0: 最適化なし"},
+                    {"value": 1, "label": "1: 軽度最適化（推奨）"},
+                    {"value": 2, "label": "2: 中程度最適化"},
+                    {"value": 3, "label": "3: 高度最適化"}
+                ],
+                "description": "出力PDFの最適化レベル",
+                "category": "出力設定"
+            },
+            {
+                "name": "force_ocr",
+                "label": "強制OCR実行",
+                "type": "checkbox",
+                "default": True,
+                "description": "既にOCR済みのPDFでも再処理を実行",
+                "category": "処理設定"
             }
-        }
+        ]
     
     def process_file(self, file_path: str, **kwargs) -> OCRResult:
         """ファイルをOCR処理"""
@@ -81,7 +113,7 @@ class OCRMyPDFEngine(OCREngine):
             cmd = [
                 'ocrmypdf',
                 '--language', language,
-                '--dpi', str(dpi),
+                '--image-dpi', str(dpi),  # --dpi から --image-dpi に修正
                 '--optimize', str(optimize),
                 '--force-ocr',  # 既にOCR済みでも再処理
                 '--sidecar', '-',  # テキストを標準出力に

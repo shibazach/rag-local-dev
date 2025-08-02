@@ -66,7 +66,7 @@ class ChatResize {
     if (!this.isResizing) return;
 
     if (this.currentResizer === 'top') {
-      // 第1パターン：上部設定の高さ調整
+      // 上部設定の高さ調整（layout-no-preview と layout-pattern1 両対応）
       const container = this.appContainer.getBoundingClientRect();
       const relativeY = e.clientY - container.top;
       const minHeight = 150; // 最小150px（固定値）
@@ -76,6 +76,9 @@ class ChatResize {
         const topEl = document.getElementById('top-container');
         if (topEl) {
           topEl.style.flex = '0 0 ' + (relativeY - 5) + 'px';
+          
+          // テキストエリアの高さを動的に調整（全レイアウトパターンで有効）
+          this.adjustTextareaHeight(relativeY - 5);
         }
       }
     } else if (this.currentResizer === 'left') {
@@ -127,8 +130,30 @@ class ChatResize {
   }
 
   adjustTextareaHeight(containerHeight) {
-    // テキストエリアは固定高さ（80px）に設定済みのため、動的調整は無効化
-    return;
+    const textarea = document.getElementById('query');
+    if (!textarea) return;
+    
+    // コンテナの高さから他の要素の高さを差し引いてテキストエリアの高さを計算
+    const settingsPanel = document.getElementById('settings-panel');
+    if (!settingsPanel) return;
+    
+    const panelContent = settingsPanel.querySelector('.panel-content');
+    if (!panelContent) return;
+    
+    // 他のフォーム要素の高さを概算で計算（padding、margin含む）
+    const otherElementsHeight = 120; // 他のform-section要素の合計高さ（概算）
+    const padding = 24; // panel-contentのpadding
+    
+    // テキストエリアに割り当て可能な高さを計算
+    const availableHeight = containerHeight - otherElementsHeight - padding;
+    const minTextareaHeight = 60; // 最小高さ
+    const maxTextareaHeight = 200; // 最大高さ
+    
+    // 高さを制限内に収める
+    const newHeight = Math.max(minTextareaHeight, Math.min(maxTextareaHeight, availableHeight));
+    
+    // テキストエリアの高さを設定
+    textarea.style.height = newHeight + 'px';
   }
 }
 

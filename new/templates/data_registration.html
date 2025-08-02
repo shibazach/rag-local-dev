@@ -7,6 +7,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', path='/js/sse_client.js') }}" defer></script>
 <script src="{{ url_for('static', path='/js/data_registration.js') }}?v=2" defer></script>
 {% endblock %}
 
@@ -159,11 +160,7 @@
         </div>
         <div class="panel-content">
             <div id="processing-log" class="log-container">
-                <div class="log-entry info">
-                    <span class="log-time">[2025-01-30 16:00:00]</span>
-                    <span class="log-level">INFO</span>
-                    <span class="log-message">システム準備完了</span>
-                </div>
+                <!-- 処理ログがここに動的追加されます -->
             </div>
         </div>
     </div>
@@ -782,29 +779,7 @@ function adjustFileNameColumn() {
 }
 </script>
 
-<!-- 進捗表示オーバーレイ -->
-<div class="progress-panel" id="progress-panel" style="display: none;">
-    <div class="panel-header">
-        <h3>📊 処理進捗</h3>
-    </div>
-    <div class="panel-content">
-        <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress-bar-fill" style="width: 0%;"></div>
-            </div>
-            <div class="progress-text">0%</div>
-        </div>
-        <div class="progress-message">処理準備中...</div>
-        <div class="progress-details">
-            <div class="progress-files">
-                <span class="progress-current">0</span> / <span class="progress-total">0</span> ファイル
-            </div>
-            <div class="progress-time">
-                経過時間: <span class="progress-elapsed">0</span>秒
-            </div>
-        </div>
-    </div>
-</div>
+<!-- OLD系と同様、処理ログペインのみを使用 -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

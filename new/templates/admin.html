@@ -356,24 +356,33 @@
             
             <!-- 処理キュー管理タブ -->
             <div id="queue-tab" class="tab-content active">
+                <!-- 元のHTMLボタン（フォールバック） -->
                 <div class="queue-controls">
                     <button class="btn btn-primary" onclick="refreshTasks()">更新</button>
                     <button class="btn btn-success" onclick="processAllTasks()">全タスク処理</button>
                     <button class="btn btn-warning" onclick="processPendingTasks()">待機タスク処理</button>
                 </div>
                 
-                <!-- NiceGUIテーブルサンプル -->
-                <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
-                    <h4 style="margin: 0 0 10px 0; color: #007bff;">📊 NiceGUIテーブルサンプル</h4>
-                    <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
-                        NiceGUIライブラリを使用したインタラクティブなテーブル表示のデモンストレーションです。
+                <!-- 本物のNiceGUI管理画面へのリンク -->
+                <div style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin: 0 0 15px 0; color: white;">🚀 本物のNiceGUI管理画面</h3>
+                    <p style="margin: 0 0 15px 0; opacity: 0.9;">
+                        管理画面全体をNiceGUIで再構築しました。タブ、テーブル、コントロールすべてが本物のNiceGUIコンポーネントです。
                     </p>
-                    <a href="/admin/nicegui-demo" target="_blank" class="btn btn-primary" style="text-decoration: none;">
-                        🚀 NiceGUIデモを開く
-                    </a>
-                    <small style="display: block; margin-top: 8px; color: #888;">
-                        ※ 新しいタブで開きます。ソート、フィルタ、リアルタイム更新などの機能をお試しください。
-                    </small>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <a href="/admin/nicegui-admin" target="_blank" 
+                           style="display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: rgba(255,255,255,0.2); color: white; text-decoration: none; border-radius: 8px; font-weight: 500; transition: all 0.3s ease; backdrop-filter: blur(10px);"
+                           onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+                           onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                            <span>🎛️</span>
+                            NiceGUI管理画面を開く
+                        </a>
+                        <div style="font-size: 12px; opacity: 0.8;">
+                            ✨ 固定サイズテーブル（7件/頁）<br>
+                            📊 リアルタイム統計<br>
+                            🎨 本物のNiceGUIコンポーネント
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="task-list" id="task-list">
@@ -494,14 +503,12 @@
             
             <!-- システムログ監視タブ -->
             <div id="logs-tab" class="tab-content">
-                <div class="queue-controls">
-                    <select id="log-level-filter" style="margin-right: 10px;">
-                        <option value="">全レベル</option>
-                        <option value="ERROR">エラーのみ</option>
-                        <option value="WARNING">警告のみ</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="refreshLogs()">更新</button>
-                    <button class="btn btn-danger" onclick="clearLogs()">ログクリア</button>
+                <!-- NiceGUI風ログコントロール -->
+                <div id="nicegui-log-controls" style="margin-bottom: 20px;">
+                    <iframe src="/admin/nicegui-log-controls" 
+                            style="width: 100%; height: 80px; border: none; border-radius: 4px;"
+                            frameborder="0">
+                    </iframe>
                 </div>
                 <div id="system-logs" class="log-container" style="max-height: 600px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 13px;">
                     <p>ログを読み込み中...</p>
@@ -830,27 +837,106 @@
         }
 
         // ===== NiceGUI風サンプルテーブル機能 =====
-        let sampleData = [
-            { id: 1, file_name: 'document1.pdf', status: '処理中', priority: '高', progress: 75, created_at: '2024-01-15 10:30' },
-            { id: 2, file_name: 'report2.docx', status: '待機中', priority: '中', progress: 0, created_at: '2024-01-15 11:15' },
-            { id: 3, file_name: 'data3.csv', status: '完了', priority: '低', progress: 100, created_at: '2024-01-15 09:45' },
-            { id: 4, file_name: 'image4.png', status: 'エラー', priority: '高', progress: 30, created_at: '2024-01-15 12:00' },
-            { id: 5, file_name: 'presentation5.pptx', status: '処理中', priority: '中', progress: 45, created_at: '2024-01-15 13:20' }
-        ];
-
+        let sampleData = [];
         let currentPage = 1;
         let itemsPerPage = 5;
         let sortColumn = -1;
         let sortDirection = 1;
 
-        function initSampleTable() {
+        async function initSampleTable() {
+            await loadFileData();
             renderTable();
-            updateStats();
+            updateSampleStats();
             
             // コントロールのイベントリスナー
             document.getElementById('sample-slider').addEventListener('input', function() {
                 document.getElementById('slider-value').textContent = this.value;
             });
+        }
+
+        async function loadFileData() {
+            try {
+                const response = await fetch('/api/files', {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const files = data.files || [];
+                    
+                    // データ登録ページと同じ形式でデータを変換
+                    sampleData = files.slice(0, 10).map((file, index) => ({
+                        id: file.id || index + 1,
+                        file_name: file.file_name || `ファイル${index + 1}`,
+                        status: getStatusText(file.status || 'pending_processing'),
+                        priority: getPriorityFromStatus(file.status || 'pending_processing'),
+                        progress: getProgressFromStatus(file.status || 'pending_processing'),
+                        created_at: file.created_at ? new Date(file.created_at).toLocaleString('ja-JP', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) : '2024-01-15 10:30',
+                        size: file.size || 0,
+                        page_count: file.page_count || 0
+                    }));
+                    
+                    console.log('ファイルデータ読み込み完了:', sampleData.length, '件');
+                } else {
+                    console.warn('ファイルデータの取得に失敗しました');
+                    // フォールバックデータ
+                    sampleData = [
+                        { id: 1, file_name: 'document1.pdf', status: '処理中', priority: '高', progress: 75, created_at: '2024-01-15 10:30', size: 1024000, page_count: 10 },
+                        { id: 2, file_name: 'report2.docx', status: '待機中', priority: '中', progress: 0, created_at: '2024-01-15 11:15', size: 512000, page_count: 5 },
+                        { id: 3, file_name: 'data3.csv', status: '完了', priority: '低', progress: 100, created_at: '2024-01-15 09:45', size: 256000, page_count: 1 },
+                        { id: 4, file_name: 'image4.png', status: 'エラー', priority: '高', progress: 30, created_at: '2024-01-15 12:00', size: 2048000, page_count: 1 },
+                        { id: 5, file_name: 'presentation5.pptx', status: '処理中', priority: '中', progress: 45, created_at: '2024-01-15 13:20', size: 3072000, page_count: 20 }
+                    ];
+                }
+            } catch (error) {
+                console.error('ファイルデータ取得エラー:', error);
+                // エラー時のフォールバックデータ
+                sampleData = [
+                    { id: 1, file_name: 'document1.pdf', status: '処理中', priority: '高', progress: 75, created_at: '2024-01-15 10:30', size: 1024000, page_count: 10 },
+                    { id: 2, file_name: 'report2.docx', status: '待機中', priority: '中', progress: 0, created_at: '2024-01-15 11:15', size: 512000, page_count: 5 },
+                    { id: 3, file_name: 'data3.csv', status: '完了', priority: '低', progress: 100, created_at: '2024-01-15 09:45', size: 256000, page_count: 1 },
+                    { id: 4, file_name: 'image4.png', status: 'エラー', priority: '高', progress: 30, created_at: '2024-01-15 12:00', size: 2048000, page_count: 1 },
+                    { id: 5, file_name: 'presentation5.pptx', status: '処理中', priority: '中', progress: 45, created_at: '2024-01-15 13:20', size: 3072000, page_count: 20 }
+                ];
+            }
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending_processing': '未処理',
+                'processing': '処理中',
+                'text_extracted': '未整形',
+                'text_refined': '未ベクトル化',
+                'processed': '完了',
+                'error': 'エラー'
+            };
+            return statusMap[status] || status;
+        }
+
+        function getPriorityFromStatus(status) {
+            // ステータスに基づいて優先度を決定
+            if (status === 'error') return '高';
+            if (status === 'processing') return '中';
+            return '低';
+        }
+
+        function getProgressFromStatus(status) {
+            // ステータスに基づいて進捗を決定
+            const progressMap = {
+                'pending_processing': 0,
+                'processing': Math.floor(Math.random() * 80) + 10, // 10-90%
+                'text_extracted': 60,
+                'text_refined': 80,
+                'processed': 100,
+                'error': Math.floor(Math.random() * 50) + 10 // 10-60%
+            };
+            return progressMap[status] || 0;
         }
 
         function renderTable() {
@@ -958,12 +1044,15 @@
             }
         }
 
-        function updateSampleTable() {
+        async function updateSampleTable() {
             // コントロールの値を取得
             const inputValue = document.getElementById('sample-input').value;
             const selectValue = document.getElementById('sample-select').value;
             const sliderValue = document.getElementById('sample-slider').value;
             const checkboxValue = document.getElementById('sample-checkbox').checked;
+
+            // データを再読み込み
+            await loadFileData();
 
             // ランダムにデータを更新（デモ用）
             sampleData.forEach(item => {
@@ -981,25 +1070,31 @@
             // 通知表示
             if (window.Utils) {
                 window.Utils.showNotification(`テーブルを更新しました (入力: ${inputValue}, 選択: ${selectValue}, スライダー: ${sliderValue}, チェック: ${checkboxValue})`, 'success');
+            } else {
+                alert(`テーブルを更新しました\n入力: ${inputValue}\n選択: ${selectValue}\nスライダー: ${sliderValue}\nチェック: ${checkboxValue}`);
             }
         }
 
-        function updateStats() {
+        function updateSampleStats() {
             const total = sampleData.length;
             const completed = sampleData.filter(item => item.status === '完了').length;
             const processing = sampleData.filter(item => item.status === '処理中').length;
             const errors = sampleData.filter(item => item.status === 'エラー').length;
 
-            document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-completed').textContent = completed;
-            document.getElementById('stat-processing').textContent = processing;
-            document.getElementById('stat-errors').textContent = errors;
+            // サンプルテーブル用の統計のみ更新
+            if (document.getElementById('stat-total')) {
+                document.getElementById('stat-total').textContent = total;
+                document.getElementById('stat-completed').textContent = completed;
+                document.getElementById('stat-processing').textContent = processing;
+                document.getElementById('stat-errors').textContent = errors;
+            }
         }
 
         // 初期化
         document.addEventListener('DOMContentLoaded', function() {
-            updateStats();
+            updateStats(); // システム統計を更新
             refreshTasks();
+            initSampleTable(); // サンプルテーブル初期化を復活
             
             // ログレベルフィルタの変更時
             document.getElementById('log-level-filter').addEventListener('change', refreshLogs);

@@ -101,6 +101,9 @@ async def cancel_processing() -> JSONResponse:
     
     current_job["status"] = "cancelled"
     
+    # 処理ログにキャンセル通知を送信
+    LOGGER.info("🛑 処理キャンセル要求を受信 - 処理を停止します")
+    
     return JSONResponse({
         "message": "処理のキャンセルを要求しました",
         "status": "cancel_requested"
@@ -233,29 +236,7 @@ async def start_processing(
         LOGGER.error(f"処理開始エラー: {e}")
         raise HTTPException(status_code=500, detail=f"処理開始エラー: {str(e)}")
 
-@router.post("/cancel")
-async def cancel_processing() -> JSONResponse:
-    """処理をキャンセル"""
-    global current_job, cancel_event, processing_pipeline
-    
-    if not current_job or current_job.get("status") != "running":
-        return JSONResponse(content={"message": "実行中の処理がありません", "status": "no_running_job"})
-    
-    if cancel_event:
-        cancel_event.set()
-        # 処理キャンセル要求（ログ削除）
-    
-    # パイプラインキャンセル
-    if processing_pipeline:
-        processing_pipeline.cancel_processing()
-    
-    # 状態をリセット
-    current_job = None
-    cancel_event = None
-    processing_pipeline = None
-    # 処理状態リセット完了（ログ削除）
-    
-    return JSONResponse(content={"message": "処理をキャンセルしました", "status": "cancelled"})
+
 
 
 
@@ -276,15 +257,27 @@ async def progress_stream(request: Request) -> StreamingResponse:
             # SSE接続確立通知
             yield f"data: {json.dumps({'type': 'connected', 'message': 'SSE接続確立'})}\n\n"
             
-            # ジョブが開始されるまで待機
+            # ジョブが開始されるまで待機（進行状況を通知）
+            wait_start = time.time()
             while not current_job:
                 if await request.is_disconnected():
                     return
+                
+                # 待機状況を定期的に通知
+                wait_elapsed = time.time() - wait_start
+                if wait_elapsed > 1.0 and int(wait_elapsed) % 5 == 0:  # 5秒毎に通知
+                    yield f"data: {json.dumps({'type': 'waiting', 'message': f'処理要求受信待機中... ({int(wait_elapsed)}秒経過)', 'elapsed': int(wait_elapsed)})}\n\n"
+                
                 await asyncio.sleep(0.5)
+            
+            # 処理パイプライン初期化通知
+            yield f"data: {json.dumps({'type': 'status', 'message': '🔧 処理パイプライン初期化中...'})}\n\n"
             
             # 処理パイプライン初期化
             processing_pipeline = ProcessingPipeline()
-            # 処理パイプライン初期化完了（ログ削除）
+            
+            # 初期化完了通知
+            yield f"data: {json.dumps({'type': 'status', 'message': '✅ 処理パイプライン初期化完了 - ファイル処理開始'})}\n\n"
             
             # クライアント切断監視
             async def monitor_disconnect():

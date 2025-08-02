@@ -46,7 +46,7 @@ class ProcessingPipeline:
                     'settings': settings
                 }
             }
-            self.logger.info(f"[DEBUG-PIPELINE] 開始イベント生成: {total_files}件")
+            self.logger.debug(f"[DEBUG-PIPELINE] 開始イベント生成: {total_files}件")
             yield start_event
             
             for idx, file_info in enumerate(files, 1):
@@ -168,7 +168,7 @@ class ProcessingPipeline:
                         'result': result
                     }
                 }
-                self.logger.info(f"[DEBUG-PIPELINE] イベント生成: {event_data['type']}, ファイル: {file_name}")
+                self.logger.debug(f"[DEBUG-PIPELINE] イベント生成: {event_data['type']}, ファイル: {file_name}")
                 yield event_data
                 
                 # エラーチェック
@@ -187,7 +187,7 @@ class ProcessingPipeline:
                         'message': 'すべての処理が完了しました'
                     }
                 }
-                self.logger.info(f"[DEBUG-PIPELINE] 完了イベント生成")
+                self.logger.debug(f"[DEBUG-PIPELINE] 完了イベント生成")
                 yield complete_event
             
         except Exception as e:

@@ -237,6 +237,21 @@ class SSEProgressClient {
                 this.onCancel(data.message || '処理がキャンセルされました');
                 this.disconnect();
                 break;
+            
+            case 'waiting':
+                this.onProgress({
+                    type: 'waiting',
+                    message: data.message,
+                    elapsed: data.elapsed
+                });
+                break;
+            
+            case 'status':
+                this.onProgress({
+                    type: 'status',
+                    message: data.message
+                });
+                break;
 
             case 'error':
                 console.error('[SSE] サーバーエラー受信:', data);

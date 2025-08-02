@@ -645,18 +645,25 @@ const DataRegistration = {
     async stopProcessing() {
         console.log('[DataRegistration] 処理停止要求');
         
+        // 即座にキャンセル要求をログに表示
+        this.addToProcessingLog('WARN', '🛑 処理のキャンセルを要求しました - 重複実行防止');
+        
         try {
             if (this.sseClient) {
                 const result = await this.sseClient.cancelProcessing();
                 if (result && result.message) {
-                    this.addToProcessingLog('INFO', `🛑 ${result.message}`);
+                    this.addToProcessingLog('INFO', `✅ ${result.message}`);
+                } else {
+                    this.addToProcessingLog('INFO', '✅ 処理キャンセル完了');
                 }
             }
         } catch (error) {
             console.error('[DataRegistration] 停止エラー:', error);
-            this.addToProcessingLog('ERROR', `停止エラー: ${error.message}`);
+            this.addToProcessingLog('ERROR', `❌ 停止エラー: ${error.message}`);
         }
         
+        // 処理中フラグをリセット
+        this.isProcessing = false;
         this.setProcessingState(false);
     },
 
@@ -805,6 +812,16 @@ const DataRegistration = {
         
         if (event.type === 'complete') {
             this.addToProcessingLog('INFO', '🎉 全処理が完了しました');
+        }
+        
+        if (event.type === 'waiting') {
+            // 待機状況を表示
+            this.addToProcessingLog('INFO', `⏳ ${event.message}`);
+        }
+        
+        if (event.type === 'status') {
+            // 処理状況を表示
+            this.addToProcessingLog('INFO', event.message);
         }
         
         // 従来の処理（互換性のため）
@@ -978,10 +995,10 @@ const DataRegistration = {
         }
         
         // 正しい順序：新しいログを末尾に追加
-        logContainer.insertBefore(logEntry, logContainer.firstChild);
+        logContainer.appendChild(logEntry);
         
-        // 自動スクロール（上へ）
-        logContainer.scrollTop = 0;
+        // 自動スクロール（下へ）
+        logContainer.scrollTop = logContainer.scrollHeight;
         
         console.log(`[LOG] ${message}`);
     },
@@ -1008,10 +1025,10 @@ const DataRegistration = {
         logEntry.innerHTML = `<span class="log-time">[${timestamp}${elapsedText}]</span> <span class="log-message">${message}</span>`;
         
         // 正しい順序：新しいログを末尾に追加
-        logContainer.insertBefore(logEntry, logContainer.firstChild);
+        logContainer.appendChild(logEntry);
         
-        // 自動スクロール（上へ）
-        logContainer.scrollTop = 0;
+        // 自動スクロール（下へ）
+        logContainer.scrollTop = logContainer.scrollHeight;
         
         // 処理中の場合、リアルタイム更新開始
         if (isProcessing) {
@@ -1096,12 +1113,12 @@ const DataRegistration = {
         
         // メインログエントリ（行全体がクリッカブル、青字アンダーライン）
         const mainEntry = document.createElement('div');
-        mainEntry.style.cursor = 'pointer';
-        mainEntry.style.color = '#007bff';
-        mainEntry.style.textDecoration = 'underline';
-        mainEntry.style.padding = '2px 4px';
-        mainEntry.style.borderRadius = '4px';
-        mainEntry.style.transition = 'background-color 0.2s';
+        mainEntry.style.cssText = `
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        `;
         mainEntry.className = 'log-entry expandable-entry';
         mainEntry.innerHTML = `<span class="log-time">[${timestamp}${elapsedText}]</span> <span class="log-message" style="color: #007bff; text-decoration: underline;">${message}</span>`;
         
@@ -1336,23 +1353,27 @@ const DataRegistration = {
         
         // クリックでPDFプレビュー表示
         headerEntry.addEventListener('click', () => {
+            console.log(`[PDF-PREVIEW] クリック検知: fileName=${fileName}, fileId=${fileId}`);
             this.showPdfPreview(fileName, fileId);
         });
         
         // 正しい順序：新しいログを末尾に追加
-        logContainer.insertBefore(headerEntry, logContainer.firstChild);
+        logContainer.appendChild(headerEntry);
         
-        // 自動スクロール（上へ）
-        logContainer.scrollTop = 0;
+        // 自動スクロール（下へ）
+        logContainer.scrollTop = logContainer.scrollHeight;
         
         console.log(`[FILE-HEADER] ${fileName}`);
     },
 
     // PDFプレビューダイアログ表示
     showPdfPreview(fileName, fileId) {
+        console.log(`[PDF-PREVIEW] ダイアログ作成開始: fileName=${fileName}, fileId=${fileId}`);
+        
         // 既存のダイアログがあれば削除
         const existingDialog = document.getElementById('pdf-preview-dialog');
         if (existingDialog) {
+            console.log(`[PDF-PREVIEW] 既存ダイアログを削除`);
             existingDialog.remove();
         }
 
@@ -1423,7 +1444,18 @@ const DataRegistration = {
         `;
         
         // PDFのURLを設定（ファイルIDを使用）
-        pdfViewer.src = `/api/files/${fileId}/preview`;
+        const pdfUrl = `/api/files/${fileId}/preview`;
+        console.log(`[PDF-PREVIEW] PDF URL設定: ${pdfUrl}`);
+        pdfViewer.src = pdfUrl;
+        
+        // iframeのロードイベント追加
+        pdfViewer.addEventListener('load', () => {
+            console.log(`[PDF-PREVIEW] PDF読み込み完了: ${pdfUrl}`);
+        });
+        
+        pdfViewer.addEventListener('error', (e) => {
+            console.error(`[PDF-PREVIEW] PDF読み込みエラー: ${pdfUrl}`, e);
+        });
         
         pdfContainer.appendChild(pdfViewer);
         dialogContent.appendChild(header);

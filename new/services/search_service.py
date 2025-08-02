@@ -236,7 +236,7 @@ class SearchService:
             # 処理率計算
             processing_rate = (processed_files / total_files * 100) if total_files > 0 else 0.0
             
-            LOGGER.info(f"📊 統計情報: ファイル={total_files}, 処理済み={processed_files}, チャンク={total_chunks}, 画像={total_images}")
+            LOGGER.debug(f"📊 統計情報: ファイル={total_files}, 処理済み={processed_files}, チャンク={total_chunks}, 画像={total_images}")
             
             return {
                 "total_files": total_files,

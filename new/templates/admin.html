@@ -361,8 +361,134 @@
                     <button class="btn btn-success" onclick="processAllTasks()">全タスク処理</button>
                     <button class="btn btn-warning" onclick="processPendingTasks()">待機タスク処理</button>
                 </div>
+                
+                <!-- NiceGUIテーブルサンプル -->
+                <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                    <h4 style="margin: 0 0 10px 0; color: #007bff;">📊 NiceGUIテーブルサンプル</h4>
+                    <p style="margin: 0 0 10px 0; color: #666; font-size: 14px;">
+                        NiceGUIライブラリを使用したインタラクティブなテーブル表示のデモンストレーションです。
+                    </p>
+                    <a href="/admin/nicegui-demo" target="_blank" class="btn btn-primary" style="text-decoration: none;">
+                        🚀 NiceGUIデモを開く
+                    </a>
+                    <small style="display: block; margin-top: 8px; color: #888;">
+                        ※ 新しいタブで開きます。ソート、フィルタ、リアルタイム更新などの機能をお試しください。
+                    </small>
+                </div>
+                
                 <div class="task-list" id="task-list">
-                    <p>タスクを読み込み中...</p>
+                    <p>待機中のタスクはありません</p>
+                </div>
+                
+                <!-- NiceGUI風テーブルサンプル（HTML/JS実装） -->
+                <div class="nicegui-sample" style="margin-top: 20px;">
+                    <h3 style="margin-bottom: 15px;">📊 NiceGUI風テーブル＆コントロールサンプル</h3>
+                    
+                    <!-- サンプルコントロール -->
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <h4 style="margin: 0 0 10px 0;">🎛️ サンプルコントロール</h4>
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                            <div>
+                                <label style="font-size: 12px; color: #666;">テキスト入力:</label>
+                                <input type="text" id="sample-input" placeholder="何か入力..." 
+                                       style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; margin-left: 5px;">
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #666;">選択:</label>
+                                <select id="sample-select" style="padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; margin-left: 5px;">
+                                    <option value="option1">オプション1</option>
+                                    <option value="option2">オプション2</option>
+                                    <option value="option3">オプション3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #666;">スライダー:</label>
+                                <input type="range" id="sample-slider" min="0" max="100" value="50" 
+                                       style="margin-left: 5px;">
+                                <span id="slider-value" style="font-size: 12px; color: #666;">50</span>
+                            </div>
+                            <div>
+                                <label style="font-size: 12px; color: #666;">
+                                    <input type="checkbox" id="sample-checkbox" style="margin-right: 5px;">
+                                    チェックボックス
+                                </label>
+                            </div>
+                            <button onclick="updateSampleTable()" 
+                                    style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                🔄 テーブル更新
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- NiceGUI風テーブル -->
+                    <div style="border: 1px solid #ddd; border-radius: 8px; overflow: hidden; background: white;">
+                        <div style="background: #f8f9fa; padding: 10px; border-bottom: 1px solid #ddd;">
+                            <strong>処理キューテーブル</strong>
+                            <span style="float: right; font-size: 12px; color: #666;">
+                                総件数: <span id="table-count">5</span>件
+                            </span>
+                        </div>
+                        
+                        <table id="sample-table" style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f1f3f4;">
+                                <tr>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd; cursor: pointer;" onclick="sortTable(0)">
+                                        ID <span style="font-size: 10px;">▼</span>
+                                    </th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd; cursor: pointer;" onclick="sortTable(1)">
+                                        ファイル名 <span style="font-size: 10px;">▼</span>
+                                    </th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd; cursor: pointer;" onclick="sortTable(2)">
+                                        ステータス <span style="font-size: 10px;">▼</span>
+                                    </th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd; cursor: pointer;" onclick="sortTable(3)">
+                                        優先度 <span style="font-size: 10px;">▼</span>
+                                    </th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
+                                        進捗
+                                    </th>
+                                    <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">
+                                        作成日時
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body">
+                                <!-- JavaScriptで動的に生成 -->
+                            </tbody>
+                        </table>
+                        
+                        <!-- ページネーション -->
+                        <div style="padding: 10px; background: #f8f9fa; border-top: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 12px; color: #666;">
+                                <span id="page-info">1-5 / 5件</span>
+                            </div>
+                            <div>
+                                <button onclick="changePage(-1)" style="padding: 5px 10px; margin-right: 5px; border: 1px solid #ddd; background: white; cursor: pointer;">◀</button>
+                                <span style="font-size: 12px; color: #666;">1 / 1</span>
+                                <button onclick="changePage(1)" style="padding: 5px 10px; margin-left: 5px; border: 1px solid #ddd; background: white; cursor: pointer;">▶</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 統計情報 -->
+                    <div style="margin-top: 15px; display: flex; gap: 15px;">
+                        <div style="flex: 1; background: #e3f2fd; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #1976d2;" id="stat-total">5</div>
+                            <div style="font-size: 12px; color: #666;">総タスク数</div>
+                        </div>
+                        <div style="flex: 1; background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #388e3c;" id="stat-completed">1</div>
+                            <div style="font-size: 12px; color: #666;">完了</div>
+                        </div>
+                        <div style="flex: 1; background: #fff3e0; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #f57c00;" id="stat-processing">2</div>
+                            <div style="font-size: 12px; color: #666;">処理中</div>
+                        </div>
+                        <div style="flex: 1; background: #ffebee; padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 24px; font-weight: bold; color: #d32f2f;" id="stat-errors">1</div>
+                            <div style="font-size: 12px; color: #666;">エラー</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -697,9 +823,177 @@
             // タブ固有の初期化処理
             if (tabName === 'queue') {
                 refreshTasks();
+                initSampleTable(); // サンプルテーブル初期化
             } else if (tabName === 'logs') {
                 refreshLogs();
             }
+        }
+
+        // ===== NiceGUI風サンプルテーブル機能 =====
+        let sampleData = [
+            { id: 1, file_name: 'document1.pdf', status: '処理中', priority: '高', progress: 75, created_at: '2024-01-15 10:30' },
+            { id: 2, file_name: 'report2.docx', status: '待機中', priority: '中', progress: 0, created_at: '2024-01-15 11:15' },
+            { id: 3, file_name: 'data3.csv', status: '完了', priority: '低', progress: 100, created_at: '2024-01-15 09:45' },
+            { id: 4, file_name: 'image4.png', status: 'エラー', priority: '高', progress: 30, created_at: '2024-01-15 12:00' },
+            { id: 5, file_name: 'presentation5.pptx', status: '処理中', priority: '中', progress: 45, created_at: '2024-01-15 13:20' }
+        ];
+
+        let currentPage = 1;
+        let itemsPerPage = 5;
+        let sortColumn = -1;
+        let sortDirection = 1;
+
+        function initSampleTable() {
+            renderTable();
+            updateStats();
+            
+            // コントロールのイベントリスナー
+            document.getElementById('sample-slider').addEventListener('input', function() {
+                document.getElementById('slider-value').textContent = this.value;
+            });
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('table-body');
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = sampleData.slice(startIndex, endIndex);
+
+            tbody.innerHTML = pageData.map(row => `
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 10px; text-align: left;">${row.id}</td>
+                    <td style="padding: 10px; text-align: left;">${row.file_name}</td>
+                    <td style="padding: 10px; text-align: center;">
+                        <span style="padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; 
+                                     background: ${getStatusColor(row.status).bg}; 
+                                     color: ${getStatusColor(row.status).text};">
+                            ${row.status}
+                        </span>
+                    </td>
+                    <td style="padding: 10px; text-align: center;">
+                        <span style="padding: 2px 6px; border-radius: 8px; font-size: 10px; font-weight: bold;
+                                     background: ${getPriorityColor(row.priority).bg}; 
+                                     color: ${getPriorityColor(row.priority).text};">
+                            ${row.priority}
+                        </span>
+                    </td>
+                    <td style="padding: 10px; text-align: center;">
+                        <div style="width: 100%; background: #e0e0e0; border-radius: 10px; height: 8px; position: relative;">
+                            <div style="width: ${row.progress}%; background: ${getProgressColor(row.progress)}; 
+                                        height: 100%; border-radius: 10px; transition: width 0.3s ease;"></div>
+                        </div>
+                        <div style="font-size: 10px; margin-top: 2px;">${row.progress}%</div>
+                    </td>
+                    <td style="padding: 10px; text-align: center; font-size: 11px;">${row.created_at}</td>
+                </tr>
+            `).join('');
+
+            // ページ情報更新
+            const totalPages = Math.ceil(sampleData.length / itemsPerPage);
+            document.getElementById('page-info').textContent = `${startIndex + 1}-${Math.min(endIndex, sampleData.length)} / ${sampleData.length}件`;
+            document.getElementById('table-count').textContent = sampleData.length;
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                '処理中': { bg: '#e3f2fd', text: '#1976d2' },
+                '待機中': { bg: '#fff3e0', text: '#f57c00' },
+                '完了': { bg: '#e8f5e8', text: '#388e3c' },
+                'エラー': { bg: '#ffebee', text: '#d32f2f' }
+            };
+            return colors[status] || { bg: '#f5f5f5', text: '#666' };
+        }
+
+        function getPriorityColor(priority) {
+            const colors = {
+                '高': { bg: '#ffebee', text: '#d32f2f' },
+                '中': { bg: '#fff3e0', text: '#f57c00' },
+                '低': { bg: '#e8f5e8', text: '#388e3c' }
+            };
+            return colors[priority] || { bg: '#f5f5f5', text: '#666' };
+        }
+
+        function getProgressColor(progress) {
+            if (progress === 100) return '#4caf50';
+            if (progress > 50) return '#2196f3';
+            if (progress > 0) return '#ff9800';
+            return '#9e9e9e';
+        }
+
+        function sortTable(columnIndex) {
+            const columns = ['id', 'file_name', 'status', 'priority'];
+            const column = columns[columnIndex];
+            
+            if (sortColumn === columnIndex) {
+                sortDirection *= -1;
+            } else {
+                sortColumn = columnIndex;
+                sortDirection = 1;
+            }
+
+            sampleData.sort((a, b) => {
+                let aVal = a[column];
+                let bVal = b[column];
+                
+                if (column === 'id') {
+                    aVal = parseInt(aVal);
+                    bVal = parseInt(bVal);
+                }
+                
+                if (aVal < bVal) return -1 * sortDirection;
+                if (aVal > bVal) return 1 * sortDirection;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        function changePage(direction) {
+            const totalPages = Math.ceil(sampleData.length / itemsPerPage);
+            const newPage = currentPage + direction;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderTable();
+            }
+        }
+
+        function updateSampleTable() {
+            // コントロールの値を取得
+            const inputValue = document.getElementById('sample-input').value;
+            const selectValue = document.getElementById('sample-select').value;
+            const sliderValue = document.getElementById('sample-slider').value;
+            const checkboxValue = document.getElementById('sample-checkbox').checked;
+
+            // ランダムにデータを更新（デモ用）
+            sampleData.forEach(item => {
+                if (Math.random() > 0.7) {
+                    item.progress = Math.min(100, item.progress + Math.floor(Math.random() * 20));
+                    if (item.progress === 100 && item.status !== '完了') {
+                        item.status = '完了';
+                    }
+                }
+            });
+
+            renderTable();
+            updateStats();
+            
+            // 通知表示
+            if (window.Utils) {
+                window.Utils.showNotification(`テーブルを更新しました (入力: ${inputValue}, 選択: ${selectValue}, スライダー: ${sliderValue}, チェック: ${checkboxValue})`, 'success');
+            }
+        }
+
+        function updateStats() {
+            const total = sampleData.length;
+            const completed = sampleData.filter(item => item.status === '完了').length;
+            const processing = sampleData.filter(item => item.status === '処理中').length;
+            const errors = sampleData.filter(item => item.status === 'エラー').length;
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-processing').textContent = processing;
+            document.getElementById('stat-errors').textContent = errors;
         }
 
         // 初期化

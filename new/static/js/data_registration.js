@@ -555,11 +555,13 @@ const DataRegistration = {
             console.log('[DataRegistration] 🔥 チェック済みチェックボックス:', checkedBoxes.length);
             
             if (checkedBoxes.length > 0) {
-                // チェックボックスはあるが selectedFiles が空の場合、強制的に同期
+                // 重複を防ぐためSetを新規作成
+                this.selectedFiles.clear();
                 checkedBoxes.forEach(checkbox => {
                     this.selectedFiles.add(checkbox.value);
                 });
                 console.log('[DataRegistration] 🔥 強制同期後の選択ファイル:', this.selectedFiles.size);
+                console.log('[DataRegistration] 🔥 選択ファイル詳細:', Array.from(this.selectedFiles));
             } else {
                 this.showError('処理するファイルを選択してください。');
                 return;
@@ -975,7 +977,7 @@ const DataRegistration = {
             logEntry.innerHTML += `<br><span style="color: #999; margin-left: 20px;">→ ${JSON.stringify(data, null, 2)}</span>`;
         }
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 正しい順序：新しいログを末尾に追加
         logContainer.insertBefore(logEntry, logContainer.firstChild);
         
         // 自動スクロール（上へ）
@@ -1005,7 +1007,7 @@ const DataRegistration = {
         logEntry.className = 'log-entry';
         logEntry.innerHTML = `<span class="log-time">[${timestamp}${elapsedText}]</span> <span class="log-message">${message}</span>`;
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 正しい順序：新しいログを末尾に追加
         logContainer.insertBefore(logEntry, logContainer.firstChild);
         
         // 自動スクロール（上へ）
@@ -1047,8 +1049,8 @@ const DataRegistration = {
                 totalElapsedText = ` (+${totalElapsed}s)`;
             }
             
-            // リアルタイム更新
-            logEntry.innerHTML = `<span style="color: #666; font-size: 11px;">[${timestamp}${totalElapsedText}]</span> ${baseMessage} <span style="color: #007bff;">(${elapsed}秒経過)</span>`;
+            // リアルタイム更新（統一スタイル）
+            logEntry.innerHTML = `<span class="log-time">[${timestamp}${totalElapsedText}]</span> <span class="log-message">${baseMessage} <span style="color: #007bff;">(${elapsed}秒経過)</span></span>`;
         }, 1000); // 1秒毎に更新
     },
 
@@ -1070,8 +1072,8 @@ const DataRegistration = {
                 elapsedText = ` (+${elapsed}s)`;
             }
             
-            // 最終状態で固定
-            logEntry.innerHTML = `<span style="color: #666; font-size: 11px;">[${timestamp}${elapsedText}]</span> ${finalMessage}`;
+            // 最終状態で固定（統一スタイル）
+            logEntry.innerHTML = `<span class="log-time">[${timestamp}${elapsedText}]</span> <span class="log-message">${finalMessage}</span>`;
         }
     },
 
@@ -1100,7 +1102,8 @@ const DataRegistration = {
         mainEntry.style.padding = '2px 4px';
         mainEntry.style.borderRadius = '4px';
         mainEntry.style.transition = 'background-color 0.2s';
-        mainEntry.innerHTML = `<span style="color: #666; font-size: 11px;">[${timestamp}${elapsedText}]</span> <span style="color: #007bff;">${message}</span>`;
+        mainEntry.className = 'log-entry expandable-entry';
+        mainEntry.innerHTML = `<span class="log-time">[${timestamp}${elapsedText}]</span> <span class="log-message" style="color: #007bff; text-decoration: underline;">${message}</span>`;
         
         // ホバー効果
         mainEntry.addEventListener('mouseenter', () => {
@@ -1290,7 +1293,7 @@ const DataRegistration = {
             height: 1px;
         `;
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 正しい順序：新しいログを末尾に追加
         logContainer.insertBefore(separator, logContainer.firstChild);
     },
 
@@ -1336,7 +1339,7 @@ const DataRegistration = {
             this.showPdfPreview(fileName, fileId);
         });
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 正しい順序：新しいログを末尾に追加
         logContainer.insertBefore(headerEntry, logContainer.firstChild);
         
         // 自動スクロール（上へ）

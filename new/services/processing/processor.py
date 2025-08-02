@@ -352,13 +352,19 @@ class FileProcessor:
                 
         except ImportError as e:
             self.logger.warning(f"Ollama統合未使用（依存関係不足）: {e}")
-            # フォールバック：正規化処理のみ + 処理時間シミュレート
-            await asyncio.sleep(2.0)  # 実際のLLM処理時間をシミュレート
+            # フォールバック：正規化処理のみ + 現実的な処理時間シミュレート
+            # 文字数に応じた処理時間（1000文字あたり3-5秒）
+            char_count = len(text) if text else 0
+            processing_time = max(3.0, (char_count / 1000) * 4.0)  # 最低3秒、1000文字で4秒
+            await asyncio.sleep(processing_time)
+            self.logger.info(f"フォールバック処理完了 - {char_count}文字、{processing_time:.1f}秒")
             return self._fallback_text_refinement(text)
         except Exception as e:
             self.logger.error(f"LLM整形エラー: {e}")
-            # フォールバック：正規化処理のみ + 処理時間シミュレート
-            await asyncio.sleep(2.0)  # 実際のLLM処理時間をシミュレート
+            # フォールバック：正規化処理のみ + 現実的な処理時間シミュレート
+            char_count = len(text) if text else 0
+            processing_time = max(3.0, (char_count / 1000) * 4.0)
+            await asyncio.sleep(processing_time)
             return self._fallback_text_refinement(text)
     
     def _create_llm_prompt(self, text: str, settings: Dict) -> str:

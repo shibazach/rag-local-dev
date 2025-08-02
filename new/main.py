@@ -146,6 +146,16 @@ app.include_router(chat_router, prefix=API_PREFIX, tags=["Chat"])
 from new.routes.ui import router as ui_router
 app.include_router(ui_router, prefix="", tags=["UI"])
 
+# NiceGUI統合
+try:
+    from new.routes.nicegui_admin import init_nicegui_routes
+    init_nicegui_routes(app)
+    LOGGER.info("NiceGUI統合完了")
+except ImportError as e:
+    LOGGER.warning(f"NiceGUI統合スキップ: {e}")
+except Exception as e:
+    LOGGER.error(f"NiceGUI統合エラー: {e}")
+
 # ヘルスチェック
 @app.get("/health")
 async def health_check():

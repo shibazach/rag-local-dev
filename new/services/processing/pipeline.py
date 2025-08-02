@@ -67,6 +67,7 @@ class ProcessingPipeline:
                     'type': 'file_start',
                     'data': {
                         'file_name': file_name,
+                        'file_id': file_id,  # file_idを追加
                         'file_index': idx,
                         'total_files': total_files,
                         'progress': round((idx - 1) / total_files * 100, 1)

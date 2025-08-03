@@ -7,6 +7,7 @@ from sqlalchemy import (
     TIMESTAMP, LargeBinary, ForeignKey, event, Index
 )
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy import JSON
 from sqlalchemy.sql import func
 
 # ============================================================================
@@ -23,7 +24,7 @@ metadata = MetaData()
 files_blob = Table(
     "files_blob",
     metadata,
-    Column("id", UUID(as_uuid=True), primary_key=True, default=uuid.uuid4),
+    Column("id", String(36), primary_key=True, default=lambda: str(uuid.uuid4())),
     Column("checksum", String(64), nullable=False, unique=True, index=True),
     Column("blob_data", LargeBinary, nullable=False),
     Column("stored_at", TIMESTAMP(timezone=True), server_default=func.now()),
@@ -39,7 +40,7 @@ files_meta = Table(
     metadata,
     Column(
         "blob_id",
-        UUID(as_uuid=True),
+        String(36),
         ForeignKey("files_blob.id", ondelete="CASCADE"),
         primary_key=True,
     ),
@@ -63,14 +64,14 @@ files_text = Table(
     metadata,
     Column(
         "blob_id",
-        UUID(as_uuid=True),
+        String(36),
         ForeignKey("files_blob.id", ondelete="CASCADE"),
         primary_key=True,
     ),
     Column("raw_text", Text, nullable=True),           # OCR生テキスト
     Column("refined_text", Text, nullable=True),       # LLM整形後テキスト
     Column("quality_score", Float, nullable=True),     # 整形品質スコア（0.0-1.0）
-    Column("tags", ARRAY(String), server_default='{}'), # タグ配列
+    Column("tags", JSON, server_default='[]'), # タグ配列（SQLite対応）
     Column("processing_log", Text, nullable=True),      # 処理ログ
     Column("ocr_engine", String(50), nullable=True),   # 使用したOCRエンジン
     Column("llm_model", String(100), nullable=True),   # 使用したLLMモデル
@@ -95,51 +96,10 @@ FILE_STATUS = {
 }
 
 # ============================================================================
-# テーブルコメント追加（可読性向上）
+# テーブルコメント追加（SQLiteでは無効化）
 # ============================================================================
 
-@event.listens_for(files_blob, "after_create")
-def _add_table_comments(target, connection, **kw):
-    """テーブル・カラムコメントを追加"""
-    
-    # files_blobテーブル
-    connection.execute(
-        """
-        COMMENT ON TABLE files_blob IS 'ファイルバイナリ格納テーブル（主テーブル）';
-        COMMENT ON COLUMN files_blob.id IS 'UUID主キー';
-        COMMENT ON COLUMN files_blob.checksum IS 'SHA256チェックサム（重複防止）';
-        COMMENT ON COLUMN files_blob.blob_data IS 'ファイル本体データ';
-        COMMENT ON COLUMN files_blob.stored_at IS 'ファイル格納日時（UTC）';
-        """
-    )
-    
-    # files_metaテーブル
-    connection.execute(
-        """
-        COMMENT ON TABLE files_meta IS 'ファイルメタ情報テーブル';
-        COMMENT ON COLUMN files_meta.blob_id IS 'files_blob外部キー（主キー）';
-        COMMENT ON COLUMN files_meta.file_name IS 'アップロード時ファイル名';
-        COMMENT ON COLUMN files_meta.mime_type IS 'MIMEタイプ';
-        COMMENT ON COLUMN files_meta.size IS 'ファイルサイズ（バイト）';
-        COMMENT ON COLUMN files_meta.page_count IS 'ページ数（PDF等）';
-        COMMENT ON COLUMN files_meta.status IS '処理ステータス';
-        COMMENT ON COLUMN files_meta.created_at IS '作成日時（UTC）';
-        COMMENT ON COLUMN files_meta.updated_at IS '更新日時（UTC）';
-        """
-    )
-    
-    # files_textテーブル
-    connection.execute(
-        """
-        COMMENT ON TABLE files_text IS 'ファイルテキスト・処理結果テーブル';
-        COMMENT ON COLUMN files_text.blob_id IS 'files_blob外部キー（主キー）';
-        COMMENT ON COLUMN files_text.raw_text IS 'OCR抽出生テキスト';
-        COMMENT ON COLUMN files_text.refined_text IS 'LLM整形後テキスト';
-        COMMENT ON COLUMN files_text.quality_score IS 'テキスト品質スコア（0.0-1.0）';
-        COMMENT ON COLUMN files_text.tags IS 'タグ配列';
-        COMMENT ON COLUMN files_text.processing_log IS '処理ログ・エラー情報';
-        COMMENT ON COLUMN files_text.ocr_engine IS '使用OCRエンジン名';
-        COMMENT ON COLUMN files_text.llm_model IS '使用LLMモデル名';
-        COMMENT ON COLUMN files_text.updated_at IS '最終更新日時（UTC）';
-        """
-    )
+# @event.listens_for(files_blob, "after_create") 
+# def _add_table_comments(target, connection, **kw):
+#     """テーブル・カラムコメントを追加（PostgreSQL専用）"""
+#     # SQLiteではCOMMENT構文をサポートしていないため無効化

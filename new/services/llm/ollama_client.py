@@ -22,35 +22,77 @@ except ImportError:
     ChatOllama = None
     OllamaEndpointNotFoundError = Exception
 
-from new.config import OLLAMA_BASE, OLLAMA_MODEL, LOGGER
+from new.config import settings, LOGGER
 
 
 class OllamaClient:
     """Ollama接続クライアント"""
     
-    def __init__(self, base_url: str = OLLAMA_BASE, model: str = OLLAMA_MODEL):
-        self.base_url = base_url
-        self.model = model
+    def __init__(self, base_url: str = None, model: str = None):
+        self.base_url = base_url or settings.OLLAMA_BASE_URL
+        self.model = model or settings.OLLAMA_MODEL
         self.logger = LOGGER
         
         if not LANGCHAIN_AVAILABLE:
             raise ImportError("LangChain関連パッケージが見つかりません。`pip install langchain langchain-community langchain-ollama` を実行してください。")
     
     async def is_available(self) -> bool:
-        """Ollama接続確認"""
+        """Ollama接続確認（軽量API使用）"""
         try:
-            # 簡単な接続テスト（タイムアウト付き）
-            llm = ChatOllama(model=self.model, base_url=self.base_url, max_new_tokens=10)
+            import aiohttp
+            import asyncio
+            
+            # 軽量なAPI確認（バージョン情報取得）
+            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=5.0)) as session:
+                async with session.get(f"{self.base_url}/api/version") as response:
+                    if response.status == 200:
+                        version_data = await response.json()
+                        self.logger.debug(f"Ollama接続成功: {self.base_url} (version: {version_data.get('version', 'unknown')})")
+                        
+                        # モデル存在確認も実行
+                        async with session.get(f"{self.base_url}/api/tags") as tags_response:
+                            if tags_response.status == 200:
+                                tags_data = await tags_response.json()
+                                models = [model['name'] for model in tags_data.get('models', [])]
+                                
+                                if self.model in models or f"{self.model}:latest" in models:
+                                    self.logger.debug(f"モデル確認成功: {self.model}")
+                                    return True
+                                else:
+                                    self.logger.warning(f"モデル '{self.model}' が見つかりません。利用可能: {models}")
+                                    return False
+                            else:
+                                self.logger.warning(f"モデル一覧取得失敗: HTTP {tags_response.status}")
+                                return False
+                    else:
+                        self.logger.warning(f"Ollama API応答エラー: HTTP {response.status}")
+                        return False
+                        
+        except asyncio.TimeoutError:
+            self.logger.warning(f"Ollama接続タイムアウト: {self.base_url} (5秒)")
+            return False
+        except ImportError:
+            self.logger.warning("aiohttp未インストール: フォールバック接続確認を使用")
+            return await self._fallback_availability_check()
+        except Exception as e:
+            self.logger.warning(f"Ollama接続失敗 ({self.base_url}, {self.model}): {e}")
+            return False
+    
+    async def _fallback_availability_check(self) -> bool:
+        """フォールバック接続確認（重い処理）"""
+        try:
+            # 実際のLLM処理（CPUでは時間がかかる）
+            llm = ChatOllama(model=self.model, base_url=self.base_url, max_new_tokens=5)
             result = await asyncio.wait_for(
-                asyncio.to_thread(llm.invoke, "Test"), 
-                timeout=10.0
+                asyncio.to_thread(llm.invoke, "Hi"), 
+                timeout=30.0  # CPU環境を考慮して長めに設定
             )
             return True
         except asyncio.TimeoutError:
-            self.logger.warning(f"Ollama接続タイムアウト ({self.base_url}, {self.model})")
+            self.logger.warning(f"Ollama処理タイムアウト（CPU環境では正常）: {self.base_url}")
             return False
         except Exception as e:
-            self.logger.warning(f"Ollama接続失敗 ({self.base_url}, {self.model}): {e}")
+            self.logger.warning(f"Ollama処理失敗: {e}")
             return False
     
     async def generate_text(
@@ -128,6 +170,15 @@ class OllamaRefiner:
     def build_refinement_prompt(self, raw_text: str, language: str = "ja") -> str:
         """整形用プロンプト構築（高品質プロンプト使用）"""
         try:
+            # 絶対importパスでプロンプトローダーを取得
+            import sys
+            import os
+            
+            # ワークスペースルートをパスに追加
+            workspace_root = '/workspace'
+            if workspace_root not in sys.path:
+                sys.path.insert(0, workspace_root)
+            
             from new.services.llm.prompt_loader import get_prompt_loader
             
             # 高品質プロンプトローダーから取得
@@ -140,11 +191,13 @@ class OllamaRefiner:
             # プロンプトテンプレートをフォーマット
             prompt = prompt_loader.format_prompt(prompt_template, TEXT=normalized_text)
             
-            self.logger.info(f"高品質プロンプト使用: {len(prompt_template)}文字, 言語={language}")
+            self.logger.info(f"✅ 高品質プロンプト使用成功: {len(prompt_template)}文字, 言語={language}")
             return prompt
             
         except Exception as e:
-            self.logger.warning(f"高品質プロンプト読み込み失敗、フォールバック使用: {e}")
+            self.logger.warning(f"❌ 高品質プロンプト読み込み失敗、フォールバック使用: {e}")
+            import traceback
+            self.logger.debug(f"詳細エラー: {traceback.format_exc()}")
             
             # フォールバック：簡易プロンプト
             normalized_text = self.normalize_text(raw_text)

@@ -22,28 +22,33 @@ const DataRegistration = {
     async init() {
         console.log('[DataRegistration] 初期化開始');
         
-        // SSEProgressClientクラスの存在確認
-        if (typeof SSEProgressClient === 'undefined') {
-            console.error('[DataRegistration] SSEProgressClientクラスが定義されていません');
-            this.showError('SSEクライアントの読み込みに失敗しました。ページを再読み込みしてください。');
-            return;
-        } else {
-            console.log('[DataRegistration] SSEProgressClientクラス確認: OK');
+        try {
+            // SSEProgressClientクラスの存在確認
+            if (typeof SSEProgressClient === 'undefined') {
+                console.error('[DataRegistration] SSEProgressClientクラスが定義されていません');
+                this.showError('SSEクライアントの読み込みに失敗しました。ページを再読み込みしてください。');
+                return;
+            } else {
+                console.log('[DataRegistration] SSEProgressClientクラス確認: OK');
+            }
+            
+            // 重複実行防止フラグ初期化
+            this.isProcessing = false;
+            this.selectedFiles = new Set();
+            
+            // デバッグログ有効化
+            window.DEBUG_DATA_REGISTRATION = true;
+            console.log('[DataRegistration] デバッグモード有効化');
+            
+            await this.loadAvailableConfig();
+            this.setupEventListeners();
+            await this.loadFileList();
+            
+            console.log('[DataRegistration] 初期化完了');
+        } catch (error) {
+            console.error('[DataRegistration] 初期化エラー:', error);
+            this.showError(`初期化エラー: ${error.message}`);
         }
-        
-        // 重複実行防止フラグ初期化
-        this.isProcessing = false;
-        this.selectedFiles = new Set();
-        
-        // デバッグログ有効化
-        window.DEBUG_DATA_REGISTRATION = true;
-        console.log('[DataRegistration] デバッグモード有効化');
-        
-        await this.loadAvailableConfig();
-        this.setupEventListeners();
-        await this.loadFileList();
-        
-        console.log('[DataRegistration] 初期化完了');
     },
 
     // 利用可能な設定を読み込み
@@ -586,8 +591,15 @@ const DataRegistration = {
             this.progressUpdateTimer = null;
         }
         
-        // 処理開始ログ
-        this.addToProcessingLog('INFO', `処理開始 - 選択ファイル数: ${this.selectedFiles.size}`);
+        // 処理開始ログ（リアルタイム更新対応）
+        this.currentProgressLogId = this.addProgressLog('INFO', `処理開始 - 選択ファイル数: ${this.selectedFiles.size}`, true);
+        
+        // 固定進捗表示を開始（リアルタイムタイマー付き）
+        const startTimeText = new Date().toLocaleTimeString('ja-JP');
+        this.showCurrentProgress(`処理開始 - 選択ファイル数: ${this.selectedFiles.size} (開始: ${startTimeText})`);
+        
+        // リアルタイム経過時間タイマーを開始
+        this.startCurrentProgressTimer();
         
         this.setProcessingState(true);
         
@@ -634,10 +646,10 @@ const DataRegistration = {
             this.addToProcessingLog('ERROR', `エラー詳細: ${error.stack || 'スタック情報なし'}`);
             this.showError(`処理開始エラー: ${error.message}`);
             this.setProcessingState(false);
-        } finally {
-            // 重複実行防止フラグを解除
+            
+            // エラー時のみ重複実行防止フラグを解除
             this.isProcessing = false;
-            console.log('[DataRegistration] 🔥 処理完了 - 重複実行防止フラグ解除');
+            console.log('[DataRegistration] 🔥 処理エラー - 重複実行防止フラグ解除');
         }
     },
 
@@ -763,6 +775,35 @@ const DataRegistration = {
                 data.step.includes('LLM処理中')
             );
             
+            // 固定進捗表示を更新（シンプル表示）
+            if (data.step) {
+                let progressText = '';
+                
+                // シンプル表示フラグがある場合はファイル名なしで表示
+                if (data.simple_status) {
+                    progressText = data.step;
+                    if (data.detail) {
+                        progressText += data.detail;
+                    }
+                } else {
+                    // 通常表示
+                    const fileName = data.file_name || 'ファイル';
+                    progressText = `${fileName}: ${data.step}`;
+                    if (data.detail) {
+                        progressText += ` - ${data.detail}`;
+                    }
+                }
+                
+                this.showCurrentProgress(progressText);
+                
+                // ファイル処理完了時の詳細時間表示
+                if (data.step.includes('🎉 処理完了') && data.detail) {
+                    const currentElapsed = this.processingStartTime ? 
+                        Math.floor((new Date() - this.processingStartTime) / 1000) : 0;
+                    this.addToProcessingLog('INFO', `📈 ${fileName} 完了: ${data.detail} (全体経過: ${currentElapsed}秒)`);
+                }
+            }
+            
             console.log('[DataRegistration] 🔥 展開可能詳細数:', expandableDetails.length);
             console.log('[DataRegistration] 🔥 ログメッセージ:', logMessage);
             console.log('[DataRegistration] 🔥 長時間処理判定:', isLongProcess);
@@ -784,12 +825,16 @@ const DataRegistration = {
                 }
                 
                 // 展開可能詳細がある場合は特別な形式でログに追加
-                if (expandableDetails.length > 0) {
-                    console.log('[DataRegistration] 🔥 展開可能ログ呼び出し');
-                    this.addExpandableProcessingLog('INFO', logMessage, expandableDetails);
-                } else {
-                    console.log('[DataRegistration] 🔥 通常ログ呼び出し');
-                    this.addToProcessingLog('INFO', logMessage);
+                // シンプル表示フラグがある場合はログ出力をスキップ
+                if (!data.simple_status) {
+                    if (expandableDetails.length > 0) {
+                        console.log('[DataRegistration] 🔥 展開可能ログ呼び出し');
+                        this.addExpandableProcessingLog('INFO', logMessage, expandableDetails);
+                    } else if (data.step && (data.step.includes('開始') || data.step.includes('完了'))) {
+                        // 重要なステップのみログに出力
+                        console.log('[DataRegistration] 🔥 通常ログ呼び出し');
+                        this.addToProcessingLog('INFO', logMessage);
+                    }
                 }
             }
             return;
@@ -800,28 +845,42 @@ const DataRegistration = {
             this.addToProcessingLog('INFO', `📄 ${event.data.total_files} 件のファイル処理を開始`);
         }
         
-        if (event.type === 'file_start' && event.data?.file_name) {
+        if (event.type === 'file_start' && (event.data?.file_name || event.fileName)) {
             // ファイル単位の区切り線を追加
             this.addFileSeparator();
             
             // ファイル名を太字クリッカブル青字アンダーラインで表示
-            // file_idはfile_startイベントで渡される場合とfile_indexから取得する場合がある
-            const fileId = event.data.file_id || this.getFileIdFromSelectedFiles(event.data.file_index);
-            this.addFileHeader(event.data.file_name, fileId);
+            // データ構造の違いに対応（event.data.file_name または event.fileName）
+            const fileName = event.data?.file_name || event.fileName;
+            const fileIndex = event.data?.file_index || event.fileIndex;
+            const fileId = event.data?.file_id || this.getFileIdFromSelectedFiles(fileIndex);
+            
+            console.log(`[FILE-START] ファイル処理開始: ${fileName}, fileId=${fileId}, fileIndex=${fileIndex}`);
+            this.addFileHeader(fileName, fileId);
         }
         
         if (event.type === 'complete') {
-            this.addToProcessingLog('INFO', '🎉 全処理が完了しました');
+            // パイプライン完了メッセージ（詳細時間情報付き）
+            const completionMessage = event.data?.message || '🎉 全処理が完了しました';
+            this.addToProcessingLog('INFO', completionMessage);
+            
+            // 詳細統計情報の表示
+            if (event.data?.total_pipeline_time) {
+                const avgTime = event.data.average_time_per_file || 0;
+                this.addToProcessingLog('INFO', `📈 処理統計: 平均 ${avgTime.toFixed(1)}秒/ファイル`);
+            }
         }
         
         if (event.type === 'waiting') {
-            // 待機状況を表示
+            // 待機状況を表示（経過時間表示付き）
             this.addToProcessingLog('INFO', `⏳ ${event.message}`);
+            this.showCurrentProgress(`⏳ ${event.message}`);
         }
         
         if (event.type === 'status') {
-            // 処理状況を表示
+            // 処理状況を表示（経過時間表示付き）
             this.addToProcessingLog('INFO', event.message);
+            this.showCurrentProgress(event.message);
         }
         
         // 従来の処理（互換性のため）
@@ -841,13 +900,26 @@ const DataRegistration = {
         
         // 進行中ログがあれば完了させる
         if (this.currentProgressLogId) {
-            this.completeProgressLog(this.currentProgressLogId, '🎉 全処理完了');
+            // トータル処理時間を計算
+            const totalElapsed = this.processingStartTime ? 
+                Math.floor((new Date() - this.processingStartTime) / 1000) : 0;
+            const endTimeText = new Date().toLocaleTimeString('ja-JP');
+            
+            const completionMessage = `🎉 全処理完了 (終了: ${endTimeText}, トータル: ${totalElapsed}秒)`;
+            this.completeProgressLog(this.currentProgressLogId, completionMessage);
             this.currentProgressLogId = null;
+            
+            // 最終ログとしてトータル時間を強調表示
+            this.addToProcessingLog('INFO', `📊 処理時間サマリー: 合計 ${totalElapsed}秒 で全ファイル処理完了`);
         }
         
         // 重複実行防止フラグを解除
         this.isProcessing = false;
         console.log('[DataRegistration] 🔥 完了処理 - 重複実行防止フラグ解除');
+        
+        // 固定進捗表示を非表示
+        this.hideCurrentProgress();
+        this.stopCurrentProgressTimer();
         
         this.setProcessingState(false);
         // 完了処理
@@ -994,7 +1066,7 @@ const DataRegistration = {
             logEntry.innerHTML += `<br><span style="color: #999; margin-left: 20px;">→ ${JSON.stringify(data, null, 2)}</span>`;
         }
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 最新が上：新しいログを先頭に挿入
         logContainer.insertBefore(logEntry, logContainer.firstChild);
         
         // 自動スクロール（上へ）
@@ -1024,7 +1096,7 @@ const DataRegistration = {
         logEntry.className = 'log-entry';
         logEntry.innerHTML = `<span class="log-time">[${timestamp}${elapsedText}]</span> <span class="log-message">${message}</span>`;
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 最新が上：新しいログを先頭に挿入
         logContainer.insertBefore(logEntry, logContainer.firstChild);
         
         // 自動スクロール（上へ）
@@ -1048,6 +1120,9 @@ const DataRegistration = {
         }
         
         const startTime = new Date();
+        
+        // 固定進捗表示の経過時間も更新
+        this.startCurrentProgressTimer();
         
         this.progressUpdateTimer = setInterval(() => {
             const logEntry = document.getElementById(entryId);
@@ -1135,11 +1210,11 @@ const DataRegistration = {
             this.showDetailsDialog(message, expandableDetails);
         });
         
-        // ログに追加
-        logContainer.appendChild(mainEntry);
+        // 最新が上：新しいログを先頭に挿入
+        logContainer.insertBefore(mainEntry, logContainer.firstChild);
         
-        // 自動スクロール
-        logContainer.scrollTop = logContainer.scrollHeight;
+        // 自動スクロール（上へ）
+        logContainer.scrollTop = 0;
         
         console.log(`[EXPANDABLE-LOG] ${message}`, expandableDetails);
     },
@@ -1310,7 +1385,7 @@ const DataRegistration = {
             height: 1px;
         `;
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 最新が上：新しいログを先頭に挿入
         logContainer.insertBefore(separator, logContainer.firstChild);
     },
 
@@ -1357,7 +1432,7 @@ const DataRegistration = {
             this.showPdfPreview(fileName, fileId);
         });
         
-        // 逆順表示：新しいログを先頭に挿入
+        // 最新が上：新しいログを先頭に挿入
         logContainer.insertBefore(headerEntry, logContainer.firstChild);
         
         // 自動スクロール（上へ）
@@ -1496,6 +1571,65 @@ const DataRegistration = {
         }
         
         return null;
+    },
+
+    // 固定進捗表示の管理
+    showCurrentProgress(status) {
+        const progressDiv = document.getElementById('current-progress');
+        const statusSpan = document.getElementById('progress-status');
+        const elapsedSpan = document.getElementById('progress-elapsed');
+        
+        if (progressDiv && statusSpan && elapsedSpan) {
+            statusSpan.textContent = status;
+            progressDiv.style.display = 'block';
+            
+            // 経過時間の更新
+            this.updateProgressElapsed();
+            
+            console.log(`[CURRENT-PROGRESS] ${status}`);
+        }
+    },
+    
+    hideCurrentProgress() {
+        const progressDiv = document.getElementById('current-progress');
+        if (progressDiv) {
+            progressDiv.style.display = 'none';
+        }
+    },
+    
+    updateProgressElapsed() {
+        const elapsedSpan = document.getElementById('progress-elapsed');
+        if (elapsedSpan && this.processingStartTime) {
+            const elapsed = Math.floor((new Date() - this.processingStartTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            
+            // より明確な時間表示
+            if (minutes > 0) {
+                elapsedSpan.textContent = `処理時間: ${minutes}分${seconds}秒`;
+            } else {
+                elapsedSpan.textContent = `処理時間: ${elapsed}秒`;
+            }
+        }
+    },
+    
+    startCurrentProgressTimer() {
+        // 既存のタイマーをクリア
+        if (this.currentProgressTimer) {
+            clearInterval(this.currentProgressTimer);
+        }
+        
+        // 1秒毎に経過時間を更新
+        this.currentProgressTimer = setInterval(() => {
+            this.updateProgressElapsed();
+        }, 1000);
+    },
+    
+    stopCurrentProgressTimer() {
+        if (this.currentProgressTimer) {
+            clearInterval(this.currentProgressTimer);
+            this.currentProgressTimer = null;
+        }
     },
 
     // 状態リセット機能

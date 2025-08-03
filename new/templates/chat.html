@@ -168,6 +168,30 @@
     </div>
   </div>
 </div>
+
+<!-- NiceGUIコントロール試験エリア -->
+<div style="margin-top: 40px; padding: 20px; border-top: 3px solid #007bff; background: #f8f9fa;">
+  <h3 style="color: #007bff; margin-bottom: 20px;">🚀 NiceGUIコントロール試験エリア</h3>
+  <p style="color: #666; margin-bottom: 20px; font-size: 14px;">
+    既存機能と同じコントロールをNiceGUIで再現しています。将来的に上部の既存コントロールと置き換え予定です。
+  </p>
+  
+  <!-- NiceGUI iframe埋め込みエリア -->
+  <div id="nicegui-chat-controls" style="min-height: 500px; border: 1px solid #ddd; border-radius: 8px; background: white;">
+    <div style="padding: 20px; text-align: center; color: #888;">
+      <div class="spinner" style="display: inline-block; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+      <p style="margin-top: 10px;">NiceGUIコントロールを読み込み中...</p>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -177,4 +201,39 @@
 <script src="{{ url_for('static', path='js/chat_search.js') }}"></script>
 <script src="{{ url_for('static', path='js/chat_history.js') }}"></script>
 <script src="{{ url_for('static', path='js/chat_main.js') }}"></script>
+
+<!-- NiceGUIコントロール埋め込み -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // NiceGUIコントロールを埋め込み
+    const niceguiContainer = document.getElementById('nicegui-chat-controls');
+    if (niceguiContainer) {
+        // iframe作成
+        const iframe = document.createElement('iframe');
+        iframe.src = '/nicegui/chat/controls';
+        iframe.style.width = '100%';
+        iframe.style.height = '500px';
+        iframe.style.border = 'none';
+        iframe.style.borderRadius = '8px';
+        
+        // ローディング完了後にスピナーを削除
+        iframe.onload = function() {
+            niceguiContainer.innerHTML = '';
+            niceguiContainer.appendChild(iframe);
+        };
+        
+        // エラーハンドリング
+        iframe.onerror = function() {
+            niceguiContainer.innerHTML = `
+                <div style="padding: 20px; text-align: center; color: #dc3545;">
+                    <p>❌ NiceGUIコントロールの読み込みに失敗しました</p>
+                    <p style="font-size: 12px; color: #666;">
+                        アプリケーションが再起動されていない可能性があります
+                    </p>
+                </div>
+            `;
+        };
+    }
+});
+</script>
 {% endblock %}

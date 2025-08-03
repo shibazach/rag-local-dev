@@ -24,15 +24,18 @@ class Settings(BaseSettings):
     
     # ──── データベース設定 ────
     DATABASE_URL: str = Field(
-        "postgresql://raguser:ragpass@ragdb:5432/rag",
-        description="PostgreSQL接続URL"
+        "sqlite:///./new_rag.db",
+        description="SQLite接続URL（開発環境用）"
     )
     
     # ──── LLM・AI設定 ────
     LLM_MODEL: str = Field("phi4-mini", description="使用LLMモデル名")
     OLLAMA_MODEL: str = Field("phi4-mini", description="Ollama使用モデル名")
     LLM_TIMEOUT: int = Field(300, description="LLMタイムアウト秒数")
-    OLLAMA_BASE_URL: str = Field("http://localhost:11434", description="Ollama API URL")
+    OLLAMA_BASE_URL: str = Field(
+        default_factory=lambda: os.getenv("OLLAMA_BASE_URL", "http://ollama:11434"),
+        description="Ollama API URL"
+    )
     
     # ──── ファイル・OCR設定 ────
     DEFAULT_OCR_ENGINE: str = Field("ocrmypdf", description="デフォルトOCRエンジン")

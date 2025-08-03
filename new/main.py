@@ -86,21 +86,37 @@ async def add_security_headers(request: Request, call_next):
     """セキュリティヘッダーを追加"""
     response = await call_next(request)
     
+    # NiceGUIパスの場合は制限を緩和
+    if request.url.path.startswith('/nicegui/'):
+        # NiceGUI用の緩和されたCSP
+        csp = (
+            "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline' data:; "
+            "img-src 'self' data: https: blob:; "
+            "font-src 'self' data: https:; "
+            "connect-src 'self' ws: wss:; "
+            "frame-src 'self'; "
+            "child-src 'self';"
+        )
+    else:
+        # 通常ページ用のCSP
+        csp = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+            "style-src 'self' 'unsafe-inline'; "
+            "img-src 'self' data: https:; "
+            "font-src 'self' data:; "
+            "connect-src 'self' ws: wss:; "
+            "frame-src 'self'; "
+            "child-src 'self';"
+        )
+    
     # セキュリティヘッダー設定
     response.headers["X-Content-Type-Options"] = "nosniff"
     # X-Frame-Optionsを削除（PDFプレビュー用）
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    
-    # Content Security Policy
-    csp = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: https:; "
-        "font-src 'self'; "
-        "connect-src 'self' ws: wss:;"
-    )
     response.headers["Content-Security-Policy"] = csp
     
     return response
@@ -146,15 +162,16 @@ app.include_router(chat_router, prefix=API_PREFIX, tags=["Chat"])
 from new.routes.ui import router as ui_router
 app.include_router(ui_router, prefix="", tags=["UI"])
 
-# NiceGUI統合
-try:
-    from new.routes.nicegui_admin import init_nicegui_routes
-    init_nicegui_routes(app)
-    LOGGER.info("NiceGUI統合完了")
-except ImportError as e:
-    LOGGER.warning(f"NiceGUI統合スキップ: {e}")
-except Exception as e:
-    LOGGER.error(f"NiceGUI統合エラー: {e}")
+# NiceGUI完全版統合（一時的に無効化）
+# try:
+#     from new.nicegui_app import init_nicegui_app
+#     init_nicegui_app(app)
+#     LOGGER.info("🚀 NiceGUI完全版統合完了: /rag-nicegui/")
+# except ImportError as e:
+#     LOGGER.warning(f"NiceGUI統合スキップ: {e}")
+# except Exception as e:
+#     LOGGER.error(f"NiceGUI統合エラー: {e}")
+LOGGER.info("🚀 NiceGUI統合スキップ（純粋WebUI専用モード）")
 
 # ヘルスチェック
 @app.get("/health")
@@ -182,10 +199,22 @@ async def internal_error_handler(request: Request, exc):
 
 if __name__ == "__main__":
     import uvicorn
+    import sys
+    
+    # コマンドライン引数解析
+    host = "0.0.0.0"
+    port = 8000
+    
+    for i, arg in enumerate(sys.argv):
+        if arg == "--host" and i + 1 < len(sys.argv):
+            host = sys.argv[i + 1]
+        elif arg == "--port" and i + 1 < len(sys.argv):
+            port = int(sys.argv[i + 1])
+    
     uvicorn.run(
         "new.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=DEBUG_MODE,
+        host=host,
+        port=port,
+        reload=False,  # watchfilesループ防止
         log_level="info"
     ) 

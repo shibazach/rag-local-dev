@@ -1,0 +1,1452 @@
+2025-08-02 15:32:13,545 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 15:33:16,714 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 15:33:17,551 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 15:33:17,625 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 15:33:17,646 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 15:33:17,705 - rag_system - ERROR - ❌ データベース初期化エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x71f0a2ac6b60> can't render element of type ARRAY
+2025-08-02 15:33:17,706 - rag_system - ERROR - ❌ 起動エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x71f0a2ac6b60> can't render element of type ARRAY
+2025-08-02 21:35:49,565 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:44:54,513 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:50:37,901 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:50:38,739 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:50:38,816 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:50:38,850 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 21:50:38,858 - rag_system - ERROR - ❌ データベース初期化エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x78d57e31eb60> can't render element of type ARRAY
+2025-08-02 21:50:38,858 - rag_system - ERROR - ❌ 起動エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x78d57e31eb60> can't render element of type ARRAY
+2025-08-02 21:51:07,117 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:51:08,069 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:51:08,136 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:51:08,173 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 21:51:08,189 - rag_system - ERROR - ❌ データベース初期化エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x76509431eb90> can't render element of type ARRAY
+2025-08-02 21:51:08,190 - rag_system - ERROR - ❌ 起動エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x76509431eb90> can't render element of type ARRAY
+2025-08-02 21:52:22,010 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:52:22,979 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:52:23,034 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:52:23,063 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 21:52:23,072 - rag_system - ERROR - ❌ データベース初期化エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x71cb56e3ab30> can't render element of type ARRAY
+2025-08-02 21:52:23,072 - rag_system - ERROR - ❌ 起動エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x71cb56e3ab30> can't render element of type ARRAY
+2025-08-02 21:56:06,243 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:56:06,294 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:56:06,321 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 21:56:06,327 - rag_system - ERROR - ❌ データベース初期化エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x72c8f28cdfc0> can't render element of type ARRAY
+2025-08-02 21:56:06,327 - rag_system - ERROR - ❌ 起動エラー: (in table 'files_text', column 'tags'): Compiler <sqlalchemy.dialects.sqlite.base.SQLiteTypeCompiler object at 0x72c8f28cdfc0> can't render element of type ARRAY
+2025-08-02 21:59:42,762 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:59:42,817 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 21:59:42,848 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 21:59:42,916 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 21:59:43,060 - rag_system - INFO - 👤 管理者ユーザー作成完了: admin/admin
+2025-08-02 21:59:43,061 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 21:59:43,061 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 21:59:43,867 - rag_system - ERROR - NiceGUI統合エラー: f-string: f-string: unmatched '(' (tables.py, line 161)
+2025-08-02 21:59:43,867 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:00:48,208 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:00:48,208 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:31:59,139 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:36:16,591 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:39:08,682 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:39:08,741 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:39:08,778 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:39:08,786 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:39:08,843 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:39:08,844 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:39:09,317 - rag_system - ERROR - NiceGUI統合エラー: f-string: f-string: unmatched '(' (tables.py, line 161)
+2025-08-02 22:39:09,317 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:44:31,285 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:44:31,285 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:45:06,320 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:46:29,218 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:46:29,276 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:46:29,301 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:46:29,306 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:46:29,351 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:46:29,351 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:46:29,888 - rag_system - ERROR - NiceGUI統合エラー: NiceGUI初期化エラー: name 'List' is not defined
+2025-08-02 22:46:29,888 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:48:18,335 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:48:18,336 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:48:29,836 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:48:29,896 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:48:29,925 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:48:29,931 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:48:29,986 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:48:29,986 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:48:30,489 - rag_system - ERROR - NiceGUI統合エラー: NiceGUI初期化エラー: run_with() got an unexpected keyword argument 'show'
+2025-08-02 22:48:30,490 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:50:10,513 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:50:10,513 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:50:15,751 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:50:15,808 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:50:15,842 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:50:15,847 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:50:15,897 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:50:15,897 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:50:16,385 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 22:50:16,385 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:52:28,653 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:52:28,705 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:52:28,732 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:52:28,737 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:52:28,787 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:52:28,787 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:52:29,276 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 22:52:29,276 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:52:29,277 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:52:29,277 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:53:38,593 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:53:38,593 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:55:13,145 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:55:36,138 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:55:36,202 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:55:36,232 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:55:36,240 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:55:36,292 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:55:36,292 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:55:36,829 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 22:55:36,829 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:56:07,308 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:56:07,308 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:56:34,898 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:56:34,963 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:56:35,008 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:56:35,014 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:56:35,086 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:56:35,086 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:56:35,619 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 22:56:35,619 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 22:57:59,222 - rag_system - ERROR - 予期しないエラー:  - http://localhost:8000/ui/
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 77, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 772, in __aexit__
+  |     raise BaseExceptionGroup(
+  | exceptiongroup.ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    |     await responder(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    |     await self.app(scope, receive, self.send_with_compression)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    |     response = await f(request)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    |     task = background_tasks.create(wait_for_result())
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    |     assert core.loop is not None
+    | AssertionError
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    await responder(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    await self.app(scope, receive, self.send_with_compression)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    task = background_tasks.create(wait_for_result())
+  File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    assert core.loop is not None
+AssertionError
+2025-08-02 22:58:06,686 - rag_system - ERROR - 予期しないエラー:  - http://localhost:8000/ui/
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 77, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 772, in __aexit__
+  |     raise BaseExceptionGroup(
+  | exceptiongroup.ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    |     await responder(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 130, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    |     await self.app(scope, receive, self.send_with_compression)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    |     response = await f(request)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    |     task = background_tasks.create(wait_for_result())
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    |     assert core.loop is not None
+    | AssertionError
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    await responder(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 130, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    await self.app(scope, receive, self.send_with_compression)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    task = background_tasks.create(wait_for_result())
+  File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    assert core.loop is not None
+AssertionError
+2025-08-02 22:59:37,497 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 22:59:37,498 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 22:59:45,189 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:59:46,024 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:59:46,074 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 22:59:46,101 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 22:59:46,113 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:59:46,168 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 22:59:46,171 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 22:59:46,735 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 22:59:46,735 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:00:05,375 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:00:05,375 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:00:06,189 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:00:06,238 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:00:06,263 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:00:06,268 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:00:06,311 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:00:06,312 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:00:06,790 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 23:00:06,790 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:00:47,223 - rag_system - ERROR - 予期しないエラー:  - http://localhost:8000/ui/
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 77, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 772, in __aexit__
+  |     raise BaseExceptionGroup(
+  | exceptiongroup.ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    |     await responder(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 130, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    |     await self.app(scope, receive, self.send_with_compression)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    |     response = await f(request)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    |     task = background_tasks.create(wait_for_result())
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    |     assert core.loop is not None
+    | AssertionError
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    await responder(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 130, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    await self.app(scope, receive, self.send_with_compression)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    task = background_tasks.create(wait_for_result())
+  File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    assert core.loop is not None
+AssertionError
+2025-08-02 23:01:08,122 - rag_system - ERROR - 予期しないエラー:  - http://localhost:8000/ui/
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 77, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 772, in __aexit__
+  |     raise BaseExceptionGroup(
+  | exceptiongroup.ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    |     await responder(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 130, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    |     await self.app(scope, receive, self.send_with_compression)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    |     response = await f(request)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    |     task = background_tasks.create(wait_for_result())
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    |     assert core.loop is not None
+    | AssertionError
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    await responder(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 130, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    await self.app(scope, receive, self.send_with_compression)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    task = background_tasks.create(wait_for_result())
+  File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    assert core.loop is not None
+AssertionError
+2025-08-02 23:01:43,497 - rag_system - ERROR - ファイル一覧取得エラー: name 'pagination' is not defined
+2025-08-02 23:01:43,498 - rag_system - ERROR - HTTPエラー 500: {'success': False, 'error_code': 'FILE_LIST_ERROR', 'error_message': 'ファイル一覧取得中にエラーが発生しました', 'details': {}, 'timestamp': '2025-08-02 23:01:43.497800'} - http://localhost:8000/api/v1/files/
+2025-08-02 23:03:22,418 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:03:22,419 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:03:24,023 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:03:24,108 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:03:24,142 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:03:24,150 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:03:24,212 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:03:24,212 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:03:24,757 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 23:03:24,757 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:04:49,375 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:04:49,376 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:04:50,793 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:04:50,855 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:04:50,889 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:04:50,896 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:04:50,954 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:04:50,954 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:04:50,955 - rag_system - INFO - ✅ NiceGUI統合スキップ（開発中）
+2025-08-02 23:04:50,955 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:07:46,142 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:07:46,143 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:07:47,043 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:07:47,097 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:07:47,126 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:07:47,131 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:07:47,182 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:07:47,182 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:07:47,182 - rag_system - INFO - ✅ NiceGUI統合スキップ（開発中）
+2025-08-02 23:07:47,182 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:07:52,695 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:07:52,695 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:08:01,979 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:08:03,093 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:08:03,150 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:08:03,176 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:08:03,184 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:08:03,235 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:08:03,235 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:08:03,235 - rag_system - INFO - ✅ NiceGUI統合スキップ（開発中）
+2025-08-02 23:08:03,236 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:08:23,637 - rag_system - ERROR - データベースセッションエラー: Textual SQL expression 'SELECT 1' should be explicitly declared as text('SELECT 1')
+2025-08-02 23:08:28,930 - rag_system - ERROR - ファイル一覧取得エラー: name 'pagination' is not defined
+2025-08-02 23:08:28,931 - rag_system - ERROR - HTTPエラー 500: {'success': False, 'error_code': 'FILE_LIST_ERROR', 'error_message': 'ファイル一覧取得中にエラーが発生しました', 'details': {}, 'timestamp': '2025-08-02 23:08:28.930324'} - http://localhost:46385/api/v1/files/
+2025-08-02 23:09:35,336 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:09:35,337 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:09:36,285 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:09:36,340 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:09:36,368 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:09:36,374 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:09:36,438 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:09:36,439 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:09:36,439 - rag_system - INFO - ✅ NiceGUI統合スキップ（開発中）
+2025-08-02 23:09:36,439 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:11:01,431 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:11:01,431 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:11:02,741 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:11:02,894 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:11:02,977 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:11:02,993 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:11:03,101 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:11:03,101 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:11:03,101 - rag_system - INFO - ✅ NiceGUI統合スキップ（開発中）
+2025-08-02 23:11:03,101 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:11:25,249 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:11:25,249 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:11:30,982 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:11:31,884 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:11:31,942 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:11:31,975 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:11:31,983 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:11:32,034 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:11:32,035 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:11:32,035 - rag_system - INFO - ✅ NiceGUI統合スキップ（開発中）
+2025-08-02 23:11:32,035 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:12:19,688 - rag_system - ERROR - ファイル一覧取得エラー: name 'pagination' is not defined
+2025-08-02 23:12:19,689 - rag_system - ERROR - HTTPエラー 500: {'success': False, 'error_code': 'FILE_LIST_ERROR', 'error_message': 'ファイル一覧取得中にエラーが発生しました', 'details': {}, 'timestamp': '2025-08-02 23:12:19.688202'} - http://localhost:8000/api/v1/files/
+2025-08-02 23:13:11,054 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:13:11,054 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:14:54,588 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:14:55,538 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:14:55,608 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:14:55,642 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:14:55,649 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:14:55,710 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:14:55,710 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:14:56,256 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 23:14:56,257 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:14:57,360 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:14:57,361 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:14:58,289 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:14:58,345 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:14:58,377 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:14:58,386 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:14:58,432 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:14:58,432 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:14:59,024 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 23:14:59,024 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:15:05,111 - rag_system - ERROR - 予期しないエラー:  - http://localhost:8000/ui/dashboard
+  + Exception Group Traceback (most recent call last):
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 77, in collapse_excgroups
+  |     yield
+  |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 183, in __call__
+  |     async with anyio.create_task_group() as task_group:
+  |   File "/usr/local/lib/python3.10/site-packages/anyio/_backends/_asyncio.py", line 772, in __aexit__
+  |     raise BaseExceptionGroup(
+  | exceptiongroup.ExceptionGroup: unhandled errors in a TaskGroup (1 sub-exception)
+  +-+---------------- 1 ----------------
+    | Traceback (most recent call last):
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    |     await self.app(scope, receive, send_wrapper)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    |     await super().__call__(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    |     await self.app(scope, receive, _send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    |     with recv_stream, send_stream, collapse_excgroups():
+    |   File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    |     self.gen.throw(typ, value, traceback)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    |     response = await self.dispatch_func(request, call_next)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    |     response = await call_next(request)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    |     raise app_exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    |     await self.app(scope, receive_or_disconnect, send_no_error)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    |     await responder(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    |     await self.app(scope, receive, self.send_with_compression)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    |     await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    |     await self.middleware_stack(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    |     await route.handle(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    |     await self.app(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    |     await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    |     raise exc
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    |     await app(scope, receive, sender)
+    |   File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    |     response = await f(request)
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    |     raw_response = await run_endpoint_function(
+    |   File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    |     return await dependant.call(**values)
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    |     task = background_tasks.create(wait_for_result())
+    |   File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    |     assert core.loop is not None
+    | AssertionError
+    +------------------------------------
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 189, in __call__
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 462, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/applications.py", line 1054, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/applications.py", line 113, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 186, in __call__
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 23, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "/usr/local/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_utils.py", line 83, in collapse_excgroups
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/middlewares.py", line 13, in dispatch
+    response = await call_next(request)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 159, in call_next
+    raise app_exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 29, in __call__
+    await responder(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/gzip.py", line 46, in __call__
+    await self.app(scope, receive, self.send_with_compression)
+  File "/usr/local/lib/python3.10/site-packages/starlette/middleware/exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 78, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "/usr/local/lib/python3.10/site-packages/starlette/_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "/usr/local/lib/python3.10/site-packages/starlette/routing.py", line 75, in app
+    response = await f(request)
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 302, in app
+    raw_response = await run_endpoint_function(
+  File "/usr/local/lib/python3.10/site-packages/fastapi/routing.py", line 213, in run_endpoint_function
+    return await dependant.call(**values)
+  File "/usr/local/lib/python3.10/site-packages/nicegui/page.py", line 161, in decorated
+    task = background_tasks.create(wait_for_result())
+  File "/usr/local/lib/python3.10/site-packages/nicegui/background_tasks.py", line 24, in create
+    assert core.loop is not None
+AssertionError
+2025-08-02 23:15:18,265 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:15:18,267 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:15:19,092 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:15:19,149 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:15:19,181 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:15:19,189 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:15:19,241 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:15:19,241 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:15:19,728 - rag_system - INFO - ✅ NiceGUI統合完了
+2025-08-02 23:15:19,728 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:21:40,164 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:21:40,974 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:21:41,024 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:21:41,048 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:21:41,055 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:21:41,105 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:21:41,105 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:21:41,106 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-02 23:21:41,106 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:24:05,993 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:24:05,994 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:24:06,889 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:24:06,950 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:24:06,980 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:24:06,985 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:24:07,031 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:24:07,031 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:24:07,031 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-02 23:24:07,031 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:25:19,107 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:25:19,108 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:25:20,081 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:25:20,156 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:25:20,196 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:25:20,206 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:25:20,272 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:25:20,272 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:25:20,273 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-02 23:25:20,273 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:27:33,229 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:27:33,230 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:27:34,165 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:27:34,217 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:27:34,242 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:27:34,247 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:27:34,294 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:27:34,294 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:27:34,294 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-02 23:27:34,294 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:29:50,575 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:29:50,576 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:29:51,415 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:29:51,471 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:29:51,503 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:29:51,507 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:29:51,553 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:29:51,553 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:29:51,554 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-02 23:29:51,554 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:31:04,707 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:31:04,707 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:31:05,681 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:31:05,754 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:31:05,796 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:31:05,806 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:31:05,863 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:31:05,863 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:31:05,864 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-02 23:31:05,864 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-02 23:31:58,604 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-02 23:31:58,605 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-02 23:31:59,476 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:31:59,560 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-02 23:31:59,588 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-02 23:31:59,595 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:31:59,644 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-02 23:31:59,644 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-02 23:31:59,645 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-02 23:31:59,645 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 00:55:39,836 - rag_system - ERROR - ファイル一覧取得エラー: name 'pagination' is not defined
+2025-08-03 00:55:39,836 - rag_system - ERROR - HTTPエラー 500: {'success': False, 'error_code': 'FILE_LIST_ERROR', 'error_message': 'ファイル一覧取得中にエラーが発生しました', 'details': {}, 'timestamp': '2025-08-03 00:55:39.836370'} - http://localhost:8000/api/v1/files/
+2025-08-03 00:57:41,393 - rag_system - ERROR - データベースセッションエラー: Textual SQL expression 'SELECT 1' should be explicitly declared as text('SELECT 1')
+2025-08-03 00:57:45,156 - rag_system - ERROR - ファイル一覧取得エラー: name 'pagination' is not defined
+2025-08-03 00:57:45,160 - rag_system - ERROR - HTTPエラー 500: {'success': False, 'error_code': 'FILE_LIST_ERROR', 'error_message': 'ファイル一覧取得中にエラーが発生しました', 'details': {}, 'timestamp': '2025-08-03 00:57:45.157703'} - http://localhost:8000/api/v1/files/
+2025-08-03 00:59:35,652 - rag_system - ERROR - データベースセッションエラー: Textual SQL expression 'SELECT 1' should be explicitly declared as text('SELECT 1')
+2025-08-03 01:00:42,586 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:00:42,587 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:00:43,628 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:00:43,724 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:00:43,781 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:00:43,787 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:00:43,844 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:00:43,845 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:00:43,845 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:00:43,845 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:01:28,879 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:01:28,879 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:01:29,980 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:01:30,047 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:01:30,080 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:01:30,087 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:01:30,143 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:01:30,143 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:01:30,144 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:01:30,144 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:01:57,214 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:01:57,215 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:01:59,149 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:01:59,203 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:01:59,229 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:01:59,234 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:01:59,289 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:01:59,290 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:01:59,290 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:01:59,290 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:02:05,813 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:02:05,813 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:02:06,692 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:02:06,746 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:02:06,776 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:02:06,782 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:02:06,837 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:02:06,837 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:02:06,838 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:02:06,838 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:02:53,519 - rag_system - INFO - API login_failed: POST /api/v1/auth/login - User: anonymous - IP: 127.0.0.1
+2025-08-03 01:02:53,522 - rag_system - ERROR - HTTPエラー 401: {'success': False, 'error_code': 'AUTH_INVALID_CREDENTIALS', 'error_message': 'ユーザー名またはパスワードが正しくありません', 'details': {}, 'timestamp': '2025-08-03 01:02:53.520351'} - http://localhost:8000/api/v1/auth/login
+2025-08-03 01:03:06,460 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:03:24,881 - rag_system - INFO - セッション作成: admin
+2025-08-03 01:03:24,893 - rag_system - INFO - API login_success: POST /api/v1/auth/login - User: admin - IP: 127.0.0.1
+2025-08-03 01:03:49,146 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:03:49,147 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:03:49,988 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:03:50,041 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:03:50,068 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:03:50,073 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:03:50,120 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:03:50,120 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:03:50,120 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:03:50,121 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:04:59,293 - rag_system - ERROR - ファイル一覧取得エラー: name 'pagination' is not defined
+2025-08-03 01:04:59,294 - rag_system - ERROR - HTTPエラー 500: {'success': False, 'error_code': 'FILE_LIST_ERROR', 'error_message': 'ファイル一覧取得中にエラーが発生しました', 'details': {}, 'timestamp': '2025-08-03 01:04:59.293806'} - http://localhost:8000/api/v1/files/
+2025-08-03 01:07:20,493 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:07:20,493 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:07:21,352 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:07:21,420 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:07:21,453 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:07:21,460 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:07:21,547 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:07:21,548 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:07:21,548 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:07:21,549 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:08:33,445 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:08:33,447 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:08:34,421 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:08:34,504 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:08:34,539 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:08:34,550 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:08:34,607 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:08:34,607 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:08:34,607 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:08:34,608 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:09:46,977 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:09:46,979 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:09:48,165 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:09:48,236 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:09:48,273 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:09:48,279 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:09:48,343 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:09:48,343 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:09:48,343 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:09:48,343 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:11:04,440 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:11:04,440 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:11:05,495 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:11:05,613 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:11:05,676 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:11:05,712 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:11:05,840 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:11:05,841 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:11:05,842 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:11:05,842 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:12:48,687 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:12:48,688 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:12:49,627 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:12:49,688 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:12:49,718 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:12:49,725 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:12:49,782 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:12:49,782 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:12:49,782 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:12:49,782 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:14:15,179 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:14:15,179 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:14:16,173 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:14:16,228 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:14:16,254 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:14:16,260 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:14:16,317 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:14:16,317 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:14:16,317 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:14:16,317 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:14:54,617 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:14:54,617 - rag_system - INFO - ✅ RAGシステム終了完了
+2025-08-03 01:14:55,494 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:14:55,555 - rag_system - INFO - ✅ 静的ファイル配信設定完了
+2025-08-03 01:14:55,584 - rag_system - INFO - 🚀 RAGシステム起動開始
+2025-08-03 01:14:55,592 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:14:55,645 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-03 01:14:55,645 - rag_system - INFO - ✅ ディレクトリ初期化完了
+2025-08-03 01:14:55,645 - rag_system - INFO - ✅ NiceGUI統合スキップ（API専用システムのため）
+2025-08-03 01:14:55,645 - rag_system - INFO - 🎉 RAGシステム起動完了
+2025-08-03 01:28:08,388 - rag_system - INFO - 🛑 RAGシステム終了処理開始
+2025-08-03 01:28:08,390 - rag_system - INFO - ✅ RAGシステム終了完了

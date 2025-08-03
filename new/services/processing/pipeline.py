@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import time
 from typing import Dict, List, AsyncGenerator, Optional
 
 from .processor import FileProcessor
@@ -36,6 +37,8 @@ class ProcessingPipeline:
         """
         total_files = len(files)
         self.abort_flag = {'flag': False}
+        pipeline_start_time = time.time()  # パイプライン開始時刻記録
+        results = []  # 結果を保存するリスト
         
         try:
             # 開始イベント
@@ -107,55 +110,12 @@ class ProcessingPipeline:
                     abort_flag=self.abort_flag
                 )
                 
-                # 収集した詳細手順イベントを送信
+                # 収集した詳細手順イベントを送信（processorからのリアルタイムイベントのみ）
                 for progress_event in progress_events:
                     yield progress_event
                 
-                # 各段階完了イベントを送信
-                if result.get('success'):
-                    yield {
-                        'type': 'file_progress',
-                        'data': {
-                            'file_name': file_name,
-                            'file_index': idx,
-                            'step': '📊 OCR処理完了',
-                            'detail': f"{result.get('text_length', 0)}文字抽出",
-                            'progress': 30
-                        }
-                    }
-                    
-                    yield {
-                        'type': 'file_progress',
-                        'data': {
-                            'file_name': file_name,
-                            'file_index': idx,
-                            'step': '🤖 LLM精緻化完了',
-                            'detail': 'テキスト品質向上処理',
-                            'progress': 60
-                        }
-                    }
-                    
-                    yield {
-                        'type': 'file_progress',
-                        'data': {
-                            'file_name': file_name,
-                            'file_index': idx,
-                            'step': '🧮 埋め込み生成完了',
-                            'detail': 'ベクトル化処理完了',
-                            'progress': 80
-                        }
-                    }
-                    
-                    yield {
-                        'type': 'file_progress',
-                        'data': {
-                            'file_name': file_name,
-                            'file_index': idx,
-                            'step': '🎉 処理完了',
-                            'detail': f'全段階完了',
-                            'progress': 100
-                        }
-                    }
+                # 結果を保存
+                results.append(result)
                 
                 # ファイル完了イベント
                 event_data = {
@@ -180,14 +140,26 @@ class ProcessingPipeline:
             
             # 全体完了
             if not self.abort_flag['flag']:
+                pipeline_end_time = time.time()
+                total_pipeline_time = pipeline_end_time - pipeline_start_time
+                
+                successful_files = len([r for r in results if r.get('success', False)])
+                failed_files = len([r for r in results if not r.get('success', False)])
+                
+                completion_message = f"全{total_files}ファイル処理完了 (成功: {successful_files}, 失敗: {failed_files}) - グランドトータル: {total_pipeline_time:.1f}秒"
+                
                 complete_event = {
                     'type': 'complete',
                     'data': {
                         'total_files': total_files,
-                        'message': 'すべての処理が完了しました'
+                        'successful_files': successful_files,
+                        'failed_files': failed_files,
+                        'total_pipeline_time': total_pipeline_time,
+                        'average_time_per_file': total_pipeline_time / total_files if total_files > 0 else 0,
+                        'message': completion_message
                     }
                 }
-                self.logger.debug(f"[DEBUG-PIPELINE] 完了イベント生成")
+                self.logger.info(f"📊 パイプライン完了: {completion_message}")
                 yield complete_event
             
         except Exception as e:

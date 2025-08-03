@@ -159,6 +159,22 @@
             </div>
         </div>
         <div class="panel-content">
+            <!-- 固定進捗表示エリア -->
+            <div id="current-progress" class="current-progress-display" style="
+                background: #e3f2fd;
+                border: 2px solid #2196f3;
+                border-radius: 6px;
+                padding: 12px 16px;
+                margin-bottom: 12px;
+                font-weight: bold;
+                color: #1565c0;
+                display: none;
+                box-shadow: 0 2px 4px rgba(33, 150, 243, 0.1);
+            ">
+                <span id="progress-status">待機中...</span>
+                <span id="progress-elapsed" style="float: right; color: #1976d2; font-weight: bold; font-size: 1.1em;">処理時間: 0秒</span>
+            </div>
+            
             <div id="processing-log" class="log-container">
                 <!-- 処理ログがここに動的追加されます -->
             </div>
@@ -193,7 +209,7 @@
                     <div class="task-stage">-</div>
                     <div class="task-progress">
                         <div class="progress-bar small">
-                            <div class="progress-fill" id="current-progress" style="width: 0%"></div>
+                            <div class="progress-fill" id="task-progress-fill" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -237,7 +253,18 @@
 <!-- JavaScript -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    initializeDataRegistration();
+    // 従来の初期化関数とDataRegistrationクラスの両方を呼び出し
+    try {
+        initializeDataRegistration();
+    } catch (error) {
+        console.error('従来の初期化エラー:', error);
+    }
+    
+    try {
+        DataRegistration.init();
+    } catch (error) {
+        console.error('DataRegistration初期化エラー:', error);
+    }
 });
 
 async function initializeDataRegistration() {
@@ -304,22 +331,32 @@ async function loadPromptConfig() {
 }
 
 function setupEventListeners() {
-    // 全選択/解除
-    document.getElementById('select-all').addEventListener('click', selectAllFiles);
-    document.getElementById('deselect-all').addEventListener('click', deselectAllFiles);
-    document.getElementById('header-checkbox').addEventListener('change', toggleAllFiles);
+    // DOM要素の存在確認付きイベントリスナー設定
+    const selectAllBtn = document.getElementById('select-all');
+    const deselectAllBtn = document.getElementById('deselect-all');
+    const headerCheckbox = document.getElementById('header-checkbox');
+    
+    if (selectAllBtn) selectAllBtn.addEventListener('click', selectAllFiles);
+    if (deselectAllBtn) deselectAllBtn.addEventListener('click', deselectAllFiles);
+    if (headerCheckbox) headerCheckbox.addEventListener('change', toggleAllFiles);
     
     // フィルター
-    document.getElementById('status-filter').addEventListener('change', filterFiles);
-    document.getElementById('search-input').addEventListener('input', filterFiles);
+    const statusFilter = document.getElementById('status-filter');
+    const searchInput = document.getElementById('search-input');
+    if (statusFilter) statusFilter.addEventListener('change', filterFiles);
+    if (searchInput) searchInput.addEventListener('input', filterFiles);
     
     // 処理ボタン
-    document.getElementById('start-processing').addEventListener('click', startProcessing);
-    document.getElementById('stop-processing').addEventListener('click', stopProcessing);
+    const startBtn = document.getElementById('start-processing');
+    const stopBtn = document.getElementById('stop-processing');
+    if (startBtn) startBtn.addEventListener('click', () => DataRegistration.startProcessing());
+    if (stopBtn) stopBtn.addEventListener('click', () => DataRegistration.stopProcessing());
     
     // ログ制御
-    document.getElementById('auto-scroll-toggle').addEventListener('change', toggleAutoScroll);
-    document.getElementById('export-csv').addEventListener('click', exportLogToCSV);
+    const autoScrollToggle = document.getElementById('auto-scroll-toggle');
+    const exportCsvBtn = document.getElementById('export-csv');
+    if (autoScrollToggle) autoScrollToggle.addEventListener('change', toggleAutoScroll);
+    if (exportCsvBtn) exportCsvBtn.addEventListener('click', exportLogToCSV);
     
     // 埋め込みモデルの変更監視
     document.querySelectorAll('input[type="checkbox"][id*="intfloat"], input[type="checkbox"][id*="nomic"]').forEach(checkbox => {
@@ -758,10 +795,6 @@ function adjustFileNameColumn() {
 
 <!-- OLD系と同様、処理ログペインのみを使用 -->
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    DataRegistration.init();
-});
-</script>
+<!-- DataRegistration.init()はdata_registration.jsで処理済み -->
 
 {% endblock %}

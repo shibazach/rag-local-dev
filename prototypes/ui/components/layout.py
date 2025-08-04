@@ -119,14 +119,14 @@ class MainContentArea:
         
         # 正確な位置・高さ計算：ヘッダー下からフッター上まで（48px短縮調整）
         # position: ヘッダー下に配置（48px下げる）
-        # height: 100vh - ヘッダー - フッター - 48px調整
-        height_style = "height:calc(100vh - 72px);"
+        # height: 100vh - ヘッダー - フッター - 24px調整（目検討）
+        height_style = "height:calc(100vh - 96px);"
         
         self.container = ui.element('div').style(
             'margin-top:48px;'                    # ヘッダー高さ分下げる
             'margin-left:0;'                      # 左余白完全ゼロ
             'margin-right:0;'                     # 右余白完全ゼロ  
-            'margin-bottom:0;'                    # フッターはposition:fixedなので不要
+            'margin-bottom:0px;'                   # position:fixed なので不要
             'padding:0;'                          # 内部余白完全ゼロ
             'width:100%;'                         # 完全幅（100vwではなく100%）
             f'{height_style}'                     # 高さ設定（100vh基準で正確計算）

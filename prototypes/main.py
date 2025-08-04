@@ -298,9 +298,13 @@ async def switch_chat_pattern(request: dict):
 
 # ====== NiceGUIフレームワーク制御（公式推奨方法） ======
 
-# GitHub Discussion #2063: NiceGUIの公式解決策
+# GitHub Discussion #2063: NiceGUIの公式解決策 + 高さ16px不足修正
 # https://github.com/zauberzeug/nicegui/discussions/2063
 ui.query('.nicegui-content').classes('p-0 gap-0')
+
+# 【緊急修正】class="nicegui-content"の高さ16px不足問題
+# DOM分析結果: フッター外配置により見た目帳尻が合うが、nicegui-content自体が小さい
+ui.query('.nicegui-content').style('min-height: calc(100vh - 72px + 16px);')
 
 # ====== アプリケーション起動 ======
 

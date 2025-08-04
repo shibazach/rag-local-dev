@@ -31,8 +31,8 @@ class ArrangementTestPage:
                     tab3 = ui.tab('C').style('padding:2px 8px;margin:0;font-size:10px;min-height:24px;')
                     tab4 = ui.tab('D').style('padding:2px 8px;margin:0;font-size:10px;min-height:24px;')
                 
-                # タブコンテンツ：padding完全ゼロ・境界内に収容・縦スクロールバー禁止
-                with ui.tab_panels(tabs, value=tab1).classes('w-full').style('height:calc(100vh - 100px);margin:0;padding:0;background:white;overflow:hidden;'):
+                # タブコンテンツ：padding完全ゼロ・境界内に収容・縦スクロールバー禁止（高さ18px調整：目検討）
+                with ui.tab_panels(tabs, value=tab1).classes('w-full').style('height:calc(100vh - 170px);margin:0;padding:0;background:white;overflow:hidden;'):
                     
                     # タブ1：リサイズ対応4分割レイアウト
                     with ui.tab_panel(tab1).style('margin:0;padding:0;height:100%;'):

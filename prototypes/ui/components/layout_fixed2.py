@@ -1,5 +1,5 @@
 """
-共通レイアウトコンポーネント - new/系templates準拠
+共通レイアウトコンポーネント - new/系templates準拠（margin-top修正版）
 """
 
 from nicegui import ui
@@ -59,29 +59,41 @@ class RAGHeader:
                 self._nav_button('🧪', '配置テスト', '/test-panel', self.current_page == "test")
                 self._nav_button('⚡', '管理', '/admin', self.current_page == "admin")
             
-            # 右側：認証部分（固定幅160px・右寄せ）
+            # 右側：ユーザー情報・ログアウト（固定幅160px）
             with ui.element('div').style('width:160px;display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-right:16px;'):
+                # ステータス表示
                 ui.label('●').style('color:#10b981;font-size:12px;')
                 ui.label('admin').style('color:white;font-size:14px;')
-                ui.button('ログアウト', on_click=lambda: ui.navigate.to('/login')).style('background:#3b82f6;color:white;border:none;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;')
+                # ログアウトボタン
+                ui.button('ログアウト', on_click=self._logout).style('background:#3b82f6;color:white;border:none;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;')
     
-    def _nav_button(self, icon: str, label: str, path: str, is_current: bool = False):
-        """ナビゲーションボタン（現在ページ対応・レスポンシブ）"""
-        # 現在ページかどうかで色とクリック動作を分岐
-        text_color = '#ff6b6b' if is_current else 'white'  # 現在ページは赤字
-        cursor_style = 'default' if is_current else 'pointer'
-        click_handler = None if is_current else lambda: ui.navigate.to(path)
+    def _nav_button(self, icon: str, text: str, path: str, is_active: bool = False):
+        """ナビゲーションボタン作成"""
+        if is_active:
+            # アクティブ状態（赤色強調）
+            color_style = 'color:#ff6b6b;'
+            cursor_style = 'cursor:default;'
+        else:
+            # 非アクティブ状態（白色・ホバー効果）
+            color_style = 'color:white;'
+            cursor_style = 'cursor:pointer;'
         
-        with ui.element('div').style(f'display:flex;align-items:center;gap:3px;cursor:{cursor_style};padding:2px 6px;border-radius:3px;transition:background 0.2s;white-space:nowrap;height:auto;line-height:1;').on('click', click_handler):
-            ui.label(icon).style(f'color:{text_color};font-size:14px;line-height:1;')
-            ui.label(label).style(f'color:{text_color};font-size:12px;line-height:1;')
-
+        with ui.element('div').style(f'display:flex;align-items:center;gap:3px;{cursor_style}padding:2px 6px;border-radius:3px;transition:background 0.2s;white-space:nowrap;height:auto;line-height:1;'):
+            if not is_active:
+                ui.element('div').on('click', lambda: ui.navigate.to(path))
+            
+            ui.label(icon).style(f'{color_style}font-size:14px;line-height:1;')
+            ui.label(text).style(f'{color_style}font-size:12px;line-height:1;')
+    
+    def _logout(self):
+        """ログアウト処理"""
+        SimpleAuth.logout()
+        ui.navigate.to('/login')
 
 class RAGFooter:
-    """共通フッター - ステータスバー形式"""
+    """new/準拠の共通フッター（ステータスバー24px固定）"""
     
     def __init__(self, show_status: bool = True):
-        self.show_status = show_status
         if show_status:
             self.create_status_bar()
     
@@ -96,7 +108,7 @@ class RAGFooter:
 # 代替: 各ページでRAGHeader + MainContentArea + RAGFooterを直接使用
 
 class MainContentArea:
-    """メインコンテンツエリア - スクロール制御対応（完璧なpadding:0制御）"""
+    """メインコンテンツエリア - スクロール制御対応（margin-top修正版）"""
     
     def __init__(self, footer_height: str = "24px", allow_overflow: bool = True):
         """
@@ -109,7 +121,7 @@ class MainContentArea:
         self.container = None
         
     def __enter__(self):
-        """メインコンテンツエリア開始 - 正確な高さ計算でスクロール制御"""
+        """メインコンテンツエリア開始 - margin-top修正（48px→32px）"""
         if self.allow_overflow:
             # オーバーフロー許可：内部スクロールバー
             overflow_style = 'overflow-y:auto;overflow-x:hidden;'
@@ -117,16 +129,16 @@ class MainContentArea:
             # オーバーフロー禁止：固定高さ・パネル内スクロール
             overflow_style = 'overflow:hidden;'
         
-        # 正確な位置・高さ計算：ヘッダー下からフッター上まで（48px短縮調整）
-        # position: ヘッダー下に配置（48px下げる）
-        # height: 100vh - ヘッダー - フッター - 48px調整
+        # 【修正済み】正確な位置・高さ計算：ヘッダー下からフッター上まで
+        # position: ヘッダー下に配置（32px下げる - 調整済み）
+        # height: 100vh - ヘッダー(48px) - フッター(24px) = 72px
         height_style = "height:calc(100vh - 72px);"
         
         self.container = ui.element('div').style(
-            'margin-top:48px;'                    # ヘッダー高さ分下げる
+            'margin-top:32px;'                    # ヘッダー高さ分下げる（48px→32px修正）
             'margin-left:0;'                      # 左余白完全ゼロ
             'margin-right:0;'                     # 右余白完全ゼロ  
-            'margin-bottom:0;'                    # フッターはposition:fixedなので不要
+            'margin-bottom:0px;'                   # position:fixed なので不要
             'padding:0;'                          # 内部余白完全ゼロ
             'width:100%;'                         # 完全幅（100vwではなく100%）
             f'{height_style}'                     # 高さ設定（100vh基準で正確計算）

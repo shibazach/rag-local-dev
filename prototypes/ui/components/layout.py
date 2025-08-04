@@ -56,7 +56,7 @@ class RAGHeader:
                 self._nav_button('📤', 'アップロード', '/upload', self.current_page == "upload")
                 self._nav_button('🔄', 'OCR調整', '/ocr-adjustment', self.current_page == "ocr-adjustment")
                 self._nav_button('⚙️', 'データ登録', '/data-registration', self.current_page == "data-registration")
-                self._nav_button('🧪', '配置テスト', '/test-panel', self.current_page == "test")
+                self._nav_button('🧪', '配置テスト', '/arrangement-test', self.current_page == "test")
                 self._nav_button('⚡', '管理', '/admin', self.current_page == "admin")
             
             # 右側：認証部分（固定幅160px・右寄せ）
@@ -86,56 +86,68 @@ class RAGFooter:
             self.create_status_bar()
     
     def create_status_bar(self):
-        """ステータスバー作成（100%幅で右端隙間ゼロ）"""
-        with ui.element('div').style('position:fixed;bottom:0;left:0;width:100%;height:24px;background:#374151;color:white;display:flex;align-items:center;justify-content:space-between;padding:0;margin:0;font-size:12px;z-index:999;'):
-            ui.label('システム: 正常稼働中').style('color:white;margin-left:16px;')
-            ui.label('接続: OK').style('color:white;margin-right:16px;')
+        """ステータスバー作成（完全画面幅・隙間ゼロ）"""
+        with ui.element('div').style('position:fixed;bottom:0;left:0;right:0;width:100%;height:24px;background:#374151;color:white;display:flex;align-items:center;justify-content:space-between;padding:0;margin:0;font-size:12px;z-index:999;'):
+            ui.label('システム: 正常稼働中').style('color:#10b981;margin-left:16px;')
+            ui.label('接続: OK').style('color:#3b82f6;margin-right:16px;')
 
 # RAGLayoutクラスは廃止
 # 理由: main.pyでの一元的CSS管理と矛盾、!important濫用でUI設計ポリシー違反
 # 代替: 各ページでRAGHeader + MainContentArea + RAGFooterを直接使用
 
 class MainContentArea:
-    """メインコンテンツエリア - スクロール制御対応（完璧なpadding:0制御）"""
+    """メインコンテンツエリア - c13方式完全制御コンテナ"""
     
-    def __init__(self, footer_height: str = "24px", allow_overflow: bool = True):
+    def __init__(self, content_padding: str = "8px", header_height: str = "48px", footer_height: str = "24px"):
         """
+        c13方式: nicegui-contentをリセットし、その中に完全制御されたコンテナを配置
+        
         Args:
+            content_padding: コンテンツ内部の余白（デフォルト8px）
+            header_height: ヘッダー高さ（デフォルト48px）
             footer_height: フッター高さ（デフォルト24px）
-            allow_overflow: オーバーフロー許可（True: 内部スクロール, False: 固定高さ）
         """
+        self.content_padding = content_padding
+        self.header_height = header_height
         self.footer_height = footer_height
-        self.allow_overflow = allow_overflow
         self.container = None
         
     def __enter__(self):
-        """メインコンテンツエリア開始 - 正確な高さ計算でスクロール制御"""
-        if self.allow_overflow:
-            # オーバーフロー許可：内部スクロールバー
-            overflow_style = 'overflow-y:auto;overflow-x:hidden;'
-        else:
-            # オーバーフロー禁止：固定高さ・パネル内スクロール
-            overflow_style = 'overflow:hidden;'
-        
-        # 正確な位置・高さ計算：ヘッダー下からフッター上まで（48px短縮調整）
-        # position: ヘッダー下に配置（48px下げる）
-        # height: 100vh - ヘッダー - フッター - 24px調整（目検討）
-        height_style = "height:calc(100vh - 96px);"
-        
+        """c13方式メインコンテンツエリア開始"""
+        # 完全制御コンテナ（c13方式）
+        # nicegui-contentは既にmain.pyでリセット済みという前提
         self.container = ui.element('div').style(
-            'margin-top:48px;'                    # ヘッダー高さ分下げる
-            'margin-left:0;'                      # 左余白完全ゼロ
-            'margin-right:0;'                     # 右余白完全ゼロ  
-            'margin-bottom:0px;'                   # position:fixed なので不要
-            'padding:0;'                          # 内部余白完全ゼロ
-            'width:100%;'                         # 完全幅（100vwではなく100%）
-            f'{height_style}'                     # 高さ設定（100vh基準で正確計算）
-            f'{overflow_style}'                   # オーバーフロー制御（モード依存）
-            'position:relative;'                  # 子要素の基準位置
-            'box-sizing:border-box;'              # ボックスサイズ計算明示
+            # position:fixedヘッダー・フッターに合わせた配置
+            f'margin-top:{self.header_height};'          # ヘッダー分のオフセット
+            f'margin-bottom:{self.footer_height};'       # フッター分のスペース確保
+            'margin-left:0;'                             # 左右余白ゼロ
+            'margin-right:0;'
+            'padding:0;'                                 # 外部パディングゼロ
+            'width:100%;'                                # 全幅使用
+            f'height:calc(100vh - {self.header_height} - {self.footer_height});'  # 正確な高さ計算
+            'overflow:hidden;'                           # オーバーフロー制御
+            'position:relative;'                         # 子要素基準
+            'box-sizing:border-box;'                     # ボックスサイズ計算明示
+            'display:flex;'                              # フレックスレイアウト
+            'flex-direction:column;'                     # 縦方向配置
         )
-        return self.container.__enter__()
+        
+        # 内部コンテンツエリア（実際のpadding/marginを持つ）
+        self.content_area = ui.element('div').style(
+            'flex:1;'                                    # 残り空間を全て使用
+            f'padding:{self.content_padding};'           # コンテンツ用の適切な余白
+            'margin:0;'                                  # 外部マージンゼロ
+            'overflow-y:auto;'                           # 内部スクロール
+            'overflow-x:hidden;'                         # 横スクロール禁止
+            'box-sizing:border-box;'                     # パディング含む計算
+        )
+        
+        # コンテナを開始し、内部エリアのコンテキストを返す
+        self.container.__enter__()
+        return self.content_area.__enter__()
         
     def __exit__(self, exc_type, exc_val, exc_tb):
         """メインコンテンツエリア終了"""
-        return self.container.__exit__(exc_type, exc_val, exc_tb)
+        result = self.content_area.__exit__(exc_type, exc_val, exc_tb)
+        self.container.__exit__(exc_type, exc_val, exc_tb)
+        return result

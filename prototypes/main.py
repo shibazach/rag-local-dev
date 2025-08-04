@@ -41,152 +41,8 @@ class ChatState:
     current_pattern = 'no-preview'
 
 # グローバルCSS設定（NiceGUI/Quasarデフォルト完全リセット）
-ui.add_head_html('''
-<style>
-/* ベースリセット（スクロールバーMainContentArea内封じ込め） */
-html, body {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;  /* 全体スクロール完全禁止 */
-}
-
-/* NiceGUI/Quasarフレームワーク制御（スクロール完全封じ込め） */
-#q-app {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    height: 100vh;
-    overflow: hidden;  /* アプリ全体でスクロール禁止 */
-}
-
-.q-layout {
-    margin: 0;
-    padding: 0;
-    height: 100vh;  /* min-heightではなく固定height */
-    width: 100%;
-    overflow: hidden;  /* レイアウト全体でスクロール禁止 */
-}
-
-.q-header {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    height: 48px;
-    overflow: hidden;
-}
-
-.q-page-container {
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: calc(100vh - 48px);  /* 固定高さでオーバーフロー制御 */
-    margin-top: 0;  /* MainContentAreaで制御するため削除 */
-    overflow: hidden;  /* ページコンテナでスクロール禁止 */
-}
-
-.q-page {
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    height: 100%;  /* 親の高さに合わせる */
-    overflow: hidden;  /* ページ自体でスクロール禁止 */
-}
-
-.nicegui-content {
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-}
-
-.nicegui-row, .nicegui-column {
-    margin: 0;
-    padding: 0;
-    gap: 0;
-}
-
-/* NiceGUI要素の強制リセット（MainContentArea外側余白対策） */
-.nicegui-element, .q-page .q-page-container > * {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* 全体コンテナの完全制御 */
-.q-page-container > .nicegui-content > * {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* MainContentArea外側要素の徹底的余白除去（全セレクタ対象） */
-.q-page > *, .nicegui-content > *, .nicegui-content > div, 
-.nicegui-content, .q-page, .q-page-container,
-div[style*="margin-top:48px"], div[style*="height:calc"] {
-    margin: 0 !important;
-    padding: 0 !important;
-    box-sizing: border-box !important;
-}
-
-/* 特定ID対象：nicegui-content完全制御 */
-#c3.nicegui-content, [id*="c3"], .nicegui-content[id*="c"] {
-    padding: 0 !important;
-    margin: 0 !important;
-}
-
-/* NiceGUIが自動挿入する可能性のある要素も制御 */
-.nicegui-content > .q-page, .nicegui-content > .q-page > div,
-* {
-    margin: 0 !important;
-    padding: 0 !important;
-}
-
-/* 共通ユーティリティクラス */
-.flex-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.flex-center-column {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.text-center {
-    text-align: center;
-}
-
-.zero-spacing {
-    margin: 0;
-    padding: 0;
-    gap: 0;
-}
-
-/* レスポンシブナビゲーション対応 */
-@media (max-width: 1200px) {
-    .q-header {
-        height: auto;
-        min-height: 48px;
-    }
-}
-
-@media (max-width: 900px) {
-    /* 2行目が表示される場合の調整 */
-}
-
-@media (max-width: 600px) {
-    /* 3行目が表示される場合の調整 */
-}
-</style>
-''')
+# グローバルCSS削除（simple_testアプローチ）
+# NiceGUIのデフォルトのみ使用
 
 # ====== ページルーティング ======
 
@@ -264,8 +120,8 @@ def admin():
     from ui.pages.admin import AdminPage
     AdminPage().render()
 
-@ui.page('/test-panel')
-def test_panel():
+@ui.page('/arrangement-test')
+def arrangement_test():
     """UI配置テストページ"""
     from ui.pages.arrangement_test import ArrangementTestPage
     ArrangementTestPage().render()
@@ -298,13 +154,9 @@ async def switch_chat_pattern(request: dict):
 
 # ====== NiceGUIフレームワーク制御（公式推奨方法） ======
 
-# GitHub Discussion #2063: NiceGUIの公式解決策 + 高さ16px不足修正
+# GitHub Discussion #2063: NiceGUIの公式解決策
 # https://github.com/zauberzeug/nicegui/discussions/2063
 ui.query('.nicegui-content').classes('p-0 gap-0')
-
-# 【緊急修正】class="nicegui-content"の高さ16px不足問題
-# DOM分析結果: フッター外配置により見た目帳尻が合うが、nicegui-content自体が小さい
-ui.query('.nicegui-content').style('min-height: calc(100vh - 72px + 16px);')
 
 # ====== アプリケーション起動 ======
 

@@ -19,10 +19,21 @@ class ArrangementTestPage:
         # 共通ヘッダー
         RAGHeader(show_site_name=True, current_page="test")
         
-        # 全ページ共通メインコンテンツエリア（オーバーフロー禁止・パネル内スクロール）
-        with MainContentArea(allow_overflow=False):
+        # 【TEST】C13方式直接実装（simple_testスタイル）
+        with ui.element('div').style(
+            'margin-top: 48px;'          # ヘッダー分
+            'margin-bottom: 24px;'       # フッター分  
+            'margin-left: 0;'
+            'margin-right: 0;'
+            'padding: 8px;'              # コンテンツ余白
+            'width: 100%;'
+            'height: calc(100vh - 48px - 24px);'  # 正確な高さ計算
+            'overflow: hidden;'
+            'position: relative;'
+            'box-sizing: border-box;'
+        ):
             # タブコンテナ：外枠付き・高さ圧迫最小・境界明確化
-            with ui.element('div').style('border:2px solid #d1d5db;border-radius:8px;overflow:hidden;height:100%;background:white;') as tab_container:
+            with ui.element('div').style('border:2px solid #d1d5db;border-radius:8px;overflow:hidden;height:100%;background:white;display:flex;flex-direction:column;') as tab_container:
                 
                 # タブヘッダー：最小高さ・アイコンなし・小文字
                 with ui.tabs().classes('w-full').style('margin:0;padding:0;min-height:24px;background:#f8f9fa;border-bottom:1px solid #d1d5db;') as tabs:
@@ -31,12 +42,12 @@ class ArrangementTestPage:
                     tab3 = ui.tab('C').style('padding:2px 8px;margin:0;font-size:10px;min-height:24px;')
                     tab4 = ui.tab('D').style('padding:2px 8px;margin:0;font-size:10px;min-height:24px;')
                 
-                # タブコンテンツ：padding完全ゼロ・境界内に収容・縦スクロールバー禁止（高さ18px調整：目検討）
-                with ui.tab_panels(tabs, value=tab1).classes('w-full').style('height:calc(100vh - 170px);margin:0;padding:0;background:white;overflow:hidden;'):
+                # タブコンテンツ：flex:1で残り空間を全て使用・パディングゼロ
+                with ui.tab_panels(tabs, value=tab1).classes('w-full').style('flex:1;margin:0;padding:0;background:white;overflow:hidden;'):
                     
-                    # タブ1：リサイズ対応4分割レイアウト
+                    # タブ1：C13方式4ペイン分割（simple_testスタイル）
                     with ui.tab_panel(tab1).style('margin:0;padding:0;height:100%;'):
-                        self._create_resizable_layout()
+                        self._create_c13_split_layout()
                     
                     # タブ2：新レイアウト実験エリア1
                     with ui.tab_panel(tab2).style('margin:0;padding:0;height:100%;'):
@@ -53,6 +64,448 @@ class ArrangementTestPage:
         # 共通フッター
         RAGFooter()
     
+    def _create_c13_split_layout(self):
+        """C13方式4ペイン分割レイアウト（simple_testスタイル）"""
+        
+        # スプリッターとリサイズのJavaScript（simple_testからの移植）
+        ui.add_head_html('''
+        <script>
+        function initArrangementSplitters() {
+            // 縦スプリッター（左右分割）
+            const vSplitter = document.getElementById('arr-vertical-splitter');
+            const leftPane = document.getElementById('arr-left-pane');
+            const rightPane = document.getElementById('arr-right-pane');
+            
+            // 横スプリッター（上下分割）- 左側
+            const hSplitterLeft = document.getElementById('arr-horizontal-splitter-left');
+            const leftTopPane = document.getElementById('arr-left-top-pane');
+            const leftBottomPane = document.getElementById('arr-left-bottom-pane');
+            
+            // 横スプリッター（上下分割）- 右側
+            const hSplitterRight = document.getElementById('arr-horizontal-splitter-right');
+            const rightTopPane = document.getElementById('arr-right-top-pane');
+            const rightBottomPane = document.getElementById('arr-right-bottom-pane');
+            
+            let isDragging = false;
+            let currentSplitter = null;
+            
+            // 縦スプリッターのドラッグ
+            if (vSplitter) {
+                vSplitter.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    currentSplitter = 'vertical';
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'col-resize';
+                });
+            }
+            
+            // 横スプリッター（左）のドラッグ
+            if (hSplitterLeft) {
+                hSplitterLeft.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    currentSplitter = 'horizontal-left';
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'row-resize';
+                });
+            }
+            
+            // 横スプリッター（右）のドラッグ
+            if (hSplitterRight) {
+                hSplitterRight.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    currentSplitter = 'horizontal-right';
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'row-resize';
+                });
+            }
+            
+            // マウス移動時のリサイズ処理
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging || !currentSplitter) return;
+                
+                const container = document.getElementById('arr-split-container');
+                if (!container) return;
+                const containerRect = container.getBoundingClientRect();
+                
+                if (currentSplitter === 'vertical') {
+                    const leftWidth = Math.max(200, Math.min(containerRect.width - 200, e.clientX - containerRect.left));
+                    const leftPercent = (leftWidth / containerRect.width) * 100;
+                    
+                    if (leftPane) leftPane.style.width = leftPercent + '%';
+                    if (rightPane) rightPane.style.width = (100 - leftPercent) + '%';
+                    
+                } else if (currentSplitter === 'horizontal-left') {
+                    const topHeight = Math.max(100, Math.min(containerRect.height - 100, e.clientY - containerRect.top));
+                    const topPercent = (topHeight / containerRect.height) * 100;
+                    
+                    if (leftTopPane) leftTopPane.style.height = topPercent + '%';
+                    if (leftBottomPane) leftBottomPane.style.height = (100 - topPercent) + '%';
+                    
+                } else if (currentSplitter === 'horizontal-right') {
+                    const topHeight = Math.max(100, Math.min(containerRect.height - 100, e.clientY - containerRect.top));
+                    const topPercent = (topHeight / containerRect.height) * 100;
+                    
+                    if (rightTopPane) rightTopPane.style.height = topPercent + '%';
+                    if (rightBottomPane) rightBottomPane.style.height = (100 - topPercent) + '%';
+                }
+            });
+            
+            // ドラッグ終了
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                currentSplitter = null;
+                document.body.style.userSelect = '';
+                document.body.style.cursor = '';
+            });
+        }
+        
+        // ページ読み込み後に初期化
+        setTimeout(initArrangementSplitters, 100);
+        </script>
+        ''')
+        
+        # 4ペイン分割コンテナ
+        with ui.element('div').style(
+            'width: 100%;'
+            'height: 100%;'
+            'display: flex;'
+            'margin: 0;'
+            'padding: 4px;'
+            'box-sizing: border-box;'
+            'gap: 0;'
+        ).props('id="arr-split-container"'):
+            
+            # 左側エリア（50%）
+            with ui.element('div').style(
+                'width: 50%;'
+                'height: 100%;'
+                'display: flex;'
+                'flex-direction: column;'
+                'margin: 0;'
+                'padding: 0;'
+                'gap: 0;'
+            ).props('id="arr-left-pane"'):
+                
+                # 左上ペイン（50%）
+                with ui.element('div').style(
+                    'width: 100%;'
+                    'height: 50%;'
+                    'margin: 0;'
+                    'padding: 2px;'
+                    'box-sizing: border-box;'
+                    'overflow: hidden;'
+                ).props('id="arr-left-top-pane"'):
+                    self._create_data_analysis_panel()
+                
+                # 横スプリッター（左側）
+                with ui.element('div').style(
+                    'width: 100%;'
+                    'height: 6px;'
+                    'background: linear-gradient(90deg, #3b82f6, #1d4ed8);'
+                    'cursor: row-resize;'
+                    'display: flex;'
+                    'align-items: center;'
+                    'justify-content: center;'
+                    'transition: background 0.2s;'
+                    'margin: 0;'
+                    'padding: 0;'
+                ).props('id="arr-horizontal-splitter-left"'):
+                    ui.label('⋮⋮⋮').style('color: white; font-size: 8px; transform: rotate(90deg);')
+                
+                # 左下ペイン（50%）
+                with ui.element('div').style(
+                    'width: 100%;'
+                    'height: 50%;'
+                    'margin: 0;'
+                    'padding: 2px;'
+                    'box-sizing: border-box;'
+                    'overflow: hidden;'
+                ).props('id="arr-left-bottom-pane"'):
+                    self._create_user_management_panel()
+            
+            # 縦スプリッター
+            with ui.element('div').style(
+                'width: 6px;'
+                'height: 100%;'
+                'background: linear-gradient(180deg, #3b82f6, #1d4ed8);'
+                'cursor: col-resize;'
+                'display: flex;'
+                'align-items: center;'
+                'justify-content: center;'
+                'transition: background 0.2s;'
+                'margin: 0;'
+                'padding: 0;'
+            ).props('id="arr-vertical-splitter"'):
+                ui.label('⋮⋮⋮').style('color: white; font-size: 8px;')
+            
+            # 右側エリア（50%）
+            with ui.element('div').style(
+                'width: 50%;'
+                'height: 100%;'
+                'display: flex;'
+                'flex-direction: column;'
+                'margin: 0;'
+                'padding: 0;'
+                'gap: 0;'
+            ).props('id="arr-right-pane"'):
+                
+                # 右上ペイン（50%）
+                with ui.element('div').style(
+                    'width: 100%;'
+                    'height: 50%;'
+                    'margin: 0;'
+                    'padding: 2px;'
+                    'box-sizing: border-box;'
+                    'overflow: hidden;'
+                ).props('id="arr-right-top-pane"'):
+                    self._create_task_management_panel()
+                
+                # 横スプリッター（右側）
+                with ui.element('div').style(
+                    'width: 100%;'
+                    'height: 6px;'
+                    'background: linear-gradient(90deg, #3b82f6, #1d4ed8);'
+                    'cursor: row-resize;'
+                    'display: flex;'
+                    'align-items: center;'
+                    'justify-content: center;'
+                    'transition: background 0.2s;'
+                    'margin: 0;'
+                    'padding: 0;'
+                ).props('id="arr-horizontal-splitter-right"'):
+                    ui.label('⋮⋮⋮').style('color: white; font-size: 8px; transform: rotate(90deg);')
+                
+                # 右下ペイン（50%）
+                with ui.element('div').style(
+                    'width: 100%;'
+                    'height: 50%;'
+                    'margin: 0;'
+                    'padding: 2px;'
+                    'box-sizing: border-box;'
+                    'overflow: hidden;'
+                ).props('id="arr-right-bottom-pane"'):
+                    self._create_system_log_panel()
+
+    def _create_data_analysis_panel(self):
+        """左上：データ分析パネル"""
+        with ui.element('div').style(
+            'width: 100%;'
+            'height: 100%;'
+            'background-color: white;'
+            'border-radius: 8px;'
+            'box-shadow: 0 2px 8px rgba(0,0,0,0.15);'
+            'display: flex;'
+            'flex-direction: column;'
+            'overflow: hidden;'
+            'border: 1px solid #e5e7eb;'
+        ):
+            # ヘッダー
+            with ui.element('div').style(
+                'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);'
+                'color: white;'
+                'padding: 8px 12px;'
+                'display: flex;'
+                'align-items: center;'
+                'justify-content: space-between;'
+                'height: 36px;'
+                'box-sizing: border-box;'
+                'flex-shrink: 0;'
+            ):
+                ui.label('📊 データ分析').style('font-weight: bold; font-size: 12px;')
+                with ui.element('div').style('display: flex; gap: 4px;'):
+                    ui.button('📈', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+                    ui.button('⚙️', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+            
+            # コンテンツ
+            with ui.element('div').style(
+                'flex: 1;'
+                'padding: 8px;'
+                'overflow-y: auto;'
+                'overflow-x: hidden;'
+            ):
+                ui.label('📈 パフォーマンス指標').style('font-weight: bold; color: #374151; margin-bottom: 6px; font-size: 11px;')
+                with ui.element('div').style('display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px;'):
+                    for i, (label, value, color) in enumerate([
+                        ('アクティブユーザー', '1,247', '#10b981'),
+                        ('処理済み', '3,892', '#3b82f6'),
+                        ('待機中', '127', '#f59e0b'),
+                        ('エラー', '12', '#ef4444')
+                    ]):
+                        with ui.element('div').style(f'background: {color}; color: white; padding: 4px; border-radius: 4px; text-align: center;'):
+                            ui.label(label).style('font-size: 8px; opacity: 0.9;')
+                            ui.label(value).style('font-weight: bold; font-size: 10px;')
+
+    def _create_user_management_panel(self):
+        """左下：ユーザー管理パネル"""
+        with ui.element('div').style(
+            'width: 100%;'
+            'height: 100%;'
+            'background-color: white;'
+            'border-radius: 8px;'
+            'box-shadow: 0 2px 8px rgba(0,0,0,0.15);'
+            'display: flex;'
+            'flex-direction: column;'
+            'overflow: hidden;'
+            'border: 1px solid #e5e7eb;'
+        ):
+            # ヘッダー
+            with ui.element('div').style(
+                'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);'
+                'color: white;'
+                'padding: 8px 12px;'
+                'display: flex;'
+                'align-items: center;'
+                'justify-content: space-between;'
+                'height: 36px;'
+                'box-sizing: border-box;'
+                'flex-shrink: 0;'
+            ):
+                ui.label('👥 ユーザー管理').style('font-weight: bold; font-size: 12px;')
+                with ui.element('div').style('display: flex; gap: 4px;'):
+                    ui.button('➕', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+                    ui.button('📝', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+            
+            # テーブル
+            with ui.element('div').style(
+                'flex: 1;'
+                'overflow-y: auto;'
+                'overflow-x: hidden;'
+            ):
+                with ui.element('table').style('width: 100%; border-collapse: collapse; margin: 0;'):
+                    # ヘッダー
+                    with ui.element('thead'):
+                        with ui.element('tr').style('background: #f8f9fa; border-bottom: 1px solid #e5e7eb;'):
+                            ui.element('th').style('padding: 4px 6px; text-align: left; font-size: 9px; font-weight: bold;').text = 'ID'
+                            ui.element('th').style('padding: 4px 6px; text-align: left; font-size: 9px; font-weight: bold;').text = 'ユーザー'
+                            ui.element('th').style('padding: 4px 6px; text-align: left; font-size: 9px; font-weight: bold;').text = 'ステータス'
+                    
+                    # データ
+                    with ui.element('tbody'):
+                        for i, (name, status) in enumerate([
+                            ('admin', 'アクティブ'),
+                            ('user1', 'アクティブ'),
+                            ('user2', '休止中'),
+                            ('guest', '制限'),
+                            ('test', 'アクティブ')
+                        ]):
+                            status_color = '#10b981' if status == 'アクティブ' else '#f59e0b' if status == '休止中' else '#ef4444'
+                            with ui.element('tr').style('border-bottom: 1px solid #f3f4f6;'):
+                                ui.element('td').style('padding: 3px 6px; font-size: 9px;').text = f'{i+1:02d}'
+                                ui.element('td').style('padding: 3px 6px; font-size: 9px;').text = name
+                                ui.element('td').style(f'padding: 3px 6px; font-size: 9px; color: {status_color}; font-weight: bold;').text = status
+
+    def _create_task_management_panel(self):
+        """右上：タスク管理パネル"""
+        with ui.element('div').style(
+            'width: 100%;'
+            'height: 100%;'
+            'background-color: white;'
+            'border-radius: 8px;'
+            'box-shadow: 0 2px 8px rgba(0,0,0,0.15);'
+            'display: flex;'
+            'flex-direction: column;'
+            'overflow: hidden;'
+            'border: 1px solid #e5e7eb;'
+        ):
+            # ヘッダー
+            with ui.element('div').style(
+                'background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);'
+                'color: white;'
+                'padding: 8px 12px;'
+                'display: flex;'
+                'align-items: center;'
+                'justify-content: space-between;'
+                'height: 36px;'
+                'box-sizing: border-box;'
+                'flex-shrink: 0;'
+            ):
+                ui.label('📝 タスク管理').style('font-weight: bold; font-size: 12px;')
+                with ui.element('div').style('display: flex; gap: 4px;'):
+                    ui.button('✅', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+                    ui.button('📋', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+            
+            # タスクリスト
+            with ui.element('div').style(
+                'flex: 1;'
+                'padding: 6px;'
+                'overflow-y: auto;'
+                'overflow-x: hidden;'
+            ):
+                for i, (task, priority, status) in enumerate([
+                    ('UI改善', '高', '進行中'),
+                    ('パフォーマンス最適化', '中', '完了'),
+                    ('ドキュメント更新', '低', '待機'),
+                    ('バグ修正', '高', '進行中'),
+                    ('テスト追加', '中', '待機')
+                ]):
+                    priority_color = '#ef4444' if priority == '高' else '#f59e0b' if priority == '中' else '#10b981'
+                    status_color = '#3b82f6' if status == '進行中' else '#10b981' if status == '完了' else '#6b7280'
+                    
+                    with ui.element('div').style('background: #f8f9fa; border: 1px solid #e5e7eb; border-radius: 4px; padding: 4px; margin-bottom: 2px;'):
+                        ui.label(task).style('font-size: 10px; font-weight: bold; color: #374151; margin-bottom: 2px;')
+                        with ui.element('div').style('display: flex; justify-content: space-between; align-items: center;'):
+                            with ui.element('span').style(f'background: {priority_color}; color: white; padding: 1px 4px; border-radius: 2px; font-size: 8px;'):
+                                ui.label(priority)
+                            with ui.element('span').style(f'color: {status_color}; font-size: 8px; font-weight: bold;'):
+                                ui.label(status)
+
+    def _create_system_log_panel(self):
+        """右下：システムログパネル"""
+        with ui.element('div').style(
+            'width: 100%;'
+            'height: 100%;'
+            'background-color: white;'
+            'border-radius: 8px;'
+            'box-shadow: 0 2px 8px rgba(0,0,0,0.15);'
+            'display: flex;'
+            'flex-direction: column;'
+            'overflow: hidden;'
+            'border: 1px solid #e5e7eb;'
+        ):
+            # ヘッダー
+            with ui.element('div').style(
+                'background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);'
+                'color: white;'
+                'padding: 8px 12px;'
+                'display: flex;'
+                'align-items: center;'
+                'justify-content: space-between;'
+                'height: 36px;'
+                'box-sizing: border-box;'
+                'flex-shrink: 0;'
+            ):
+                ui.label('💬 システムログ').style('font-weight: bold; font-size: 12px;')
+                with ui.element('div').style('display: flex; gap: 4px;'):
+                    ui.button('🔄', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+                    ui.button('🗑️', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px;')
+            
+            # ログコンテンツ
+            with ui.element('div').style(
+                'flex: 1;'
+                'padding: 4px;'
+                'overflow-y: auto;'
+                'overflow-x: hidden;'
+                'font-family: monospace;'
+                'background: #1f2937;'
+                'color: #e5e7eb;'
+            ):
+                for i in range(15):
+                    timestamp = f'15:{30+i%30:02d}:{10+i%50:02d}'
+                    log_type = ['INFO', 'WARN', 'ERROR'][i % 3]
+                    log_color = {'INFO': '#10b981', 'WARN': '#f59e0b', 'ERROR': '#ef4444'}[log_type]
+                    message = [
+                        'User login successful',
+                        'Database connected',
+                        'Processing request',
+                        'Cache updated',
+                        'Session expired'
+                    ][i % 5]
+                    
+                    with ui.element('div').style('margin-bottom: 1px; font-size: 8px; line-height: 1.2;'):
+                        ui.label(f'[{timestamp}] ').style('color: #9ca3af;')
+                        ui.label(f'{log_type}: ').style(f'color: {log_color}; font-weight: bold;')
+                        ui.label(message).style('color: #e5e7eb;')
+
     def _create_resizable_layout(self):
         """リサイズ対応の4分割レイアウト作成（VB Splitter風）"""
         

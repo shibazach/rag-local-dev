@@ -1,6 +1,6 @@
 """
 R&D RAGシステム - メインアプリケーション
-Enterprise-grade FastAPI application with NiceGUI integration
+Enterprise-grade FastAPI API Backend (Pure API Server)
 """
 
 import uvicorn

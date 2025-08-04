@@ -26,29 +26,26 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip setuptools wheel
 
 # GitHub の main から huggingface_hub をインストール（1.x 系が手に入る）
-RUN pip install --no-cache-dir \
+RUN python3 -m pip install --no-cache-dir \
       git+https://github.com/huggingface/huggingface_hub.git@main
 
 # 残りの requirements を一括インストール
-RUN pip install --no-cache-dir \
+RUN python3 -m pip install --no-cache-dir --ignore-installed \
       -r /tmp/requirements.txt && \
-    pip install --no-cache-dir streamlit && \
-    pip install --no-cache-dir \
+    python3 -m pip install --no-cache-dir \
       torch=="${TorchVer}" \
       torchvision=="${TorchVisionVer}" \
       --index-url https://download.pytorch.org/whl/cpu && \
     rm /tmp/requirements.txt
 
-    
 # ---------- 5. パッケージ化準備 ----------
 RUN mkdir -p src scripts/views && \
     touch src/__init__.py \
           scripts/__init__.py \
           scripts/views/__init__.py
 
-
-# REM: Streamlit ポート公開（必要に応じてアンコメント）
-# EXPOSE 8501
+# REM: FastAPI ポート公開（必要に応じてアンコメント）
+# EXPOSE 8000
 
 # REM: デフォルト起動コマンド（必要に応じてアンコメント）
-# CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# CMD ["python3", "run_app.py", "--app", "old"]

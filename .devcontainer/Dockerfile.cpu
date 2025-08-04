@@ -26,13 +26,13 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip setuptools wheel
 
 # GitHub の main から huggingface_hub をインストール（1.x 系が手に入る）
-RUN pip install --no-cache-dir \
+RUN python3 -m pip install --no-cache-dir \
       git+https://github.com/huggingface/huggingface_hub.git@main
 
 # 残りの requirements を一括インストール
-RUN pip install --no-cache-dir \
+RUN python3 -m pip install --no-cache-dir \
       -r /tmp/requirements.txt && \
-    pip install --no-cache-dir \
+    python3 -m pip install --no-cache-dir \
       torch=="${TorchVer}" \
       torchvision=="${TorchVisionVer}" \
       --index-url https://download.pytorch.org/whl/cpu && \

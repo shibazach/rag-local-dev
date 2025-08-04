@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}ホーム - R&D RAGシステム{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-primary text-white p-5 rounded mb-4">
+            <h1 class="display-4"><i class="fas fa-robot"></i> R&D RAGシステム</h1>
+            <p class="lead">高度な文書検索・質問応答システムへようこそ</p>
+            <hr class="my-4">
+            <p>OCR技術とLLMを活用した次世代の文書処理システムです。</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-upload fa-3x text-primary mb-3"></i>
+                <h5 class="card-title">データ登録</h5>
+                <p class="card-text">PDF、Word、テキストファイルをアップロードして処理します。</p>
+                <a href="/data-registration" class="btn btn-primary">開始する</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-comments fa-3x text-success mb-3"></i>
+                <h5 class="card-title">チャット検索</h5>
+                <p class="card-text">自然言語で質問して、関連する文書を検索できます。</p>
+                <a href="/chat" class="btn btn-success">開始する</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-folder fa-3x text-info mb-3"></i>
+                <h5 class="card-title">ファイル管理</h5>
+                <p class="card-text">アップロード済みファイルの管理と確認ができます。</p>
+                <a href="/files" class="btn btn-info">開始する</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-search fa-3x text-warning mb-3"></i>
+                <h5 class="card-title">OCR比較</h5>
+                <p class="card-text">複数のOCRエンジンによる精度比較・検証ができます。</p>
+                <a href="/ocr-comparison" class="btn btn-warning">開始する</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-book fa-3x text-secondary mb-3"></i>
+                <h5 class="card-title">API仕様書</h5>
+                <p class="card-text">システムのAPI仕様とドキュメントを確認できます。</p>
+                <a href="/docs" class="btn btn-secondary" target="_blank">開く</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-heartbeat fa-3x text-danger mb-3"></i>
+                <h5 class="card-title">システム状態</h5>
+                <p class="card-text">システムのヘルスチェックと動作状況を確認できます。</p>
+                <a href="/health" class="btn btn-danger" target="_blank">確認する</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> システム情報</h5>
+            <p class="mb-1"><strong>バージョン:</strong> 1.0.0</p>
+            <p class="mb-1"><strong>最終更新:</strong> 2024年12月</p>
+            <p class="mb-0"><strong>対応形式:</strong> PDF, DOCX, TXT, CSV, JSON, EML</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

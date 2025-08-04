@@ -1,0 +1,8 @@
+# x11vncプロセスを停止
+kill 1960
+
+# 念のため、プロセスが終了したか確認
+ps aux | grep vnc
+
+# x11vncを再起動（必要に応じてオプションを調整）
+x11vnc -auth /home/shibaz-t/.Xauthority -display :0 -rfbauth /home/shibaz-t/.vnc/passwd -forever -noxdamage -repeat

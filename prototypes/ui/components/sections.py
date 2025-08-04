@@ -15,8 +15,8 @@ class HeroSection:
         self.render()
     
     def render(self):
-        """ヒーローセクション描画（メニューと連続・隙間なし）"""
-        with ui.element('div').style(f'background:{self.background_color};padding:40px 0;width:100%;margin:0;margin-left:0;margin-right:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
+        """ヒーローセクション描画（レスポンシブ高さ・画面内収まり優先）"""
+        with ui.element('div').style(f'background:{self.background_color};padding:20px 0;width:100%;margin:0;margin-left:0;margin-right:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
             ui.label(self.title).style('color:white;font-size:48px;font-weight:bold;margin:0 0 16px 0;text-shadow:0 2px 4px rgba(0,0,0,0.3);text-align:center;')
             ui.label(self.subtitle).style('color:rgba(255,255,255,0.9);font-size:18px;margin:0;text-align:center;')
 
@@ -29,9 +29,9 @@ class FeatureSection:
         self.render()
     
     def render(self):
-        """機能セクション描画（完全センタリング）"""
-        with ui.element('div').style('padding:40px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
-            ui.label(self.title).style('font-size:24px;font-weight:bold;color:#1f2937;margin:0 0 24px 0;text-align:center;')
+        """機能セクション描画（コンパクト・画面内収まり優先）"""
+        with ui.element('div').style('padding:12px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
+            ui.label(self.title).style('font-size:24px;font-weight:bold;color:#1f2937;margin:0 0 20px 0;text-align:center;')
             
             # 機能リスト（センタリング）
             with ui.element('div').style('display:flex;justify-content:center;align-items:center;width:100%;'):
@@ -44,11 +44,14 @@ class FeatureSection:
                         )
     
     def _create_feature_item(self, icon: str, title: str, description: str):
-        """個別機能アイテム作成"""
-        with ui.element('div').style('display:flex;align-items:flex-start;margin:0 0 16px 0;'):
-            ui.label(icon).style('font-size:20px;margin:0 12px 0 0;flex-shrink:0;')
-            with ui.element('div'):
-                ui.html(f'<span style="font-weight:bold;color:#1f2937;">{title}</span> {description}').style('font-size:14px;line-height:1.5;margin:0;')
+        """個別機能アイテム作成（行間詰め・説明左揃え・グレー色）"""
+        with ui.element('div').style('display:flex;align-items:flex-start;margin:0 0 8px 0;'):
+            ui.label(icon).style('font-size:20px;margin:0 12px 0 0;flex-shrink:0;line-height:1.2;')
+            with ui.element('div').style('display:flex;flex-direction:column;flex:1;'):
+                # タイトル部分
+                ui.label(title).style('font-size:14px;font-weight:bold;color:#1f2937;margin:0 0 2px 0;line-height:1.2;')
+                # 説明部分（左揃え・グレー色）
+                ui.label(description).style('font-size:14px;color:#6b7280;margin:0;line-height:1.3;text-align:left;')
 
 class StatusSection:
     """ステータスセクション - システム状況表示"""
@@ -59,9 +62,9 @@ class StatusSection:
         self.render()
     
     def render(self):
-        """ステータスセクション描画（完全センタリング・下部余白60px）"""
-        with ui.element('div').style('padding:40px 0 60px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
-            ui.label(self.title).style('font-size:24px;font-weight:bold;color:#1f2937;margin:0 0 24px 0;text-align:center;')
+        """ステータスセクション描画（極小余白・画面内収まり優先）"""
+        with ui.element('div').style('padding:8px 0 12px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
+            ui.label(self.title).style('font-size:24px;font-weight:bold;color:#1f2937;margin:0 0 20px 0;text-align:center;')
             
             # ステータスカード群
             with ui.element('div').style('display:flex;gap:24px;justify-content:center;align-items:center;flex-wrap:wrap;'):

@@ -9,6 +9,7 @@ from .files import FilesPage
 from .upload import UploadPage
 from .ocr_adjustment import OCRAdjustmentPage
 from .data_registration import DataRegistrationPage
+from .arrangement_test import ArrangementTestPage
 from .admin import AdminPage
 
 __all__ = [
@@ -19,5 +20,6 @@ __all__ = [
     'UploadPage',
     'OCRAdjustmentPage',
     'DataRegistrationPage',
+    'ArrangementTestPage',
     'AdminPage'
 ]

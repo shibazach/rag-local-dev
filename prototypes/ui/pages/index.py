@@ -28,7 +28,7 @@ class IndexPage:
             )
 
             # 機能セクション（6行3カラム透明表形式）
-            with ui.element('div').style('padding:24px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
+            with ui.element('div').style('padding:32px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
                 ui.label('主な機能').style('font-size:24px;font-weight:bold;color:#1f2937;margin:0 0 20px 0;text-align:center;')
                 
                 # 機能リスト表（透明・センタリング・最適幅）
@@ -38,40 +38,61 @@ class IndexPage:
                         with ui.element('tbody'):
                             # 1行目: 多形式文書対応
                             with ui.element('tr'):
-                                ui.element('td').style('text-align:center;padding:4px 12px 4px 0;font-size:20px;width:40px;vertical-align:top;').text = '📄'
-                                ui.element('td').style('text-align:left;padding:4px 8px 4px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:top;').text = '多形式文書対応：'
-                                ui.element('td').style('text-align:left;padding:4px 0;font-size:14px;color:#6b7280;line-height:1.3;vertical-align:top;').text = 'PDF、Word、テキスト、CSV、JSON、EMLファイルの処理に対応'
+                                with ui.element('td').style('text-align:center;padding:2px 12px 2px 0;font-size:20px;width:40px;vertical-align:middle;'):
+                                    ui.label('📄')
+                                with ui.element('td').style('text-align:left;padding:2px 8px 2px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:middle;'):
+                                    ui.label('多形式文書対応：')
+                                with ui.element('td').style('text-align:left;padding:2px 0;font-size:14px;color:#6b7280;line-height:1.2;vertical-align:middle;'):
+                                    ui.label('PDF、Word、テキスト、CSV、JSON、EMLファイルの処理に対応')
                             
                             # 2行目: 高精度OCR
                             with ui.element('tr'):
-                                ui.element('td').style('text-align:center;padding:4px 12px 4px 0;font-size:20px;width:40px;vertical-align:top;').text = '🔍'
-                                ui.element('td').style('text-align:left;padding:4px 8px 4px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:top;').text = '高精度OCR：'
-                                ui.element('td').style('text-align:left;padding:4px 0;font-size:14px;color:#6b7280;line-height:1.3;vertical-align:top;').text = '複数のOCRエンジンによる高精度なテキスト抽出'
+                                with ui.element('td').style('text-align:center;padding:2px 12px 2px 0;font-size:20px;width:40px;vertical-align:middle;'):
+                                    ui.label('🔍')
+                                with ui.element('td').style('text-align:left;padding:2px 8px 2px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:middle;'):
+                                    ui.label('高精度OCR：')
+                                with ui.element('td').style('text-align:left;padding:2px 0;font-size:14px;color:#6b7280;line-height:1.2;vertical-align:middle;'):
+                                    ui.label('複数のOCRエンジンによる高精度なテキスト抽出')
                             
                             # 3行目: LLM整形
                             with ui.element('tr'):
-                                ui.element('td').style('text-align:center;padding:4px 12px 4px 0;font-size:20px;width:40px;vertical-align:top;').text = '🤖'
-                                ui.element('td').style('text-align:left;padding:4px 8px 4px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:top;').text = 'LLM整形：'
-                                ui.element('td').style('text-align:left;padding:4px 0;font-size:14px;color:#6b7280;line-height:1.3;vertical-align:top;').text = 'Ollamaを使用した日本語テキストの品質向上'
+                                with ui.element('td').style('text-align:center;padding:2px 12px 2px 0;font-size:20px;width:40px;vertical-align:middle;'):
+                                    ui.label('🤖')
+                                with ui.element('td').style('text-align:left;padding:2px 8px 2px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:middle;'):
+                                    ui.label('LLM整形：')
+                                with ui.element('td').style('text-align:left;padding:2px 0;font-size:14px;color:#6b7280;line-height:1.2;vertical-align:middle;'):
+                                    ui.label('Ollamaを使用した日本語テキストの品質向上')
                             
                             # 4行目: ベクトル検索
                             with ui.element('tr'):
-                                ui.element('td').style('text-align:center;padding:4px 12px 4px 0;font-size:20px;width:40px;vertical-align:top;').text = '🔎'
-                                ui.element('td').style('text-align:left;padding:4px 8px 4px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:top;').text = 'ベクトル検索：'
-                                ui.element('td').style('text-align:left;padding:4px 0;font-size:14px;color:#6b7280;line-height:1.3;vertical-align:top;').text = '複数の埋め込みモデルによる高精度検索'
+                                with ui.element('td').style('text-align:center;padding:2px 12px 2px 0;font-size:20px;width:40px;vertical-align:middle;'):
+                                    ui.label('🔎')
+                                with ui.element('td').style('text-align:left;padding:2px 8px 2px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:middle;'):
+                                    ui.label('ベクトル検索：')
+                                with ui.element('td').style('text-align:left;padding:2px 0;font-size:14px;color:#6b7280;line-height:1.2;vertical-align:middle;'):
+                                    ui.label('複数の埋め込みモデルによる高精度検索')
                             
                             # 5行目: リアルタイム処理
                             with ui.element('tr'):
-                                ui.element('td').style('text-align:center;padding:4px 12px 4px 0;font-size:20px;width:40px;vertical-align:top;').text = '⚡'
-                                ui.element('td').style('text-align:left;padding:4px 8px 4px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:top;').text = 'リアルタイム処理：'
-                                ui.element('td').style('text-align:left;padding:4px 0;font-size:14px;color:#6b7280;line-height:1.3;vertical-align:top;').text = 'SSEによる進捗表示とリアルタイム処理'
+                                with ui.element('td').style('text-align:center;padding:2px 12px 2px 0;font-size:20px;width:40px;vertical-align:middle;'):
+                                    ui.label('⚡')
+                                with ui.element('td').style('text-align:left;padding:2px 8px 2px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:middle;'):
+                                    ui.label('リアルタイム処理：')
+                                with ui.element('td').style('text-align:left;padding:2px 0;font-size:14px;color:#6b7280;line-height:1.2;vertical-align:middle;'):
+                                    ui.label('SSEによる進捗表示とリアルタイム処理')
                             
                             # 6行目: セキュリティ設計
                             with ui.element('tr'):
-                                ui.element('td').style('text-align:center;padding:4px 12px 4px 0;font-size:20px;width:40px;vertical-align:top;').text = '🔒'
-                                ui.element('td').style('text-align:left;padding:4px 8px 4px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:top;').text = 'セキュリティ設計：'
-                                ui.element('td').style('text-align:left;padding:4px 0;font-size:14px;color:#6b7280;line-height:1.3;vertical-align:top;').text = 'HTTPS対応、認証、API分離によるセキュアな設計'
+                                with ui.element('td').style('text-align:center;padding:2px 12px 2px 0;font-size:20px;width:40px;vertical-align:middle;'):
+                                    ui.label('🔒')
+                                with ui.element('td').style('text-align:left;padding:2px 8px 2px 0;font-size:14px;font-weight:bold;color:#1f2937;white-space:nowrap;vertical-align:middle;'):
+                                    ui.label('セキュリティ設計：')
+                                with ui.element('td').style('text-align:left;padding:2px 0;font-size:14px;color:#6b7280;line-height:1.2;vertical-align:middle;'):
+                                    ui.label('HTTPS対応、認証、API分離によるセキュアな設計')
 
+            # スペーサー（主な機能とシステム状況の間隔）
+            ui.element('div').style('height: 24px;')
+            
             # ステータスセクション（共通コンポーネント）
             StatusSection(
                 title='システム状況',

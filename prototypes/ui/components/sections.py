@@ -16,9 +16,9 @@ class HeroSection:
     
     def render(self):
         """ヒーローセクション描画（レスポンシブ高さ・画面内収まり優先）"""
-        with ui.element('div').style(f'background:{self.background_color};padding:20px 0;width:100%;margin:0;margin-left:0;margin-right:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
-            ui.label(self.title).style('color:white;font-size:48px;font-weight:bold;margin:0 0 16px 0;text-shadow:0 2px 4px rgba(0,0,0,0.3);text-align:center;')
-            ui.label(self.subtitle).style('color:rgba(255,255,255,0.9);font-size:18px;margin:0;text-align:center;')
+        with ui.element('div').style(f'background:{self.background_color};padding:16px 0;width:100%;margin:0;margin-left:0;margin-right:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
+            ui.label(self.title).style('color:white;font-size:48px;font-weight:bold;margin:0 0 4px 0;text-shadow:0 2px 4px rgba(0,0,0,0.3);text-align:center;')
+            ui.label(self.subtitle).style('color:rgba(255,255,255,0.7);font-size:18px;margin:0;text-align:center;')
 
 class FeatureSection:
     """機能セクション - 機能一覧表示"""
@@ -63,7 +63,7 @@ class StatusSection:
     
     def render(self):
         """ステータスセクション描画（極小余白・画面内収まり優先）"""
-        with ui.element('div').style('padding:8px 0 12px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
+        with ui.element('div').style('padding:16px 0 20px 0;width:100%;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;'):
             ui.label(self.title).style('font-size:24px;font-weight:bold;color:#1f2937;margin:0 0 20px 0;text-align:center;')
             
             # ステータスカード群

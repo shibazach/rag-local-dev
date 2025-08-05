@@ -135,7 +135,13 @@ def admin():
 def arrangement_test():
     """UI配置テストページ"""
     from ui.pages.arrangement_test import ArrangementTestPage
-    ArrangementTestPage()
+    ArrangementTestPage(current_page="arrangement-test")
+
+@ui.page('/test-minimal')
+def test_minimal():
+    """最小限テストページ"""
+    from ui.pages.test_minimal import TestMinimalPage
+    TestMinimalPage()
 
 # ====== FastAPI エンドポイント ======
 

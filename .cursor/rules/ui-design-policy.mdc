@@ -276,3 +276,150 @@ arrangement_test.py → components/ → 本番ページ
 - 失敗パターンも学習のため一時保存
 
 これらの原則に従い、**安全性と革新性を両立したUI開発**を実現する。
+
+## 共通コンポーネント実装ガイド（2025年実証済み）+ NiceGUI公式準拠
+
+### NiceGUI公式ドキュメント準拠の基本原則
+**参考**: [NiceGUI Documentation](https://nicegui.io/documentation/)
+
+#### **コンポーネント設計のNiceGUI準拠ルール**
+1. **ui.element()ベース構築**: 全てのカスタムコンポーネントは`ui.element()`から開始
+2. **context manager活用**: `with ui.element():` パターンで階層構造を明確化
+3. **style()メソッド統一**: `.style('CSS文字列')` での統一的スタイル制御
+4. **props()での属性制御**: HTML属性は`.props('id="xxx" class="yyy"')`で設定
+5. **classes()でCSS class**: Tailwind等のクラス指定は`.classes('w-full h-full')`
+6. **公式コンポーネント優先**: 可能な限り`ui.button()`, `ui.table()`, `ui.card()`等を活用
+
+#### **NiceGUIコンポーネント階層構造（公式推奨）**
+```python
+# Level 1: Page Layout（ページ全体）
+ui.page('/path')
+def page_function():
+    with ui.header():         # ヘッダー
+        pass
+    with ui.column():         # メインコンテンツ
+        with ui.row():        # 横並びセクション
+            with ui.card():   # カードコンポーネント
+                ui.label()    # 個別要素
+    with ui.footer():         # フッター
+        pass
+```
+
+#### **padding/margin設定の公式準拠アプローチ**
+```python
+# ❌ 旧方式: CSS直書き回避
+ui.element('div').style('padding: 16px; margin: 8px;')
+
+# ✅ 推奨: NiceGUIクラス + 必要時CSS補完
+ui.element('div').classes('p-4 m-2').style('box-sizing: border-box;')
+
+# ✅ 公式コンポーネント + スタイル調整
+ui.card().classes('p-4').style('margin: 0; padding: 16px;')
+```
+
+#### **レスポンシブ設計（公式推奨）**
+```python
+# Tailwindクラス活用
+ui.element('div').classes('w-full h-screen md:w-1/2 lg:w-1/3')
+
+# グリッドシステム
+with ui.grid(columns='repeat(auto-fit, minmax(300px, 1fr))'):
+    for item in items:
+        ui.card()
+```
+
+### MainContentArea - FixedHeaderFooterContainer（NiceGUI準拠版）
+```python
+# prototypes/ui/components/layout.py
+class MainContentArea:
+    """
+    NiceGUI公式ガイドライン + simple_test.py成功実装の統合版
+    
+    機能:
+    1. ui.query().style()でNiceGUIフレームワーク要素を完全制御
+    2. calc(100vh - 48px - 24px)による正確な高さ計算
+    3. position:fixedヘッダー・フッター対応の完全レイアウト
+    4. NiceGUI公式コンポーネント活用でメンテナンス性向上
+    
+    NiceGUI公式準拠要素:
+    - ui.element()をベースとした構築
+    - context managerパターン準拠
+    - classes()とstyle()の使い分け
+    
+    Usage:
+        RAGHeader()
+        with MainContentArea():
+            # NiceGUI公式コンポーネント配置推奨
+            with ui.card():
+                ui.label('コンテンツ')
+        RAGFooter()
+    """
+```
+
+### NiceGUI公式コンポーネント活用指針
+
+#### **基本UI要素（公式推奨優先順位）**
+1. **ui.card()**: パネル・セクション区切り
+2. **ui.column() / ui.row()**: レイアウト制御
+3. **ui.button()**: 全ボタン操作
+4. **ui.table()**: データ表示（ページネーション内蔵）
+5. **ui.input() / ui.select()**: フォーム要素
+6. **ui.label() / ui.html()**: テキスト表示
+7. **ui.icon()**: アイコン表示
+
+#### **高度な公式コンポーネント**
+```python
+# ページネーション（公式内蔵機能）
+ui.table(columns=columns, rows=rows, pagination=True)
+
+# タブシステム（公式推奨）
+with ui.tabs() as tabs:
+    ui.tab('tab1', label='タブ1')
+    ui.tab('tab2', label='タブ2')
+with ui.tab_panels(tabs):
+    with ui.tab_panel('tab1'):
+        ui.label('タブ1コンテンツ')
+
+# スプリッター（公式コンポーネント）
+with ui.splitter() as splitter:
+    with splitter.before:
+        ui.label('左パネル')
+    with splitter.after:
+        ui.label('右パネル')
+```
+
+### 実証済み成功パターン（NiceGUI準拠）
+- **ui.query() x 6個出力**: html, body, .q-layout, .q-page-container, .q-page, .nicegui-content
+- **calc()高さ計算**: `calc(100vh - 48px - 24px)` による正確な高さ制御
+- **DOM構造制御**: ブラウザ〜NiceGUIフレームワーク全階層を完全制御
+- **公式コンポーネント最大活用**: カスタムCSS最小限、NiceGUI内蔵機能優先
+
+### コンポーネント化の成功手順（NiceGUI準拠版）
+1. **実験フェーズ**: arrangement_test.pyで公式コンポーネントベース実装作成
+2. **公式コンポーネント検証**: NiceGUIドキュメントで最適な公式要素を確認
+3. **バックアップ作成**: 既存コンポーネントを `_back` でリネーム
+4. **NiceGUI準拠実装**: 公式推奨パターン + 成功パターンの融合
+5. **実動確認**: `nicegui-query` 出力数と DOM構造で動作確認
+6. **本番投入**: 他のページでの利用可能性確認
+
+### 実装時の注意点（NiceGUI準拠）
+- **公式ドキュメント優先**: 新機能実装前に[公式ドキュメント](https://nicegui.io/documentation/)を確認
+- **カスタムCSS最小化**: 公式コンポーネントで解決できる場合はCSS直書き回避
+- **classes()とstyle()使い分け**: Tailwindクラスは`classes()`、カスタムCSSは`style()`
+- **simple_test.pyとの一致性確認**: `nicegui-query` 出力数で正確性検証
+- **段階的移行**: 全ページ一括変更ではなく、1ページずつ確実に移行
+- **バックアップ保持**: 既存実装は必ず `_back` として保持
+- **DOM実測**: ブラウザ開発者ツールで実際の出力を常に確認
+
+### カスタムCSS vs 公式コンポーネント判断基準
+```python
+# ✅ 公式コンポーネントで実現可能 → 優先
+ui.table(columns=columns, rows=rows, pagination=True)
+
+# ✅ 公式 + 軽微なスタイル調整 → 許可
+ui.card().style('border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);')
+
+# ⚠️ 複雑なカスタムレイアウト → arrangement_test.pyで実験後判断
+with ui.element('div').style('display: grid; grid-template-columns: ...'):
+    # 複雑なカスタム実装
+```

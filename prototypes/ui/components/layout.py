@@ -56,7 +56,7 @@ class RAGHeader:
                 self._nav_button('📤', 'アップロード', '/upload', self.current_page == "upload")
                 self._nav_button('🔄', 'OCR調整', '/ocr-adjustment', self.current_page == "ocr-adjustment")
                 self._nav_button('⚙️', 'データ登録', '/data-registration', self.current_page == "data-registration")
-                self._nav_button('🧪', '配置テスト', '/arrangement-test', self.current_page == "test")
+                self._nav_button('🧪', '配置テスト', '/arrangement-test', self.current_page == "arrangement-test")
                 self._nav_button('⚡', '管理', '/admin', self.current_page == "admin")
             
             # 右側：認証部分（固定幅160px・右寄せ）
@@ -66,15 +66,35 @@ class RAGHeader:
                 ui.button('ログアウト', on_click=lambda: ui.navigate.to('/login')).style('background:#3b82f6;color:white;border:none;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;')
     
     def _nav_button(self, icon: str, label: str, path: str, is_current: bool = False):
-        """ナビゲーションボタン（現在ページ対応・レスポンシブ）"""
+        """ナビゲーションボタン（現在ページ対応・レスポンシブ・ホバー効果）"""
         # 現在ページかどうかで色とクリック動作を分岐
         text_color = '#ff6b6b' if is_current else 'white'  # 現在ページは赤字
+        background_color = 'rgba(255,107,107,0.1)' if is_current else 'transparent'  # 現在ページは薄い赤背景
         cursor_style = 'default' if is_current else 'pointer'
         click_handler = None if is_current else lambda: ui.navigate.to(path)
         
-        with ui.element('div').style(f'display:flex;align-items:center;gap:3px;cursor:{cursor_style};padding:2px 6px;border-radius:3px;transition:background 0.2s;white-space:nowrap;height:auto;line-height:1;').on('click', click_handler):
+        # ホバー効果用のID生成
+        button_id = f'nav-btn-{path.replace("/", "-").replace("-", "")}'
+        
+        with ui.element('div').style(
+            f'display:flex;align-items:center;gap:3px;cursor:{cursor_style};'
+            f'padding:2px 6px;border-radius:3px;transition:all 0.2s;'
+            f'white-space:nowrap;height:auto;line-height:1;'
+            f'background:{background_color};'
+        ).props(f'id="{button_id}"').on('click', click_handler):
             ui.label(icon).style(f'color:{text_color};font-size:14px;line-height:1;')
             ui.label(label).style(f'color:{text_color};font-size:12px;line-height:1;')
+        
+        # ホバー効果CSS追加（現在ページでない場合のみ）
+        if not is_current:
+            ui.add_head_html(f'''
+            <style>
+            #{button_id}:hover {{
+                background: rgba(255,255,255,0.1) !important;
+                transform: translateY(-1px);
+            }}
+            </style>
+            ''')
 
 
 class RAGFooter:
@@ -88,15 +108,15 @@ class RAGFooter:
     def create_status_bar(self):
         """ステータスバー作成（完全画面幅・隙間ゼロ）"""
         with ui.element('div').style('position:fixed;bottom:0;left:0;right:0;width:100%;height:24px;background:#374151;color:white;display:flex;align-items:center;justify-content:space-between;padding:0;margin:0;font-size:12px;z-index:999;'):
-            ui.label('システム: 正常稼働中').style('color:#10b981;margin-left:16px;')
-            ui.label('接続: OK').style('color:#3b82f6;margin-right:16px;')
+            ui.label('システム: 正常稼働中').style('color:white;margin-left:16px;')
+            ui.label('接続: OK').style('color:white;margin-right:16px;')
 
 # RAGLayoutクラスは廃止
 # 理由: main.pyでの一元的CSS管理と矛盾、!important濫用でUI設計ポリシー違反
 # 代替: 各ページでRAGHeader + MainContentArea + RAGFooterを直接使用
 
-class MainContentArea:
-    """メインコンテンツエリア - c13方式完全制御コンテナ"""
+class MainContentArea_back:
+    """メインコンテンツエリア - c13方式完全制御コンテナ（バックアップ版）"""
     
     def __init__(self, content_padding: str = "8px", header_height: str = "48px", footer_height: str = "24px"):
         """
@@ -151,3 +171,56 @@ class MainContentArea:
         result = self.content_area.__exit__(exc_type, exc_val, exc_tb)
         self.container.__exit__(exc_type, exc_val, exc_tb)
         return result
+
+
+class MainContentArea:
+    """
+    FixedHeaderFooterContainer - simple_test.py成功実装ベース
+    
+    simple_test.pyでピクセル完璧を実現した手法を共通コンポーネント化：
+    1. ui.query().style()でフレームワーク要素を完全制御
+    2. calc(100vh - 48px - 24px)による正確な高さ計算
+    3. position:fixedヘッダー・フッター対応の完全レイアウト
+    
+    Usage:
+        RAGHeader()
+        with MainContentArea():
+            # コンテンツ配置
+        RAGFooter()
+    """
+    
+    def __init__(self, content_padding: str = "8px"):
+        """
+        Args:
+            content_padding: メインコンテンツエリアの内部パディング（デフォルト8px）
+        """
+        self.content_padding = content_padding
+        self.container = None
+        
+    def __enter__(self):
+        """フレームワーク制御 + メインコンテンツエリア作成"""
+        
+        # simple_test.py成功パターン: ui.query().style()でフレームワーク完全制御
+        ui.query('html').style('margin: 0; padding: 0; height: 100vh; overflow: hidden;')
+        ui.query('body').style('margin: 0; padding: 0; height: 100vh; overflow: hidden;')
+        ui.query('.q-layout').style('margin: 0; padding: 0; height: 100vh; overflow: hidden;')
+        ui.query('.q-page-container').style('margin: 0; padding: 0; height: 100vh; overflow: hidden;')
+        ui.query('.q-page').style('margin: 0; padding: 0; height: 100vh; overflow: hidden;')
+        ui.query('.nicegui-content').style('margin: 0; padding: 0; height: 100vh; overflow: hidden;')
+        
+        # メインコンテンツエリア（simple_testと同じ計算式）
+        self.container = ui.element('div').style(
+            'margin: 48px 0 24px 0;'                    # ヘッダー48px + フッター24px分のマージン
+            'padding: 0;'                               # 外部パディングゼロ
+            'width: 100%;'                              # 全幅使用
+            'height: calc(100vh - 48px - 24px);'        # 正確な高さ計算（simple_testと同じ）
+            'overflow: hidden;'                         # オーバーフロー制御
+            'position: relative;'                       # 子要素基準
+            'box-sizing: border-box;'                   # ボックスサイズ計算
+        )
+        
+        return self.container.__enter__()
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """メインコンテンツエリア終了"""
+        return self.container.__exit__(exc_type, exc_val, exc_tb)

@@ -46,6 +46,12 @@ class ArrangementTestTabA:
         
         # ページネーションJavaScript
         self._add_pagination_js()
+        
+        # テーブルスクロールバー固定余白方式（JavaScript不要）
+        # self._add_table_scrollbar_js()  # 固定余白方式では不要
+        
+        # ページネーションCSS調整（直接inputタグ使用で不要）
+        # self._add_pagination_css()
     
     def _create_left_top_pane(self):
         """左上ペイン - データ分析"""
@@ -62,17 +68,23 @@ class ArrangementTestTabA:
                 'display: flex; flex-direction: column; '
                 'overflow: hidden;'
             ):
-                # ヘッダー
+                # ヘッダー（コンパクトサイズ）
                 with ui.element('div').style(
                     'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); '
-                    'color: white; padding: 12px 16px; height: 48px; '
+                    'color: white; padding: 8px 12px; height: 32px; '
                     'display: flex; align-items: center; justify-content: space-between; '
                     'box-sizing: border-box; flex-shrink: 0;'
                 ):
                     ui.label('📊 データ分析').style('font-weight: bold; font-size: 14px;')
-                    with ui.element('div').style('display: flex; gap: 4px;'):
-                        ui.button('📈', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
-                        ui.button('⚙️', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
+                    with ui.element('div').style('display: flex; gap: 2px;'):
+                        ui.button('📈', color='white').style(
+                            'padding: 1px 4px; font-size: 9px; min-width: 16px; '
+                            'height: 20px; margin: 0; line-height: 1;'
+                        )
+                        ui.button('⚙️', color='white').style(
+                            'padding: 1px 4px; font-size: 9px; min-width: 16px; '
+                            'height: 20px; margin: 0; line-height: 1;'
+                        )
                 
                 # コンテンツ
                 with ui.element('div').style('flex: 1; padding: 8px; overflow: auto;'):
@@ -129,14 +141,14 @@ class ArrangementTestTabA:
                 # ヘッダー
                 with ui.element('div').style(
                     'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); '
-                    'color: white; padding: 12px 16px; height: 48px; '
+                    'color: white; padding: 8px 12px; height: 32px; '
                     'display: flex; align-items: center; justify-content: space-between; '
                     'box-sizing: border-box; flex-shrink: 0;'
                 ):
                     ui.label('👥 ユーザー管理').style('font-weight: bold; font-size: 14px;')
-                    with ui.element('div').style('display: flex; gap: 4px;'):
-                        ui.button('➕', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
-                        ui.button('✏️', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
+                    with ui.element('div').style('display: flex; gap: 2px;'):
+                        ui.button('➕', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
+                        ui.button('✏️', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
                 
                 # テーブルとページネーション
                 with ui.element('div').style('flex: 1; display: flex; flex-direction: column; overflow: hidden;'):
@@ -205,14 +217,14 @@ class ArrangementTestTabA:
                 # ヘッダー
                 with ui.element('div').style(
                     'background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); '
-                    'color: white; padding: 12px 16px; height: 48px; '
+                    'color: white; padding: 8px 12px; height: 32px; '
                     'display: flex; align-items: center; justify-content: space-between; '
                     'box-sizing: border-box; flex-shrink: 0;'
                 ):
                     ui.label('📝 タスク管理').style('font-weight: bold; font-size: 14px;')
-                    with ui.element('div').style('display: flex; gap: 4px;'):
-                        ui.button('✅', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
-                        ui.button('🔄', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
+                    with ui.element('div').style('display: flex; gap: 2px;'):
+                        ui.button('✅', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
+                        ui.button('🔄', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
                 
                 # タスクリスト
                 with ui.element('div').style('flex: 1; padding: 8px; overflow: auto;'):
@@ -279,14 +291,14 @@ class ArrangementTestTabA:
                 # ヘッダー
                 with ui.element('div').style(
                     'background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); '
-                    'color: white; padding: 12px 16px; height: 48px; '
+                    'color: white; padding: 8px 12px; height: 32px; '
                     'display: flex; align-items: center; justify-content: space-between; '
                     'box-sizing: border-box; flex-shrink: 0;'
                 ):
                     ui.label('💬 システムログ').style('font-weight: bold; font-size: 14px;')
-                    with ui.element('div').style('display: flex; gap: 4px;'):
-                        ui.button('🔄', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
-                        ui.button('🗑️', color='white').style('padding: 2px 6px; font-size: 10px; min-width: 20px;')
+                    with ui.element('div').style('display: flex; gap: 2px;'):
+                        ui.button('🔄', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
+                        ui.button('🗑️', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
                 
                 # ログ表示
                 with ui.element('div').style(
@@ -326,39 +338,49 @@ class ArrangementTestTabA:
         end_idx = start_idx + self.rows_per_page
         current_page_data = self.users_data[start_idx:end_idx]
         
-        # ヘッダー固定テーブルコンテナ
+        # ヘッダー固定テーブルコンテナ（スクロールバーオーバーレイ方式）
         with ui.element('div').style(
             'width: 100%; height: 100%; '
             'display: flex; flex-direction: column; '
-            'overflow: hidden;'
+            'overflow: hidden; position: relative;'
         ).props('id="table-container"'):
             
-            # ヘッダー（固定・スクロールバー幅考慮）
+            # ヘッダー（固定・オーバーレイ方式）
             with ui.element('div').style(
                 'flex-shrink: 0; background: #3b82f6; '
                 'color: white; font-weight: bold; '
                 'font-size: 11px; border-bottom: 1px solid #e5e7eb; '
-                'padding-right: 17px; box-sizing: border-box;'  # スクロールバー幅分確保
-            ):
+                'padding-right: 0; box-sizing: border-box;'  # 余白削除（オーバーレイ方式）
+            ).props('id="table-header"'):
                 with ui.element('div').style(
                     'display: grid; '
                     'grid-template-columns: 60px 1fr 2fr 100px 100px 160px; '
                     'gap: 0; padding: 0;'
                 ):
-                    for header in ['ID', '名前', 'メール', '役割', 'ステータス', '最終ログイン']:
+                    headers = ['ID', '名前', 'メール', '役割', 'ステータス', '最終ログイン']
+                    for i, header in enumerate(headers):
+                        # 最後のヘッダー（最終ログイン）は境界線なし
+                        border_style = 'border-right: 1px solid rgba(255,255,255,0.2);' if i < len(headers) - 1 else ''
                         with ui.element('div').style(
-                            'padding: 6px 8px; '
-                            'border-right: 1px solid rgba(255,255,255,0.2); '
-                            'text-align: center; '
-                            'background: #3b82f6;'
-                        ):
+                            f'padding: 6px 8px; '
+                            f'{border_style} '
+                            f'text-align: center; '
+                            f'background: #3b82f6;'
+                        ).classes(f'header-cell header-cell-{i}'):
                             ui.label(header)
             
-            # テーブル本体（スクロール可能）
+            # テーブル本体（スクロールバーオーバーレイ方式）
             with ui.element('div').style(
-                'flex: 1; overflow-y: auto; overflow-x: auto; '
-                'border: 1px solid #e5e7eb;'
-            ).props('id="table-body"'):
+                'flex: 1; overflow-y: auto; overflow-x: hidden; '
+                'border: 1px solid #e5e7eb; '
+                'scrollbar-width: thin; '
+                'scrollbar-color: #cbd5e0 #f7fafc;'
+            ).props(
+                'id="table-body" '
+                'tabindex="0" '
+                'role="region" '
+                'aria-label="ユーザーデータテーブル（スクロール可能）"'
+            ):
                 for row in current_page_data:
                     self._create_table_row(row)
     
@@ -434,11 +456,11 @@ class ArrangementTestTabA:
     def _create_pagination(self):
         """ページネーション作成"""
         with ui.element('div').style(
-            'height: 36px; background: #f8f9fa; '
+            'height: 24px; background: #f8f9fa; '
             'border-top: 1px solid #e5e7eb; '
             'display: flex; align-items: center; '
             'justify-content: space-between; '
-            'padding: 0 12px; font-size: 12px; '
+            'padding: 0 12px; font-size: 11px; '
             'color: #374151; flex-shrink: 0;'
         ).props('id="pagination-container"'):
             with ui.element('div').props('id="pagination-info"'):
@@ -447,26 +469,42 @@ class ArrangementTestTabA:
             with ui.element('div').style('display: flex; gap: 4px; align-items: center;').props('id="pagination-buttons"'):
                 # 前ページボタン
                 ui.button('◀', color='grey').style(
-                    'padding: 2px 8px; font-size: 10px; min-width: 20px;'
+                    'padding: 1px 6px; font-size: 10px; min-width: 20px; height: 20px;'
                 ).props('id="prev-btn" onclick="changePage(-1)"')
                 
-                # ページ入力・表示エリア
-                with ui.element('div').style('display: flex; align-items: center; gap: 4px;'):
-                    ui.input(value='1', placeholder='1').style(
-                        'width: 40px; height: 24px; font-size: 11px; '
+                # ページ入力・表示エリア新（直接inputタグ使用）
+                with ui.element('div').style(
+                    'display: flex; align-items: center; gap: 4px; '
+                    'height: 20px;'
+                ):
+                    # 直接inputタグを使用（NiceGUIのui.input()を回避）
+                    ui.element('input').style(
+                        'width: 40px; height: 20px; font-size: 10px; '
                         'text-align: center; border: 1px solid #d1d5db; '
-                        'border-radius: 3px; padding: 2px;'
-                    ).props('id="page-input" onchange="goToPageFromInput()" onkeypress="handlePageInputEnter(event)"')
+                        'border-radius: 3px; padding: 1px; '
+                        'margin: 0; box-sizing: border-box; '
+                        'outline: none; background: white;'
+                    ).props(
+                        'id="page-input" '
+                        'type="text" '
+                        'value="1" '
+                        'onchange="goToPageFromInput()" '
+                        'onkeypress="handlePageInputEnter(event)"'
+                    )
                     
-                    ui.label('/').style('font-size: 11px; color: #6b7280;')
+                    ui.label('/').style(
+                        'font-size: 10px; color: #6b7280; '
+                        'line-height: 20px; margin: 0;'
+                    )
                     
                     ui.label('2').style(
-                        'font-size: 11px; color: #374151; font-weight: bold;'
+                        'font-size: 10px; color: #374151; font-weight: bold; '
+                        'line-height: 20px; margin: 0;'
                     ).props('id="max-pages"')
                 
                 # 次ページボタン
                 ui.button('▶', color='grey').style(
-                    'padding: 2px 8px; font-size: 10px; min-width: 20px;'
+                    'padding: 1px 6px; font-size: 10px; min-width: 20px; height: 20px;'
                 ).props('id="next-btn" onclick="changePage(1)"')
     
     def _create_sample_users(self):
@@ -813,4 +851,124 @@ class ArrangementTestTabA:
             console.log('Pagination initialized');
         }, 500);
         </script>
+        
+        <style>
+        /* スクロール領域のアクセシビリティ対応 */
+        [role="region"][aria-label][tabindex]:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        /* スクロールバーオーバーレイ方式（ヘッダー余白削除） */
+        #table-header {
+            padding-right: 0 !important;
+            box-sizing: border-box !important;
+        }
+        
+        /* テーブルコンテナでスクロールバーオーバーレイを制御 */
+        #table-container {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #table-body {
+            position: relative;
+            overflow-y: auto;
+            overflow-x: hidden;
+            /* スクロールバーのカスタマイズ (Webkit系ブラウザ) */
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f7fafc;
+        }
+        
+        /* Webkit系ブラウザ向けスクロールバースタイリング */
+        #table-body::-webkit-scrollbar {
+            width: 12px;
+            background-color: transparent;
+        }
+        
+        #table-body::-webkit-scrollbar-track {
+            background: rgba(247, 250, 252, 0.8);
+            border-radius: 6px;
+            margin: 2px;
+        }
+        
+        #table-body::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        
+        #table-body::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+        
+        #table-body::-webkit-scrollbar-thumb:active {
+            background: #6b7280;
+        }
+        
+        /* スクロールバーのオーバーレイ効果を強化 */
+        #table-body {
+            /* スクロールバーがコンテンツの上に表示されるように設定 */
+            scrollbar-gutter: stable;
+        }
+        
+        /* ホバー時のスクロールバー表示強化 */
+        #table-body:hover::-webkit-scrollbar {
+            opacity: 1;
+        }
+        
+        /* スクロールバーがヘッダーやフッターに重ならないように高さ調整 */
+        #table-body {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        
+        /* テーブル行のグリッドレイアウトをヘッダーと完全一致させる */
+        #table-body > div {
+            display: grid;
+            grid-template-columns: 60px 1fr 2fr 100px 100px 160px;
+            gap: 0;
+            padding: 0;
+        }
+        
+        /* パネルボタンのmargin強制適用 */
+        .nicegui-button {
+            margin: 0 !important;
+        }
+        
+        /* ドロップダウンアイコンの文字化問題を修正 */
+        .q-select .q-field__append {
+            display: none !important;
+        }
+        
+        .q-select::after {
+            content: '▼';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #6b7280;
+            pointer-events: none;
+        }
+        
+        .q-select .q-field__control::before {
+            display: none !important;
+        }
+        
+        .q-select .q-field__control::after {
+            display: none !important;
+        }
+        </style>
         ''')
+    
+    # スクロールバーオーバーレイ方式採用：
+    # - スクロールバーをテーブルコンテンツの上にオーバーレイ表示
+    # - ヘッダーの余白調整が不要（境界位置ズレなし）
+    # - スクロールバーの有無に関係なく一定の表示
+    # - CSSのみで実現、JavaScript不要
+    # - ヘッダーとデータ行の境界位置が完全一致
+    
+    # ページネーションは直接inputタグ使用でシンプル化済み
+    # オーバーレイ方式でスクロールバー位置問題を根本解決

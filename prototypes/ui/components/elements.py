@@ -222,16 +222,6 @@ class CommonSplitter:
                     this.setupGlobalEvents();
                     this.initialized = true;
                     console.log(`CommonSplitter: ${allSplitters.length}個のスプリッター初期化完了`);
-                    
-                    // デバッグ情報出力
-                    allSplitters.forEach((splitter, index) => {
-                        console.log(`Splitter ${index}:`, {
-                            id: splitter.id,
-                            cursor: splitter.style.cursor,
-                            parent: splitter.parentElement?.tagName,
-                            siblings: splitter.parentElement?.children.length
-                        });
-                    });
                 }, 300);
             },
             
@@ -251,58 +241,34 @@ class CommonSplitter:
             setupGlobalEvents: function() {
                 if (this.globalEventsSetup) return;
                 
-                // マウス移動処理（実際のリサイズ）
+                // mousemoveイベントでサイズ変更
                 document.addEventListener('mousemove', (e) => {
                     if (!this.isDragging || !this.currentSplitter) return;
                     
                     const splitter = this.currentSplitter;
                     const isVertical = splitter.style.cursor === 'col-resize';
+                    const prevElement = splitter.previousElementSibling;
+                    const nextElement = splitter.nextElementSibling;
                     
-                    // スプリッターの親要素を取得
-                    const container = splitter.parentElement;
-                    if (!container) {
-                        console.log('Container not found for splitter:', splitter.id);
-                        return;
-                    }
+                    if (!prevElement || !nextElement) return;
                     
-                    console.log('Splitter drag:', {
-                        splitterId: splitter.id,
-                        isVertical: isVertical,
-                        containerChildren: container.children.length,
-                        containerTagName: container.tagName
-                    });
+                    const parent = splitter.parentElement;
+                    const parentRect = parent.getBoundingClientRect();
                     
-                    // 縦スプリッター（左右分割）
                     if (isVertical) {
-                        const rect = container.getBoundingClientRect();
-                        const x = e.clientX - rect.left;
-                        const percentage = Math.max(20, Math.min(80, (x / rect.width) * 100));
+                        // 縦スプリッター（左右分割）
+                        const x = e.clientX - parentRect.left;
+                        const percentage = Math.max(20, Math.min(80, (x / parentRect.width) * 100));
                         
-                        // 左右のパネルを取得
-                        const children = Array.from(container.children);
-                        const leftPanel = children[0];
-                        const rightPanel = children[2]; // スプリッターが1番目なので2番目
+                        prevElement.style.width = percentage + '%';
+                        nextElement.style.width = (100 - percentage) + '%';
+                    } else {
+                        // 横スプリッター（上下分割）
+                        const y = e.clientY - parentRect.top;
+                        const percentage = Math.max(20, Math.min(80, (y / parentRect.height) * 100));
                         
-                        if (leftPanel && rightPanel) {
-                            leftPanel.style.width = percentage + '%';
-                            rightPanel.style.width = (100 - percentage) + '%';
-                        }
-                    } 
-                    // 横スプリッター（上下分割）
-                    else {
-                        const rect = container.getBoundingClientRect();
-                        const y = e.clientY - rect.top;
-                        const percentage = Math.max(20, Math.min(80, (y / rect.height) * 100));
-                        
-                        // 上下のパネルを取得
-                        const children = Array.from(container.children);
-                        const topPanel = children[0];
-                        const bottomPanel = children[2]; // スプリッターが1番目なので2番目
-                        
-                        if (topPanel && bottomPanel) {
-                            topPanel.style.height = percentage + '%';
-                            bottomPanel.style.height = (100 - percentage) + '%';
-                        }
+                        prevElement.style.height = percentage + '%';
+                        nextElement.style.height = (100 - percentage) + '%';
                     }
                 });
                 
@@ -1159,3 +1125,176 @@ class CommonFormElements:
         ):
             for element in elements:
                 element
+
+
+class ChatSearchResultCard:
+    """
+    チャット検索結果カード（NiceGUI公式準拠）
+    
+    機能:
+    - 検索結果の表示（ファイル名、説明、プレビュー、一致度）
+    - アクションボタン配置
+    - ホバー効果対応
+    - レスポンシブ対応
+    
+    Usage:
+        result_data = {
+            'filename': 'テストファイル1.pdf',
+            'description': '説明文...',
+            'content': 'プレビューテキスト...',
+            'score': 0.85
+        }
+        ChatSearchResultCard.create(result_data, index=0, on_detail=detail_handler, on_edit=edit_handler)
+    """
+    
+    @staticmethod
+    def create(result: dict, index: int = 0, on_detail: Optional[Callable] = None, on_edit: Optional[Callable] = None, on_filename_click: Optional[Callable] = None):
+        """検索結果カードを作成（ファイル名クリッカブル対応）"""
+        with ui.element('div').style(
+            'border: 1px solid #ddd; padding: 12px; margin: 8px 0; '
+            'border-radius: 4px; background: #fafafa; '
+            'transition: all 0.2s;'
+        ).classes('search-result-card'):
+            # タイトル行
+            with ui.row().style('width: 100%; justify-content: space-between; align-items: center;'):
+                # ファイル名 - クリッカブル
+                filename_text = f"{index + 1}. {result['filename']}"
+                if on_filename_click:
+                    ui.button(filename_text, on_click=on_filename_click).style(
+                        'font-size: 1.1em; margin: 0 0 6px; font-weight: 600; '
+                        'background: none; border: none; padding: 0; color: #2563eb; '
+                        'text-decoration: underline; cursor: pointer; text-align: left;'
+                    ).props('flat')
+                else:
+                    ui.label(filename_text).style(
+                        'font-size: 1.1em; margin: 0 0 6px; font-weight: 600;'
+                    )
+                ui.label(f"一致度: {result['score']:.3f}").style('color: #666; font-size: 0.9em;')
+            
+            # 説明文
+            ui.label(result['description']).style('color: #555; margin-bottom: 8px;')
+            
+            # プレビューテキスト
+            with ui.element('pre').style(
+                'white-space: pre-wrap; background: #f5f5f5; '
+                'padding: 8px; border-radius: 4px; overflow-x: auto; '
+                'margin: 8px 0; font-size: 0.9em;'
+            ):
+                content_preview = result['content'][:200] + ('...' if len(result['content']) > 200 else '')
+                ui.html(content_preview)
+            
+            # アクションボタン
+            with ui.row().style('gap: 8px; margin-top: 6px;'):
+                ui.button('📄 詳細', on_click=on_detail if on_detail else lambda: None).style(
+                    'padding: 4px 8px; font-size: 12px; min-height: 28px;'
+                )
+                ui.button('📎 編集', on_click=on_edit if on_edit else lambda: None).style(
+                    'padding: 4px 8px; font-size: 12px; min-height: 28px;'
+                )
+
+
+class ChatLayoutButton:
+    """
+    チャットレイアウト切り替えボタン（NiceGUI公式準拠）
+    
+    機能:
+    - レイアウト切り替え用ボタン
+    - 位置指定対応（絶対位置）
+    - カスタマイズ可能なスタイル
+    
+    Usage:
+        ChatLayoutButton.create(">>", on_click=switch_handler, title="第2パターンに切り替え")
+    """
+    
+    @staticmethod
+    def create(
+        text: str,
+        on_click: Optional[Callable] = None,
+        title: str = "",
+        position_style: str = "position: absolute; top: 8px; right: 8px; z-index: 1000;"
+    ):
+        """レイアウト切り替えボタンを作成"""
+        with ui.element('div').style(position_style):
+            ui.button(text, on_click=on_click if on_click else lambda: None).style(
+                'background: rgba(255,255,255,0.9); border: 1px solid #ddd; '
+                'border-radius: 4px; padding: 5px 10px; font-size: 12px;'
+            ).props(f'title="{title}"')
+
+
+class ChatSettingsPanel:
+    """
+    チャット検索設定パネル（NiceGUI公式準拠）
+    
+    機能:
+    - 検索設定フォーム
+    - アクションボタン配置
+    - CommonPanelベース
+    
+    Usage:
+        ChatSettingsPanel.create(
+            search_handler=search_func,
+            history_handler=history_func
+        )
+    """
+    
+    @staticmethod
+    def create(
+        search_handler: Optional[Callable] = None,
+        history_handler: Optional[Callable] = None,
+        width: str = "100%",
+        height: str = "100%"
+    ):
+        """検索設定パネルを作成"""
+        with CommonPanel(
+            title="⚙️ 検索設定",
+            gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            width=width,
+            height=height
+        ) as panel:
+            # 質問入力（行間縮小）
+            ui.textarea(label='質問を入力してください', placeholder='質問を入力してください…').style(
+                'width: 100%; min-height: 40px; margin-bottom: 2px;'
+            )
+            
+            # 設定項目（検索モード・埋め込みモデル：左右並び、左寄せ）
+            with ui.row().style('width: 100%; align-items: center; margin-bottom: 0px; gap: 4px; justify-content: flex-start;'):
+                with ui.column().style('min-width: 0; flex-shrink: 1;'):
+                    with ui.row().style('align-items: center;'):
+                        ui.label('検索モード：').style('min-width: 70px; font-size: 12px; line-height: 1.4;')
+                        ui.select(['ファイル別（要約+一致度）', 'チャンク統合'], value='ファイル別（要約+一致度）').style('width: 160px; font-size: 12px;')
+                
+                with ui.column().style('min-width: 0; flex-shrink: 1; margin-left: 8px;'):
+                    with ui.row().style('align-items: center;'):
+                        ui.label('埋め込みモデル：').style('min-width: 80px; font-size: 12px; line-height: 1.4;')
+                        ui.select(['intfloat/e5-large-v2'], value='intfloat/e5-large-v2').style('width: 140px; font-size: 12px;')
+            
+            # 検索件数・最小一致度：左右並び（値フィールド高さ位置調整）
+            with ui.row().style('width: 100%; align-items: center; margin-bottom: 0px; gap: 4px; justify-content: flex-start;'):
+                with ui.column().style('min-width: 0; flex-shrink: 1;'):
+                    with ui.row().style('align-items: center;'):
+                        ui.label('検索件数：').style('min-width: 60px; font-size: 12px; line-height: 1.4;')
+                        ui.number(label='', value=10, min=1, max=50).style('width: 3.5em; font-size: 12px; height: 32px; line-height: 1.4;')
+                        ui.label('件').style('margin-left: 4px; color: #666; font-size: 12px; line-height: 1.4;')
+                
+                with ui.column().style('min-width: 0; flex-shrink: 1; margin-left: 8px;'):
+                    with ui.row().style('align-items: center;'):
+                        ui.label('最小一致度：').style('min-width: 70px; font-size: 12px; line-height: 1.4;')
+                        ui.number(label='', value=0.0, min=0, max=1, step=0.1).style('width: 3.5em; font-size: 12px; height: 32px; line-height: 1.4;')
+                        ui.label('以上').style('margin-left: 4px; color: #666; font-size: 12px; line-height: 1.4;')
+            
+            # 検索タイムアウト（1行）
+            with ui.row().style('width: 100%; align-items: center; margin-bottom: 2px;'):
+                ui.label('⏱️ 検索タイムアウト：').style('min-width: 100px; font-size: 12px; line-height: 1.4;')
+                ui.number(label='', value=10, min=0, max=3600, step=5).style('width: 4em; font-size: 12px;')
+                ui.label('秒（0でタイムアウトなし）').style('margin-left: 4px; color: #666; font-size: 12px; line-height: 1.4;')
+            
+            # アクションボタン + PDF表示設定（1行に配置）
+            with ui.row().style('width: 100%; align-items: center; gap: 4px; margin-top: 2px;'):
+                ui.button('🔍 検索実行', color='primary', on_click=search_handler if search_handler else lambda: None).style('font-size: 12px; padding: 4px 8px;')
+                ui.button('📜 履歴', on_click=history_handler if history_handler else lambda: None).style('font-size: 12px; padding: 4px 8px;')
+                
+                # PDF表示設定（履歴ボタンの右に間隔を開けて配置）
+                with ui.element('div').style('margin-left: 12px; display: flex; align-items: center;'):
+                    ui.label('PDF表示：').style('font-size: 12px; margin-right: 6px; line-height: 1.4;')
+                    with ui.radio(['同一タブ内', '別タブ'], value='同一タブ内').style('font-size: 11px;') as radio:
+                        radio.props('inline dense')

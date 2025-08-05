@@ -13,6 +13,8 @@ class ArrangementTestTabC:
         """タブCの共通コンポーネントテストを描画"""
         # スプリッター用CSS追加
         CommonSplitter.add_splitter_styles()
+        # スプリッターJavaScript追加
+        CommonSplitter.add_splitter_javascript()
         
         with ui.element('div').style(
             'width: 100%; height: 100%; '
@@ -24,7 +26,7 @@ class ArrangementTestTabC:
                 'width: 50%; height: 100%; '
                 'display: flex; flex-direction: column; '
                 'margin: 0; padding: 0; gap: 0;'
-            ):
+            ).props('id="left-pane"'):
                 # 上パネル: データ分析風
                 with CommonPanel(
                     title="📊 共通パネルテスト",

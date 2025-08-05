@@ -18,8 +18,8 @@ class FilesPage:
         # 共通ヘッダー
         RAGHeader(show_site_name=True, current_page="files")
         
-        # 全ページ共通メインコンテンツエリア（オーバーフロー禁止・パネル内スクロール）
-        with MainContentArea(allow_overflow=False):
+        # 全ページ共通メインコンテンツエリア
+        with MainContentArea():
             # ページ内容（余白調整不要）
             with ui.element('div').style('padding:8px;display:flex;flex-direction:column;height:100%;'):
                 # 検索・フィルター

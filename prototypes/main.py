@@ -17,6 +17,17 @@ fastapi_app = FastAPI(
     version="1.0.0"
 )
 
+# グローバルCSS設定（UI設計ポリシー準拠・1箇所のみ定義）
+ui.add_head_html('''
+<style>
+html, body { margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+.q-layout { margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+.q-page-container { margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+.q-page { margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+.nicegui-content { margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+</style>
+''')
+
 # 認証クラス（簡易実装）
 class SimpleAuth:
     _authenticated = False
@@ -124,7 +135,7 @@ def admin():
 def arrangement_test():
     """UI配置テストページ"""
     from ui.pages.arrangement_test import ArrangementTestPage
-    ArrangementTestPage().render()
+    ArrangementTestPage()
 
 # ====== FastAPI エンドポイント ======
 
@@ -157,6 +168,8 @@ async def switch_chat_pattern(request: dict):
 # GitHub Discussion #2063: NiceGUIの公式解決策
 # https://github.com/zauberzeug/nicegui/discussions/2063
 ui.query('.nicegui-content').classes('p-0 gap-0')
+
+# 場当たり対応を削除（根本原因を特定するため）
 
 # ====== アプリケーション起動 ======
 

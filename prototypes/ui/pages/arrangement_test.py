@@ -6,6 +6,7 @@ from ui.pages.arrangement_test_tab_a import ArrangementTestTabA
 from ui.pages.arrangement_test_tab_b import ArrangementTestTabB
 from ui.pages.arrangement_test_tab_c import ArrangementTestTabC
 from ui.pages.arrangement_test_tab_d import ArrangementTestTabD
+from ui.pages.arrangement_test_tab_e import ArrangementTestTabE
 
 class ArrangementTestPage:
     def __init__(self, current_page: str = "arrangement-test"):
@@ -42,6 +43,7 @@ class ArrangementTestPage:
                 self._tab_button('tab2', 'B', False)
                 self._tab_button('tab3', 'C', False)
                 self._tab_button('tab4', 'D', False)
+                self._tab_button('tab5', 'E', False)
             
             # タブコンテンツエリア
             with ui.element('div').style(
@@ -69,12 +71,19 @@ class ArrangementTestPage:
                 ).props('id="tab3-content"'):
                     ArrangementTestTabC().render()
                 
-                # タブ4: 空の練習エリア
+                # タブ4: 全共通コンポーネント統合展示
                 with ui.element('div').style(
                     'display: none; height: 100%; '
                     'margin: 0; padding: 0;'
                 ).props('id="tab4-content"'):
                     ArrangementTestTabD().render()
+                
+                # タブ5: 新機能実験エリア
+                with ui.element('div').style(
+                    'display: none; height: 100%; '
+                    'margin: 0; padding: 0;'
+                ).props('id="tab5-content"'):
+                    ArrangementTestTabE().render()
         
         # タブ切り替えJavaScript
         self._add_tab_switching_js()
@@ -108,7 +117,7 @@ class ArrangementTestPage:
         ui.add_head_html('''
         <script>
         function switchTab(tabId) {
-            const allTabs = ['tab1-content', 'tab2-content', 'tab3-content', 'tab4-content'];
+            const allTabs = ['tab1-content', 'tab2-content', 'tab3-content', 'tab4-content', 'tab5-content'];
             allTabs.forEach(function(id) {
                 const element = document.getElementById(id);
                 if (element) {
@@ -121,7 +130,7 @@ class ArrangementTestPage:
                 targetTab.style.display = 'block';
             }
             
-            const allTabButtons = ['tab-tab1', 'tab-tab2', 'tab-tab3', 'tab-tab4'];
+            const allTabButtons = ['tab-tab1', 'tab-tab2', 'tab-tab3', 'tab-tab4', 'tab-tab5'];
             allTabButtons.forEach(function(id) {
                 const button = document.getElementById(id);
                 if (button) {

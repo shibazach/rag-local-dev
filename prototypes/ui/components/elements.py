@@ -192,6 +192,147 @@ class CommonSplitter:
         }
         </style>
         ''')
+    
+    @staticmethod
+    def add_splitter_javascript():
+        """統一スプリッターJavaScript（全IDに対応）"""
+        ui.add_head_html('''
+        <script>
+        // グローバルスプリッター管理システム
+        window.splitterManager = window.splitterManager || {
+            initialized: false,
+            isDragging: false,
+            currentSplitter: null,
+            
+            init: function() {
+                if (this.initialized) return;
+                
+                setTimeout(() => {
+                    // 全スプリッター要素を自動検出
+                    const allSplitters = document.querySelectorAll('.splitter');
+                    
+                    allSplitters.forEach(splitter => {
+                        if (!splitter.dataset.splitterInitialized) {
+                            this.initSplitter(splitter);
+                            splitter.dataset.splitterInitialized = 'true';
+                        }
+                    });
+                    
+                    // グローバルイベント設定
+                    this.setupGlobalEvents();
+                    this.initialized = true;
+                    console.log(`CommonSplitter: ${allSplitters.length}個のスプリッター初期化完了`);
+                    
+                    // デバッグ情報出力
+                    allSplitters.forEach((splitter, index) => {
+                        console.log(`Splitter ${index}:`, {
+                            id: splitter.id,
+                            cursor: splitter.style.cursor,
+                            parent: splitter.parentElement?.tagName,
+                            siblings: splitter.parentElement?.children.length
+                        });
+                    });
+                }, 300);
+            },
+            
+            initSplitter: function(splitter) {
+                const isVertical = splitter.style.cursor === 'col-resize';
+                
+                splitter.addEventListener('mousedown', (e) => {
+                    this.isDragging = true;
+                    this.currentSplitter = splitter;
+                    splitter.classList.add('dragging');
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = isVertical ? 'col-resize' : 'row-resize';
+                    e.preventDefault();
+                });
+            },
+            
+            setupGlobalEvents: function() {
+                if (this.globalEventsSetup) return;
+                
+                // マウス移動処理（実際のリサイズ）
+                document.addEventListener('mousemove', (e) => {
+                    if (!this.isDragging || !this.currentSplitter) return;
+                    
+                    const splitter = this.currentSplitter;
+                    const isVertical = splitter.style.cursor === 'col-resize';
+                    
+                    // スプリッターの親要素を取得
+                    const container = splitter.parentElement;
+                    if (!container) {
+                        console.log('Container not found for splitter:', splitter.id);
+                        return;
+                    }
+                    
+                    console.log('Splitter drag:', {
+                        splitterId: splitter.id,
+                        isVertical: isVertical,
+                        containerChildren: container.children.length,
+                        containerTagName: container.tagName
+                    });
+                    
+                    // 縦スプリッター（左右分割）
+                    if (isVertical) {
+                        const rect = container.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const percentage = Math.max(20, Math.min(80, (x / rect.width) * 100));
+                        
+                        // 左右のパネルを取得
+                        const children = Array.from(container.children);
+                        const leftPanel = children[0];
+                        const rightPanel = children[2]; // スプリッターが1番目なので2番目
+                        
+                        if (leftPanel && rightPanel) {
+                            leftPanel.style.width = percentage + '%';
+                            rightPanel.style.width = (100 - percentage) + '%';
+                        }
+                    } 
+                    // 横スプリッター（上下分割）
+                    else {
+                        const rect = container.getBoundingClientRect();
+                        const y = e.clientY - rect.top;
+                        const percentage = Math.max(20, Math.min(80, (y / rect.height) * 100));
+                        
+                        // 上下のパネルを取得
+                        const children = Array.from(container.children);
+                        const topPanel = children[0];
+                        const bottomPanel = children[2]; // スプリッターが1番目なので2番目
+                        
+                        if (topPanel && bottomPanel) {
+                            topPanel.style.height = percentage + '%';
+                            bottomPanel.style.height = (100 - percentage) + '%';
+                        }
+                    }
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    if (this.isDragging) {
+                        document.querySelectorAll('.splitter').forEach(s => {
+                            s.classList.remove('dragging');
+                        });
+                        this.isDragging = false;
+                        this.currentSplitter = null;
+                        document.body.style.userSelect = '';
+                        document.body.style.cursor = '';
+                    }
+                });
+                
+                this.globalEventsSetup = true;
+            }
+        };
+        
+        // 初期化実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => window.splitterManager.init());
+        } else {
+            window.splitterManager.init();
+        }
+        
+        // ページ遷移後の再初期化
+        setTimeout(() => window.splitterManager.init(), 100);
+        </script>
+        ''')
 
 
 class CommonCard:

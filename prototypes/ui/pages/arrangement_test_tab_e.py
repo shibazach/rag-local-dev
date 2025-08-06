@@ -119,9 +119,7 @@ class ArrangementTestTabE:
         """検索結果カード - 共通コンポーネント使用（ファイル名クリッカブル対応）"""
         ChatSearchResultCard.create(
             result=result,
-            index=index,
-            on_detail=lambda: self._handle_detail(result),
-            on_edit=lambda: self._handle_edit(result),
+            on_click=lambda: self._handle_detail(result),
             on_filename_click=lambda: self._handle_filename_click(result)
         )
     

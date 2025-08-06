@@ -31,13 +31,8 @@ class ArrangementTestTabC:
                 with CommonPanel(
                     title="📊 共通パネルテスト",
                     gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                    buttons=[
-                        ('📈', lambda: ui.notify('チャートボタン')),
-                        ('⚙️', lambda: ui.notify('設定ボタン'))
-                    ],
                     footer_content="📊 更新: 2024-01-15 15:30",
-                    height="50%",
-                    panel_id="test-panel-1"
+                    height="50%"
                 ):
                     CommonSectionTitle.create("🎯 パネル内容テスト")
                     ui.label("CommonPanelコンポーネントの動作確認")
@@ -52,13 +47,8 @@ class ArrangementTestTabC:
                 with CommonPanel(
                     title="📝 タスク管理",
                     gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
-                    buttons=[
-                        ('✅', lambda: ui.notify('完了')),
-                        ('🔄', lambda: ui.notify('更新'))
-                    ],
                     footer_content="📝 タスク: 3件",
-                    height="50%",
-                    panel_id="test-panel-2"
+                    height="50%"
                 ):
                     CommonSectionTitle.create("📋 タスクリスト")
                     

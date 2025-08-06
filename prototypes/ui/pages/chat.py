@@ -146,9 +146,7 @@ class ChatPage:
         """検索結果カード - 共通コンポーネント使用"""
         ChatSearchResultCard.create(
             result=result,
-            index=index,
-            on_detail=lambda: self._handle_detail(result),
-            on_edit=lambda: self._handle_edit(result)
+            on_click=lambda: self._handle_detail(result)
         )
     
     def _create_pdf_panel(self):

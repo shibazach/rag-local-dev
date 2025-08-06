@@ -68,7 +68,7 @@ class ArrangementTestTabA:
                 'display: flex; flex-direction: column; '
                 'overflow: hidden;'
             ):
-                # ヘッダー（コンパクトサイズ）
+                # ヘッダー（拡張サイズ）
                 with ui.element('div').style(
                     'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); '
                     'color: white; padding: 8px 12px; height: 32px; '
@@ -78,11 +78,12 @@ class ArrangementTestTabA:
                     ui.label('📊 データ分析').style('font-weight: bold; font-size: 14px;')
                     with ui.element('div').style('display: flex; gap: 2px;'):
                         ui.button('📈', color='white').style(
-                            'padding: 1px 4px; font-size: 9px; min-width: 16px; '
-                            'height: 20px; margin: 0; line-height: 1;'
+                            'padding: 1px 4px; font-size: 9px; width: 20px !important; '
+                            'height: 20px !important; margin: 0; line-height: 1; '
+                            'min-width: 20px !important; max-width: 20px !important;'
                         )
                         ui.button('⚙️', color='white').style(
-                            'padding: 1px 4px; font-size: 9px; min-width: 16px; '
+                            'padding: 1px 4px; font-size: 9px; width: 20px; '
                             'height: 20px; margin: 0; line-height: 1;'
                         )
                 
@@ -103,7 +104,7 @@ class ArrangementTestTabA:
                 
                 # フッター
                 with ui.element('div').style(
-                    'height: 24px; background: #f8f9fa; '
+                    'height: 32px; background: #f8f9fa; '
                     'border-top: 1px solid #e5e7eb; '
                     'display: flex; align-items: center; '
                     'justify-content: space-between; '
@@ -125,51 +126,22 @@ class ArrangementTestTabA:
     
     def _create_left_bottom_pane(self):
         """左下ペイン - ユーザー管理テーブル"""
+        from ui.components.common import UserManagementPanel
+        
         with ui.element('div').style(
             'width: 100%; height: 50%; '
             'margin: 0; padding: 4px; '
             'box-sizing: border-box; overflow: hidden;'
         ).props('id="left-bottom-pane"'):
-            with ui.element('div').style(
-                'width: 100%; height: 100%; '
-                'background: white; border-radius: 12px; '
-                'box-shadow: 0 2px 8px rgba(0,0,0,0.15); '
-                'border: 1px solid #e5e7eb; '
-                'display: flex; flex-direction: column; '
-                'overflow: hidden;'
-            ):
-                # ヘッダー
-                with ui.element('div').style(
-                    'background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); '
-                    'color: white; padding: 8px 12px; height: 32px; '
-                    'display: flex; align-items: center; justify-content: space-between; '
-                    'box-sizing: border-box; flex-shrink: 0;'
-                ):
-                    ui.label('👥 ユーザー管理').style('font-weight: bold; font-size: 14px;')
-                    with ui.element('div').style('display: flex; gap: 2px;'):
-                        ui.button('➕', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
-                        ui.button('✏️', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
-                
-                # テーブルとページネーション
-                with ui.element('div').style('flex: 1; display: flex; flex-direction: column; overflow: hidden;'):
-                    # テーブル本体
-                    with ui.element('div').style('flex: 1; overflow: auto;'):
-                        self._create_user_table()
-                    
-                    # ページネーション
-                    self._create_pagination()
-                
-                # フッター
-                with ui.element('div').style(
-                    'height: 24px; background: #f8f9fa; '
-                    'border-top: 1px solid #e5e7eb; '
-                    'display: flex; align-items: center; '
-                    'justify-content: space-between; '
-                    'padding: 0 12px; font-size: 11px; '
-                    'color: #6b7280; flex-shrink: 0;'
-                ):
-                    ui.label('👥 5名のユーザー')
-                    ui.label('最終同期: 15:30')
+            # 共通コンポーネントを使用
+            panel = UserManagementPanel(
+                users_data=self.users_data,
+                on_add_user=lambda: ui.notify('ユーザー追加'),
+                on_edit_user=lambda: ui.notify('ユーザー編集'),
+                width="100%",
+                height="100%"
+            )
+            panel.render()
     
     def _create_vertical_splitter(self):
         """縦スプリッター"""
@@ -223,8 +195,8 @@ class ArrangementTestTabA:
                 ):
                     ui.label('📝 タスク管理').style('font-weight: bold; font-size: 14px;')
                     with ui.element('div').style('display: flex; gap: 2px;'):
-                        ui.button('✅', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
-                        ui.button('🔄', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
+                        ui.button('✅', color='white').style('padding: 1px 4px; font-size: 9px; width: 20px; height: 20px; margin: 0; line-height: 1;')
+                        ui.button('🔄', color='white').style('padding: 1px 4px; font-size: 9px; width: 20px; height: 20px; margin: 0; line-height: 1;')
                 
                 # タスクリスト
                 with ui.element('div').style('flex: 1; padding: 8px; overflow: auto;'):
@@ -252,7 +224,7 @@ class ArrangementTestTabA:
                 
                 # フッター
                 with ui.element('div').style(
-                    'height: 24px; background: #f8f9fa; '
+                    'height: 32px; background: #f8f9fa; '
                     'border-top: 1px solid #e5e7eb; '
                     'display: flex; align-items: center; '
                     'justify-content: space-between; '
@@ -297,8 +269,8 @@ class ArrangementTestTabA:
                 ):
                     ui.label('💬 システムログ').style('font-weight: bold; font-size: 14px;')
                     with ui.element('div').style('display: flex; gap: 2px;'):
-                        ui.button('🔄', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
-                        ui.button('🗑️', color='white').style('padding: 1px 4px; font-size: 9px; min-width: 16px; height: 20px; margin: 0; line-height: 1;')
+                        ui.button('🔄', color='white').style('padding: 1px 4px; font-size: 9px; width: 20px; height: 20px; margin: 0; line-height: 1;')
+                        ui.button('🗑️', color='white').style('padding: 1px 4px; font-size: 9px; width: 20px; height: 20px; margin: 0; line-height: 1;')
                 
                 # ログ表示
                 with ui.element('div').style(
@@ -321,7 +293,7 @@ class ArrangementTestTabA:
                 
                 # フッター
                 with ui.element('div').style(
-                    'height: 24px; background: #374151; '
+                    'height: 32px; background: #374151; '
                     'border-top: 1px solid #e5e7eb; '
                     'display: flex; align-items: center; '
                     'justify-content: space-between; '
@@ -331,26 +303,28 @@ class ArrangementTestTabA:
                     ui.label('💬 ログ: 6件')
                     ui.label('最新: 15:35')
     
-    def _create_user_table(self):
+    def _create_user_table_old(self):
         """ユーザーテーブル作成（ヘッダー固定・スクロールバー対応）"""
         # 現在ページのデータ
         start_idx = (self.current_page - 1) * self.rows_per_page
         end_idx = start_idx + self.rows_per_page
         current_page_data = self.users_data[start_idx:end_idx]
         
-        # ヘッダー固定テーブルコンテナ（スクロールバーオーバーレイ方式）
+        # ヘッダー固定テーブルコンテナ（完全オーバーレイ方式）
         with ui.element('div').style(
             'width: 100%; height: 100%; '
             'display: flex; flex-direction: column; '
-            'overflow: hidden; position: relative;'
+            'overflow: hidden; position: relative; '
+            'margin: 0; padding: 0; box-sizing: border-box;'
         ).props('id="table-container"'):
             
-            # ヘッダー（固定・オーバーレイ方式）
+            # ヘッダー（スクロールバー分padding追加）
             with ui.element('div').style(
                 'flex-shrink: 0; background: #3b82f6; '
                 'color: white; font-weight: bold; '
                 'font-size: 11px; border-bottom: 1px solid #e5e7eb; '
-                'padding-right: 0; box-sizing: border-box;'  # 余白削除（オーバーレイ方式）
+                'padding-right: 17px; margin: 0; box-sizing: border-box; '
+                'width: 100%; position: relative;'
             ).props('id="table-header"'):
                 with ui.element('div').style(
                     'display: grid; '
@@ -369,12 +343,12 @@ class ArrangementTestTabA:
                         ).classes(f'header-cell header-cell-{i}'):
                             ui.label(header)
             
-            # テーブル本体（スクロールバーオーバーレイ方式）
+            # テーブル本体（完全オーバーレイスクロール方式）
             with ui.element('div').style(
-                'flex: 1; overflow-y: auto; overflow-x: hidden; '
-                'border: 1px solid #e5e7eb; '
-                'scrollbar-width: thin; '
-                'scrollbar-color: #cbd5e0 #f7fafc;'
+                'flex: 1; overflow-y: overlay; overflow-x: hidden; '
+                'border: 1px solid #e5e7eb; margin: 0; padding: 0; '
+                'scrollbar-width: thin; scrollbar-color: #cbd5e0 #f7fafc; '
+                'box-sizing: border-box;'
             ).props(
                 'id="table-body" '
                 'tabindex="0" '
@@ -382,9 +356,9 @@ class ArrangementTestTabA:
                 'aria-label="ユーザーデータテーブル（スクロール可能）"'
             ):
                 for row in current_page_data:
-                    self._create_table_row(row)
+                    self._create_table_row_old(row)
     
-    def _create_table_row(self, row):
+    def _create_table_row_old(self, row):
         """テーブル行作成"""
         with ui.element('div').style(
             'display: grid; '
@@ -453,10 +427,10 @@ class ArrangementTestTabA:
             ):
                 ui.label(row['last_login'])
     
-    def _create_pagination(self):
+    def _create_pagination_old(self):
         """ページネーション作成"""
         with ui.element('div').style(
-            'height: 24px; background: #f8f9fa; '
+            'height: 32px; background: #f8f9fa; '
             'border-top: 1px solid #e5e7eb; '
             'display: flex; align-items: center; '
             'justify-content: space-between; '
@@ -469,7 +443,7 @@ class ArrangementTestTabA:
             with ui.element('div').style('display: flex; gap: 4px; align-items: center;').props('id="pagination-buttons"'):
                 # 前ページボタン
                 ui.button('◀', color='grey').style(
-                    'padding: 1px 6px; font-size: 10px; min-width: 20px; height: 20px;'
+                    'padding: 1px 6px; font-size: 10px; width: 20px; height: 20px;'
                 ).props('id="prev-btn" onclick="changePage(-1)"')
                 
                 # ページ入力・表示エリア新（直接inputタグ使用）
@@ -504,7 +478,7 @@ class ArrangementTestTabA:
                 
                 # 次ページボタン
                 ui.button('▶', color='grey').style(
-                    'padding: 1px 6px; font-size: 10px; min-width: 20px; height: 20px;'
+                    'padding: 1px 6px; font-size: 10px; width: 20px; height: 20px;'
                 ).props('id="next-btn" onclick="changePage(1)"')
     
     def _create_sample_users(self):

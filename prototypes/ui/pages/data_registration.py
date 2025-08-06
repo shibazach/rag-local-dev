@@ -33,32 +33,35 @@ class DataRegistrationPage:
         
         # 全ページ共通メインコンテンツエリア
         with MainContentArea():
-            # 共通スプリッタースタイル・JS追加
-            CommonSplitter.add_splitter_styles()
-            CommonSplitter.add_splitter_javascript()
-            
             self._create_main_layout()
         
         # 共通フッター
         RAGFooter()
     
     def _create_main_layout(self):
-        """3ペイン構成（2:3:5）メインレイアウト"""
+        """3ペイン構成（3:3:4）メインレイアウト + 共通スプリッター"""
         with ui.element('div').style(
             'width: 100%; height: 100%; '
-            'display: grid; '
-            'grid-template-columns: 2fr 3fr 5fr; '
-            'gap: 4px; margin: 0; padding: 4px;'
+            'display: flex; margin: 0; padding: 4px; gap: 4px;'
         ).props('id="data-reg-container"'):
             
-            # 左ペイン: 処理設定（2fr）
-            self._create_settings_pane()
+            # 左ペイン: 処理設定（3fr）
+            with ui.element('div').style('width: 30%; height: 100%;'):
+                self._create_settings_pane()
+            
+            # 左スプリッター
+            CommonSplitter.create_vertical(splitter_id="data-reg-splitter-1", width="4px")
             
             # 中央ペイン: 処理ログ（3fr）
-            self._create_log_pane()
+            with ui.element('div').style('width: 30%; height: 100%;'):
+                self._create_log_pane()
             
-            # 右ペイン: ファイル選択（5fr）
-            self._create_file_selection_pane()
+            # 右スプリッター
+            CommonSplitter.create_vertical(splitter_id="data-reg-splitter-2", width="4px")
+            
+            # 右ペイン: ファイル選択（4fr）
+            with ui.element('div').style('width: 40%; height: 100%;'):
+                self._create_file_selection_pane()
     
     def _create_settings_pane(self):
         """左ペイン: 処理設定（2fr）"""
@@ -110,7 +113,7 @@ class DataRegistrationPage:
                             with ui.element('div').style('background: #f3f4f6; padding: 6px; border-radius: 4px;'):
                                 with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
                                     ui.label('使用モデル:').style('font-weight: 600; font-size: 12px;')
-                                    self.current_model_label = ui.label('自動判定中...').style('color: #6b7280; font-size: 12px;')
+                                    self.current_model_label = ui.label('Phi4-mini (CPU)').style('color: #6b7280; font-size: 12px;')
                         
                         # 埋め込みモデル
                         with ui.element('div').style('display: flex; flex-direction: column; gap: 6px;'):
@@ -127,23 +130,23 @@ class DataRegistrationPage:
                                     on_change=self._update_process_button
                                 ).style('font-size: 12px;')
                         
-                        # 設定オプション（横並び）
-                        with ui.element('div').style('display: flex; align-items: center; gap: 16px;'):
-                            # 既存データ上書き
+                        # 既存データ上書き
+                        with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                            ui.label('既存データ上書き').style('min-width: 120px; font-weight: 500; font-size: 13px;')
                             self.overwrite_checkbox = ui.checkbox(
-                                '既存データを上書き',
+                                '',
                                 value=True
                             ).style('font-size: 12px;')
-                            
-                            # 品質しきい値
-                            with ui.element('div').style('display: flex; align-items: center; gap: 6px;'):
-                                ui.label('品質しきい値').style('font-weight: 500; font-size: 12px;')
-                                self.quality_threshold = ui.number(
-                                    value=0.0,
-                                    min=0,
-                                    max=1,
-                                    step=0.1
-                                ).style('width: 70px;').props('outlined dense')
+                        
+                        # 品質しきい値
+                        with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                            ui.label('品質しきい値').style('min-width: 120px; font-weight: 500; font-size: 13px;')
+                            self.quality_threshold = ui.number(
+                                value=0.0,
+                                min=0,
+                                max=1,
+                                step=0.1
+                            ).style('width: 80px;').props('outlined dense')
                         
                         # LLMタイムアウト
                         with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
@@ -154,6 +157,18 @@ class DataRegistrationPage:
                                 max=3600,
                                 step=30
                             ).style('width: 80px;').props('outlined dense')
+                        
+                        # 区切り線
+                        ui.element('div').style('border-top: 1px solid #e5e7eb; margin: 12px 0 8px 0;')
+                        
+                        # 自動スクロール設定
+                        with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                            ui.label('自動スクロール').style('min-width: 120px; font-weight: 500; font-size: 13px;')
+                            self.auto_scroll_toggle = ui.checkbox(
+                                '',
+                                value=True,
+                                on_change=self._toggle_auto_scroll
+                            ).style('font-size: 12px;')
     
     def _create_log_pane(self):
         """中央ペイン: 処理ログ（3fr）"""
@@ -165,19 +180,11 @@ class DataRegistrationPage:
             height="100%"
         ) as panel:
             
-            # ヘッダーにコントロール配置
+            # ヘッダーにCSV出力ボタンのみ配置
             with panel.header_element:
                 with ui.element('div').style(
-                    'display: flex; gap: 12px; align-items: center; margin-right: 8px;'
+                    'display: flex; gap: 6px; margin-right: 8px;'
                 ):
-                    # 自動スクロールトグル
-                    with ui.element('div').style('display: flex; align-items: center; gap: 6px;'):
-                        self.auto_scroll_toggle = ui.checkbox(
-                            '自動スクロール',
-                            value=True,
-                            on_change=self._toggle_auto_scroll
-                        ).style('color: white; font-size: 12px;')
-                    
                     # CSV出力ボタン
                     export_btn = BaseButton.create_type_b(
                         "📄 CSV出力",
@@ -380,132 +387,136 @@ class DataRegistrationPage:
         
         self._update_selection_count()
     
-    def _create_settings_panel(self):
-        """設定パネル（左上）- new/系準拠"""
-        with ui.element('div').style('''
-            grid-row: 1 / 2;
-            grid-column: 1 / 2;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        '''):
-            # パネルヘッダー
-            with ui.element('div').style('background:#f8f9fa;padding:8px 12px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;'):
-                ui.label('📋 処理設定').style('font-size:16px;font-weight:600;margin:0;')
-                with ui.row().classes('gap-1'):
-                    ui.button('🚀 処理開始', on_click=lambda: ui.notify('処理開始')).props('size=sm color=primary').style('font-size:11px;')
-                    ui.button('⏹️ 停止', on_click=lambda: ui.notify('停止')).props('size=sm color=secondary').style('font-size:11px;display:none;')
+    # イベントハンドラー
+    def _start_processing(self):
+        """処理開始"""
+        selected_count = len(self.selected_files)
+        if selected_count == 0:
+            ui.notify('ファイルを選択してください', type='warning')
+            return
+        
+        # 埋め込みモデルチェック
+        if not (self.embedding_model_1.value or self.embedding_model_2.value):
+            ui.notify('埋め込みモデルを選択してください', type='warning')
+            return
+        
+        # UI状態変更
+        self.start_btn.style('display: none;')
+        self.stop_btn.style('display: inline-flex;')
+        self.progress_display.style('display: block;')
+        
+        ui.notify(f'{selected_count}ファイルの処理を開始します')
+        self._add_log_entry('INFO', f'処理開始: {selected_count}ファイル選択済み')
+    
+    def _stop_processing(self):
+        """処理停止"""
+        self.start_btn.style('display: inline-flex;')
+        self.stop_btn.style('display: none;')
+        self.progress_display.style('display: none;')
+        
+        ui.notify('処理を停止しました')
+        self._add_log_entry('WARNING', '処理が停止されました')
+    
+    def _on_process_change(self, e):
+        """整形プロセス変更時"""
+        if e.value == 'マルチモーダル':
+            self.current_model_label.text = 'Qwen-VL 7B (GPU)'
+        else:
+            self.current_model_label.text = 'Phi4-mini (CPU)'
+    
+    def _update_process_button(self, e=None):
+        """処理ボタンの有効/無効を更新"""
+        selected_count = len(self.selected_files)
+        has_model = self.embedding_model_1.value or self.embedding_model_2.value
+        
+        self.start_btn.props(f'disable={not (selected_count > 0 and has_model)}')
+    
+    def _toggle_auto_scroll(self, e):
+        """自動スクロール切り替え"""
+        ui.notify(f'自動スクロール: {"有効" if e.value else "無効"}')
+    
+    def _export_csv(self):
+        """CSV出力"""
+        ui.notify('処理ログをCSV出力します')
+    
+    def _filter_files(self, e=None):
+        """ファイルフィルタリング"""
+        status_filter = self.status_filter.value if hasattr(self, 'status_filter') else ''
+        search_term = self.search_input.value.lower() if hasattr(self, 'search_input') else ''
+        
+        filtered = []
+        for file_data in self.all_files:
+            # ステータスフィルター
+            if status_filter and status_filter != 'すべてのステータス':
+                if file_data['status'] != status_filter:
+                    continue
             
-            # パネル内容
-            with ui.element('div').style('flex:1;padding:8px;overflow-y:auto;'):
-                # 整形プロセス
-                ui.label('整形プロセス').style('font-weight:600;margin-bottom:6px;font-size:13px;')
-                ui.select(['デフォルト (OCR + LLM整形)', 'マルチモーダル'], value='デフォルト (OCR + LLM整形)').props('outlined dense').style('width:100%;margin-bottom:16px;')
-                
-                # 埋め込みモデル
-                ui.label('埋め込みモデル').style('font-weight:600;margin-bottom:6px;font-size:13px;')
-                with ui.element('div').style('border:1px solid #eee;border-radius:4px;padding:8px;background:#fafafa;margin-bottom:16px;'):
-                    ui.checkbox('intfloat/e5-large-v2: multilingual-e5-large', value=True).style('margin-bottom:3px;font-size:14px;')
-                    ui.checkbox('intfloat/e5-small-v2: multilingual-e5-small').style('margin-bottom:3px;font-size:14px;')
-                    ui.checkbox('nomic-embed-text: nomic-text-embed').style('margin-bottom:3px;font-size:14px;')
-                
-                # 横並び設定
-                with ui.row().classes('gap-4 w-full'):
-                    with ui.column():
-                        ui.checkbox('既存データを上書き', value=True).style('margin-bottom:8px;')
-                    with ui.column():
-                        ui.label('品質しきい値').style('font-weight:600;margin-bottom:6px;font-size:13px;')
-                        ui.number(value=0.0, min=0, max=1, step=0.1).props('outlined dense').style('width:80px;height:28px;font-size:11px;')
-                
-                # LLMタイムアウト
-                ui.label('LLMタイムアウト (秒)').style('font-weight:600;margin-bottom:6px;font-size:13px;')
-                ui.number(value=300, min=30, max=3600).props('outlined dense').style('width:120px;height:28px;font-size:11px;')
-
-    def _create_log_panel(self):
-        """処理ログパネル（中央全体）- new/系準拠"""
-        with ui.element('div').style('''
-            grid-row: 1 / 3;
-            grid-column: 2 / 3;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        '''):
-            # パネルヘッダー
-            with ui.element('div').style('background:#f8f9fa;padding:8px 12px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center;'):
-                ui.label('📋 処理ログ').style('font-size:16px;font-weight:600;margin:0;')
-                with ui.row().classes('items-center gap-2'):
-                    ui.switch('自動スクロール', value=True).style('font-size:11px;')
-                    ui.button('CSV出力').props('size=sm outline').style('font-size:11px;')
+            # 検索フィルター
+            if search_term:
+                if search_term not in file_data['filename'].lower():
+                    continue
             
-            # ログコンテナ
-            with ui.element('div').style('flex:1;overflow-y:auto;padding:8px;font-family:"Courier New",monospace;font-size:11px;'):
-                ui.label('処理ログはここに表示されます').style('color:#666;text-align:center;margin-top:4em;')
-
-    def _create_file_panel(self):
-        """ファイル選択パネル（右全体）- new/系準拠"""
-        with ui.element('div').style('''
-            grid-row: 1 / 3;
-            grid-column: 3 / 4;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        '''):
-            # パネルヘッダー（横並び）
-            with ui.element('div').style('background:#f8f9fa;padding:8px 12px;border-bottom:1px solid #ddd;display:flex;justify-content:flex-start;align-items:center;gap:12px;'):
-                ui.label('📁 ファイル選択').style('font-size:16px;font-weight:600;margin:0;flex-shrink:0;min-width:120px;')
-                ui.select(['すべてのステータス', '未処理', '処理中', '処理完了'], value='すべてのステータス').props('outlined dense').style('min-width:180px;height:32px;font-size:12px;')
-                ui.input(placeholder='ファイル名で検索...').props('outlined dense').style('flex:1;height:32px;font-size:12px;')
-                ui.label('選択: 0件').style('font-size:12px;color:#666;flex-shrink:0;min-width:80px;text-align:right;')
-            
-            # ファイル一覧
-            with ui.element('div').style('flex:1;overflow:hidden;padding:0;'):
-                ui.label('ファイル一覧はここに表示されます').style('color:#666;text-align:center;margin-top:4em;padding:16px;')
-
-    def _create_status_panel(self):
-        """処理状況パネル（左下）- new/系準拠"""
-        with ui.element('div').style('''
-            grid-row: 2 / 3;
-            grid-column: 1 / 2;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            margin-top: 6px;
-        '''):
-            # パネルヘッダー
-            with ui.element('div').style('background:#f8f9fa;padding:8px 12px;border-bottom:1px solid #ddd;'):
-                ui.label('📊 処理状況').style('font-size:16px;font-weight:600;margin:0;')
-            
-            # パネル内容
-            with ui.element('div').style('flex:1;padding:8px;'):
-                # 全体進捗
-                ui.label('全体進捗').style('font-weight:600;font-size:13px;margin-bottom:6px;')
-                ui.label('待機中').style('font-size:11px;color:#666;margin-bottom:6px;')
-                with ui.element('div').style('height:16px;background:#e9ecef;border-radius:8px;overflow:hidden;margin-bottom:16px;'):
-                    ui.element('div').style('height:100%;width:0%;background:linear-gradient(90deg,#007bff,#0056b3);')
+            filtered.append(file_data)
+        
+        self.filtered_files = filtered
+        if self.data_grid:
+            self.data_grid.update_data(filtered)
+        
+        self._update_selection_count()
+    
+    def _handle_checkbox_click(self, row_data, field):
+        """チェックボックスクリック処理"""
+        if field == 'selected':
+            file_id = row_data.get('file_id')
+            if file_id:
+                if row_data['selected']:
+                    self.selected_files.add(file_id)
+                else:
+                    self.selected_files.discard(file_id)
                 
-                # 現在の処理
-                ui.label('現在の処理').style('font-weight:600;font-size:13px;margin-bottom:6px;')
-                ui.label('待機中...').style('font-size:12px;margin-bottom:16px;')
-                
-                # 統計（4個横並び）
-                with ui.row().classes('gap-2 w-full'):
-                    with ui.element('div').style('flex:1;text-align:center;padding:8px;background:#f8f9fa;border-radius:4px;'):
-                        ui.label('0').style('font-size:16px;font-weight:700;color:#007bff;')
-                        ui.label('総ファイル数').style('font-size:10px;color:#666;margin-top:2px;')
-                    
-                    with ui.element('div').style('flex:1;text-align:center;padding:8px;background:#f8f9fa;border-radius:4px;'):
-                        ui.label('0').style('font-size:16px;font-weight:700;color:#007bff;')
-                        ui.label('選択数').style('font-size:10px;color:#666;margin-top:2px;')
-
+                self._update_selection_count()
+                self._update_process_button()
+    
+    def _toggle_all_files(self, checked):
+        """全選択/解除"""
+        if checked:
+            # 全選択
+            for file_data in self.filtered_files:
+                self.selected_files.add(file_data['file_id'])
+                file_data['selected'] = True
+        else:
+            # 全解除
+            for file_data in self.filtered_files:
+                self.selected_files.discard(file_data['file_id'])
+                file_data['selected'] = False
+        
+        # データグリッド更新
+        if self.data_grid:
+            self.data_grid.update_data(self.filtered_files)
+        
+        self._update_selection_count()
+        self._update_process_button()
+    
+    def _update_selection_count(self):
+        """選択数表示更新"""
+        count = len(self.selected_files)
+        if hasattr(self, 'selected_count_label'):
+            self.selected_count_label.text = str(count)
+    
+    def _add_log_entry(self, level, message):
+        """ログエントリ追加"""
+        import datetime
+        
+        timestamp = datetime.datetime.now().strftime('%H:%M:%S')
+        log_style = {
+            'INFO': 'color: #2563eb;',
+            'SUCCESS': 'color: #16a34a;',
+            'WARNING': 'color: #d97706;',
+            'ERROR': 'color: #dc2626;'
+        }.get(level, 'color: #6b7280;')
+        
+        with self.log_container:
+            with ui.element('div').style('margin-bottom: 4px; font-size: 12px;'):
+                ui.label(f'[{timestamp}]').style('color: #9ca3af; margin-right: 8px;')
+                ui.label(level).style(f'{log_style} font-weight: bold; margin-right: 8px;')
+                ui.label(message).style('color: #374151;')

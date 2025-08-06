@@ -1,12 +1,25 @@
 """
-データ登録ページ - UI設計ポリシー準拠実装
+データ登録ページ - 3ペイン構成（2:3:5）+ 共通コンポーネント実装
 """
 from nicegui import ui
 from ui.components.layout import RAGHeader, RAGFooter, MainContentArea
+from ui.components.elements import CommonPanel
+from ui.components.common.layout import CommonSplitter
+from ui.components.base.button import BaseButton
+from ui.components.common.data_grid import BaseDataGridView
 
 class DataRegistrationPage:
-    """データ登録ページクラス - UI設計ポリシー準拠"""
+    """データ登録ページクラス - 3ペイン構成（2:3:5）+ 共通コンポーネント"""
     
+    def __init__(self):
+        """初期化"""
+        self.selected_files = set()
+        self.all_files = []
+        self.filtered_files = []
+        self.current_status_filter = ""
+        self.current_search_term = ""
+        self.data_grid = None
+        
     def render(self):
         """ページレンダリング"""
         from main import SimpleAuth
@@ -15,25 +28,357 @@ class DataRegistrationPage:
             ui.navigate.to('/login')
             return
         
-        # UI設計ポリシー準拠実装
-        self._render_policy_compliant_registration()
-    
-    def _render_policy_compliant_registration(self):
-        """new/系完全準拠のデータ登録実装"""
         # 共通ヘッダー
         RAGHeader(show_site_name=True, current_page="data-registration")
         
         # 全ページ共通メインコンテンツエリア
         with MainContentArea():
-            # new/系Grid Layout (3:3:4, 上下分割)
-            with ui.element('div').style('display:grid;grid-template-columns:3fr 3fr 4fr;grid-template-rows:1fr 1fr;gap:6px;height:100%;padding:8px;overflow:hidden;'):
-                self._create_settings_panel()      # 左上
-                self._create_log_panel()           # 中央（全体）
-                self._create_file_panel()          # 右（全体）
-                self._create_status_panel()        # 左下
+            # 共通スプリッタースタイル・JS追加
+            CommonSplitter.add_splitter_styles()
+            CommonSplitter.add_splitter_javascript()
+            
+            self._create_main_layout()
         
         # 共通フッター
         RAGFooter()
+    
+    def _create_main_layout(self):
+        """3ペイン構成（2:3:5）メインレイアウト"""
+        with ui.element('div').style(
+            'width: 100%; height: 100%; '
+            'display: grid; '
+            'grid-template-columns: 2fr 3fr 5fr; '
+            'gap: 4px; margin: 0; padding: 4px;'
+        ).props('id="data-reg-container"'):
+            
+            # 左ペイン: 処理設定（2fr）
+            self._create_settings_pane()
+            
+            # 中央ペイン: 処理ログ（3fr）
+            self._create_log_pane()
+            
+            # 右ペイン: ファイル選択（5fr）
+            self._create_file_selection_pane()
+    
+    def _create_settings_pane(self):
+        """左ペイン: 処理設定（2fr）"""
+        with CommonPanel(
+            title="📋 処理設定",
+            gradient="#f8f9fa",
+            header_color="#374151",
+            width="100%",
+            height="100%"
+        ) as panel:
+            
+            # ヘッダーにボタン配置
+            with panel.header_element:
+                with ui.element('div').style(
+                    'display: flex; gap: 6px; margin-right: 8px;'
+                ):
+                    # 処理開始ボタン
+                    self.start_btn = BaseButton.create_type_a(
+                        "🚀 処理開始",
+                        on_click=self._start_processing
+                    )
+                    
+                    # 停止ボタン（初期非表示）
+                    self.stop_btn = BaseButton.create_type_b(
+                        "⏹️ 停止",
+                        on_click=self._stop_processing
+                    )
+                    self.stop_btn.style('display: none;')
+            
+            # パネル内容
+            panel.content_element.style('padding: 0; height: 100%;')
+            
+            with panel.content_element:
+                with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box;'):
+                    with ui.element('div').style('display: flex; flex-direction: column; gap: 12px; height: 100%;'):
+                        
+                        # 整形プロセスと使用モデル
+                        with ui.element('div').style('display: flex; flex-direction: column; gap: 8px;'):
+                            # 整形プロセス
+                            with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                                ui.label('整形プロセス').style('min-width: 80px; font-weight: 500; font-size: 13px;')
+                                self.process_select = ui.select(
+                                    options=['デフォルト (OCR + LLM整形)', 'マルチモーダル'],
+                                    value='デフォルト (OCR + LLM整形)',
+                                    on_change=self._on_process_change
+                                ).style('flex: 1;').props('outlined dense')
+                            
+                            # 使用モデル表示
+                            with ui.element('div').style('background: #f3f4f6; padding: 6px; border-radius: 4px;'):
+                                with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                                    ui.label('使用モデル:').style('font-weight: 600; font-size: 12px;')
+                                    self.current_model_label = ui.label('自動判定中...').style('color: #6b7280; font-size: 12px;')
+                        
+                        # 埋め込みモデル
+                        with ui.element('div').style('display: flex; flex-direction: column; gap: 6px;'):
+                            ui.label('埋め込みモデル').style('font-weight: 500; font-size: 13px;')
+                            with ui.element('div').style('display: flex; flex-direction: column; gap: 4px;'):
+                                self.embedding_model_1 = ui.checkbox(
+                                    'intfloat: all-MiniLM-L6-v2',
+                                    value=True,
+                                    on_change=self._update_process_button
+                                ).style('font-size: 12px;')
+                                self.embedding_model_2 = ui.checkbox(
+                                    'nomic: nomic-embed-text-v1',
+                                    value=False,
+                                    on_change=self._update_process_button
+                                ).style('font-size: 12px;')
+                        
+                        # 設定オプション（横並び）
+                        with ui.element('div').style('display: flex; align-items: center; gap: 16px;'):
+                            # 既存データ上書き
+                            self.overwrite_checkbox = ui.checkbox(
+                                '既存データを上書き',
+                                value=True
+                            ).style('font-size: 12px;')
+                            
+                            # 品質しきい値
+                            with ui.element('div').style('display: flex; align-items: center; gap: 6px;'):
+                                ui.label('品質しきい値').style('font-weight: 500; font-size: 12px;')
+                                self.quality_threshold = ui.number(
+                                    value=0.0,
+                                    min=0,
+                                    max=1,
+                                    step=0.1
+                                ).style('width: 70px;').props('outlined dense')
+                        
+                        # LLMタイムアウト
+                        with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                            ui.label('LLMタイムアウト (秒)').style('min-width: 120px; font-weight: 500; font-size: 13px;')
+                            self.llm_timeout = ui.number(
+                                value=300,
+                                min=30,
+                                max=3600,
+                                step=30
+                            ).style('width: 80px;').props('outlined dense')
+    
+    def _create_log_pane(self):
+        """中央ペイン: 処理ログ（3fr）"""
+        with CommonPanel(
+            title="📋 処理ログ",
+            gradient="#f8f9fa",
+            header_color="#374151",
+            width="100%",
+            height="100%"
+        ) as panel:
+            
+            # ヘッダーにコントロール配置
+            with panel.header_element:
+                with ui.element('div').style(
+                    'display: flex; gap: 12px; align-items: center; margin-right: 8px;'
+                ):
+                    # 自動スクロールトグル
+                    with ui.element('div').style('display: flex; align-items: center; gap: 6px;'):
+                        self.auto_scroll_toggle = ui.checkbox(
+                            '自動スクロール',
+                            value=True,
+                            on_change=self._toggle_auto_scroll
+                        ).style('color: white; font-size: 12px;')
+                    
+                    # CSV出力ボタン
+                    export_btn = BaseButton.create_type_b(
+                        "📄 CSV出力",
+                        on_click=self._export_csv
+                    )
+            
+            # パネル内容
+            panel.content_element.style('padding: 0; height: 100%;')
+            
+            with panel.content_element:
+                with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box;'):
+                    # 進捗表示エリア
+                    self.progress_display = ui.element('div').style(
+                        'background: #e3f2fd; border: 2px solid #2196f3; '
+                        'border-radius: 6px; padding: 12px 16px; margin-bottom: 12px; '
+                        'font-weight: bold; color: #1565c0; display: none;'
+                    )
+                    
+                    with self.progress_display:
+                        with ui.element('div').style('display: flex; justify-content: space-between; align-items: center;'):
+                            self.progress_status = ui.label('待機中...').style('font-size: 14px;')
+                            self.progress_elapsed = ui.label('処理時間: 0秒').style('color: #1976d2; font-weight: bold;')
+                    
+                    # ログコンテナ
+                    self.log_container = ui.element('div').style(
+                        'height: calc(100% - 60px); overflow-y: auto; '
+                        'background: white; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px;'
+                    )
+                    
+                    with self.log_container:
+                        # 初期ログメッセージ
+                        with ui.element('div').style('text-align: center; color: #9ca3af; padding: 20px;'):
+                            ui.label('処理ログがここに表示されます').style('font-size: 14px;')
+    
+    def _create_file_selection_pane(self):
+        """右ペイン: ファイル選択（5fr）- new/系準拠チェックボックス付き"""
+        with CommonPanel(
+            title="📁 ファイル選択",
+            gradient="#f8f9fa",
+            header_color="#374151",
+            width="100%",
+            height="100%"
+        ) as panel:
+            
+            # ヘッダーにフィルター・検索・選択数表示
+            with panel.header_element:
+                with ui.element('div').style(
+                    'display: flex; align-items: center; gap: 8px; margin-right: 8px; flex: 1;'
+                ):
+                    # ステータスフィルター
+                    self.status_filter = ui.select(
+                        options=['すべてのステータス', '未処理', '処理中', '未整形', '未ベクトル化', '処理完了', 'エラー'],
+                        value='すべてのステータス',
+                        on_change=self._filter_files
+                    ).style('width: 160px; flex-shrink: 0;').props('outlined dense')
+                    
+                    # ファイル名検索
+                    self.search_input = ui.input(
+                        placeholder='ファイル名で検索...',
+                        on_change=self._filter_files
+                    ).style('flex: 1; min-width: 0;').props('outlined dense')
+                    
+                    # 選択数表示
+                    with ui.element('div').style(
+                        'background: rgba(37, 99, 235, 0.1); padding: 4px 8px; '
+                        'border-radius: 4px; white-space: nowrap;'
+                    ):
+                        ui.label('選択: ').style('color: white; font-size: 12px; font-weight: 500;')
+                        self.selected_count_label = ui.label('0').style('color: white; font-size: 12px; font-weight: bold;')
+                        ui.label('件').style('color: white; font-size: 12px; font-weight: 500;')
+            
+            # パネル内容
+            panel.content_element.style('padding: 0; height: 100%;')
+            
+            with panel.content_element:
+                self._setup_file_data_grid()
+    
+    def _setup_file_data_grid(self):
+        """ファイル選択用データグリッド設定"""
+        # カラム定義（チェックボックス付き）
+        columns = [
+            {
+                'field': 'selected',
+                'label': '',  # ヘッダーチェックボックスは別途追加
+                'width': '40px',
+                'align': 'center',
+                'render_type': 'checkbox'
+            },
+            {
+                'field': 'filename',
+                'label': 'ファイル名',
+                'width': '1fr',
+                'align': 'left'
+            },
+            {
+                'field': 'pages',
+                'label': '頁数',
+                'width': '80px',
+                'align': 'center'
+            },
+            {
+                'field': 'status',
+                'label': 'ステータス',
+                'width': '120px',
+                'align': 'center'
+            },
+            {
+                'field': 'size',
+                'label': 'サイズ',
+                'width': '100px',
+                'align': 'right'
+            }
+        ]
+        
+        self.data_grid = BaseDataGridView(
+            columns=columns,
+            height='100%',
+            auto_rows=True,
+            min_rows=10,
+            default_rows_per_page=100,
+            header_color='#2563eb'
+        )
+        
+        # データグリッドのチェックボックスイベント
+        self.data_grid.on_cell_click = self._handle_checkbox_click
+        
+        # サンプルデータ設定
+        self._load_sample_data()
+        
+        # 全選択チェックボックスをヘッダーに追加
+        self._add_header_checkbox()
+    
+    def _add_header_checkbox(self):
+        """ヘッダーに全選択チェックボックスを追加"""
+        # ここではJavaScriptで実装（将来的にはBaseDataGridViewの機能拡張）
+        ui.run_javascript('''
+            // ヘッダーの最初のセルにチェックボックスを追加
+            setTimeout(() => {
+                const headerCell = document.querySelector('.base-data-grid th:first-child');
+                if (headerCell && !headerCell.querySelector('input[type="checkbox"]')) {
+                    headerCell.innerHTML = '<input type="checkbox" id="header-checkbox-data-reg" title="全選択/解除">';
+                    
+                    const headerCheckbox = document.getElementById('header-checkbox-data-reg');
+                    if (headerCheckbox) {
+                        headerCheckbox.addEventListener('change', () => {
+                            // Pythonのメソッドを呼び出し
+                            window.pyodide?.runPython(`
+                                if hasattr(window, 'data_reg_page'):
+                                    window.data_reg_page._toggle_all_files(${headerCheckbox.checked})
+                            `);
+                        });
+                    }
+                }
+            }, 100);
+        ''')
+    
+    def _load_sample_data(self):
+        """サンプルデータ読み込み"""
+        sample_data = [
+            {
+                'selected': False,
+                'filename': 'document1.pdf',
+                'pages': 15,
+                'status': '未処理',
+                'size': '2.1 MB',
+                'file_id': 1
+            },
+            {
+                'selected': False,
+                'filename': 'report2023.pdf',
+                'pages': 42,
+                'status': '処理完了',
+                'size': '5.8 MB',
+                'file_id': 2
+            },
+            {
+                'selected': False,
+                'filename': 'manual_v2.pdf',
+                'pages': 128,
+                'status': '未整形',
+                'size': '12.3 MB',
+                'file_id': 3
+            },
+            {
+                'selected': False,
+                'filename': 'contract_20241201.pdf',
+                'pages': 8,
+                'status': 'エラー',
+                'size': '1.5 MB',
+                'file_id': 4
+            }
+        ]
+        
+        self.all_files = sample_data
+        self.filtered_files = sample_data.copy()
+        self.data_grid.update_data(sample_data)
+        
+        # グローバル参照用
+        ui.run_javascript('window.data_reg_page = pyodide.globals.get("data_reg_page");')
+        
+        self._update_selection_count()
     
     def _create_settings_panel(self):
         """設定パネル（左上）- new/系準拠"""

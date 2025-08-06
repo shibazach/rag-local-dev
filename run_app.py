@@ -19,7 +19,7 @@ def run_app(app_type: str = "old"):
             "uvicorn",
             "OLD.app.main:app",
             "--host", "0.0.0.0",
-            "--port", "8002",
+            "--port", "8003",
             "--reload",
             "--log-level", "warning",
         ]

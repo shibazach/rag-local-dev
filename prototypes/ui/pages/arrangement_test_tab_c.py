@@ -3,8 +3,9 @@
 from nicegui import ui
 from ui.components.elements import (
     CommonPanel, CommonSplitter, CommonCard, CommonSectionTitle,
-    CommonTable, CommonFormElements
+    CommonFormElements
 )
+from ui.components.common import BaseDataGridView
 
 class ArrangementTestTabC:
     """タブC: 共通コンポーネント実証テスト場"""
@@ -117,27 +118,29 @@ class ArrangementTestTabC:
                         CommonFormElements.create_input("名前", placeholder="名前を入力", width="120px")
                         CommonFormElements.create_dropdown("部署", ["開発", "営業", "企画"], width="100px")
                 
-                # テーブル展示（タブDから移動・コンパクト版）
+                # テーブル展示（BaseDataGridView版・コンパクト）
                 with CommonCard():
-                    CommonSectionTitle.create("📊 CommonTable", size="14px")
+                    CommonSectionTitle.create("📊 BaseDataGridView", size="14px")
                     
-                    table = CommonTable(
-                        columns=[
-                            {'key': 'id', 'label': 'ID', 'width': '40px', 'align': 'center'},
-                            {'key': 'name', 'label': '名前', 'width': '1fr'},
-                            {'key': 'status', 'label': 'ステータス', 'width': '70px', 'align': 'center',
-                             'render_type': 'badge', 'badge_colors': {'アクティブ': '#10b981', '保留': '#f59e0b'}}
-                        ],
-                        data=[
+                    with ui.element('div').style('height: 120px;'):
+                        grid = BaseDataGridView(
+                            columns=[
+                                {'field': 'id', 'label': 'ID', 'width': '40px', 'align': 'center'},
+                                {'field': 'name', 'label': '名前', 'width': '1fr'},
+                                {'field': 'status', 'label': 'ステータス', 'width': '70px', 'align': 'center',
+                                 'render_type': 'badge', 'badge_colors': {
+                                     'アクティブ': '#22c55e', '保留': '#f59e0b'
+                                 }}
+                            ],
+                            height='100%',
+                            default_rows_per_page=2
+                        )
+                        grid.set_data([
                             {'id': 1, 'name': '田中太郎', 'status': 'アクティブ'},
                             {'id': 2, 'name': '佐藤花子', 'status': '保留'},
                             {'id': 3, 'name': '鈴木一郎', 'status': 'アクティブ'}
-                        ],
-                        rows_per_page=2
-                    )
-                    
-                    with ui.element('div').style('height: 120px;'):
-                        table.render()
+                        ])
+                        grid.render()
                 
                 # 基本コンポーネント説明（簡素化）
                 with CommonCard():

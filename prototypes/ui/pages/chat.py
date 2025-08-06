@@ -1,237 +1,319 @@
-"""チャット画面 - RAGシステム用チャットインターフェース"""
+"""チャット画面 - RAGシステム用チャットインターフェース（4ペイン方式）"""
 
 from nicegui import ui
-from typing import Optional
-from ui.components.elements import CommonPanel, ChatSearchResultCard, ChatLayoutButton, ChatSettingsPanel
+from typing import Optional, List, Dict, Any
+from ui.components.layout import RAGHeader, RAGFooter, MainContentArea
+from ui.components.elements import CommonPanel
+from ui.components.common import CommonSplitter
+from ui.components.base.styles import CommonStyles
+from ui.components.base.button import BaseButton
 
 class ChatPage:
     """
-    チャット画面
+    チャット画面（4ペイン方式）
     
-    機能:
-    - 3パターンレイアウト対応（PDFなし/第1パターン/第2パターン）
-    - 検索設定パネル
-    - 検索結果表示
-    - PDFプレビュー
-    - レスポンシブ設計
+    構造:
+    - RAGHeader（共通ヘッダー）
+    - MainContentArea内に4分割splitter
+      - 左上: 質問エリア
+      - 右上: 検索設定
+      - 左下: 検索結果
+      - 右下: PDFプレビュー
+    - RAGFooter（共通フッター）
     """
     
     def __init__(self):
-        self.current_layout = 'no-preview'  # 'no-preview', 'pattern1', 'pattern2'
         self.search_results = self._create_dummy_search_results()
+        self.current_question = ""
+        self.embedding_model = "all-MiniLM-L6-v2"
+        self.min_similarity = 0.7
+        self.max_results = 10
     
     def render(self):
         """チャット画面を描画"""
-        with ui.element('div').style('width: 100%; height: 100%; margin: 0; padding: 0;'):
-            self._create_layout_tabs()
-    
-    def _create_layout_tabs(self):
-        """レイアウト切り替えタブシステム"""
-        with ui.tabs() as tabs:
-            tab1 = ui.tab('no-preview', label='PDFプレビューなし')
-            tab2 = ui.tab('pattern1', label='第1パターン（<<）')
-            tab3 = ui.tab('pattern2', label='第2パターン（>>）')
+        # 共通ヘッダー
+        RAGHeader(show_site_name=True, current_page="chat")
         
-        with ui.tab_panels(tabs).style('width: 100%; height: calc(100% - 48px);'):
-            with ui.tab_panel('no-preview'):
-                self._create_no_preview_layout()
-            
-            with ui.tab_panel('pattern1'):
-                self._create_pattern1_layout()
-            
-            with ui.tab_panel('pattern2'):
-                self._create_pattern2_layout()
+        # メインコンテンツエリア（C31相当）に4分割splitter配置
+        with MainContentArea():
+            self._create_four_pane_layout()
+        
+        # 共通フッター
+        RAGFooter()
     
-    def _create_no_preview_layout(self):
-        """PDFプレビューなし - 縦2分割"""
+    def _create_four_pane_layout(self):
+        """4分割splitterレイアウト"""
         with ui.element('div').style(
             'width: 100%; height: 100%; '
-            'display: flex; flex-direction: column; '
-            'margin: 0; padding: 8px; gap: 6px; '
-            'box-sizing: border-box;'
-        ):
-            # 上部：検索設定パネル
-            with ui.element('div').style('flex: 0 0 180px;'):
-                self._create_search_settings_panel()
+            'display: flex; margin: 0; padding: 4px; gap: 4px;'
+        ).props('id="chat-main-container"'):
             
-            # 下部：検索結果パネル
-            with ui.element('div').style('flex: 1;'):
-                self._create_search_results_panel()
-    
-    def _create_pattern1_layout(self):
-        """第1パターン - 上部設定、下部左右分割"""
-        with ui.element('div').style(
-            'width: 100%; height: 100%; '
-            'display: flex; flex-direction: column; '
-            'margin: 0; padding: 8px; gap: 6px; '
-            'box-sizing: border-box;'
-        ):
-            # 上部：検索設定パネル
-            with ui.element('div').style('flex: 0 0 180px; position: relative;'):
-                # レイアウト切り替えボタン（右上）
-                ChatLayoutButton.create(
-                    text=">>",
-                    on_click=lambda: self._switch_to_pattern2(),
-                    title="第2パターンに切り替え"
-                )
+            # 左側エリア（33.33%）- 左：右 = 1:2
+            with ui.element('div').style(
+                'width: 33.33%; height: 100%; '
+                'display: flex; flex-direction: column; '
+                'margin: 0; padding: 0; gap: 4px;'
+            ).props('id="chat-left-pane"'):
                 
-                self._create_search_settings_panel()
-            
-            # 下部：左右分割（検索結果 + PDF）
-            with ui.element('div').style('flex: 1; display: flex; gap: 6px;'):
-                # 左：検索結果パネル
-                with ui.element('div').style('flex: 1;'):
-                    self._create_search_results_panel()
+                # 左上ペイン: 質問エリア
+                self._create_question_pane()
                 
-                # 右：PDFパネル
-                with ui.element('div').style('flex: 1;'):
-                    self._create_pdf_panel()
+                # 横スプリッター（左）
+                CommonSplitter.create_horizontal(splitter_id="chat-hsplitter-left", height="4px")
+                
+                # 左下ペイン: 検索設定（移動）
+                self._create_search_settings_pane()
+            
+            # 縦スプリッター
+            CommonSplitter.create_vertical(splitter_id="chat-vsplitter", width="4px")
+            
+            # 右側エリア（66.67%）- 左：右 = 1:2
+            with ui.element('div').style(
+                'width: 66.67%; height: 100%; '
+                'display: flex; flex-direction: column; '
+                'margin: 0; padding: 0; gap: 4px;'
+            ).props('id="chat-right-pane"'):
+                
+                # 右上ペイン: 検索結果（移動）
+                self._create_search_results_pane()
+                
+                # 横スプリッター（右）
+                CommonSplitter.create_horizontal(splitter_id="chat-hsplitter-right", height="4px")
+                
+                # 右下ペイン: PDFプレビュー
+                self._create_pdf_preview_pane()
+        
+        # CommonSplitter初期化
+        CommonSplitter.add_splitter_styles()
+        CommonSplitter.add_splitter_javascript()
     
-    def _create_pattern2_layout(self):
-        """第2パターン - 左縦分割、右PDF"""
-        with ui.element('div').style(
-            'width: 100%; height: 100%; '
-            'display: flex; gap: 6px; '
-            'margin: 0; padding: 8px; '
-            'box-sizing: border-box;'
-        ):
-            # 左側：縦分割（設定 + 検索結果）
-            with ui.element('div').style('flex: 1; display: flex; flex-direction: column; gap: 6px;'):
-                # 左上：検索設定パネル
-                with ui.element('div').style('flex: 0 0 180px; position: relative;'):
-                    # レイアウト切り替えボタン（右上）
-                    ChatLayoutButton.create(
-                        text="<<",
-                        on_click=lambda: self._switch_to_pattern1(),
-                        title="第1パターンに切り替え"
+    def _create_question_pane(self):
+        """左上: 質問エリア"""
+        with CommonPanel(
+            title="質問",
+            gradient="#f8f9fa",
+            header_color="#374151",
+            width="100%",
+            height="50%"
+        ) as panel:
+            
+            # ヘッダーにボタンを追加
+            with panel.header_element:
+                with ui.element('div').style('display: flex; gap: 6px; margin-right: 8px;'):
+                    clear_button = BaseButton.create_type_b('クリア')
+                    search_button = ui.button('検索実行', color='primary').style(
+                        'padding: 4px 12px; font-size: 12px;'
                     )
-                    
-                    self._create_search_settings_panel()
-                
-                # 左下：検索結果パネル
-                with ui.element('div').style('flex: 1;'):
-                    self._create_search_results_panel()
             
-            # 右側：PDFパネル
-            with ui.element('div').style('flex: 1;'):
-                self._create_pdf_panel()
+            panel.content_element.style('padding: 0; height: 100%;')
+            
+            # 質問入力エリア（全面表示、padding分を除く）
+            with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box;'):
+                question_input = ui.textarea(
+                    placeholder="RAGシステムに質問したい内容を入力してください...",
+                    value=self.current_question
+                ).style(
+                    'width: 100%; height: 100%; resize: none; box-sizing: border-box;'
+                ).props('outlined')
+            
+            # ボタンのイベントハンドラーを設定
+            clear_button.on('click', lambda: question_input.set_value(''))
+            search_button.on('click', lambda: self._execute_search(question_input.value))
     
-    def _create_search_settings_panel(self):
-        """検索設定パネル - 共通コンポーネント使用"""
-        ChatSettingsPanel.create(
-            search_handler=self._handle_search,
-            history_handler=self._handle_history,
-            width="100%",
-            height="100%"
-        )
-    
-    def _create_search_results_panel(self):
-        """検索結果パネル - CommonPanel使用"""
+    def _create_search_settings_pane(self):
+        """右上: 検索設定"""
         with CommonPanel(
-            title="📋 検索結果",
-            gradient="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+            title="検索設定",
+            gradient="#f8f9fa",
+            header_color="#374151",
             width="100%",
-            height="100%"
+            height="50%"
         ) as panel:
-            # 検索結果表示
-            if not self.search_results:
-                ui.label('質問を入力して「検索実行」ボタンを押してください').style(
-                    'color: #888; text-align: center; margin-top: 2em;'
-                )
-            else:
-                for i, result in enumerate(self.search_results):
-                    self._create_search_result_card(result, i)
+            # 右ペインもpadding付きのコンテナで左ペインと同じ構造にする
+            with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box;'):
+                with ui.element('div').style('display: flex; flex-direction: column; gap: 6px; height: 100%;'):
+                    
+                    # 検索モード設定
+                    with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                        ui.label('検索モード').style(
+                            'min-width: 100px; font-weight: 500; text-align: left;'
+                        )
+                        ui.select(
+                            options=['チャンク統合', 'ファイル別（要約+一致度）'],
+                            value='ファイル別（要約+一致度）'
+                        ).style('width: 360px;').props('outlined dense')
+                    
+                    # 埋め込みモデル設定
+                    with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                        ui.label('埋め込みモデル').style(
+                            'min-width: 100px; font-weight: 500; text-align: left;'
+                        )
+                        ui.select(
+                            options=['all-MiniLM-L6-v2', 'sentence-transformers/all-mpnet-base-v2', 'text-embedding-ada-002'],
+                            value=self.embedding_model
+                        ).style('width: 360px;').props('outlined dense')
+                    
+                    # 最小一致度設定
+                    with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                        ui.label('最小一致度').style(
+                            'min-width: 100px; font-weight: 500; text-align: left;'
+                        )
+                        with ui.element('div').style('display: flex; align-items: center; gap: 6px;'):
+                            # テキストボックスを左に配置（幅60px）
+                            similarity_input = ui.number(
+                                value=self.min_similarity,
+                                format='%.1f',
+                                min=0.0,
+                                max=1.0,
+                                step=0.1
+                            ).style('width: 60px;').props('outlined dense')
+                            
+                            # スライドバーを右に配置（埋め込みモデルの右端に合わせて244px幅）
+                            similarity_slider = ui.slider(min=0.0, max=1.0, step=0.1, value=self.min_similarity).style(
+                                'width: 244px;'
+                            ).props('label')  # label-alwaysを削除して吹き出しを非表示
+                            
+                            # リアルタイム連動設定
+                            similarity_slider.on('update:model-value', lambda e: similarity_input.set_value(e.args))
+                            similarity_input.on('update:model-value', lambda e: similarity_slider.set_value(e.args))
+                    
+                    # 最大結果数設定
+                    with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                        ui.label('最大結果数').style(
+                            'min-width: 100px; font-weight: 500; text-align: left;'
+                        )
+                        ui.number(
+                            value=self.max_results,
+                            min=1,
+                            max=100,
+                            step=1
+                        ).style('width: 70px;').props('outlined dense')
+                    
+                    # 検索オプション
+                    with ui.element('div').style('display: flex; align-items: center; gap: 8px;'):
+                        ui.label('検索オプション').style(
+                            'min-width: 100px; font-weight: 500; text-align: left;'
+                        )
+                        ui.checkbox('セマンティック検索を使用', value=True)
     
-    def _create_search_result_card(self, result: dict, index: int):
-        """検索結果カード - 共通コンポーネント使用"""
-        ChatSearchResultCard.create(
-            result=result,
-            on_click=lambda: self._handle_detail(result)
-        )
-    
-    def _create_pdf_panel(self):
-        """PDFプレビューパネル - CommonPanel使用（全面表示）"""
+    def _create_search_results_pane(self):
+        """左下: 検索結果"""
         with CommonPanel(
-            title="📄 PDF",
-            gradient="linear-gradient(135deg, #4ade80 0%, #3b82f6 100%)",
+            title="検索結果",
+            gradient="#f8f9fa",
+            header_color="#374151",
             width="100%",
-            height="100%"
+            height="50%"
         ) as panel:
-            # パネルのコンテンツエリアのpaddingを0に上書き
+            
+            # ヘッダーに履歴ボタンを追加
+            with panel.header_element:
+                with ui.element('div').style('margin-right: 8px;'):
+                    BaseButton.create_type_b('履歴')
+            
             panel.content_element.style('padding: 0;')
             
-            # PDF表示エリア（全面表示）
+            # 検索結果リスト
             with ui.element('div').style(
-                'width: 100%; height: 100%; background: #f5f5f5; '
-                'display: flex; align-items: center; justify-content: center; '
-                'margin: 0; padding: 0;'
+                'height: 100%; overflow-y: auto; padding: 4px;'
             ):
-                # プレースホルダー（PDFが読み込まれるまで）
-                with ui.element('div').style('text-align: center; color: #888;'):
-                    ui.icon('picture_as_pdf', size='64px').style('color: #ccc; margin-bottom: 12px;')
-                    ui.label('PDFプレビューエリア').style('font-size: 16px; margin-bottom: 8px;')
-                    ui.label('PDF表示準備中...').style('font-size: 12px; color: #aaa;')
-                
-                # 実際のPDFプレビューエリア（後で実装）
-                # ui.html('<iframe src="" style="width: 100%; height: 100%; border: none; margin: 0; padding: 0;"></iframe>')
+                for i, result in enumerate(self.search_results):
+                    self._create_search_result_item(result, i)
     
-    def _create_dummy_search_results(self):
-        """ダミーの検索結果データ"""
+    def _create_search_result_item(self, result: Dict[str, Any], index: int):
+        """検索結果アイテム"""
+        with ui.element('div').style(
+            f'margin-bottom: 4px; padding: 8px; '
+            f'border: 1px solid {CommonStyles.COLOR_GRAY_200}; '
+            f'border-radius: 4px; background: white; '
+            'cursor: pointer; transition: all 0.2s;'
+        ).classes('hover:shadow-md hover:border-blue-300').on('click', lambda: self._select_result(result)):
+            
+            # ヘッダー（ファイル名とスコア）
+            with ui.element('div').style('display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;'):
+                ui.label(result['filename']).style(
+                    'font-weight: bold; color: #2563eb; font-size: 14px;'
+                )
+                ui.label(f"{result['score']:.3f}").style(
+                    f'background: {CommonStyles.COLOR_PRIMARY}; color: white; '
+                    'padding: 2px 8px; border-radius: 12px; font-size: 11px;'
+                )
+            
+            # コンテンツプレビュー
+            ui.label(result['content']).style(
+                'font-size: 13px; line-height: 1.4; color: #374151; '
+                'display: -webkit-box; -webkit-line-clamp: 3; '
+                '-webkit-box-orient: vertical; overflow: hidden;'
+            )
+            
+            # メタデータ
+            with ui.element('div').style('margin-top: 4px; display: flex; gap: 8px; font-size: 11px; color: #6b7280;'):
+                ui.label(f"ページ: {result['page']}")
+                ui.label(f"チャンク: {result['chunk']}")
+    
+    def _create_pdf_preview_pane(self):
+        """右下: PDFプレビュー（ヘッダーなし）"""
+        # ヘッダーなしの直接コンテンツ表示
+        with ui.element('div').style(
+            'width: 100%; height: 50%; '
+            'background: white; border-radius: 12px; '
+            'box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); '
+            'border: 1px solid #e5e7eb; '
+            'display: flex; flex-direction: column; '
+            'overflow: hidden;'
+        ):
+            # PDFビューアエリア（破線縁取りなし）
+            with ui.element('div').style(
+                'height: 100%; background: #f3f4f6; '
+                'display: flex; align-items: center; justify-content: center;'
+            ):
+                with ui.element('div').style('text-align: center; color: #6b7280;'):
+                    ui.icon('picture_as_pdf', size='48px').style('margin-bottom: 12px;')
+                    ui.label('PDFプレビュー').style('font-size: 16px; font-weight: 500; margin-bottom: 4px;')
+                    ui.label('検索結果をクリックするとPDFが表示されます').style('font-size: 12px;')
+    
+
+    
+    def _execute_search(self, question: str):
+        """検索実行"""
+        self.current_question = question
+        print(f"検索実行: {question}")
+        # TODO: 実際の検索処理を実装
+    
+    def _select_result(self, result: Dict[str, Any]):
+        """検索結果選択"""
+        print(f"結果選択: {result['filename']}")
+        # TODO: PDFプレビュー表示処理を実装
+    
+    def _create_dummy_search_results(self) -> List[Dict[str, Any]]:
+        """ダミー検索結果データ"""
         return [
             {
                 'filename': 'テストファイル1.pdf',
-                'description': 'これはテスト用の検索結果です。実際のサーバーとの通信でエラーが発生したため、ダミーデータを表示しています。',
-                'content': 'ファイルをクリックするとダミー時刻がプレビューされます。',
-                'score': 0.85
+                'content': 'これはテストファイル1の内容です。RAGシステムについて詳しく説明しています。機械学習と自然言語処理の技術を組み合わせて、効率的な情報検索を実現します。',
+                'score': 0.892,
+                'page': 1,
+                'chunk': 1
             },
             {
-                'filename': 'サンプルドキュメント.pdf',
-                'description': 'サンプルの技術文書です。様々な機能やAPIの使用方法について説明しています。',
-                'content': 'この文書では、システムアーキテクチャと実装の詳細について解説します。主要なコンポーネントには...',
-                'score': 0.73
+                'filename': 'テストファイル2.pdf',
+                'content': '文書検索における最新技術について解説。ベクトル類似度検索やセマンティック検索の手法を詳しく紹介しています。',
+                'score': 0.847,
+                'page': 3,
+                'chunk': 2
             },
             {
-                'filename': 'プロジェクト仕様書.pdf',
-                'description': 'プロジェクトの要件定義と仕様について記載された文書です。',
-                'content': '本プロジェクトは、RAGシステムの構築を目的としており、以下の機能を実装します...',
-                'score': 0.68
+                'filename': 'テストファイル3.pdf',
+                'content': 'AI技術の応用事例について。特に自然言語処理分野での進歩と実用化について詳細に記載されています。',
+                'score': 0.823,
+                'page': 2,
+                'chunk': 1
+            },
+            {
+                'filename': 'テストファイル4.pdf',
+                'content': 'ドキュメント管理システムの構築方法。効率的なインデックス作成と検索最適化について説明しています。',
+                'score': 0.789,
+                'page': 5,
+                'chunk': 3
             }
         ]
-    
-    # ハンドラーメソッド
-    def _handle_search(self):
-        """検索実行ハンドラー"""
-        print("検索実行がクリックされました")
-        # 実際の検索処理を実装
-    
-    def _handle_history(self):
-        """履歴表示ハンドラー"""
-        print("履歴がクリックされました")
-        # 履歴表示処理を実装
-    
-    def _handle_detail(self, result: dict):
-        """詳細表示ハンドラー"""
-        print(f"詳細表示: {result['filename']}")
-        # 詳細表示処理を実装
-    
-    def _handle_edit(self, result: dict):
-        """編集ハンドラー"""
-        print(f"編集: {result['filename']}")
-        # 編集処理を実装
-    
-    def _switch_to_pattern1(self):
-        """第1パターンに切り替え"""
-        print("第1パターンに切り替え")
-        # タブ切り替え処理を実装
-    
-    def _switch_to_pattern2(self):
-        """第2パターンに切り替え"""
-        print("第2パターンに切り替え")
-        # タブ切り替え処理を実装
-
-
-# チャット画面のレンダリング関数
-def render_chat_page():
-    """チャット画面をレンダリング"""
-    chat = ChatPage()
-    chat.render()

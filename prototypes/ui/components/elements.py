@@ -20,7 +20,7 @@ from .base import (
 )
 from .common import (
     CommonSplitter, CommonCard, CommonSectionTitle, CommonTabs,
-    CommonTable, CommonFormElements
+    BaseDataGridView, CommonFormElements
 )
 from .chat import (
     ChatSettingsPanel, ChatSearchResultCard, ChatLayoutButton
@@ -93,7 +93,7 @@ class CommonPanel:
             # ヘッダー（オプション）
             if self.title:
                 self._create_header()
-            
+        
             # コンテンツエリア
             self.content_element = ui.element('div').style(
                 f'flex: 1; padding: {self.content_padding}; overflow: auto;'
@@ -104,8 +104,8 @@ class CommonPanel:
             
             # フッター用のコンテキストを保持
             self._content_context = content_context
-            
-            return self
+        
+        return self
     
     def __exit__(self, exc_type, exc_val, exc_tb):
         """パネル終了"""
@@ -127,12 +127,13 @@ class CommonPanel:
             f'align-items: center; '
             f'justify-content: space-between; '
             f'box-sizing: border-box; '
-            f'flex-shrink: 0;'
+            f'flex-shrink: 0; '
+            f'border-bottom: 1px solid #e5e7eb;'
         )
         
         with self.header_element:
             ui.element('div').style(
-                'font-weight: bold; font-size: 14px;'
+                'font-weight: bold; font-size: 16px;'
             ).props(f'innerHTML="{self.title}"')
     
     def _create_footer(self):

@@ -3,8 +3,9 @@
 from nicegui import ui
 from prototypes.ui.components.elements import (
     CommonPanel, CommonSplitter, CommonCard, CommonSectionTitle,
-    CommonTabs, CommonTable, CommonFormElements
+    CommonTabs, CommonFormElements
 )
+from ui.components.common import BaseDataGridView
 
 class ArrangementTestTabD:
     """タブD: 全共通コンポーネント統合展示"""
@@ -51,29 +52,31 @@ class ArrangementTestTabD:
                     CommonFormElements.create_input("名前", placeholder="名前を入力", width="150px")
                     CommonFormElements.create_dropdown("部署", ["開発", "営業", "企画"], width="120px")
             
-            # テーブル展示
+            # テーブル展示（BaseDataGridView）
             with CommonCard():
-                CommonSectionTitle.create("📊 CommonTable展示", size="14px")
+                CommonSectionTitle.create("📊 BaseDataGridView展示", size="14px")
                 
-                table = CommonTable(
-                    columns=[
-                        {'key': 'id', 'label': 'ID', 'width': '50px', 'align': 'center'},
-                        {'key': 'name', 'label': '名前', 'width': '1fr'},
-                        {'key': 'status', 'label': 'ステータス', 'width': '80px', 'align': 'center',
-                         'render_type': 'badge', 'badge_colors': {'アクティブ': '#10b981', '保留': '#f59e0b'}}
-                    ],
-                    data=[
+                with ui.element('div').style('height: 200px;'):
+                    grid = BaseDataGridView(
+                        columns=[
+                            {'field': 'id', 'label': 'ID', 'width': '50px', 'align': 'center'},
+                            {'field': 'name', 'label': '名前', 'width': '1fr'},
+                            {'field': 'status', 'label': 'ステータス', 'width': '80px', 'align': 'center',
+                             'render_type': 'badge', 'badge_colors': {
+                                 'アクティブ': '#22c55e', '保留': '#f59e0b'
+                             }}
+                        ],
+                        height='100%',
+                        default_rows_per_page=3
+                    )
+                    grid.set_data([
                         {'id': 1, 'name': '田中太郎', 'status': 'アクティブ'},
                         {'id': 2, 'name': '佐藤花子', 'status': '保留'},
                         {'id': 3, 'name': '鈴木一郎', 'status': 'アクティブ'},
                         {'id': 4, 'name': '高橋美咲', 'status': 'アクティブ'},
                         {'id': 5, 'name': '山田次郎', 'status': '保留'}
-                    ],
-                    rows_per_page=3
-                )
-                
-                with ui.element('div').style('height: 200px;'):
-                    table.render()
+                    ])
+                    grid.render()
             
             # 成功メッセージ
             with ui.element('div').style(

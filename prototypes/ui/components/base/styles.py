@@ -166,3 +166,23 @@ class CommonStyles:
     
     HEADER_HEIGHT = '32px'
     FOOTER_HEIGHT = '32px'
+    
+    # === フォーム要素 ===
+    FORM_ROW = {
+        'display': 'flex',
+        'align-items': 'center',
+        'margin-bottom': SPACING_SM,
+        'gap': SPACING_SM
+    }
+    
+    FORM_LABEL = {
+        'font-size': FONT_SIZE_BASE,
+        'color': COLOR_GRAY_700,
+        'font-weight': '500',
+        'flex-shrink': '0'
+    }
+    
+    FORM_CONTROL = {
+        'flex': '1',
+        'font-size': FONT_SIZE_BASE
+    }

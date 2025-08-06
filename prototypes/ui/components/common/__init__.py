@@ -4,17 +4,14 @@
 """
 
 from .layout import CommonSplitter, CommonCard, CommonSectionTitle, CommonTabs
-from .display import CommonTable, CommonFormElements
-from .table import BaseTablePanel
-from .user_management_panel import UserManagementPanel
+from .display import CommonFormElements
+from .data_grid import BaseDataGridView
 
 __all__ = [
     'CommonSplitter',
     'CommonCard', 
     'CommonSectionTitle',
     'CommonTabs',
-    'CommonTable',
+    'BaseDataGridView',
     'CommonFormElements',
-    'BaseTablePanel',
-    'UserManagementPanel',
 ]

@@ -126,22 +126,80 @@ class ArrangementTestTabA:
     
     def _create_left_bottom_pane(self):
         """左下ペイン - ユーザー管理テーブル"""
-        from ui.components.common import UserManagementPanel
+        from ui.components.common import BaseDataGridView
+        from ui.components.base import CommonStyles
         
         with ui.element('div').style(
             'width: 100%; height: 50%; '
             'margin: 0; padding: 4px; '
             'box-sizing: border-box; overflow: hidden;'
         ).props('id="left-bottom-pane"'):
-            # 共通コンポーネントを使用
-            panel = UserManagementPanel(
-                users_data=self.users_data,
-                on_add_user=lambda: ui.notify('ユーザー追加'),
-                on_edit_user=lambda: ui.notify('ユーザー編集'),
-                width="100%",
-                height="100%"
-            )
-            panel.render()
+            with ui.element('div').style(
+                'width: 100%; height: 100%; '
+                'background: white; border-radius: 12px; '
+                'box-shadow: 0 2px 8px rgba(0,0,0,0.15); '
+                'border: 1px solid #e5e7eb; '
+                'display: flex; flex-direction: column; '
+                'overflow: hidden;'
+            ):
+                # ヘッダー（統一グレー）
+                with ui.element('div').style(
+                    f'background: {CommonStyles.COLOR_GRAY_100}; '
+                    f'color: {CommonStyles.COLOR_GRAY_800}; '
+                    f'padding: 8px 12px; height: {CommonStyles.HEADER_HEIGHT}; '
+                    'display: flex; align-items: center; justify-content: space-between; '
+                    'box-sizing: border-box; flex-shrink: 0;'
+                ):
+                    ui.label('👥 ユーザー管理').style('font-weight: bold; font-size: 14px;')
+                    with ui.element('div').style('display: flex; gap: 2px;'):
+                        ui.button('➕', color='primary').style(
+                            'padding: 2px 6px; font-size: 12px; '
+                            'min-height: 24px; min-width: 24px;'
+                        ).on('click', lambda: ui.notify('ユーザー追加'))
+                        ui.button('✏️', color='primary').style(
+                            'padding: 2px 6px; font-size: 12px; '
+                            'min-height: 24px; min-width: 24px;'
+                        ).on('click', lambda: ui.notify('ユーザー編集'))
+                
+                # テーブルエリア
+                with ui.element('div').style('flex: 1; overflow: hidden; padding: 0;'):
+                    # カラム定義（BaseDataGridView用にstatusをbadge化）
+                    columns = [
+                        {'field': 'id', 'label': 'ID', 'width': '60px', 'align': 'center'},
+                        {'field': 'name', 'label': '名前', 'width': '1fr', 'align': 'left'},
+                        {'field': 'email', 'label': 'メール', 'width': '2fr', 'align': 'left'},
+                        {'field': 'role', 'label': '役割', 'width': '100px', 'align': 'center'},
+                        {'field': 'status', 'label': 'ステータス', 'width': '100px', 'align': 'center',
+                         'render_type': 'badge', 'badge_colors': {
+                             'アクティブ': '#22c55e', '保留': '#f59e0b', '無効': '#ef4444'
+                         }},
+                        {'field': 'last_login', 'label': '最終ログイン', 'width': '160px', 'align': 'center'}
+                    ]
+                    
+                    # BaseDataGridView作成
+                    grid = BaseDataGridView(
+                        columns=columns,
+                        height='100%',
+                        auto_rows=True,
+                        default_rows_per_page=self.rows_per_page
+                    )
+                    grid.set_data(self.users_data)
+                    grid.render()
+                
+                # フッター
+                with ui.element('div').style(
+                    f'height: {CommonStyles.FOOTER_HEIGHT}; '
+                    f'background: {CommonStyles.COLOR_GRAY_50}; '
+                    f'border-top: 1px solid {CommonStyles.COLOR_GRAY_200}; '
+                    'display: flex; align-items: center; '
+                    'justify-content: space-between; '
+                    f'padding: 0 {CommonStyles.SPACING_MD}; '
+                    f'font-size: {CommonStyles.FONT_SIZE_XS}; '
+                    f'color: {CommonStyles.COLOR_GRAY_600}; '
+                    'flex-shrink: 0;'
+                ):
+                    ui.label(f'👥 {len(self.users_data)}名のユーザー')
+                    ui.label('最終同期: 15:30')
     
     def _create_vertical_splitter(self):
         """縦スプリッター"""

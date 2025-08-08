@@ -1,6 +1,6 @@
 """
-処理サービス
-Document processing service with OCR, LLM, and embedding
+処理サービス - Prototype統合版
+OCR・LLM・Embedding統合処理サービス
 """
 
 import asyncio
@@ -12,16 +12,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import config, logger
 from app.core.database import get_db
-from app.core.models import FilesMeta, FilesText
-from app.services.file_service import FileService
-
+from app.core.models import FilesBlob, FilesMeta, FilesText
+from app.services.ocr.ocr_process import extract_text_from_pdf
+from app.services.llm.refiner import refine_text
+from app.services.embedding.embedder import EmbeddingService
 
 class ProcessingService:
     """文書処理サービス"""
     
-    def __init__(self, db_session: AsyncSession):
+    def __init__(self, db_session: AsyncSession = None):
+        """
+        Args:
+            db_session: データベースセッション（オプショナル）
+        """
         self.db = db_session
-        self.file_service = FileService(db_session)
         self.processing_queue = asyncio.Queue()
         self.active_jobs = {}
     
@@ -32,7 +36,18 @@ class ProcessingService:
         progress_callback: Optional[Callable] = None,
         user_id: Optional[str] = None
     ) -> str:
-        """処理開始"""
+        """
+        処理開始
+        
+        Args:
+            file_ids: 処理対象ファイルIDリスト
+            processing_config: 処理設定
+            progress_callback: 進捗コールバック
+            user_id: ユーザーID
+            
+        Returns:
+            ジョブID
+        """
         try:
             # ジョブID生成
             job_id = str(uuid.uuid4())
@@ -48,275 +63,265 @@ class ProcessingService:
                 "created_at": datetime.utcnow(),
                 "total_files": len(file_ids),
                 "completed_files": 0,
-                "current_file": None,
-                "error_count": 0
+                "current_step": "",
+                "error": None
             }
             
             # アクティブジョブに追加
             self.active_jobs[job_id] = job_info
             
-            # 処理キューに追加
+            # キューに追加
             await self.processing_queue.put(job_info)
             
-            # バックグラウンド処理開始
-            asyncio.create_task(self._process_job(job_info))
-            
             logger.info(f"処理ジョブ開始: {job_id}, ファイル数: {len(file_ids)}")
+            
+            # 非同期処理開始
+            asyncio.create_task(self._process_job(job_id))
+            
             return job_id
             
         except Exception as e:
             logger.error(f"処理開始エラー: {e}")
             raise
     
-    async def get_job_status(self, job_id: str) -> Optional[Dict[str, Any]]:
-        """ジョブステータス取得"""
-        return self.active_jobs.get(job_id)
-    
-    async def cancel_job(self, job_id: str) -> bool:
-        """ジョブキャンセル"""
-        try:
-            job_info = self.active_jobs.get(job_id)
-            if job_info:
-                job_info["status"] = "cancelled"
-                logger.info(f"処理ジョブキャンセル: {job_id}")
-                return True
-            return False
-            
-        except Exception as e:
-            logger.error(f"ジョブキャンセルエラー: {e}")
-            return False
-    
-    async def stream_progress(self, job_id: str) -> AsyncGenerator[Dict[str, Any], None]:
-        """進捗ストリーミング"""
-        try:
-            job_info = self.active_jobs.get(job_id)
-            if not job_info:
-                yield {"type": "error", "message": "ジョブが見つかりません"}
-                return
-            
-            # 初期状態送信
-            yield {
-                "type": "job_start",
-                "job_id": job_id,
-                "total_files": job_info["total_files"],
-                "timestamp": datetime.utcnow().isoformat()
-            }
-            
-            # ジョブ完了まで定期的にステータス送信
-            while job_info.get("status") not in ["completed", "cancelled", "error"]:
-                yield {
-                    "type": "progress_update",
-                    "job_id": job_id,
-                    "status": job_info.get("status", "unknown"),
-                    "completed_files": job_info.get("completed_files", 0),
-                    "total_files": job_info.get("total_files", 0),
-                    "current_file": job_info.get("current_file"),
-                    "error_count": job_info.get("error_count", 0),
-                    "timestamp": datetime.utcnow().isoformat()
-                }
-                
-                await asyncio.sleep(1)  # 1秒間隔で更新
-            
-            # 最終状態送信
-            yield {
-                "type": "job_complete",
-                "job_id": job_id,
-                "status": job_info.get("status"),
-                "completed_files": job_info.get("completed_files", 0),
-                "total_files": job_info.get("total_files", 0),
-                "error_count": job_info.get("error_count", 0),
-                "timestamp": datetime.utcnow().isoformat()
-            }
-            
-        except Exception as e:
-            logger.error(f"進捗ストリーミングエラー: {e}")
-            yield {"type": "error", "message": str(e)}
-    
-    # プライベートメソッド
-    
-    async def _process_job(self, job_info: Dict[str, Any]) -> None:
+    async def _process_job(self, job_id: str) -> None:
         """ジョブ処理実行"""
-        job_id = job_info["job_id"]
+        job_info = self.active_jobs.get(job_id)
+        if not job_info:
+            return
         
         try:
+            # ステータス更新
             job_info["status"] = "processing"
             job_info["started_at"] = datetime.utcnow()
             
-            # 各ファイルを処理
-            for i, file_id in enumerate(job_info["file_ids"]):
-                # キャンセルチェック
-                if job_info.get("status") == "cancelled":
-                    logger.info(f"ジョブキャンセル検出: {job_id}")
-                    break
+            # ファイルごとに処理
+            for idx, file_id in enumerate(job_info["file_ids"]):
+                # 進捗更新
+                await self._update_progress(
+                    job_id,
+                    f"ファイル処理中 ({idx + 1}/{job_info['total_files']})",
+                    (idx / job_info['total_files']) * 100
+                )
                 
-                # ファイル処理
-                try:
-                    job_info["current_file"] = file_id
-                    await self._process_single_file(job_info, file_id)
-                    job_info["completed_files"] += 1
-                    
-                except Exception as e:
-                    logger.error(f"ファイル処理エラー ({file_id}): {e}")
-                    job_info["error_count"] += 1
-                    
-                    # ファイルステータス更新
-                    await self.file_service.update_file_status(
-                        file_id=file_id,
-                        status="error",
-                        error_message=str(e)
-                    )
-            
-            # ジョブ完了
-            if job_info.get("status") != "cancelled":
-                job_info["status"] = "completed"
-            
-            job_info["completed_at"] = datetime.utcnow()
-            
-            logger.info(f"ジョブ処理完了: {job_id}, 成功: {job_info['completed_files']}, エラー: {job_info['error_count']}")
-            
-        except Exception as e:
-            logger.error(f"ジョブ処理エラー: {job_id}, {e}")
-            job_info["status"] = "error"
-            job_info["error_message"] = str(e)
-        
-        finally:
-            # 一定時間後にジョブ情報をクリーンアップ
-            await asyncio.sleep(3600)  # 1時間後
-            self.active_jobs.pop(job_id, None)
-    
-    async def _process_single_file(self, job_info: Dict[str, Any], file_id: str) -> None:
-        """単一ファイル処理"""
-        progress_callback = job_info.get("progress_callback")
-        config_data = job_info.get("config", {})
-        
-        try:
-            # ファイルステータス更新
-            await self.file_service.update_file_status(file_id, "processing", 0)
-            
-            # 進捗通知
-            if progress_callback:
-                await progress_callback({
-                    "type": "file_start",
-                    "file_id": file_id,
-                    "timestamp": datetime.utcnow().isoformat()
-                })
-            
-            # Step 1: OCR処理
-            await self.file_service.update_file_status(file_id, "processing", 20)
-            if progress_callback:
-                await progress_callback({
-                    "type": "ocr_start",
-                    "file_id": file_id,
-                    "message": "OCR処理開始"
-                })
-            
-            raw_text = await self._perform_ocr(file_id, config_data)
-            
-            # Step 2: LLM整形
-            await self.file_service.update_file_status(file_id, "processing", 60)
-            if progress_callback:
-                await progress_callback({
-                    "type": "llm_start", 
-                    "file_id": file_id,
-                    "message": "LLM整形開始"
-                })
-            
-            refined_text = await self._perform_llm_refinement(file_id, raw_text, config_data)
-            
-            # Step 3: 埋め込み生成
-            await self.file_service.update_file_status(file_id, "processing", 80)
-            if progress_callback:
-                await progress_callback({
-                    "type": "embedding_start",
-                    "file_id": file_id,
-                    "message": "埋め込み生成開始"
-                })
-            
-            await self._generate_embeddings(file_id, refined_text, config_data)
+                # 各処理ステップ実行
+                await self._process_file(file_id, job_info["config"], job_id)
+                
+                job_info["completed_files"] = idx + 1
             
             # 完了
-            await self.file_service.update_file_status(file_id, "processed", 100)
-            if progress_callback:
-                await progress_callback({
-                    "type": "file_complete",
-                    "file_id": file_id,
-                    "message": "処理完了"
-                })
+            job_info["status"] = "completed"
+            job_info["completed_at"] = datetime.utcnow()
             
+            await self._update_progress(job_id, "処理完了", 100)
+            
+        except Exception as e:
+            logger.error(f"ジョブ処理エラー: {e}")
+            job_info["status"] = "failed"
+            job_info["error"] = str(e)
+            await self._update_progress(job_id, f"エラー: {str(e)}", -1)
+    
+    async def _process_file(
+        self,
+        file_id: str,
+        config: Dict[str, Any],
+        job_id: str
+    ) -> None:
+        """
+        ファイル処理
+        
+        Args:
+            file_id: ファイルID
+            config: 処理設定
+            job_id: ジョブID
+        """
+        try:
+            # データベースからファイル情報取得
+            async with get_db() as db:
+                file_blob = await db.get(FilesBlob, file_id)
+                if not file_blob:
+                    raise ValueError(f"ファイルが見つかりません: {file_id}")
+                
+                # OCR処理
+                extracted_text = None
+                if config.get("enable_ocr", False):
+                    await self._update_progress(job_id, f"OCR処理中: {file_id}", -1)
+                    
+                    # PDFファイルを一時保存
+                    temp_path = Path(f"/tmp/{file_id}.pdf")
+                    with open(temp_path, "wb") as f:
+                        f.write(file_blob.content)
+                    
+                    # OCR実行
+                    ocr_result = extract_text_from_pdf(
+                        str(temp_path),
+                        ocr_engine=config.get("ocr_engine", "ocrmypdf")
+                    )
+                    extracted_text = ocr_result.get("text", "")
+                    
+                    # 一時ファイル削除
+                    temp_path.unlink()
+                    
+                    logger.info(f"OCR完了: {file_id}, 文字数: {len(extracted_text)}")
+                
+                # LLM整形
+                refined_text = extracted_text
+                if config.get("enable_llm_refine", False) and extracted_text:
+                    await self._update_progress(job_id, f"テキスト整形中: {file_id}", -1)
+                    
+                    # LLM整形実行
+                    refined_result = refine_text(
+                        extracted_text,
+                        model_name=config.get("llm_model", config.OLLAMA_MODEL)
+                    )
+                    refined_text = refined_result.get("text", extracted_text)
+                    
+                    logger.info(f"LLM整形完了: {file_id}, 品質スコア: {refined_result.get('score', 0)}")
+                
+                # テキストをデータベースに保存
+                if refined_text:
+                    files_text = await db.get(FilesText, file_id)
+                    if not files_text:
+                        files_text = FilesText(file_id=file_id)
+                        db.add(files_text)
+                    
+                    files_text.extracted_text = extracted_text
+                    files_text.refined_text = refined_text
+                    files_text.last_processed = datetime.utcnow()
+                    
+                    await db.commit()
+                
+                # Embedding生成
+                if config.get("enable_embedding", True) and refined_text:
+                    await self._update_progress(job_id, f"ベクトル生成中: {file_id}", -1)
+                    
+                    # Embeddingサービス初期化
+                    embedding_service = EmbeddingService(
+                        embedding_option=config.get("embedding_option", config.DEFAULT_EMBEDDING_OPTION)
+                    )
+                    
+                    # ベクトル生成（チャンク分割含む）
+                    chunks_with_embeddings = embedding_service.generate_embeddings(
+                        refined_text,
+                        file_id=file_id
+                    )
+                    
+                    # ベクトルをデータベースに保存
+                    # TODO: FileEmbeddingテーブルへの保存実装
+                    
+                    logger.info(f"Embedding生成完了: {file_id}, チャンク数: {len(chunks_with_embeddings)}")
+                
         except Exception as e:
             logger.error(f"ファイル処理エラー ({file_id}): {e}")
             raise
     
-    async def _perform_ocr(self, file_id: str, config: Dict[str, Any]) -> str:
-        """OCR処理"""
-        try:
-            # TODO: 実際のOCR処理実装
-            # ocrmypdf, tesseract等との連携
-            
-            # ダミー実装
-            await asyncio.sleep(2)  # OCR処理のシミュレーション
-            
-            return f"OCR結果のダミーテキスト (ファイルID: {file_id})\n\nこれは文書の内容をOCRで読み取った結果です。実際の実装では、PDFからテキストを抽出し、画像の場合は文字認識を行います。"
-            
-        except Exception as e:
-            logger.error(f"OCR処理エラー ({file_id}): {e}")
-            raise
-    
-    async def _perform_llm_refinement(
+    async def _update_progress(
         self,
-        file_id: str,
-        raw_text: str,
-        config: Dict[str, Any]
-    ) -> str:
-        """LLM整形処理"""
-        try:
-            # TODO: Ollama連携実装
-            
-            # ダミー実装
-            await asyncio.sleep(3)  # LLM処理のシミュレーション
-            
-            return f"LLM整形結果:\n\n{raw_text}\n\n[整形済み] 文書の内容を自然な日本語に整形し、読みやすくしました。OCRエラーの修正や文章の構造化を行っています。"
-            
-        except Exception as e:
-            logger.error(f"LLM整形エラー ({file_id}): {e}")
-            # フォールバック: 元のテキストを返す
-            return raw_text
-    
-    async def _generate_embeddings(
-        self,
-        file_id: str,
-        text: str,
-        config: Dict[str, Any]
+        job_id: str,
+        message: str,
+        progress: float
     ) -> None:
-        """埋め込み生成"""
-        try:
-            # TODO: 埋め込み生成実装
-            # SentenceTransformer, OpenAI embeddings等との連携
+        """進捗更新"""
+        job_info = self.active_jobs.get(job_id)
+        if not job_info:
+            return
+        
+        job_info["current_step"] = message
+        
+        # コールバック実行
+        if job_info.get("progress_callback"):
+            try:
+                await job_info["progress_callback"]({
+                    "job_id": job_id,
+                    "message": message,
+                    "progress": progress,
+                    "completed_files": job_info["completed_files"],
+                    "total_files": job_info["total_files"]
+                })
+            except Exception as e:
+                logger.error(f"進捗コールバックエラー: {e}")
+    
+    async def get_job_status(self, job_id: str) -> Dict[str, Any]:
+        """
+        ジョブステータス取得
+        
+        Args:
+            job_id: ジョブID
             
-            # ダミー実装
-            await asyncio.sleep(1)  # 埋め込み生成のシミュレーション
+        Returns:
+            ジョブステータス情報
+        """
+        job_info = self.active_jobs.get(job_id)
+        if not job_info:
+            return {
+                "job_id": job_id,
+                "status": "not_found",
+                "error": "ジョブが見つかりません"
+            }
+        
+        return {
+            "job_id": job_id,
+            "status": job_info["status"],
+            "current_step": job_info["current_step"],
+            "completed_files": job_info["completed_files"],
+            "total_files": job_info["total_files"],
+            "created_at": job_info["created_at"].isoformat(),
+            "error": job_info.get("error")
+        }
+    
+    async def cancel_job(self, job_id: str) -> Dict[str, Any]:
+        """
+        ジョブキャンセル
+        
+        Args:
+            job_id: ジョブID
             
-            # FileTextレコード作成
-            file_text = FileText(
-                id=str(uuid.uuid4()),
-                file_id=file_id,
-                raw_text=text,
-                refined_text=text,
-                quality_score=0.85,
-                created_at=datetime.utcnow()
-            )
+        Returns:
+            キャンセル結果
+        """
+        job_info = self.active_jobs.get(job_id)
+        if not job_info:
+            return {
+                "status": "error",
+                "message": "ジョブが見つかりません"
+            }
+        
+        job_info["status"] = "cancelled"
+        job_info["cancelled_at"] = datetime.utcnow()
+        
+        logger.info(f"ジョブキャンセル: {job_id}")
+        
+        return {
+            "status": "success",
+            "message": "ジョブをキャンセルしました"
+        }
+    
+    def get_active_jobs(self, user_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """
+        アクティブジョブ一覧取得
+        
+        Args:
+            user_id: ユーザーID（フィルタリング用）
             
-            self.db.add(file_text)
-            await self.db.commit()
+        Returns:
+            ジョブリスト
+        """
+        jobs = []
+        for job_id, job_info in self.active_jobs.items():
+            if user_id and job_info.get("user_id") != user_id:
+                continue
             
-        except Exception as e:
-            logger.error(f"埋め込み生成エラー ({file_id}): {e}")
-            raise
+            jobs.append({
+                "job_id": job_id,
+                "status": job_info["status"],
+                "total_files": job_info["total_files"],
+                "completed_files": job_info["completed_files"],
+                "created_at": job_info["created_at"].isoformat()
+            })
+        
+        return jobs
 
-
-# 依存性注入用ファクトリ
-async def get_processing_service(db = None):
-    """処理サービス取得"""
-    if db is None:
-        db = next(get_db())
-    return ProcessingService(db)
+# サービスインスタンス作成ヘルパー
+def get_processing_service(db_session: AsyncSession = None) -> ProcessingService:
+    """処理サービスインスタンス取得"""
+    return ProcessingService(db_session)

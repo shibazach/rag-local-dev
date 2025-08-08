@@ -1,0 +1,297 @@
+"""ファイル管理ページ - ui.table版"""
+
+from nicegui import ui
+from ui.components.layout import RAGHeader, RAGFooter, MainContentArea
+from ui.components.common import CommonPanel
+from ui.components.common.buttons import BaseButton
+from app.services.file_service import FileService
+import logging
+
+logger = logging.getLogger(__name__)
+
+class FilesPage:
+    def __init__(self):
+        """ファイルページの初期化"""
+        self.file_service = FileService()
+        self.file_data = []
+        self.original_data = []
+        self.status_filter = '全て'
+        self.search_query = ''
+        self.render()
+    
+    def render(self):
+        """ページレンダリング"""
+        RAGHeader(current_page="files")
+        
+        with MainContentArea():
+            self._create_layout()
+        
+        RAGFooter()
+    
+    def _create_layout(self):
+        """レイアウト作成"""
+        with ui.element('div').style(
+            'display: grid; '
+            'grid-template-columns: 1fr 1fr; '
+            'grid-template-rows: 1fr; '
+            'gap: 16px; '
+            'height: 100%; '
+            'padding: 16px;'
+        ):
+            self._create_file_list_pane()
+            self._create_pdf_preview_pane()
+    
+    def _create_file_list_pane(self):
+        """ファイル一覧ペイン"""
+        with CommonPanel(
+            title="📁 ファイル一覧",
+            gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            header_color="#6b7280",
+            width="100%",
+            height="100%",
+            content_style="padding: 0; position: relative;"
+        ) as panel:
+            # ヘッダーにフィルタリングUI追加
+            with panel.header_element:
+                with ui.element('div').style(
+                    'display: flex; gap: 8px; align-items: center; '
+                    'flex: 1; margin-right: 8px;'
+                ):
+                    # ステータスフィルタ
+                    self.status_select = ui.select(
+                        options=[
+                            '全て',
+                            '処理完了',
+                            '処理中', 
+                            '未処理',
+                            '未整形',
+                            '未ベクトル化',
+                            'エラー'
+                        ],
+                        value=self.status_filter,
+                        on_change=lambda e: self._apply_filters()
+                    ).style('width: 150px; height: 28px; min-height: 28px; flex-shrink: 0;').props('outlined dense')
+                    
+                    # 検索ボックス
+                    self.search_input = ui.input(
+                        placeholder='ファイル名で検索...',
+                        on_change=lambda e: self._apply_filters()
+                    ).style('flex: 1; min-width: 120px; height: 28px; min-height: 28px;').props('outlined dense')
+            
+            # ファイルデータをロード
+            self._load_file_data()
+            
+            # データグリッドをコンテンツに追加
+            with panel.content_element:
+                self._setup_data_grid()
+    
+    def _load_file_data(self):
+        """ファイルデータをロード"""
+        try:
+            result = self.file_service.get_file_list(limit=1000, offset=0)
+            if result and 'files' in result:
+                self.file_data = []
+                for file in result['files']:
+                    # ステータス判定
+                    if file.get('refined_text'):
+                        status = '処理完了'
+                    elif file.get('raw_text') and not file.get('refined_text'):
+                        status = '未整形'
+                    elif not file.get('raw_text') and not file.get('refined_text'):
+                        status = '未処理'
+                    else:
+                        status = '処理中'
+                    
+                    # ファイルサイズのフォーマット
+                    size = file.get('size', 0)
+                    if size < 1024:
+                        size_str = f"{size}B"
+                    elif size < 1024 * 1024:
+                        size_str = f"{size / 1024:.1f}KB"
+                    elif size < 1024 * 1024 * 1024:
+                        size_str = f"{size / 1024 / 1024:.1f}MB"
+                    else:
+                        size_str = f"{size / 1024 / 1024 / 1024:.1f}GB"
+                    
+                    # アクション列のHTML（実際のアイコンは ui.table のスロットで処理）
+                    actions_html = 'actions'
+                    
+                    self.file_data.append({
+                        'file_id': file.get('file_id'),
+                        'filename': file.get('filename', '不明'),
+                        'size': size_str,
+                        'status': status,
+                        'created_at': file.get('created_at', '').split('T')[0] if file.get('created_at') else '',
+                        'actions': actions_html,
+                        'raw_data': file  # 元データを保持
+                    })
+                
+                logger.info(f"ファイルデータ読み込み完了: {len(self.file_data)}件")
+        except Exception as e:
+            logger.error(f"ファイルデータ読み込みエラー: {str(e)}")
+            ui.notify(f'ファイルデータの読み込みに失敗しました: {str(e)}', type='error')
+    
+    def _setup_data_grid(self):
+        """データグリッド設定 - ui.table版"""
+        # データ設定
+        self.original_data = self.file_data.copy()
+        
+        # 各行に選択状態とIDを追加
+        for idx, row in enumerate(self.file_data):
+            row['id'] = idx
+            row['selected'] = False
+        
+        # カラム定義
+        columns = [
+            {'name': 'select', 'label': '', 'field': 'select', 'sortable': False, 'align': 'center'},
+            {'name': 'filename', 'label': 'ファイル名', 'field': 'filename', 'sortable': True, 'align': 'left'},
+            {'name': 'size', 'label': 'サイズ', 'field': 'size', 'sortable': True, 'align': 'right'},
+            {'name': 'status', 'label': 'ステータス', 'field': 'status', 'sortable': True, 'align': 'center'},
+            {'name': 'created_at', 'label': '作成日時', 'field': 'created_at', 'sortable': True, 'align': 'center'},
+            {'name': 'actions', 'label': '操作', 'field': 'actions', 'sortable': False, 'align': 'center'}
+        ]
+        
+        # ui.table作成
+        self.file_table = ui.table(
+            columns=columns,
+            rows=self.file_data,
+            row_key='id',
+            pagination={'rowsPerPage': 20}
+        ).classes('w-full').style('height: 100%;')
+        
+        # テーブルヘッダーの背景色をカスタマイズ
+        self.file_table.add_slot('header', '''
+            <template v-slot:header="props">
+                <q-tr :props="props" style="background-color: #e5e7eb;">
+                    <q-th v-for="col in props.cols" :key="col.name" :props="props">
+                        {{ col.label }}
+                    </q-th>
+                </q-tr>
+            </template>
+        ''')
+        
+        # チェックボックス列のカスタムレンダリング
+        self.file_table.add_slot('body-cell-select', '''
+            <template v-slot:body-cell-select="props">
+                <q-td :props="props">
+                    <q-checkbox v-model="props.row.selected" 
+                                @input="$parent.$emit('selection-change', props.row)"
+                                dense />
+                </q-td>
+            </template>
+        ''')
+        
+        # ステータス列のカスタムレンダリング（バッジ風）
+        self.file_table.add_slot('body-cell-status', '''
+            <template v-slot:body-cell-status="props">
+                <q-td :props="props">
+                    <q-badge :color="props.value === '処理完了' ? 'green' :
+                                    props.value === '処理中' ? 'blue' :
+                                    props.value === '未処理' ? 'grey' :
+                                    props.value === '未整形' ? 'orange' :
+                                    props.value === '未ベクトル化' ? 'purple' :
+                                    props.value === 'エラー' ? 'red' : 'grey'" 
+                             :label="props.value" 
+                             style="padding: 4px 8px;" />
+                </q-td>
+            </template>
+        ''')
+        
+        # アクション列のカスタムレンダリング
+        self.file_table.add_slot('body-cell-actions', '''
+            <template v-slot:body-cell-actions="props">
+                <q-td :props="props">
+                    <div style="display: flex; gap: 4px; justify-content: center;">
+                        <q-btn flat round dense icon="visibility" size="sm"
+                               @click="$parent.$emit('preview', props.row)"
+                               style="color: #6b7280;">
+                            <q-tooltip>プレビュー</q-tooltip>
+                        </q-btn>
+                        <q-btn flat round dense icon="info" size="sm"
+                               @click="$parent.$emit('info', props.row)"
+                               style="color: #6b7280;">
+                            <q-tooltip>詳細情報</q-tooltip>
+                        </q-btn>
+                        <q-btn flat round dense icon="delete" size="sm"
+                               @click="$parent.$emit('delete', props.row)"
+                               style="color: #ef4444;">
+                            <q-tooltip>削除</q-tooltip>
+                        </q-btn>
+                    </div>
+                </q-td>
+            </template>
+        ''')
+        
+        # イベントハンドラーの設定
+        self.file_table.on('selection-change', lambda e: self._handle_selection_change(e.args))
+        self.file_table.on('preview', lambda e: self._preview_file(e.args))
+        self.file_table.on('info', lambda e: self._show_file_info(e.args))
+        self.file_table.on('delete', lambda e: self._delete_file(e.args))
+    
+    def _create_pdf_preview_pane(self):
+        """PDFプレビューペイン（chatの右下ペインと同構造）"""
+        # ヘッダーなしの直接コンテンツ表示
+        with ui.element('div').style(
+            'width: 100%; height: 100%; '
+            'background: white; border-radius: 12px; '
+            'box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); '
+            'border: 1px solid #e5e7eb; '
+            'display: flex; flex-direction: column; '
+            'overflow: hidden;'
+        ):
+            # PDFビューアエリア
+            with ui.element('div').style(
+                'height: 100%; background: #f3f4f6; '
+                'display: flex; align-items: center; justify-content: center;'
+            ):
+                with ui.element('div').style('text-align: center; color: #6b7280;'):
+                    ui.icon('picture_as_pdf', size='48px').style('margin-bottom: 12px;')
+                    ui.label('PDFプレビュー').style('font-size: 16px; font-weight: 500; margin-bottom: 4px;')
+                    ui.label('ファイルを選択してプレビューを表示').style('font-size: 12px;')
+    
+    def _apply_filters(self):
+        """フィルタを適用"""
+        status_filter = self.status_select.value
+        search_query = self.search_input.value.lower()
+        
+        filtered_data = []
+        for row in self.original_data:
+            # ステータスフィルタ
+            if status_filter != '全て' and row['status'] != status_filter:
+                continue
+            
+            # 検索フィルタ
+            if search_query and search_query not in row['filename'].lower():
+                continue
+            
+            filtered_data.append(row)
+        
+        # テーブルデータを更新
+        self.file_table.rows = filtered_data
+        self.file_table.update()
+    
+    def _preview_file(self, row_data):
+        """ファイルプレビュー"""
+        file_id = row_data.get('file_id')
+        filename = row_data.get('filename')
+        
+        if file_id:
+            ui.notify(f'{filename} をプレビュー中...', type='info')
+            # TODO: 実際のプレビュー処理を実装
+    
+    def _show_file_info(self, row_data):
+        """ファイル詳細情報表示"""
+        filename = row_data.get('filename')
+        ui.notify(f'{filename} の詳細情報を表示', type='info')
+        # TODO: 詳細情報ダイアログを実装
+    
+    def _delete_file(self, row_data):
+        """ファイル削除"""
+        filename = row_data.get('filename')
+        ui.notify(f'{filename} を削除しますか？', type='warning')
+        # TODO: 削除確認ダイアログと削除処理を実装
+    
+    def _handle_selection_change(self, row_data):
+        """選択状態の変更処理"""
+        selected_count = sum(1 for row in self.file_table.rows if row.get('selected'))
+        logger.debug(f'選択されたファイル数: {selected_count}')

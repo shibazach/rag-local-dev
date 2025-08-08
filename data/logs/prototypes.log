@@ -1,0 +1,487 @@
+2025-08-06 09:41:48,338 - rag_system - INFO - ========================================
+2025-08-06 09:41:48,338 - rag_system - INFO - Prototype系 統合テスト - Phase 4
+2025-08-06 09:41:48,339 - rag_system - INFO - ========================================
+2025-08-06 09:41:48,339 - rag_system - INFO - === データベース接続テスト ===
+2025-08-06 09:41:48,342 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-06 09:41:48,797 - rag_system - ERROR - ❌ データベース接続エラー: object NoneType can't be used in 'await' expression
+2025-08-06 09:41:48,798 - rag_system - INFO - 
+=== ファイルサービステスト ===
+2025-08-06 09:41:48,798 - rag_system - ERROR - ファイルリスト取得エラー: __aenter__
+2025-08-06 09:41:48,798 - rag_system - INFO - ✅ ファイルリスト取得: 0件中0件
+2025-08-06 09:41:48,798 - rag_system - INFO - 
+=== チャットサービステスト ===
+2025-08-06 09:41:48,798 - rag_system - INFO - 検索開始: query='テスト検索', mode=file_separate, embedding=intfloat/e5-small-v2
+2025-08-06 09:41:48,798 - rag_system - ERROR - 検索エラー: 'ChatService' object has no attribute 'db_session'
+2025-08-06 09:41:48,798 - rag_system - INFO - ✅ 文書検索: 0件
+2025-08-06 09:41:48,798 - rag_system - ERROR - チャット応答エラー: 'PromptLoader' object has no attribute 'load_chat_prompt'
+2025-08-06 09:41:48,798 - rag_system - INFO - ✅ チャット応答生成: 69文字
+2025-08-06 09:41:48,798 - rag_system - INFO - 
+=== 処理サービステスト ===
+2025-08-06 09:41:48,798 - rag_system - ERROR - ❌ 処理サービスエラー: __aenter__
+2025-08-06 09:41:48,798 - rag_system - INFO - 
+========================================
+2025-08-06 09:41:48,798 - rag_system - INFO - テスト結果サマリー
+2025-08-06 09:41:48,798 - rag_system - INFO - ========================================
+2025-08-06 09:41:48,798 - rag_system - WARNING - ⚠️ 一部テスト失敗 (2/4)
+2025-08-06 09:41:48,798 - rag_system - INFO - 
+統合テスト完了
+2025-08-06 16:09:24,541 - rag_system - INFO - ========================================
+2025-08-06 16:09:24,541 - rag_system - INFO - 統合テスト - 同期版
+2025-08-06 16:09:24,541 - rag_system - INFO - ========================================
+2025-08-06 16:09:24,541 - rag_system - INFO - === データベース接続テスト ===
+2025-08-06 16:09:24,566 - rag_system - INFO - ヘルスチェック結果: {'status': 'healthy', 'database': 'connected', 'query_result': 1}
+2025-08-06 16:09:24,602 - rag_system - ERROR - データベースセッションエラー: (psycopg2.errors.UndefinedColumn) column embeddings.chunk_index does not exist
+LINE 2: ...ngs_id, embeddings.blob_id AS embeddings_blob_id, embeddings...
+                                                             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT embeddings.id AS embeddings_id, embeddings.blob_id AS embeddings_blob_id, embeddings.chunk_index AS embeddings_chunk_index, embeddings.chunk_text AS embeddings_chunk_text, embeddings.chunk_start AS embeddings_chunk_start, embeddings.chunk_end AS embeddings_chunk_end, embeddings.vector_json AS embeddings_vector_json, embeddings.embedding_model AS embeddings_embedding_model, embeddings.embedding_dimension AS embeddings_embedding_dimension, embeddings.created_at AS embeddings_created_at 
+FROM embeddings) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-06 16:09:24,602 - rag_system - INFO - データベース情報:
+2025-08-06 16:09:24,602 - rag_system - INFO -   - URL: None
+2025-08-06 16:09:24,602 - rag_system - INFO -   - テーブル数: {}
+2025-08-06 16:09:24,602 - rag_system - INFO - 
+=== データベース初期化テスト ===
+2025-08-06 16:09:24,612 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-06 16:09:24,613 - rag_system - INFO - ✅ 初期データ作成完了（現在は初期データなし）
+2025-08-06 16:09:24,613 - rag_system - INFO - ✅ データベース初期化成功
+2025-08-06 16:09:24,613 - rag_system - INFO - 
+=== ファイル操作テスト ===
+2025-08-06 16:09:24,614 - rag_system - INFO - 1. ファイル登録テスト
+2025-08-06 16:09:24,641 - rag_system - INFO - 新規ファイル登録完了: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa (test_integration.txt)
+2025-08-06 16:09:24,641 - rag_system - INFO - ✅ ファイル登録成功: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa (新規: True)
+2025-08-06 16:09:24,642 - rag_system - INFO - 
+2. 重複チェックテスト
+2025-08-06 16:09:24,644 - rag_system - INFO - ✅ 重複チェック: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:09:24,644 - rag_system - INFO - 
+3. ファイル情報取得テスト
+2025-08-06 16:09:24,649 - rag_system - INFO - ✅ ファイル情報取得成功:
+2025-08-06 16:09:24,649 - rag_system - INFO -   - ファイル名: test_integration.txt
+2025-08-06 16:09:24,649 - rag_system - INFO -   - サイズ: 76 bytes
+2025-08-06 16:09:24,649 - rag_system - INFO -   - MIME: text/plain
+2025-08-06 16:09:24,649 - rag_system - INFO -   - タグ: ['テスト', '統合', 'RAG']
+2025-08-06 16:09:24,649 - rag_system - INFO -   - 品質スコア: 0.95
+2025-08-06 16:09:24,649 - rag_system - INFO - 
+4. ファイルリスト取得テスト
+2025-08-06 16:09:24,747 - rag_system - INFO - ✅ ファイルリスト: 10件
+2025-08-06 16:09:24,748 - rag_system - INFO -   - test_integration.txt (76 bytes)
+2025-08-06 16:09:24,748 - rag_system - INFO -   - 1753793715_0526-1(H14.10) ラプチャー_converted.pdf (176825 bytes)
+2025-08-06 16:09:24,748 - rag_system - INFO -   - 3583(2025.6)ラプチャー試験片破面観察.pdf (628300 bytes)
+2025-08-06 16:09:24,748 - rag_system - INFO - 
+5. タグ更新テスト
+2025-08-06 16:09:24,755 - rag_system - INFO - タグ更新完了: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:09:24,755 - rag_system - INFO - ✅ タグ更新: True
+2025-08-06 16:09:24,756 - rag_system - INFO - 
+6. 統計情報取得テスト
+2025-08-06 16:09:24,767 - rag_system - ERROR - 統計情報取得エラー: (psycopg2.errors.UndefinedColumn) column embeddings.chunk_index does not exist
+LINE 2: ...ngs_id, embeddings.blob_id AS embeddings_blob_id, embeddings...
+                                                             ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT embeddings.id AS embeddings_id, embeddings.blob_id AS embeddings_blob_id, embeddings.chunk_index AS embeddings_chunk_index, embeddings.chunk_text AS embeddings_chunk_text, embeddings.chunk_start AS embeddings_chunk_start, embeddings.chunk_end AS embeddings_chunk_end, embeddings.vector_json AS embeddings_vector_json, embeddings.embedding_model AS embeddings_embedding_model, embeddings.embedding_dimension AS embeddings_embedding_dimension, embeddings.created_at AS embeddings_created_at 
+FROM embeddings) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-06 16:09:24,767 - rag_system - INFO - ✅ 統計情報:
+2025-08-06 16:09:24,767 - rag_system - INFO -   - 総ファイル数: 0
+2025-08-06 16:09:24,767 - rag_system - INFO -   - 総サイズ: 0 MB
+2025-08-06 16:09:24,767 - rag_system - INFO -   - テキストありファイル: 0
+2025-08-06 16:09:24,767 - rag_system - INFO -   - 整形済みテキスト: 0
+2025-08-06 16:09:24,767 - rag_system - INFO -   - ユニークタグ数: 0
+2025-08-06 16:09:24,768 - rag_system - INFO - 
+========================================
+2025-08-06 16:09:24,768 - rag_system - INFO - テスト結果サマリー
+2025-08-06 16:09:24,768 - rag_system - INFO - ========================================
+2025-08-06 16:09:24,768 - rag_system - INFO - ✅ 全テスト成功 (3/3)
+2025-08-06 16:09:24,768 - rag_system - INFO - 
+統合テスト完了
+2025-08-06 16:10:24,586 - rag_system - INFO - 既存のembeddingsテーブルをバックアップ中...
+2025-08-06 16:10:24,604 - rag_system - INFO - バックアップテーブル作成完了: embeddings_backup_20250806_161024
+2025-08-06 16:10:24,604 - rag_system - INFO - バックアップレコード数: 0
+2025-08-06 16:10:24,607 - rag_system - INFO - 既存のembeddingsテーブルを削除
+2025-08-06 16:10:24,607 - rag_system - INFO - 新しい構造でembeddingsテーブルを作成中...
+2025-08-06 16:10:24,617 - rag_system - ERROR - マイグレーションエラー: (psycopg2.errors.DuplicateTable) relation "embeddings" already exists
+
+[SQL: 
+CREATE TABLE embeddings (
+	id UUID NOT NULL, 
+	blob_id UUID NOT NULL, 
+	chunk_index INTEGER NOT NULL, 
+	chunk_text TEXT NOT NULL, 
+	chunk_start INTEGER, 
+	chunk_end INTEGER, 
+	vector_json TEXT, 
+	embedding_model VARCHAR(100), 
+	embedding_dimension INTEGER, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now(), 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(blob_id) REFERENCES files_blob (id) ON DELETE CASCADE
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-06 16:10:55,439 - rag_system - INFO - 既存のembeddingsテーブルをバックアップ中...
+2025-08-06 16:10:55,450 - rag_system - INFO - バックアップテーブル作成完了: embeddings_backup_20250806_161055
+2025-08-06 16:10:55,451 - rag_system - INFO - バックアップレコード数: 0
+2025-08-06 16:10:55,452 - rag_system - INFO - 既存のembeddingsテーブルを削除
+2025-08-06 16:10:55,452 - rag_system - INFO - 新しい構造でembeddingsテーブルを作成中...
+2025-08-06 16:10:55,459 - rag_system - INFO - インデックスを作成中...
+2025-08-06 16:10:55,463 - rag_system - ERROR - マイグレーションエラー: This result object is closed.
+2025-08-06 16:11:32,538 - rag_system - INFO - 既存のembeddingsテーブルをバックアップ中...
+2025-08-06 16:11:32,549 - rag_system - INFO - バックアップテーブル作成完了: embeddings_backup_20250806_161132
+2025-08-06 16:11:32,550 - rag_system - INFO - バックアップレコード数: 0
+2025-08-06 16:11:32,551 - rag_system - INFO - 既存のembeddingsテーブルを削除
+2025-08-06 16:11:32,551 - rag_system - INFO - 新しい構造でembeddingsテーブルを作成中...
+2025-08-06 16:11:32,555 - rag_system - INFO - インデックスを作成中...
+2025-08-06 16:11:32,558 - rag_system - INFO - マイグレーション完了!
+2025-08-06 16:11:53,774 - rag_system - INFO - ========================================
+2025-08-06 16:11:53,774 - rag_system - INFO - 統合テスト - 同期版
+2025-08-06 16:11:53,774 - rag_system - INFO - ========================================
+2025-08-06 16:11:53,774 - rag_system - INFO - === データベース接続テスト ===
+2025-08-06 16:11:53,787 - rag_system - INFO - ヘルスチェック結果: {'status': 'healthy', 'database': 'connected', 'query_result': 1}
+2025-08-06 16:11:53,831 - rag_system - ERROR - データベースセッションエラー: (psycopg2.errors.UndefinedColumn) column file_images.id does not exist
+LINE 2: FROM (SELECT file_images.id AS file_images_id, file_images.b...
+                     ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT file_images.id AS file_images_id, file_images.blob_id AS file_images_blob_id, file_images.page_number AS file_images_page_number, file_images.image_index AS file_images_image_index, file_images.image_type AS file_images_image_type, file_images.image_data AS file_images_image_data, file_images.image_format AS file_images_image_format, file_images.width AS file_images_width, file_images.height AS file_images_height, file_images.caption AS file_images_caption, file_images.extracted_text AS file_images_extracted_text, file_images.created_at AS file_images_created_at 
+FROM file_images) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-06 16:11:53,831 - rag_system - INFO - データベース情報:
+2025-08-06 16:11:53,831 - rag_system - INFO -   - URL: None
+2025-08-06 16:11:53,831 - rag_system - INFO -   - テーブル数: {}
+2025-08-06 16:11:53,831 - rag_system - INFO - 
+=== データベース初期化テスト ===
+2025-08-06 16:11:53,839 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-06 16:11:53,839 - rag_system - INFO - ✅ 初期データ作成完了（現在は初期データなし）
+2025-08-06 16:11:53,839 - rag_system - INFO - ✅ データベース初期化成功
+2025-08-06 16:11:53,839 - rag_system - INFO - 
+=== ファイル操作テスト ===
+2025-08-06 16:11:53,840 - rag_system - INFO - 1. ファイル登録テスト
+2025-08-06 16:11:53,847 - rag_system - INFO - 既存ファイル検出 (checksum: 6e0d301c...): 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:11:53,857 - rag_system - INFO - 既存ファイルのテキスト更新: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:11:53,857 - rag_system - INFO - ✅ ファイル登録成功: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa (新規: False)
+2025-08-06 16:11:53,857 - rag_system - INFO - 
+2. 重複チェックテスト
+2025-08-06 16:11:53,861 - rag_system - INFO - ✅ 重複チェック: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:11:53,862 - rag_system - INFO - 
+3. ファイル情報取得テスト
+2025-08-06 16:11:53,865 - rag_system - INFO - ✅ ファイル情報取得成功:
+2025-08-06 16:11:53,866 - rag_system - INFO -   - ファイル名: test_integration.txt
+2025-08-06 16:11:53,866 - rag_system - INFO -   - サイズ: 76 bytes
+2025-08-06 16:11:53,866 - rag_system - INFO -   - MIME: text/plain
+2025-08-06 16:11:53,866 - rag_system - INFO -   - タグ: ['テスト', '統合', 'RAG']
+2025-08-06 16:11:53,866 - rag_system - INFO -   - 品質スコア: 0.95
+2025-08-06 16:11:53,866 - rag_system - INFO - 
+4. ファイルリスト取得テスト
+2025-08-06 16:11:53,970 - rag_system - INFO - ✅ ファイルリスト: 10件
+2025-08-06 16:11:53,970 - rag_system - INFO -   - test_integration.txt (76 bytes)
+2025-08-06 16:11:53,970 - rag_system - INFO -   - 1753793715_0526-1(H14.10) ラプチャー_converted.pdf (176825 bytes)
+2025-08-06 16:11:53,970 - rag_system - INFO -   - 3583(2025.6)ラプチャー試験片破面観察.pdf (628300 bytes)
+2025-08-06 16:11:53,970 - rag_system - INFO - 
+5. タグ更新テスト
+2025-08-06 16:11:53,973 - rag_system - INFO - タグ更新完了: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:11:53,973 - rag_system - INFO - ✅ タグ更新: True
+2025-08-06 16:11:53,974 - rag_system - INFO - 
+6. 統計情報取得テスト
+2025-08-06 16:11:53,987 - rag_system - ERROR - 統計情報取得エラー: (psycopg2.errors.UndefinedColumn) column file_images.id does not exist
+LINE 2: FROM (SELECT file_images.id AS file_images_id, file_images.b...
+                     ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT file_images.id AS file_images_id, file_images.blob_id AS file_images_blob_id, file_images.page_number AS file_images_page_number, file_images.image_index AS file_images_image_index, file_images.image_type AS file_images_image_type, file_images.image_data AS file_images_image_data, file_images.image_format AS file_images_image_format, file_images.width AS file_images_width, file_images.height AS file_images_height, file_images.caption AS file_images_caption, file_images.extracted_text AS file_images_extracted_text, file_images.created_at AS file_images_created_at 
+FROM file_images) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-06 16:11:53,988 - rag_system - INFO - ✅ 統計情報:
+2025-08-06 16:11:53,988 - rag_system - INFO -   - 総ファイル数: 0
+2025-08-06 16:11:53,988 - rag_system - INFO -   - 総サイズ: 0 MB
+2025-08-06 16:11:53,988 - rag_system - INFO -   - テキストありファイル: 0
+2025-08-06 16:11:53,988 - rag_system - INFO -   - 整形済みテキスト: 0
+2025-08-06 16:11:53,988 - rag_system - INFO -   - ユニークタグ数: 0
+2025-08-06 16:11:53,989 - rag_system - INFO - 
+========================================
+2025-08-06 16:11:53,989 - rag_system - INFO - テスト結果サマリー
+2025-08-06 16:11:53,989 - rag_system - INFO - ========================================
+2025-08-06 16:11:53,989 - rag_system - INFO - ✅ 全テスト成功 (3/3)
+2025-08-06 16:11:53,989 - rag_system - INFO - 
+統合テスト完了
+2025-08-06 16:18:36,081 - rag_system - INFO - ========================================
+2025-08-06 16:18:36,081 - rag_system - INFO - 統合テスト - 同期版
+2025-08-06 16:18:36,081 - rag_system - INFO - ========================================
+2025-08-06 16:18:36,081 - rag_system - INFO - === データベース接続テスト ===
+2025-08-06 16:18:36,096 - rag_system - INFO - ヘルスチェック結果: {'status': 'healthy', 'database': 'connected', 'query_result': 1}
+2025-08-06 16:18:36,136 - rag_system - ERROR - データベースセッションエラー: (psycopg2.errors.UndefinedColumn) column files_image.id does not exist
+LINE 2: FROM (SELECT files_image.id AS files_image_id, files_image.b...
+                     ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT files_image.id AS files_image_id, files_image.blob_id AS files_image_blob_id, files_image.page_number AS files_image_page_number, files_image.image_index AS files_image_image_index, files_image.image_type AS files_image_image_type, files_image.image_data AS files_image_image_data, files_image.image_format AS files_image_image_format, files_image.width AS files_image_width, files_image.height AS files_image_height, files_image.caption AS files_image_caption, files_image.extracted_text AS files_image_extracted_text, files_image.created_at AS files_image_created_at 
+FROM files_image) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-06 16:18:36,136 - rag_system - INFO - データベース情報:
+2025-08-06 16:18:36,136 - rag_system - INFO -   - URL: None
+2025-08-06 16:18:36,136 - rag_system - INFO -   - テーブル数: {}
+2025-08-06 16:18:36,136 - rag_system - INFO - 
+=== データベース初期化テスト ===
+2025-08-06 16:18:36,146 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-06 16:18:36,146 - rag_system - INFO - ✅ 初期データ作成完了（現在は初期データなし）
+2025-08-06 16:18:36,146 - rag_system - INFO - ✅ データベース初期化成功
+2025-08-06 16:18:36,146 - rag_system - INFO - 
+=== ファイル操作テスト ===
+2025-08-06 16:18:36,147 - rag_system - INFO - 1. ファイル登録テスト
+2025-08-06 16:18:36,154 - rag_system - INFO - 既存ファイル検出 (checksum: 6e0d301c...): 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:18:36,167 - rag_system - INFO - 既存ファイルのテキスト更新: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:18:36,167 - rag_system - INFO - ✅ ファイル登録成功: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa (新規: False)
+2025-08-06 16:18:36,167 - rag_system - INFO - 
+2. 重複チェックテスト
+2025-08-06 16:18:36,169 - rag_system - INFO - ✅ 重複チェック: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:18:36,169 - rag_system - INFO - 
+3. ファイル情報取得テスト
+2025-08-06 16:18:36,173 - rag_system - INFO - ✅ ファイル情報取得成功:
+2025-08-06 16:18:36,173 - rag_system - INFO -   - ファイル名: test_integration.txt
+2025-08-06 16:18:36,173 - rag_system - INFO -   - サイズ: 76 bytes
+2025-08-06 16:18:36,173 - rag_system - INFO -   - MIME: text/plain
+2025-08-06 16:18:36,173 - rag_system - INFO -   - タグ: ['テスト', '統合', 'RAG']
+2025-08-06 16:18:36,173 - rag_system - INFO -   - 品質スコア: 0.95
+2025-08-06 16:18:36,173 - rag_system - INFO - 
+4. ファイルリスト取得テスト
+2025-08-06 16:18:36,266 - rag_system - INFO - ✅ ファイルリスト: 10件
+2025-08-06 16:18:36,266 - rag_system - INFO -   - test_integration.txt (76 bytes)
+2025-08-06 16:18:36,266 - rag_system - INFO -   - 1753793715_0526-1(H14.10) ラプチャー_converted.pdf (176825 bytes)
+2025-08-06 16:18:36,266 - rag_system - INFO -   - 3583(2025.6)ラプチャー試験片破面観察.pdf (628300 bytes)
+2025-08-06 16:18:36,266 - rag_system - INFO - 
+5. タグ更新テスト
+2025-08-06 16:18:36,271 - rag_system - INFO - タグ更新完了: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:18:36,271 - rag_system - INFO - ✅ タグ更新: True
+2025-08-06 16:18:36,271 - rag_system - INFO - 
+6. 統計情報取得テスト
+2025-08-06 16:18:36,281 - rag_system - ERROR - 統計情報取得エラー: (psycopg2.errors.UndefinedColumn) column files_image.id does not exist
+LINE 2: FROM (SELECT files_image.id AS files_image_id, files_image.b...
+                     ^
+
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT files_image.id AS files_image_id, files_image.blob_id AS files_image_blob_id, files_image.page_number AS files_image_page_number, files_image.image_index AS files_image_image_index, files_image.image_type AS files_image_image_type, files_image.image_data AS files_image_image_data, files_image.image_format AS files_image_image_format, files_image.width AS files_image_width, files_image.height AS files_image_height, files_image.caption AS files_image_caption, files_image.extracted_text AS files_image_extracted_text, files_image.created_at AS files_image_created_at 
+FROM files_image) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/f405)
+2025-08-06 16:18:36,282 - rag_system - INFO - ✅ 統計情報:
+2025-08-06 16:18:36,282 - rag_system - INFO -   - 総ファイル数: 0
+2025-08-06 16:18:36,282 - rag_system - INFO -   - 総サイズ: 0 MB
+2025-08-06 16:18:36,282 - rag_system - INFO -   - テキストありファイル: 0
+2025-08-06 16:18:36,282 - rag_system - INFO -   - 整形済みテキスト: 0
+2025-08-06 16:18:36,282 - rag_system - INFO -   - ユニークタグ数: 0
+2025-08-06 16:18:36,282 - rag_system - INFO - 
+========================================
+2025-08-06 16:18:36,282 - rag_system - INFO - テスト結果サマリー
+2025-08-06 16:18:36,282 - rag_system - INFO - ========================================
+2025-08-06 16:18:36,282 - rag_system - INFO - ✅ 全テスト成功 (3/3)
+2025-08-06 16:18:36,283 - rag_system - INFO - 
+統合テスト完了
+2025-08-06 16:19:39,080 - rag_system - INFO - ========================================
+2025-08-06 16:19:39,080 - rag_system - INFO - 統合テスト - 同期版
+2025-08-06 16:19:39,080 - rag_system - INFO - ========================================
+2025-08-06 16:19:39,080 - rag_system - INFO - === データベース接続テスト ===
+2025-08-06 16:19:39,093 - rag_system - INFO - ヘルスチェック結果: {'status': 'healthy', 'database': 'connected', 'query_result': 1}
+2025-08-06 16:19:39,132 - rag_system - INFO - データベース情報:
+2025-08-06 16:19:39,132 - rag_system - INFO -   - URL: postgresql://***
+2025-08-06 16:19:39,132 - rag_system - INFO -   - テーブル数: {'files_blob': 33, 'files_meta': 33, 'files_text': 16, 'embeddings': 0, 'files_image': 0}
+2025-08-06 16:19:39,132 - rag_system - INFO - 
+=== データベース初期化テスト ===
+2025-08-06 16:19:39,141 - rag_system - INFO - ✅ データベース初期化完了
+2025-08-06 16:19:39,141 - rag_system - INFO - ✅ 初期データ作成完了（現在は初期データなし）
+2025-08-06 16:19:39,142 - rag_system - INFO - ✅ データベース初期化成功
+2025-08-06 16:19:39,142 - rag_system - INFO - 
+=== ファイル操作テスト ===
+2025-08-06 16:19:39,143 - rag_system - INFO - 1. ファイル登録テスト
+2025-08-06 16:19:39,149 - rag_system - INFO - 既存ファイル検出 (checksum: 6e0d301c...): 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:19:39,164 - rag_system - INFO - 既存ファイルのテキスト更新: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:19:39,164 - rag_system - INFO - ✅ ファイル登録成功: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa (新規: False)
+2025-08-06 16:19:39,164 - rag_system - INFO - 
+2. 重複チェックテスト
+2025-08-06 16:19:39,165 - rag_system - INFO - ✅ 重複チェック: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:19:39,165 - rag_system - INFO - 
+3. ファイル情報取得テスト
+2025-08-06 16:19:39,169 - rag_system - INFO - ✅ ファイル情報取得成功:
+2025-08-06 16:19:39,170 - rag_system - INFO -   - ファイル名: test_integration.txt
+2025-08-06 16:19:39,170 - rag_system - INFO -   - サイズ: 76 bytes
+2025-08-06 16:19:39,170 - rag_system - INFO -   - MIME: text/plain
+2025-08-06 16:19:39,170 - rag_system - INFO -   - タグ: ['テスト', '統合', 'RAG']
+2025-08-06 16:19:39,170 - rag_system - INFO -   - 品質スコア: 0.95
+2025-08-06 16:19:39,170 - rag_system - INFO - 
+4. ファイルリスト取得テスト
+2025-08-06 16:19:39,259 - rag_system - INFO - ✅ ファイルリスト: 10件
+2025-08-06 16:19:39,259 - rag_system - INFO -   - test_integration.txt (76 bytes)
+2025-08-06 16:19:39,259 - rag_system - INFO -   - 1753793715_0526-1(H14.10) ラプチャー_converted.pdf (176825 bytes)
+2025-08-06 16:19:39,259 - rag_system - INFO -   - 3583(2025.6)ラプチャー試験片破面観察.pdf (628300 bytes)
+2025-08-06 16:19:39,259 - rag_system - INFO - 
+5. タグ更新テスト
+2025-08-06 16:19:39,262 - rag_system - INFO - タグ更新完了: 9b95bd65-7f1b-45a2-a0b7-671aa1afb5fa
+2025-08-06 16:19:39,262 - rag_system - INFO - ✅ タグ更新: True
+2025-08-06 16:19:39,262 - rag_system - INFO - 
+6. 統計情報取得テスト
+2025-08-06 16:19:39,276 - rag_system - INFO - ✅ 統計情報:
+2025-08-06 16:19:39,276 - rag_system - INFO -   - 総ファイル数: 33
+2025-08-06 16:19:39,276 - rag_system - INFO -   - 総サイズ: 35.80 MB
+2025-08-06 16:19:39,276 - rag_system - INFO -   - テキストありファイル: 16
+2025-08-06 16:19:39,276 - rag_system - INFO -   - 整形済みテキスト: 16
+2025-08-06 16:19:39,276 - rag_system - INFO -   - ユニークタグ数: 5
+2025-08-06 16:19:39,277 - rag_system - INFO - 
+========================================
+2025-08-06 16:19:39,277 - rag_system - INFO - テスト結果サマリー
+2025-08-06 16:19:39,277 - rag_system - INFO - ========================================
+2025-08-06 16:19:39,277 - rag_system - INFO - ✅ 全テスト成功 (3/3)
+2025-08-06 16:19:39,277 - rag_system - INFO - 
+統合テスト完了
+2025-08-07 06:11:39,110 - rag_system - INFO - 一時ファイル保存完了: /tmp/7fac3baa-a3bc-4968-aef6-292e3be7241a.txt
+2025-08-07 06:11:39,167 - rag_system - INFO - 新規ファイル登録完了: e382d802-a5d8-4ee5-bf29-90d636873fc8 (test_upload.txt)
+2025-08-07 06:11:39,167 - rag_system - INFO - ファイルDB登録完了: test_upload.txt (ID: e382d802-a5d8-4ee5-bf29-90d636873fc8, new: True)
+2025-08-07 06:11:39,167 - rag_system - INFO - ファイルアップロード成功: test_upload.txt (ID: e382d802-a5d8-4ee5-bf29-90d636873fc8)
+2025-08-07 06:29:34,453 - rag_system - INFO - 一時ファイル保存完了: /tmp/86b0224e-6fdf-446a-8296-cbd450b9fb59.txt
+2025-08-07 06:29:34,509 - rag_system - INFO - 新規ファイル登録完了: d9f9c907-f511-4340-be58-6cefa00d373c (test_upload_new.txt)
+2025-08-07 06:29:34,510 - rag_system - INFO - ファイルDB登録完了: test_upload_new.txt (ID: d9f9c907-f511-4340-be58-6cefa00d373c, new: True)
+2025-08-07 06:29:34,510 - rag_system - INFO - ファイルアップロード成功: test_upload_new.txt (ID: d9f9c907-f511-4340-be58-6cefa00d373c)
+2025-08-07 06:29:34,510 - rag_system - INFO - バッチアップロード完了: 成功=1, 失敗=0
+2025-08-07 06:37:29,036 - rag_system - INFO - 一時ファイル保存完了: /tmp/4e3e32df-2f94-4c88-ab73-f98890583b53.txt
+2025-08-07 06:37:29,073 - rag_system - INFO - 既存ファイル検出: test_upload_new.txt (ID: d9f9c907-f511-4340-be58-6cefa00d373c)
+2025-08-07 06:37:29,074 - rag_system - INFO - ファイルアップロード成功: test_upload_new.txt (ID: d9f9c907-f511-4340-be58-6cefa00d373c)
+2025-08-07 06:37:29,074 - rag_system - INFO - バッチアップロード完了: 成功=1, 失敗=0
+2025-08-07 06:38:27,116 - rag_system - INFO - 一時ファイル保存完了: /tmp/c78a87cc-f368-401f-a3eb-c310db514702.txt
+2025-08-07 06:38:27,125 - rag_system - INFO - 新規ファイル登録完了: bd4b6f5e-5af1-46c9-aec1-32e31f393a33 (test_upload_ui_test.txt)
+2025-08-07 06:38:27,125 - rag_system - INFO - ファイルDB登録完了: test_upload_ui_test.txt (ID: bd4b6f5e-5af1-46c9-aec1-32e31f393a33, new: True)
+2025-08-07 06:38:27,126 - rag_system - INFO - ファイルアップロード成功: test_upload_ui_test.txt (ID: bd4b6f5e-5af1-46c9-aec1-32e31f393a33)
+2025-08-07 06:38:27,126 - rag_system - INFO - バッチアップロード完了: 成功=1, 失敗=0
+2025-08-07 06:42:44,318 - rag_system - INFO - 一時ファイル保存完了: /tmp/2e872536-f3e5-4aac-8def-175abfcfec80.txt
+2025-08-07 06:42:44,362 - rag_system - INFO - 新規ファイル登録完了: 6101c293-e48c-4d73-b7a5-ec0448aac789 (test_upload_final.txt)
+2025-08-07 06:42:44,363 - rag_system - INFO - ファイルDB登録完了: test_upload_final.txt (ID: 6101c293-e48c-4d73-b7a5-ec0448aac789, new: True)
+2025-08-07 06:42:44,363 - rag_system - INFO - ファイルアップロード成功: test_upload_final.txt (ID: 6101c293-e48c-4d73-b7a5-ec0448aac789)
+2025-08-07 06:42:44,363 - rag_system - INFO - バッチアップロード完了: 成功=1, 失敗=0
+2025-08-07 06:46:28,615 - rag_system - INFO - 一時ファイル保存完了: /tmp/29311b13-622e-4bcb-a7bd-de43af4d7bc3.pdf
+2025-08-07 06:46:28,617 - rag_system - INFO - 既存ファイル検出: 1753793547_0526-1(H14.10) ラプチャー_converted.pdf (ID: 16ffc61e-acfe-430d-9a18-179e4b617af7)
+2025-08-07 06:46:28,618 - rag_system - INFO - ファイルアップロード成功: 1753793547_0526-1(H14.10) ラプチャー_converted.pdf (ID: 16ffc61e-acfe-430d-9a18-179e4b617af7)
+2025-08-07 06:46:28,619 - rag_system - INFO - 一時ファイル保存完了: /tmp/26d0051a-7123-44c5-8706-3ab24f2fc9bb.pdf
+2025-08-07 06:46:28,624 - rag_system - INFO - 既存ファイル検出: 1753793547_0526-2(H14.10) ラプチャー写真_converted.pdf (ID: 25f83128-0a74-42ff-8885-a557a0d18d86)
+2025-08-07 06:46:28,625 - rag_system - INFO - ファイルアップロード成功: 1753793547_0526-2(H14.10) ラプチャー写真_converted.pdf (ID: 25f83128-0a74-42ff-8885-a557a0d18d86)
+2025-08-07 06:46:28,627 - rag_system - INFO - 一時ファイル保存完了: /tmp/1008044d-5211-44dd-ad6e-72123733c3cd.pdf
+2025-08-07 06:46:28,634 - rag_system - INFO - 既存ファイル検出: 1753793547_0792(H16.2)ＡＬ溶接割れ結果_converted.pdf (ID: c5edc2a6-c66c-4c0b-aae9-518f8d43b391)
+2025-08-07 06:46:28,635 - rag_system - INFO - ファイルアップロード成功: 1753793547_0792(H16.2)ＡＬ溶接割れ結果_converted.pdf (ID: c5edc2a6-c66c-4c0b-aae9-518f8d43b391)
+2025-08-07 06:46:28,636 - rag_system - INFO - 一時ファイル保存完了: /tmp/3d222c3b-279c-4819-a441-a20c7e1019ec.pdf
+2025-08-07 06:46:28,641 - rag_system - INFO - 既存ファイル検出: 1753793547_1635　(H23.4)ＵＳ－２_converted.pdf (ID: 9b2115aa-6b2b-40da-9ef2-975556a8538c)
+2025-08-07 06:46:28,641 - rag_system - INFO - ファイルアップロード成功: 1753793547_1635　(H23.4)ＵＳ－２_converted.pdf (ID: 9b2115aa-6b2b-40da-9ef2-975556a8538c)
+2025-08-07 06:46:28,642 - rag_system - INFO - バッチアップロード完了: 成功=4, 失敗=0
+2025-08-07 06:47:16,777 - rag_system - INFO - 一時ファイル保存完了: /tmp/1bc73e7e-29f7-4db0-84c9-bd816b306341.pdf
+2025-08-07 06:47:16,807 - rag_system - INFO - 既存ファイル検出: 1753793715_0526-2(H14.10) ラプチャー写真_converted.pdf (ID: 25f83128-0a74-42ff-8885-a557a0d18d86)
+2025-08-07 06:47:16,808 - rag_system - INFO - ファイルアップロード成功: 1753793715_0526-2(H14.10) ラプチャー写真_converted.pdf (ID: 25f83128-0a74-42ff-8885-a557a0d18d86)
+2025-08-07 06:47:16,811 - rag_system - INFO - 一時ファイル保存完了: /tmp/276f4ad1-3e60-46cf-9624-69dd6eb777b2.pdf
+2025-08-07 06:47:16,817 - rag_system - INFO - 既存ファイル検出: 1753793715_0792(H16.2)ＡＬ溶接割れ結果_converted.pdf (ID: c5edc2a6-c66c-4c0b-aae9-518f8d43b391)
+2025-08-07 06:47:16,819 - rag_system - INFO - ファイルアップロード成功: 1753793715_0792(H16.2)ＡＬ溶接割れ結果_converted.pdf (ID: c5edc2a6-c66c-4c0b-aae9-518f8d43b391)
+2025-08-07 06:47:16,820 - rag_system - INFO - 一時ファイル保存完了: /tmp/44d4f2b6-0e99-4af7-bb87-725ba662a2c6.pdf
+2025-08-07 06:47:16,824 - rag_system - INFO - 既存ファイル検出: 1753793715_1635　(H23.4)ＵＳ－２_converted.pdf (ID: 9b2115aa-6b2b-40da-9ef2-975556a8538c)
+2025-08-07 06:47:16,825 - rag_system - INFO - ファイルアップロード成功: 1753793715_1635　(H23.4)ＵＳ－２_converted.pdf (ID: 9b2115aa-6b2b-40da-9ef2-975556a8538c)
+2025-08-07 06:47:16,826 - rag_system - INFO - 一時ファイル保存完了: /tmp/ca320c77-c0ad-4a05-9915-22b80e689af8.pdf
+2025-08-07 06:47:16,830 - rag_system - INFO - 既存ファイル検出: 1753793715_3353(2022.10) アルミ引張試験片観察結果_converted.pdf (ID: 3772f4f4-7bfd-4007-bda9-7910730a3200)
+2025-08-07 06:47:16,831 - rag_system - INFO - ファイルアップロード成功: 1753793715_3353(2022.10) アルミ引張試験片観察結果_converted.pdf (ID: 3772f4f4-7bfd-4007-bda9-7910730a3200)
+2025-08-07 06:47:16,831 - rag_system - INFO - バッチアップロード完了: 成功=4, 失敗=0
+2025-08-07 07:21:03,095 - rag_system - INFO - 一時ファイル保存完了: /tmp/aac8842b-c0cf-46b6-99de-e2f32c837e6f.txt
+2025-08-07 07:21:03,158 - rag_system - INFO - 新規ファイル登録完了: 881c8872-5e91-45b2-b727-e62b91ea25ce (test_upload_ui_update.txt)
+2025-08-07 07:21:03,158 - rag_system - INFO - ファイルDB登録完了: test_upload_ui_update.txt (ID: 881c8872-5e91-45b2-b727-e62b91ea25ce, new: True)
+2025-08-07 07:21:03,158 - rag_system - INFO - ファイルアップロード成功: test_upload_ui_update.txt (ID: 881c8872-5e91-45b2-b727-e62b91ea25ce)
+2025-08-07 07:21:03,158 - rag_system - INFO - バッチアップロード完了: 成功=1, 失敗=0
+2025-08-07 07:33:38,499 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 07:33:38,763 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files - 成功=35, 失敗=0
+2025-08-07 07:41:03,872 - rag_system - INFO - 一時ファイル保存完了: /tmp/34ed071d-16ee-4602-bbce-93f2caee76c0.txt
+2025-08-07 07:41:03,919 - rag_system - INFO - 新規ファイル登録完了: 53fb4b3b-c1ae-4c3e-bb89-b497a1478b77 (test_syntax_fix.txt)
+2025-08-07 07:41:03,920 - rag_system - INFO - ファイルDB登録完了: test_syntax_fix.txt (ID: 53fb4b3b-c1ae-4c3e-bb89-b497a1478b77, new: True)
+2025-08-07 07:41:03,921 - rag_system - INFO - ファイルアップロード成功: test_syntax_fix.txt (ID: 53fb4b3b-c1ae-4c3e-bb89-b497a1478b77)
+2025-08-07 07:41:03,921 - rag_system - INFO - バッチアップロード完了: 成功=1, 失敗=0
+2025-08-07 08:06:18,508 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 08:06:36,367 - rag_system - INFO - フォルダリスト取得成功: /workspace (9個)
+2025-08-07 08:06:42,909 - rag_system - INFO - フォルダリスト取得成功: /workspace (9個)
+2025-08-07 08:06:49,153 - rag_system - INFO - フォルダリスト取得成功: /workspace (9個)
+2025-08-07 08:06:56,547 - rag_system - INFO - フォルダリスト取得成功: /workspace (9個)
+2025-08-07 08:07:05,360 - rag_system - INFO - ファイルプレビュー取得成功: test_syntax_fix.txt (text/plain)
+2025-08-07 08:07:12,025 - rag_system - INFO - ファイルプレビュー取得成功: test_syntax_fix.txt (text/plain)
+2025-08-07 08:43:48,234 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored (4個)
+2025-08-07 08:44:15,433 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 08:44:27,652 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 08:44:44,959 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 08:44:51,161 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files/20250619_RAG検討ファイル (2個)
+2025-08-07 08:45:02,039 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 08:45:05,043 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files/20250619_RAG検討ファイル (2個)
+2025-08-07 08:45:54,485 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 08:46:22,040 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files/20250619_RAG検討ファイル (2個)
+2025-08-07 08:46:24,007 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files/20250619_RAG検討ファイル/PDF (0個)
+2025-08-07 08:46:26,949 - rag_system - INFO - フォルダスキャン完了: 31個のファイルを発見
+2025-08-07 08:46:27,436 - rag_system - INFO - 新規ファイル登録完了: f9a666e4-dbca-4eb1-9ad4-560862799be8 (3584(2025.6) アルミ製リングギア破面調査.pdf)
+2025-08-07 08:46:27,437 - rag_system - INFO - サーバーファイル登録完了: 3584(2025.6) アルミ製リングギア破面調査.pdf
+2025-08-07 08:46:27,458 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files/20250619_RAG検討ファイル/PDF - 成功=31, 失敗=0
+2025-08-07 08:46:43,936 - rag_system - INFO - フォルダスキャン完了: 31個のファイルを発見
+2025-08-07 08:46:44,178 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files/20250619_RAG検討ファイル/PDF - 成功=31, 失敗=0
+2025-08-07 08:46:47,232 - rag_system - INFO - フォルダスキャン完了: 31個のファイルを発見
+2025-08-07 08:46:47,460 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files/20250619_RAG検討ファイル/PDF - 成功=31, 失敗=0
+2025-08-07 08:47:21,519 - rag_system - INFO - フォルダスキャン完了: 31個のファイルを発見
+2025-08-07 08:47:21,728 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files/20250619_RAG検討ファイル/PDF - 成功=31, 失敗=0
+2025-08-07 08:52:28,828 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 08:52:29,055 - rag_system - INFO - サーバーフォルダアップロード完了: ignored/input_files - 成功=35, 失敗=0
+2025-08-07 08:58:32,300 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 08:58:37,703 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 08:58:37,893 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files - 成功=35, 失敗=0
+2025-08-07 08:58:51,066 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 08:58:51,247 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files - 成功=35, 失敗=0
+2025-08-07 08:59:30,183 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 08:59:30,345 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files - 成功=35, 失敗=0
+2025-08-07 09:02:43,196 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 09:02:46,394 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 09:02:46,649 - rag_system - INFO - サーバーフォルダアップロード完了: /workspace/ignored/input_files - 成功=35, 失敗=0
+2025-08-07 09:16:39,369 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 09:16:39,601 - rag_system - INFO - サーバーフォルダアップロード完了: ignored/input_files - 成功=35, 失敗=0
+2025-08-07 09:31:53,727 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 09:32:07,803 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 09:32:16,766 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 09:32:35,232 - rag_system - INFO - フォルダリスト取得成功: /workspace (9個)
+2025-08-07 09:32:43,182 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored (4個)
+2025-08-07 09:32:52,077 - rag_system - INFO - フォルダリスト取得成功: /workspace/ignored/input_files (1個)
+2025-08-07 09:33:17,342 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 09:33:17,610 - rag_system - INFO - サーバーフォルダアップロード完了: ignored/input_files - 成功=35, 失敗=0
+2025-08-07 09:33:27,514 - rag_system - INFO - フォルダスキャン完了: 35個のファイルを発見
+2025-08-07 09:33:27,736 - rag_system - INFO - サーバーフォルダアップロード完了: ignored/input_files - 成功=35, 失敗=0
+2025-08-07 14:13:07,995 - rag_system - INFO - ファイルプレビュー取得成功: 3584(2025.6) アルミ製リングギア破面調査.pdf (application/pdf)
+2025-08-07 14:13:08,223 - rag_system - INFO - ファイルプレビュー取得成功: 3584(2025.6) アルミ製リングギア破面調査.pdf (application/pdf)
+2025-08-08 00:19:35,606 - rag_system - ERROR - DB接続エラー: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2025-08-08 00:19:35,606 - rag_system - ERROR - ファイルリスト取得エラー: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2025-08-08 00:19:35,611 - rag_system - ERROR - DB接続エラー: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2025-08-08 00:19:35,612 - rag_system - ERROR - ファイルリスト取得エラー: connection to server at "localhost" (::1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused
+	Is the server running on that host and accepting TCP/IP connections?
+
+2025-08-08 00:22:07,859 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:31:54,063 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:32:42,520 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:34:25,737 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:37:44,079 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:38:38,854 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:40:09,515 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:43:01,915 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:44:31,255 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 00:53:20,295 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:02:59,519 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:05:17,866 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:06:59,432 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:19:46,582 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:22:36,675 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:38:24,266 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:45:41,408 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:50:36,884 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:56:20,421 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-08 01:58:05,923 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag

@@ -1,8 +1,22 @@
 """
-設定管理モジュール
-Centralized configuration management
+設定モジュール
+統合設定システムのエクスポート
 """
 
-from .base import config, logger, setup_logger
+from .settings import (
+    config,
+    logger,
+    setup_logger,
+    get_config,
+    print_config,
+    BaseConfig
+)
 
-__all__ = ["config", "logger", "setup_logger"]
+__all__ = [
+    'config',
+    'logger', 
+    'setup_logger',
+    'get_config',
+    'print_config',
+    'BaseConfig'
+]

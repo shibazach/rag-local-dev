@@ -1,14 +1,14 @@
 """
-認証依存性注入
-Authentication dependencies for FastAPI
+認証依存性注入 - Prototype統合版
+FastAPI + NiceGUIの統合認証システム
 """
 
 from typing import Optional, Dict, Any
 from fastapi import Request, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from nicegui import ui
 
 from app.config import logger
-from app.core.database import get_db
 
 security = HTTPBearer(auto_error=False)
 
@@ -29,22 +29,33 @@ class AuthorizationError(HTTPException):
             detail=detail
         )
 
-def get_current_user_optional(request: Request) -> Optional[Dict[str, Any]]:
+def get_current_user_optional(request: Request = None) -> Optional[Dict[str, Any]]:
     """
     オプショナル認証
     ログインしていなくてもアクセス可能なページ用
+    NiceGUIのストレージも確認
     """
     try:
-        user_data = request.session.get("user")
-        if user_data:
-            logger.debug(f"認証済みユーザー: {user_data.get('username', 'unknown')}")
-            return user_data
+        # NiceGUIストレージから確認（優先）
+        if hasattr(ui, 'storage') and ui.storage.user:
+            user_data = ui.storage.user.get('user')
+            if user_data:
+                logger.debug(f"NiceGUI認証済みユーザー: {user_data.get('username', 'unknown')}")
+                return user_data
+        
+        # FastAPIセッションから確認
+        if request and hasattr(request, 'session'):
+            user_data = request.session.get("user")
+            if user_data:
+                logger.debug(f"セッション認証済みユーザー: {user_data.get('username', 'unknown')}")
+                return user_data
+        
         return None
     except Exception as e:
-        logger.warning(f"セッション取得エラー: {e}")
+        logger.warning(f"認証情報取得エラー: {e}")
         return None
 
-def get_current_user_required(request: Request) -> Dict[str, Any]:
+def get_current_user_required(request: Request = None) -> Dict[str, Any]:
     """
     必須認証
     ログインが必要なページ用
@@ -78,5 +89,34 @@ def require_api_key(credentials: Optional[HTTPAuthorizationCredentials] = Depend
     
     return api_key
 
-# 便利なエイリアス（データベースセッションのみ残存）
-DatabaseSession = Depends(get_db)
+# NiceGUI用認証デコレーター
+def require_auth(admin_only: bool = False):
+    """
+    NiceGUIページ用認証デコレーター
+    
+    Usage:
+        @ui.page('/protected')
+        @require_auth()
+        def protected_page():
+            ui.label('Protected content')
+    """
+    def decorator(func):
+        async def wrapper(*args, **kwargs):
+            user = get_current_user_optional()
+            
+            if not user:
+                # 未認証の場合はログインページへリダイレクト
+                ui.open('/login')
+                return
+            
+            if admin_only and not user.get('is_admin', False):
+                # 権限不足の場合
+                ui.notify('管理者権限が必要です', color='negative')
+                ui.open('/')
+                return
+            
+            # 認証成功
+            return await func(*args, **kwargs) if hasattr(func, '__await__') else func(*args, **kwargs)
+        
+        return wrapper
+    return decorator

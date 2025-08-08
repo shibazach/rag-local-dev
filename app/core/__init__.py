@@ -1,95 +1,71 @@
 """
-コアモジュール
-Core functionality: database, models, schemas
+コア機能モジュール - Prototype統合版
+データベース・モデル・共通機能
 """
 
 from .database import (
-    init_database,
+    Base,
+    engine,
+    # async_engine,  # 非同期版は将来実装
+    SessionLocal,
+    # AsyncSessionLocal,  # 非同期版は将来実装
     get_db,
+    # get_async_db,  # 非同期版は将来実装
     get_db_session,
-    health_check as db_health_check,
+    # get_async_db_session,  # 非同期版は将来実装
+    init_database,
+    health_check,
+    # async_health_check,  # 非同期版は将来実装
     get_database_info
 )
+
 from .models import (
-    Base,
+    # ファイル管理モデル（Files3兄弟）
     FilesBlob,
     FilesMeta,
     FilesText,
+    # 埋め込みモデル
     FileEmbedding,
-    User,
-    UserSession,
-    SystemLog,
-    SystemMetrics
+    # 画像管理モデル
+    FilesImage
 )
+
+from .db_handler import FileDBHandler
+
 from .schemas import (
-    BaseResponse,
-    PaginatedResponse,
-    UserCreate,
-    UserUpdate,
-    UserLogin,
-    UserResponse,
-    AuthResponse,
-    FileResponse,
-    FileListResponse,
-    FileTextResponse,
     UploadResponse,
     BatchUploadResponse,
-    ProcessingConfig,
-    ProcessingRequest,
-    ProcessingStatus,
-    ProcessingEvent,
-    SearchRequest,
-    SearchResult,
-    SearchResponse,
-    ChatRequest,
-    ChatResponse,
-    HealthCheck,
-    SystemStats,
+    UploadStatusResponse,
+    FileInfoResponse,
+    FileListResponse,
+    SuccessResponse,
     ErrorResponse
 )
 
 __all__ = [
-    # Database
-    "init_database",
-    "get_db",
-    "get_db_session", 
-    "db_health_check",
-    "get_database_info",
-    
-    # Models
-    "Base",
-    "FilesBlob",
-    "FilesMeta", 
-    "FilesText",
-    "FileEmbedding",
-    "User",
-    "UserSession",
-    "SystemLog",
-    "SystemMetrics",
-    
-    # Schemas
-    "BaseResponse",
-    "PaginatedResponse",
-    "UserCreate",
-    "UserUpdate",
-    "UserLogin", 
-    "UserResponse",
-    "AuthResponse",
-    "FileResponse",
-    "FileListResponse",
-    "FileTextResponse",
-    "UploadResponse",
-    "BatchUploadResponse",
-    "ProcessingConfig",
-    "ProcessingRequest",
-    "ProcessingStatus",
-    "ProcessingEvent",
-    "SearchRequest",
-    "SearchResult",
-    "SearchResponse",
-    "ChatRequest",
-    "ChatResponse",
-    "HealthCheck",
-    "SystemStats",
-    "ErrorResponse"
+    # データベース関連
+    'Base',
+    'engine',
+    'SessionLocal',
+    'get_db',
+    'get_db_session',
+    'init_database',
+    'health_check',
+    'get_database_info',
+    # モデル
+    'FilesBlob',
+    'FilesMeta',
+    'FilesText',
+    'FileEmbedding',
+    'FilesImage',
+    # ハンドラ
+    'FileDBHandler',
+    # スキーマ
+    'UploadResponse',
+    'BatchUploadResponse',
+    'UploadStatusResponse',
+    'FileInfoResponse',
+    'FileListResponse',
+    'SuccessResponse',
+    'ErrorResponse'
 ]

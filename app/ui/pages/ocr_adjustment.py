@@ -158,7 +158,7 @@ class OCRAdjustmentPage:
             with panel.header_element:
                 with ui.element('div').style('display: flex; gap: 6px; margin-right: 8px;'):
                     load_button = BaseButton.create_type_b('📂 読込', on_click=self._load_settings)
-                    save_button = BaseButton.create_type_b('💾 保存', on_click=self._save_settings)
+                    save_button = BaseButton.create_type_a('💾 保存', on_click=self._save_settings)
             
             # パネル内容
             panel.content_element.style('padding: 0; height: 100%;')
@@ -192,16 +192,16 @@ class OCRAdjustmentPage:
                 with ui.element('div').style(
                     'display: flex; gap: 6px; margin-right: 8px;'
                 ):
-                    # エクスポートボタン
-                    export_btn = BaseButton.create_type_b(
-                        "📄 エクスポート",
-                        on_click=self._export_results
-                    )
-                    
                     # クリアボタン
                     clear_btn = BaseButton.create_type_b(
                         "🗑️ クリア",
                         on_click=self._clear_results
+                    )
+                    
+                    # エクスポートボタン
+                    export_btn = BaseButton.create_type_a(
+                        "📄 エクスポート",
+                        on_click=self._export_results
                     )
             
             # パネル内容

@@ -5,13 +5,13 @@
 
 from .layout import CommonSplitter, CommonCard, CommonSectionTitle, CommonTabs
 from .display import CommonFormElements
-from .data_grid import BaseDataGridView
+# from .data_grid import BaseDataGridView  # ui.tableに移行済み
 
 __all__ = [
     'CommonSplitter',
     'CommonCard', 
     'CommonSectionTitle',
     'CommonTabs',
-    'BaseDataGridView',
+    # 'BaseDataGridView',  # ui.tableに移行済み
     'CommonFormElements',
 ]

@@ -1,0 +1,99 @@
+CREATE TABLE
+  public.files_image (
+    id uuid NOT NULL DEFAULT gen_random_uuid (),
+    blob_id uuid NOT NULL,
+    page_number integer NOT NULL,
+    image_index integer NOT NULL,
+    image_type character varying(50) NOT NULL DEFAULT 'image'::character varying,
+    image_data bytea NOT NULL,
+    image_format character varying(10) NULL,
+    width integer NULL,
+    height integer NULL,
+    caption text NULL,
+    extracted_text text NULL,
+    created_at timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP
+  );
+ALTER TABLE
+  public.files_image
+ADD
+  CONSTRAINT files_image_pkey PRIMARY KEY (id)
+  
+CREATE TABLE
+  public.embeddings (
+    id uuid NOT NULL DEFAULT gen_random_uuid (),
+    blob_id uuid NOT NULL,
+    chunk_index integer NOT NULL,
+    chunk_text text NOT NULL,
+    chunk_start integer NULL,
+    chunk_end integer NULL,
+    vector_json text NULL,
+    embedding_model character varying(100) NULL,
+    embedding_dimension integer NULL,
+    created_at timestamp with time zone NULL DEFAULT now()
+  );
+ALTER TABLE
+  public.embeddings
+ADD
+  CONSTRAINT embeddings_pkey PRIMARY KEY (id)
+
+  CREATE TABLE
+  public.chat_messages (
+    id serial NOT NULL,
+    session_id character varying NOT NULL,
+    role character varying NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone NULL DEFAULT now(),
+    tokens_used integer NULL,
+    referenced_files json NULL
+  );
+ALTER TABLE
+  public.chat_messages
+ADD
+  CONSTRAINT chat_messages_pkey PRIMARY KEY (id)
+
+CREATE TABLE
+  public.chat_sessions (
+    id serial NOT NULL,
+    session_id character varying NOT NULL,
+    user_id integer NOT NULL,
+    title character varying NULL,
+    created_at timestamp with time zone NULL DEFAULT now(),
+    updated_at timestamp with time zone NULL DEFAULT now(),
+    is_active boolean NULL
+  );
+ALTER TABLE
+  public.chat_sessions
+ADD
+  CONSTRAINT chat_sessions_pkey PRIMARY KEY (id)
+
+CREATE TABLE
+  public.processing_queue (
+    id serial NOT NULL,
+    file_id uuid NOT NULL,
+    task_type character varying NOT NULL,
+    priority integer NULL,
+    status character varying NULL,
+    retry_count integer NULL,
+    max_retries integer NULL,
+    created_at timestamp with time zone NULL DEFAULT now(),
+    started_at timestamp with time zone NULL,
+    completed_at timestamp with time zone NULL,
+    error_message text NULL
+  );
+ALTER TABLE
+  public.processing_queue
+ADD
+  CONSTRAINT processing_queue_pkey PRIMARY KEY (id)
+
+CREATE TABLE
+  public.system_config (
+    id serial NOT NULL,
+    key character varying NOT NULL,
+    value text NULL,
+    description text NULL,
+    updated_at timestamp with time zone NULL DEFAULT now()
+  );
+ALTER TABLE
+  public.system_config
+ADD
+  CONSTRAINT system_config_pkey PRIMARY KEY (id)

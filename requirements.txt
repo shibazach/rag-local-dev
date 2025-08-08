@@ -17,6 +17,7 @@ email-validator>=2.1.0
 
 # UI Framework
 nicegui>=1.4.0
+libsass>=0.23.0  # SASSサポート（ui.table sticky headerなどで使用）
 
 # File Processing
 pypdf>=3.17.0

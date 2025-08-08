@@ -50,6 +50,9 @@ class UploadPage:
         
         # グローバル参照の設定（Python側メソッド呼び出し用）
         ui.run_javascript(f'window.uploadPageInstance = {{id: "{id(self)}"}};')
+        
+        # NiceGUIのJavaScript連携のための設定
+        self._setup_js_callbacks()
     
     def _create_main_layout(self):
         """メインレイアウト作成"""
@@ -185,6 +188,10 @@ class UploadPage:
                             self.description_label = ui.label('💻 ローカルフォルダアップロード').style('font-weight: 600; font-size: 14px; margin-bottom: 6px;')
                             self.description_list = ui.element('div')
                             self._update_description()
+                            # ブラウザ制限の注記
+                            ui.label('※ ブラウザの仕様上、フォルダ選択ダイアログのタイトルは「ファイルを開く」と表示されます').style(
+                                'font-size: 12px; color: #6b7280; margin-top: 8px;'
+                            )
                     
                     # 既存のfile-inputを動的に切り替えて使用（webkitdirectory属性をJavaScriptで制御）
     
@@ -393,6 +400,46 @@ class UploadPage:
             i += 1
         return f"{size_bytes:.1f} {size_names[i]}"
     
+    def _set_folder_path(self, path):
+        """フォルダパスを設定（JavaScriptから呼び出される）"""
+        self.folder_path_input.value = path
+        self.folder_path_input.update()
+    
+    def _setup_js_callbacks(self):
+        """JavaScriptから呼び出し可能なコールバックを設定"""
+        # 結果表示用の隠しinput要素を作成（JavaScript→Python通信用）
+        self._results_input = ui.input().style('display: none;')
+        self._results_input.on('value-change', lambda e: self._handle_results_change(e.value))
+        
+        # フォルダパス更新用の隠しinput要素を作成
+        self._folder_path_update = ui.input().style('display: none;')
+        self._folder_path_update.on('value-change', lambda e: self._handle_folder_path_change(e.value))
+        
+        # JavaScript側に要素のIDを渡す
+        ui.run_javascript(f'''
+            window.resultsInputId = "{self._results_input.id}";
+            window.folderPathUpdateId = "{self._folder_path_update.id}";
+        ''')
+    
+    def _handle_results_change(self, value):
+        """結果データが更新されたときの処理"""
+        if value:
+            import json
+            try:
+                results = json.loads(value)
+                self._show_results(results)
+                # 処理後は値をクリア
+                self._results_input.value = ''
+            except json.JSONDecodeError:
+                print(f"Invalid JSON in results: {value}")
+    
+    def _handle_folder_path_change(self, value):
+        """フォルダパスが更新されたときの処理"""
+        if value:
+            self.folder_path_input.value = value
+            # 処理後は値をクリア
+            self._folder_path_update.value = ''
+    
     # イベントハンドラー
     def _open_file_dialog(self):
         """ファイル選択ダイアログを開く"""
@@ -440,10 +487,12 @@ class UploadPage:
         
         if upload_type == '💻 ローカル':
             # ローカルフォルダ選択（既存のfile-inputにwebkitdirectory属性を追加してクリック）
+            # 注意：ブラウザのネイティブダイアログのタイトルは「ファイルを開く」と表示されますが、
+            # 実際にはフォルダ選択ダイアログです。タイトルはブラウザ依存で変更できません。
             ui.run_javascript('''
                 const fileInput = document.getElementById("file-input");
                 if (fileInput) {
-                    // webkitdirectory属性を追加
+                    // webkitdirectory属性を追加（フォルダ選択モード）
                     fileInput.setAttribute("webkitdirectory", "");
                     fileInput.setAttribute("directory", "");
                     // フォルダ選択フラグを設定
@@ -484,7 +533,14 @@ class UploadPage:
     
     def _add_upload_javascript(self):
         """アップロード機能のJavaScript追加（new/系移植版）"""
-        ui.run_javascript('''
+        # Python側のメソッドを呼び出すための関数を登録
+        upload_page_id = id(self)
+        
+        # JavaScriptコードを通常の文字列として定義（中括弧のエスケープ不要）
+        js_code = '''
+// Python側のインスタンスIDを保存
+window.uploadPageId = "''' + str(upload_page_id) + '''";
+
 // アップロード機能 - new/系移植版（app/系API対応）
 
 // サーバーフォルダブラウザ機能を最初に定義（即座実行）
@@ -630,12 +686,17 @@ class UploadPage:
 
     window.selectFolder = function(path) {
         const fullPath = '/workspace/' + path;
-        const pathInput = document.querySelector('input[placeholder*="フォルダパス"]');
-        if (pathInput) {
-            pathInput.value = fullPath;
-            // NiceGUIの入力フィールドを更新
-            pathInput.dispatchEvent(new Event('input', { bubbles: true }));
+        
+        // 隠しinput要素経由でPython側にフォルダパスを送信
+        if (window.folderPathUpdateId) {
+            const folderPathInput = document.getElementById(window.folderPathUpdateId);
+            if (folderPathInput) {
+                folderPathInput.value = fullPath;
+                // changeイベントを発火してNiceGUIに通知
+                folderPathInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
         }
+        
         closeFolderBrowser();
     };
 
@@ -654,25 +715,38 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!uploadBox || !fileInput) return;
     
+    // デフォルトのドラッグ&ドロップ動作を無効化（ブラウザでファイルが開くのを防ぐ）
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        document.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+    });
+    
     // ドラッグ&ドロップイベント
     uploadBox.addEventListener('dragover', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         uploadBox.style.borderColor = '#3b82f6';
         uploadBox.style.backgroundColor = '#eff6ff';
     });
     
     uploadBox.addEventListener('dragleave', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         uploadBox.style.borderColor = '#d1d5db';
         uploadBox.style.backgroundColor = '#f9fafb';
     });
     
     uploadBox.addEventListener('drop', (e) => {
         e.preventDefault();
+        e.stopPropagation();
         uploadBox.style.borderColor = '#d1d5db';
         uploadBox.style.backgroundColor = '#f9fafb';
         const files = e.dataTransfer.files;
-        handleFiles(files);
+        if (files.length > 0) {
+            handleFiles(files);
+        }
     });
     
     // ファイル選択イベント（フォルダ選択かファイル選択かを判定）
@@ -688,11 +762,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // フォルダパスを表示用の入力欄に設定（最初のファイルのパスから推定）
             if (files[0] && files[0].webkitRelativePath) {
                 const folderPath = files[0].webkitRelativePath.split('/')[0];
-                const pathInput = document.querySelector('input[placeholder*="フォルダパス"]');
-                if (pathInput) {
-                    pathInput.value = folderPath;
-                    // NiceGUIの入力フィールドを更新
-                    pathInput.dispatchEvent(new Event('input', { bubbles: true }));
+                
+                // 隠しinput要素経由でPython側にフォルダパスを送信
+                if (window.folderPathUpdateId) {
+                    const folderPathInput = document.getElementById(window.folderPathUpdateId);
+                    if (folderPathInput) {
+                        folderPathInput.value = folderPath;
+                        folderPathInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
                 }
             }
             
@@ -720,6 +797,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // 通常のファイル選択の場合
             console.log('ファイル選択:', files.length + '個のファイル');
             handleFiles(files);
+            // inputをリセット（次回も選択できるように）
+            e.target.value = '';
         }
     });
     
@@ -841,7 +920,7 @@ async function uploadFiles(files) {
     }, 1500);
 }
 
-// 結果を表示（新BaseDataGridView対応）
+// 結果を表示（隠しinput経由でPython側に送信）
 function displayResults(results) {
     // 配列でない場合のエラーハンドリング
     if (!Array.isArray(results)) {
@@ -851,73 +930,19 @@ function displayResults(results) {
     
     console.log('displayResults called with:', results);
     
-    // 待機メッセージを隠す
-    const waitingElement = document.getElementById('upload-waiting');
-    if (waitingElement) {
-        waitingElement.style.display = 'none';
-    }
-    
-    // データを整形
-    const formattedData = results.map(result => {
-        // ステータス表示の変換
-        let statusDisplay = '不明';
-        if (result.status === 'uploaded' || result.upload_status === 'uploaded') {
-            // is_existingフラグで新規・既存を判定
-            if (result.is_existing === false) {
-                statusDisplay = '✅ 新規';
-            } else {
-                statusDisplay = '🔄 既存';
-            }
-        } else if (result.status === 'duplicate' || result.upload_status === 'duplicate') {
-            statusDisplay = '🔄 既存';
-        } else if (result.status === 'error' || result.upload_status === 'error') {
-            statusDisplay = '❌ エラー';
+    // 隠しinput要素経由でPython側に結果を送信
+    if (window.resultsInputId) {
+        const resultsInput = document.getElementById(window.resultsInputId);
+        if (resultsInput) {
+            // JSON文字列として値を設定
+            resultsInput.value = JSON.stringify(results);
+            // changeイベントを発火してNiceGUIに通知
+            resultsInput.dispatchEvent(new Event('input', { bubbles: true }));
+        } else {
+            console.error('Results input element not found');
         }
-        
-        // サイズの表示
-        const sizeDisplay = result.size ? formatFileSize(result.size) : '-';
-        
-        // 日時の表示
-        let dateDisplay = '-';
-        if (result.created_at) {
-            if (typeof result.created_at === 'string') {
-                dateDisplay = result.created_at.substring(0, 16).replace('T', ' ');
-            }
-        }
-        
-        return {
-            status: statusDisplay,
-            file_name: result.file_name || '',
-            size: sizeDisplay,
-            created_at: dateDisplay,
-            message: result.message || ''
-        };
-    });
-    
-    // データグリッドを更新（NiceGUIのイベントを発火）
-    // データグリッドのDOM要素を直接操作
-    const gridContainer = document.querySelector('.q-table tbody');
-    if (gridContainer) {
-        // 既存の行をクリア
-        gridContainer.innerHTML = '';
-        
-        // 新しい行を追加
-        formattedData.forEach(row => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = 
-                '<td class="text-center">' + row.status + '</td>' +
-                '<td class="text-left">' + row.file_name + '</td>' +
-                '<td class="text-right">' + row.size + '</td>' +
-                '<td class="text-center">' + row.created_at + '</td>' +
-                '<td class="text-left">' + row.message + '</td>';
-            gridContainer.appendChild(tr);
-        });
-    }
-    
-    // データグリッドを表示
-    const gridContainer = document.querySelector('[id$="-container"]');
-    if (gridContainer) {
-        gridContainer.style.display = 'block';
+    } else {
+        console.error('resultsInputId not set');
     }
 }
 
@@ -1018,4 +1043,5 @@ async function uploadServerFolder(folderPath, includeSubfolders) {
         }
     }
 });
-        ''')
+        '''
+        ui.run_javascript(js_code)

@@ -112,7 +112,8 @@ class ChatPage:
                 placeholder="RAGシステムに質問したい内容を入力してください...",
                 value=self.current_question
             ).style(
-                'width: 100%; height: 100%; resize: none; box-sizing: border-box;'
+                'width: calc(100% - 8px); height: calc(100% - 8px); '
+                'margin: 4px; resize: none; box-sizing: border-box;'
             ).props('outlined')
             
             # ボタンのイベントハンドラーを設定
@@ -207,8 +208,9 @@ class ChatPage:
             
             # ヘッダーに履歴ボタンを追加
             with panel.header_element:
-                with ui.element('div').style('margin-right: 8px;'):
+                with ui.element('div').style('display: flex; gap: 6px; margin-right: 8px;'):
                     BaseButton.create_type_b('履歴')
+                    BaseButton.create_type_a('💾 保存', on_click=self._save_settings)
             
             panel.content_element.style('padding: 0;')
             
@@ -218,6 +220,10 @@ class ChatPage:
             ):
                 for i, result in enumerate(self.search_results):
                     self._create_search_result_item(result, i)
+    
+    def _save_settings(self):
+        """設定を保存"""
+        ui.notify('設定を保存しました', type='positive')
     
     def _create_search_result_item(self, result: Dict[str, Any], index: int):
         """検索結果アイテム"""

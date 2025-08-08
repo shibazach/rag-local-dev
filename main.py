@@ -2,10 +2,13 @@
 RAG System - FastAPI + NiceGUI Router
 ルーティング定義のみ、具体的実装は各ui.pagesに分離
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from nicegui import ui
 import sys
 import os
+from typing import List
+from app.config import logger
+from app.services.file_service import get_file_service
 
 # パス設定
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -170,7 +173,7 @@ async def switch_chat_pattern(request: dict):
 
 from fastapi import File, UploadFile, HTTPException, Form
 from typing import List
-from app.services.file_service import FileService
+from app.services.file_service import get_file_service
 from app.core.schemas import UploadResponse, BatchUploadResponse, UploadStatusResponse
 
 @fastapi_app.post("/api/upload/single", response_model=UploadResponse)
@@ -185,7 +188,7 @@ async def upload_single_file(file: UploadFile = File(...)):
         UploadResponse: アップロード結果
     """
     try:
-        file_service = FileService()
+        file_service = get_file_service()
         result = file_service.upload_file(file)
         return result
     except HTTPException:
@@ -208,7 +211,7 @@ async def upload_batch_files(files: List[UploadFile] = File(...)):
         if len(files) > 50:
             raise HTTPException(status_code=400, detail="一度にアップロードできるファイル数は50個までです")
         
-        file_service = FileService()
+        file_service = get_file_service()
         result = file_service.upload_batch_files(files)
         return result
     except HTTPException:
@@ -225,7 +228,7 @@ async def get_upload_status():
         UploadStatusResponse: アップロード機能ステータス
     """
     try:
-        file_service = FileService()
+        file_service = get_file_service()
         status_data = file_service.get_upload_status()
         return UploadStatusResponse(
             status=status_data["status"],
@@ -250,7 +253,7 @@ async def upload_folder(
         Dict: アップロード結果
     """
     try:
-        file_service = FileService()
+        file_service = get_file_service()
         result = file_service.upload_folder(folder_path, include_subfolders)
         return result
     except HTTPException:
@@ -271,7 +274,7 @@ async def list_folders(path: str = ""):
         Dict: フォルダリスト
     """
     try:
-        file_service = FileService()
+        file_service = get_file_service()
         result = file_service.list_server_folders(path)
         return result
     except HTTPException:
@@ -292,7 +295,7 @@ async def preview_file(file_id: str):
         Response: ファイルバイナリまたはJSON
     """
     try:
-        file_service = FileService()
+        file_service = get_file_service()
         result = file_service.get_file_preview(file_id)
         
         if result is None:
@@ -335,6 +338,50 @@ async def preview_file(file_id: str):
     except Exception as e:
         logger.error(f"ファイルプレビューエラー: {e}")
         raise HTTPException(status_code=500, detail=f"ファイルプレビューに失敗しました: {str(e)}")
+
+@fastapi_app.post("/api/upload/batch")
+async def upload_batch_files(files: List[UploadFile] = File(...)):
+    """バッチファイルアップロード"""
+    try:
+        file_service = get_file_service()
+        result = file_service.upload_batch_files(files)
+        return result
+    except Exception as e:
+        logger.error(f"バッチアップロードエラー: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@fastapi_app.post("/api/upload/folder")
+async def upload_folder(folder_path: str = Form(...), include_subfolders: bool = Form(False)):
+    """フォルダアップロード"""
+    try:
+        file_service = get_file_service()
+        result = file_service.upload_folder(folder_path, include_subfolders)
+        return result
+    except Exception as e:
+        logger.error(f"フォルダアップロードエラー: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@fastapi_app.get("/api/upload/status")
+async def get_upload_status():
+    """アップロードステータス取得"""
+    try:
+        file_service = get_file_service()
+        result = file_service.get_upload_status()
+        return result
+    except Exception as e:
+        logger.error(f"ステータス取得エラー: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@fastapi_app.get("/api/folders/browse")
+async def browse_folders(path: str = "/"):
+    """サーバーフォルダブラウズ"""
+    try:
+        file_service = get_file_service()
+        result = file_service.list_server_folders(path)
+        return result
+    except Exception as e:
+        logger.error(f"フォルダブラウズエラー: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ====== NiceGUIフレームワーク制御（公式推奨方法） ======
 

@@ -1,36 +1,10 @@
 """
 コア機能モジュール - Prototype統合版
-データベース・モデル・共通機能
+データベース・共通機能（SQLAlchemy削除済み）
 """
 
-from .database import (
-    Base,
-    engine,
-    # async_engine,  # 非同期版は将来実装
-    SessionLocal,
-    # AsyncSessionLocal,  # 非同期版は将来実装
-    get_db,
-    # get_async_db,  # 非同期版は将来実装
-    get_db_session,
-    # get_async_db_session,  # 非同期版は将来実装
-    init_database,
-    health_check,
-    # async_health_check,  # 非同期版は将来実装
-    get_database_info
-)
-
-from .models import (
-    # ファイル管理モデル（Files3兄弟）
-    FilesBlob,
-    FilesMeta,
-    FilesText,
-    # 埋め込みモデル
-    FileEmbedding,
-    # 画像管理モデル
-    FilesImage
-)
-
-from .db_handler import FileDBHandler
+# db_simpleを使用する新しい実装のみ残す
+# from .db_handler import FileDBHandler  # SQLAlchemy依存のため削除
 
 from .schemas import (
     UploadResponse,
@@ -43,23 +17,6 @@ from .schemas import (
 )
 
 __all__ = [
-    # データベース関連
-    'Base',
-    'engine',
-    'SessionLocal',
-    'get_db',
-    'get_db_session',
-    'init_database',
-    'health_check',
-    'get_database_info',
-    # モデル
-    'FilesBlob',
-    'FilesMeta',
-    'FilesText',
-    'FileEmbedding',
-    'FilesImage',
-    # ハンドラ
-    'FileDBHandler',
     # スキーマ
     'UploadResponse',
     'BatchUploadResponse',

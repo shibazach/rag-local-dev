@@ -20,7 +20,8 @@ from .base import (
 )
 from .common import (
     CommonSplitter, CommonCard, CommonSectionTitle, CommonTabs,
-    BaseDataGridView, CommonFormElements
+    # BaseDataGridView,  # ui.tableに移行済み
+    CommonFormElements
 )
 from .chat import (
     ChatSettingsPanel, ChatSearchResultCard, ChatLayoutButton

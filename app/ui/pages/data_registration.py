@@ -100,7 +100,7 @@ class DataRegistrationPage:
             panel.content_element.style('padding: 0; height: 100%;')
             
             with panel.content_element:
-                with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box;'):
+                with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;'):
                     with ui.element('div').style('display: flex; flex-direction: column; gap: 12px; height: 100%;'):
                         
                         # 整形プロセスと使用モデル
@@ -191,7 +191,7 @@ class DataRegistrationPage:
                     'display: flex; gap: 6px; margin-right: 8px;'
                 ):
                     # CSV出力ボタン
-                    export_btn = BaseButton.create_type_b(
+                    export_btn = BaseButton.create_type_a(
                         "📄 CSV出力",
                         on_click=self._export_csv
                     )
@@ -200,7 +200,7 @@ class DataRegistrationPage:
             panel.content_element.style('padding: 0; height: 100%;')
             
             with panel.content_element:
-                with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box;'):
+                with ui.element('div').style('padding: 4px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;'):
                     # 進捗表示エリア
                     self.progress_display = ui.element('div').style(
                         'background: #e3f2fd; border: 2px solid #2196f3; '
@@ -215,7 +215,7 @@ class DataRegistrationPage:
                     
                     # ログコンテナ
                     self.log_container = ui.element('div').style(
-                        'height: calc(100% - 60px); overflow-y: auto; '
+                        'flex: 1; overflow-y: auto; '
                         'background: white; border: 1px solid #e5e7eb; border-radius: 4px; padding: 8px;'
                     )
                     
@@ -361,7 +361,7 @@ class DataRegistrationPage:
                         'filename': file['filename'],
                         'size': self._format_file_size(file.get('file_size', 0)),
                         'status': status,
-                        'created_at': file.get('created_at', '').strftime('%Y-%m-%d %H:%M') if file.get('created_at') else '',
+                        'created_at': file.get('created_at').strftime('%Y-%m-%d %H:%M') if file.get('created_at') and hasattr(file.get('created_at'), 'strftime') else str(file.get('created_at', '')),
                         'raw_data': file  # 元のデータを保持
                     })
                 

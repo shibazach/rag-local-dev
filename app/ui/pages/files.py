@@ -31,6 +31,18 @@ class FilesPage:
         """レイアウト作成 - スプリッター分割"""
         from app.ui.components.common.layout import CommonSplitter
         
+        # テーブルヘッダー固定用のスタイル
+        ui.add_sass('''
+        .sticky-header-table
+          thead tr:first-child th
+            background-color: #f3f4f6
+          thead tr th
+            position: sticky
+            z-index: 11
+          thead tr:first-child th
+            top: 0
+        ''')
+        
         # スプリッタースタイルとJSを追加
         CommonSplitter.add_splitter_styles()
         CommonSplitter.add_splitter_javascript()
@@ -178,7 +190,7 @@ class FilesPage:
             rows=self.file_data,
             row_key='id',
             pagination=20  # シンプルなページネーション設定
-        ).classes('w-full').style(
+        ).classes('w-full sticky-header-table').style(
             'height: 100%; margin: 0; '
         ).props('dense flat virtual-scroll :virtual-scroll-sticky-size-start="48"')
         

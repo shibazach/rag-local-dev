@@ -6,7 +6,10 @@ from app.ui.components.layout import RAGHeader, RAGFooter, MainContentArea
 from app.ui.components.elements import CommonPanel
 from app.ui.components.common.layout import CommonSplitter
 from app.ui.components.base.button import BaseButton
-# from app.ui.components.common.data_grid import BaseDataGridView  # ui.tableに移行
+from app.core.db_simple import get_file_list
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DataRegistrationPage:
     """データ登録ページクラス - 3ペイン構成（2:3:5）+ 共通コンポーネント"""
@@ -16,6 +19,8 @@ class DataRegistrationPage:
         self.selected_files = set()
         self.all_files = []
         self.filtered_files = []
+        self.file_data = []  # files.pyと同じ
+        self.original_data = []  # files.pyと同じ
         self.current_status_filter = ""
         self.current_search_term = ""
         self.data_grid = None
@@ -235,23 +240,33 @@ class DataRegistrationPage:
                 with ui.element('div').style(
                     'display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;'
                 ):
-                    # ステータスフィルター（ラベルなし）
+                    # ステータスフィルター（files.pyと同じ）
                     self.status_filter = ui.select(
-                        options=['全て', '未処理', '処理中', '未整形', '未ベクトル化', '処理完了', 'エラー'],
+                        options=[
+                            '全て',
+                            '処理完了',
+                            '処理中', 
+                            '未処理',
+                            '未整形',
+                            '未ベクトル化',
+                            'エラー'
+                        ],
                         value='全て',
                         on_change=self._filter_files
                     ).style(
-                        'width: 150px; height: 28px; min-height: 28px; flex-shrink: 0; '
-                        'background-color: white; color: black; border-radius: 0;'
+                        'width: 120px; flex-shrink: 0; '
+                        'background-color: white; color: black; '
+                        'border-radius: 0;'
                     ).props('outlined dense square').classes('q-ma-none')
                     
-                    # ファイル名検索
+                    # ファイル名検索（files.pyと同じ）
                     self.search_input = ui.input(
                         placeholder='ファイル名で検索...',
                         on_change=self._filter_files
                     ).style(
-                        'flex: 1; min-width: 100px; height: 28px; min-height: 28px; '
-                        'background-color: white; color: black; border-radius: 0;'
+                        'flex: 1; min-width: 120px; '
+                        'background-color: white; color: black; '
+                        'border-radius: 0;'
                     ).props('outlined dense bg-white square').classes('q-ma-none')
                     
                     # 選択数表示
@@ -270,30 +285,30 @@ class DataRegistrationPage:
     
     def _setup_file_data_grid(self):
         """ファイル選択用ui.table設定"""
-        # カラム定義（チェックボックスなしの場合に備えてコメント化）
+        # カラム定義（files.pyと同じ、ただしチェックボックス付き）
         columns = [
             {'name': 'filename', 'label': 'ファイル名', 'field': 'filename', 'sortable': True, 'align': 'left'},
-            {'name': 'pages', 'label': '頁数', 'field': 'pages', 'sortable': True, 'align': 'center'},
+            {'name': 'size', 'label': 'サイズ', 'field': 'size', 'sortable': True, 'align': 'right'},
             {'name': 'status', 'label': 'ステータス', 'field': 'status', 'sortable': True, 'align': 'center'},
-            {'name': 'size', 'label': 'サイズ', 'field': 'size', 'sortable': True, 'align': 'right'}
+            {'name': 'created_at', 'label': '作成日時', 'field': 'created_at', 'sortable': True, 'align': 'center'}
         ]
         
         # ui.table作成（files.pyと同じ仕様、チェックボックス付き）
         self.data_grid = ui.table(
             columns=columns,
             rows=[],  # 初期は空
-            row_key='file_id',
-            pagination=100,
-            selection='multiple'  # 複数選択可能
+            row_key='id',  # files.pyと同じ
+            pagination=20,  # files.pyと同じ
+            selection='multiple'  # 複数選択可能（チェックボックス機能）
         ).classes('w-full').style(
             'height: 100%; margin: 0;'
-        ).props('dense flat')
+        ).props('dense flat virtual-scroll :virtual-scroll-sticky-size-start="48"')  # files.pyと同じ
         
         # 選択変更イベント
         self.data_grid.on('selection', self._handle_selection_change)
         
-        # サンプルデータ設定
-        self._load_sample_data()
+        # ファイルデータをロード
+        self._load_file_data()
         
         # ui.tableでは選択機能が組み込まれているため、カスタムチェックボックスは不要
     
@@ -321,52 +336,62 @@ class DataRegistrationPage:
             }, 100);
         ''')
     
-    def _load_sample_data(self):
-        """サンプルデータ読み込み"""
-        sample_data = [
-            {
-                'selected': False,
-                'filename': 'document1.pdf',
-                'pages': 15,
-                'status': '未処理',
-                'size': '2.1 MB',
-                'file_id': 1
-            },
-            {
-                'selected': False,
-                'filename': 'report2023.pdf',
-                'pages': 42,
-                'status': '処理完了',
-                'size': '5.8 MB',
-                'file_id': 2
-            },
-            {
-                'selected': False,
-                'filename': 'manual_v2.pdf',
-                'pages': 128,
-                'status': '未整形',
-                'size': '12.3 MB',
-                'file_id': 3
-            },
-            {
-                'selected': False,
-                'filename': 'contract_20241201.pdf',
-                'pages': 8,
-                'status': 'エラー',
-                'size': '1.5 MB',
-                'file_id': 4
-            }
-        ]
-        
-        self.all_files = sample_data
-        self.filtered_files = sample_data.copy()
-        self.data_grid.rows[:] = sample_data
-        self.data_grid.update()
-        
-        # グローバル参照用
-        ui.run_javascript('window.data_reg_page = pyodide.globals.get("data_reg_page");')
-        
-        self._update_selection_count()
+    def _load_file_data(self):
+        """ファイルデータをロード - files.pyと同じ実装"""
+        logger = logging.getLogger(__name__)
+        try:
+            # シンプルなDB接続でファイルリストを取得
+            result = get_file_list(limit=1000, offset=0)
+            if result and 'files' in result:
+                self.file_data = []
+                
+                for file in result['files']:
+                    # ステータス判定（files.pyと同じロジック）
+                    if file.get('has_text', False):
+                        if file.get('text_length', 0) > 0:
+                            status = '処理完了'
+                        else:
+                            status = '処理中'
+                    else:
+                        status = '未処理'
+                    
+                    self.file_data.append({
+                        'id': file['file_id'],  # ui.tableのrow-key用
+                        'file_id': file['file_id'],  # 実際のファイルID
+                        'filename': file['filename'],
+                        'size': self._format_file_size(file.get('file_size', 0)),
+                        'status': status,
+                        'created_at': file.get('created_at', '').strftime('%Y-%m-%d %H:%M') if file.get('created_at') else '',
+                        'raw_data': file  # 元のデータを保持
+                    })
+                
+                logger.info(f"Loaded {len(self.file_data)} files")
+                
+                # 元データを保持（フィルタリング用）
+                self.original_data = self.file_data.copy()
+                self.all_files = self.file_data.copy()
+                self.filtered_files = self.file_data.copy()
+                
+                # 各行にIDを追加（既に追加済みだが念のため）
+                for idx, row in enumerate(self.file_data):
+                    row['id'] = idx
+                
+                # ui.tableを更新
+                self.data_grid.rows[:] = self.file_data
+                self.data_grid.update()
+            else:
+                logger.warning("No files data received from database")
+                self.file_data = []
+                self.original_data = []
+                self.all_files = []
+                self.filtered_files = []
+        except Exception as e:
+            logger.error(f"Error loading file data: {e}")
+            self.file_data = []
+            self.original_data = []
+            self.all_files = []
+            self.filtered_files = []
+            ui.notify(f'ファイルデータの読み込みに失敗しました: {str(e)}', type='negative')
     
     # イベントハンドラー
     def _start_processing(self):
@@ -421,30 +446,44 @@ class DataRegistrationPage:
         ui.notify('処理ログをCSV出力します')
     
     def _filter_files(self, e=None):
-        """ファイルフィルタリング"""
+        """フィルタを適用 - files.pyと同じロジック"""
         status_filter = self.status_filter.value if hasattr(self, 'status_filter') else ''
-        search_term = self.search_input.value.lower() if hasattr(self, 'search_input') else ''
+        search_query = self.search_input.value.lower() if hasattr(self, 'search_input') else ''
         
-        filtered = []
-        for file_data in self.all_files:
-            # ステータスフィルター
-            if status_filter and status_filter != '全て':
-                if file_data['status'] != status_filter:
-                    continue
+        filtered_data = []
+        for row in self.original_data:
+            # ステータスフィルタ
+            if status_filter != '全て' and row['status'] != status_filter:
+                continue
             
-            # 検索フィルター
-            if search_term:
-                if search_term not in file_data['filename'].lower():
-                    continue
+            # 検索フィルタ
+            if search_query and search_query not in row['filename'].lower():
+                continue
             
-            filtered.append(file_data)
+            filtered_data.append(row)
         
-        self.filtered_files = filtered
+        # 各行のIDを再設定
+        for idx, row in enumerate(filtered_data):
+            row['id'] = idx
+        
+        self.filtered_files = filtered_data
+        # ui.tableの行データを更新（NiceGUIの標準的な方法）
         if self.data_grid:
-            self.data_grid.rows[:] = filtered
+            self.data_grid.rows[:] = filtered_data
             self.data_grid.update()
         
         self._update_selection_count()
+    
+    def _format_file_size(self, size):
+        """ファイルサイズをフォーマット - files.pyと同じロジック"""
+        if size < 1024:
+            return f"{size}B"
+        elif size < 1024 * 1024:
+            return f"{size / 1024:.1f}KB"  
+        elif size < 1024 * 1024 * 1024:
+            return f"{size / 1024 / 1024:.1f}MB"
+        else:
+            return f"{size / 1024 / 1024 / 1024:.1f}GB"
     
     def _handle_selection_change(self, e):
         """ui.tableの選択変更処理"""

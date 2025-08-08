@@ -5,8 +5,7 @@ pydantic>=2.5.0
 pydantic-settings>=2.1.0
 
 # Database
-sqlalchemy>=2.0.0
-alembic>=1.12.0
+# SQLAlchemy removed - using psycopg2-binary directly
 asyncpg>=0.29.0  # PostgreSQL async driver
 psycopg2-binary>=2.9.0  # PostgreSQL sync driver
 

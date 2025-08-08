@@ -36,7 +36,7 @@ class BaseButton:
     
     # タイプB: 縁取りボタン
     TYPE_B_STYLES = {
-        'background': 'transparent',
+        'background': 'white',
         'color': '#2563eb',
         'border': '1px solid #2563eb'
     }

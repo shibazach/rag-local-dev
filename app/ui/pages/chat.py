@@ -100,16 +100,7 @@ class ChatPage:
             # ヘッダーにボタンを追加
             with panel.header_element:
                 with ui.element('div').style('display: flex; gap: 6px; margin-right: 8px;'):
-                    # TypeAの反転版（白背景、青文字）
-                    clear_button = BaseButton.create(
-                        'クリア',
-                        color=None,
-                        additional_styles={
-                            'background': 'white',
-                            'color': '#2563eb',
-                            'border': '1px solid #2563eb'
-                        }
-                    )
+                    clear_button = BaseButton.create_type_b('クリア')
                     search_button = ui.button('検索実行', color='primary').style(
                         'padding: 4px 12px; font-size: 12px;'
                     )
@@ -217,16 +208,7 @@ class ChatPage:
             # ヘッダーに履歴ボタンを追加
             with panel.header_element:
                 with ui.element('div').style('margin-right: 8px;'):
-                    # 白背景版
-                    BaseButton.create(
-                        '履歴',
-                        color=None,
-                        additional_styles={
-                            'background': 'white',
-                            'color': '#2563eb',
-                            'border': '1px solid #2563eb'
-                        }
-                    )
+                    BaseButton.create_type_b('履歴')
             
             panel.content_element.style('padding: 0;')
             

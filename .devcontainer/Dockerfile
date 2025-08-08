@@ -23,7 +23,7 @@ WORKDIR /workspace
 COPY requirements.txt /tmp/requirements.txt
 
 # pip／setuptools／wheel を最新化
-RUN pip install --upgrade pip setuptools wheel
+RUN python3 -m pip install --upgrade pip setuptools wheel
 
 # GitHub の main から huggingface_hub をインストール（1.x 系が手に入る）
 RUN python3 -m pip install --no-cache-dir \
@@ -32,6 +32,7 @@ RUN python3 -m pip install --no-cache-dir \
 # 残りの requirements を一括インストール
 RUN python3 -m pip install --no-cache-dir --ignore-installed \
       -r /tmp/requirements.txt && \
+    python3 -m pip install --no-cache-dir streamlit && \
     python3 -m pip install --no-cache-dir \
       torch=="${TorchVer}" \
       torchvision=="${TorchVisionVer}" \
@@ -44,8 +45,8 @@ RUN mkdir -p src scripts/views && \
           scripts/__init__.py \
           scripts/views/__init__.py
 
-# REM: FastAPI ポート公開（必要に応じてアンコメント）
-# EXPOSE 8000
+# REM: Streamlit ポート公開（必要に応じてアンコメント）
+# EXPOSE 8501
 
 # REM: デフォルト起動コマンド（必要に応じてアンコメント）
-# CMD ["python3", "run_app.py", "--app", "old"]
+# CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

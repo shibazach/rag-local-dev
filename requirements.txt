@@ -84,4 +84,5 @@ diskcache>=5.6.0
 
 # Configuration
 dynaconf>=3.2.0
-configparser>=6.0.0PyJWT
+configparser>=6.0.0
+PyJWT

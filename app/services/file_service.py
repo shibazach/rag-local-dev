@@ -6,6 +6,7 @@ import os
 import tempfile
 import uuid
 from pathlib import Path
+from datetime import datetime
 from typing import Dict, Any, Optional, List, BinaryIO
 from app.config import config, logger
 from app.core.db_simple import (
@@ -18,6 +19,7 @@ from app.core.db_simple import (
     delete_file,
     get_files_for_export
 )
+from app.services.upload_log_service import upload_log_service
 
 class FileService:
     """ファイル管理サービス（シンプル版）"""
@@ -34,7 +36,7 @@ class FileService:
         # サポート対象拡張子
         self.supported_extensions = set(config.ALLOWED_EXTENSIONS)
     
-    def upload_file(self, file_data: BinaryIO, filename: str, content_type: str = None) -> Dict[str, Any]:
+    def upload_file(self, file_data: BinaryIO, filename: str, content_type: str = None, session_id: str = None, log_id: str = None) -> Dict[str, Any]:
         """
         ファイルアップロード
         
@@ -42,14 +44,40 @@ class FileService:
             file_data: ファイルデータ
             filename: ファイル名
             content_type: MIMEタイプ
+            session_id: アップロードセッションID
+            log_id: アップロードログID
             
         Returns:
             アップロード結果
         """
         try:
+            # ログエントリーの作成または更新
+            if session_id and not log_id:
+                # ファイルサイズを先に取得
+                file_data.seek(0, 2)  # ファイルの最後へ
+                file_size = file_data.tell()
+                file_data.seek(0)  # ファイルの最初に戻る
+                
+                log_id = upload_log_service.create_log(
+                    session_id=session_id,
+                    file_name=filename,
+                    file_size=file_size,
+                    status="uploading"
+                )
+            
+            if log_id:
+                upload_log_service.update_log(log_id, status="uploading", progress=10)
             # ファイルバリデーション
             file_ext = Path(filename).suffix.lower()
             if file_ext not in self.supported_extensions:
+                # ログ更新（失敗）
+                if log_id:
+                    upload_log_service.update_log(
+                        log_id,
+                        status="failed",
+                        progress=0,
+                        message=f"サポートされていない拡張子です: {file_ext}"
+                    )
                 return {
                     "status": "error",
                     "message": f"サポートされていない拡張子です: {file_ext}"
@@ -66,11 +94,26 @@ class FileService:
             # 重複チェック
             existing_id = check_file_exists(checksum)
             if existing_id:
+                # 既存ファイル情報を取得して詳細を付与
+                existing_info = get_file_with_blob(existing_id)
+                # ログ更新（重複）
+                if log_id:
+                    upload_log_service.update_log(
+                        log_id,
+                        status="duplicate",
+                        progress=100,
+                        message=f"既存ファイルを検出: {filename}",
+                        metadata={"file_id": existing_id}
+                    )
                 return {
                     "status": "duplicate",
                     "message": f"ファイル '{filename}' は既に存在します",
                     "file_id": existing_id,
-                    "is_existing": True
+                    "is_existing": True,
+                    "file_name": (existing_info.get("filename") if existing_info else filename),
+                    "size": (existing_info.get("file_size") if existing_info else file_size),
+                    # stored_at を created_at として表示用に返す
+                    "created_at": (existing_info.get("created_at") if existing_info else None),
                 }
             
             # 新規ファイルとして保存
@@ -78,6 +121,13 @@ class FileService:
             
             # DB保存
             if not insert_file_blob(file_id, checksum, file_content):
+                if log_id:
+                    upload_log_service.update_log(
+                        log_id,
+                        status="failed",
+                        progress=0,
+                        message="ファイルBLOBの保存に失敗しました"
+                    )
                 return {
                     "status": "error",
                     "message": "ファイルBLOBの保存に失敗しました"
@@ -86,12 +136,28 @@ class FileService:
             if not insert_file_meta(file_id, filename, content_type or "application/octet-stream", file_size):
                 # ロールバック的な処理
                 delete_file(file_id)
+                if log_id:
+                    upload_log_service.update_log(
+                        log_id,
+                        status="failed",
+                        progress=0,
+                        message="ファイルメタデータの保存に失敗しました"
+                    )
                 return {
                     "status": "error",
                     "message": "ファイルメタデータの保存に失敗しました"
                 }
             
             logger.info(f"ファイルアップロード成功: {filename} (ID: {file_id})")
+            # ログ更新（完了）
+            if log_id:
+                upload_log_service.update_log(
+                    log_id,
+                    status="completed",
+                    progress=100,
+                    message="アップロード完了",
+                    metadata={"file_id": file_id}
+                )
             
             return {
                 "status": "success",
@@ -100,11 +166,21 @@ class FileService:
                 "file_name": filename,
                 "size": file_size,
                 "checksum": checksum,
-                "is_existing": False
+                "is_existing": False,
+                # 新規は現在時刻を返す（DB側でも NOW() 記録。UI要件: 新規は now 表示）
+                "created_at": datetime.now().isoformat()
             }
             
         except Exception as e:
             logger.error(f"ファイルアップロードエラー: {e}")
+            if 'log_id' in locals() and log_id:
+                upload_log_service.update_log(
+                    log_id,
+                    status="failed",
+                    progress=0,
+                    message="アップロード中にエラーが発生",
+                    error_detail=str(e)
+                )
             return {
                 "status": "error",
                 "message": f"アップロードに失敗しました: {str(e)}"
@@ -121,6 +197,71 @@ class FileService:
         ファイル情報取得（blob含む）
         """
         return get_file_with_blob(file_id)
+
+    def get_file_preview(self, file_id: str) -> Optional[Dict[str, Any]]:
+        """
+        プレビュー用のファイル取得
+
+        Returns:
+            - バイナリの場合: {"type": "binary", "filename": str, "mime_type": str, "data": bytes}
+            - テキストの場合: {"type": "text", "content": str, "filename": str}
+            - 取得失敗時: None
+        """
+        try:
+            info = get_file_with_blob(file_id)
+            if not info:
+                return None
+
+            filename = info.get('filename') or 'file'
+            mime_type = info.get('content_type') or 'application/octet-stream'
+            blob_data = info.get('blob_data')
+
+            if isinstance(blob_data, memoryview):
+                blob_data = blob_data.tobytes()
+
+            if not blob_data:
+                return None
+
+            # PDFやその他バイナリはそのまま返す
+            if mime_type.startswith('application/pdf') or not mime_type.startswith('text/'):
+                return {
+                    "type": "binary",
+                    "filename": filename,
+                    "mime_type": mime_type,
+                    "data": blob_data,
+                }
+
+            # テキストの場合はJSONで返す
+            try:
+                text = blob_data.decode('utf-8')
+            except UnicodeDecodeError:
+                text = blob_data.decode('utf-8', errors='ignore')
+            return {
+                "type": "text",
+                "content": text,
+                "filename": filename,
+            }
+        except Exception as e:
+            logger.error(f"プレビュー取得エラー: {e}")
+            return None
+    
+    def is_pdf_by_content(self, blob_data: bytes) -> bool:
+        """
+        バイナリデータの内容からPDFかどうかを判定
+        PDFファイルは '%PDF-' で始まる
+        """
+        if not blob_data:
+            return False
+        
+        # memoryviewの場合はbytesに変換
+        if isinstance(blob_data, memoryview):
+            blob_data = blob_data.tobytes()
+        
+        # 最初の5バイトをチェック
+        if len(blob_data) >= 5:
+            return blob_data[:5] == b'%PDF-'
+        
+        return False
     
     def delete_file(self, file_id: str) -> Dict[str, Any]:
         """
@@ -170,9 +311,12 @@ class FileService:
         """
         バッチファイルアップロード
         """
+        # 新しいセッションを作成
+        session_id = upload_log_service.create_session()
+        
         results = []
         for file in files:
-            result = self.upload_file(file.file, file.filename, file.content_type)
+            result = self.upload_file(file.file, file.filename, file.content_type, session_id=session_id)
             results.append(result)
         
         successful = [r for r in results if r["status"] == "success"]
@@ -188,7 +332,8 @@ class FileService:
                 "successful": len(successful),
                 "duplicates": len(duplicates),
                 "failed": len(failed)
-            }
+            },
+            "session_id": session_id
         }
     
     def upload_folder(self, folder_path: str, include_subfolders: bool = False) -> Dict[str, Any]:
@@ -206,6 +351,9 @@ class FileService:
                     "message": f"フォルダが見つかりません: {folder_path}"
                 }
             
+            # セッションを作成（フォルダアップロード全体用）
+            session_id = upload_log_service.create_session()
+
             files_to_upload = []
             if include_subfolders:
                 for file_path in folder.rglob("*"):
@@ -219,7 +367,7 @@ class FileService:
             results = []
             for file_path in files_to_upload:
                 with open(file_path, 'rb') as f:
-                    result = self.upload_file(f, file_path.name)
+                    result = self.upload_file(f, file_path.name, session_id=session_id)
                     results.append(result)
             
             successful = [r for r in results if r["status"] == "success"]
@@ -235,7 +383,8 @@ class FileService:
                     "successful": len(successful),
                     "duplicates": len(duplicates),
                     "failed": len(failed)
-                }
+                },
+                "session_id": session_id
             }
         except Exception as e:
             logger.error(f"フォルダアップロードエラー: {e}")

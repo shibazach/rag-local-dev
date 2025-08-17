@@ -21,9 +21,15 @@ class PaddleOCREngine(OCREngine):
         """PaddleOCRの利用可能性をチェック"""
         try:
             import paddleocr
-            return True
-        except ImportError:
-            LOGGER.warning("PaddleOCRがインストールされていません")
+            # 依存のpaddle未導入でもimportは成功する場合があるため、軽く初期化を試す
+            try:
+                _ = paddleocr.PaddleOCR(lang='en')  # 例外が出れば非対応とみなす
+                return True
+            except Exception as e:
+                LOGGER.warning(f"PaddleOCR初期化確認に失敗: {e}")
+                return False
+        except Exception as e:
+            LOGGER.warning(f"PaddleOCRインポート不可: {e}")
             return False
     
     def get_parameters(self) -> List[Dict[str, Any]]:
@@ -170,16 +176,14 @@ class PaddleOCREngine(OCREngine):
         try:
             import paddleocr
             
-            # パラメータ設定
+            # パラメータ設定（互換性のため最小限のみ渡す）
             use_angle_cls = kwargs.get('use_angle_cls', True)
             lang = kwargs.get('lang', 'japan')
-            use_gpu = kwargs.get('use_gpu', False)
             
+            # 一部のバージョンでは show_log や use_gpu 引数が存在しないため渡さない
             self._ocr = paddleocr.PaddleOCR(
                 use_angle_cls=use_angle_cls,
-                lang=lang,
-                use_gpu=use_gpu,
-                show_log=False
+                lang=lang
             )
             
         except Exception as e:

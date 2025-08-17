@@ -2,9 +2,11 @@
 
 from nicegui import ui
 from app.ui.components.layout import RAGHeader, RAGFooter, MainContentArea
-from app.ui.components.elements import CommonPanel
+from app.ui.components.elements import CommonPanel, CommonSplitter
 from app.ui.components.base.button import BaseButton
+from app.ui.components.pdf_viewer import PDFViewer, PDFViewerDialog
 from app.core.db_simple import get_file_list
+from app.services.file_service import get_file_service
 import logging
 import traceback
 
@@ -17,6 +19,12 @@ class FilesPage:
         self.original_data = []
         self.status_filter = '全て'
         self.search_query = ''
+        self.selected_files = set()
+        self.selected_count_label = None
+        self.pdf_dialog = None
+        self.pdf_viewer = None
+        self.file_service = get_file_service()
+        self.data_table = None
     
     def render(self):
         """ページレンダリング"""
@@ -116,6 +124,15 @@ class FilesPage:
                         'background-color: white; color: black; '
                         'border-radius: 0;'  # 角丸をなくす
                     ).props('outlined dense bg-white square').classes('q-ma-none')
+                    
+                    # 選択数表示
+                    with ui.element('div').style(
+                        'display: flex; align-items: center; gap: 4px; '
+                        'margin: 0 8px; color: #6b7280; font-size: 14px;'
+                    ):
+                        ui.label('選択中:').style('margin: 0;')
+                        self.selected_count_label = ui.label('0').style('margin: 0; font-weight: 600;')
+                        ui.label('件').style('margin: 0;')
             
             # ファイルデータをロード
             self._load_file_data()
@@ -123,6 +140,9 @@ class FilesPage:
             # データグリッドをコンテンツに追加
             with self.panel.content_element:
                 self._setup_data_grid()
+            
+            # PDFダイアログを初期化
+            self.pdf_dialog = PDFViewerDialog()
     
     def _load_file_data(self):
         """ファイルデータをロード - シンプルDB接続版"""
@@ -184,68 +204,121 @@ class FilesPage:
             {'name': 'created_at', 'label': '作成日時', 'field': 'created_at', 'sortable': True, 'align': 'center'}
         ]
         
+        # デバッグ：最初の3行のデータ構造を確認
+        logger.info("=== Table data structure debug ===")
+        for i, row in enumerate(self.file_data[:3]):
+            logger.info(f"Row {i}: {row}")
+            logger.info(f"Row {i} keys: {list(row.keys())}")
+        
         # ui.table作成（シンプル版）
         self.file_table = ui.table(
             columns=columns,
             rows=self.file_data,
             row_key='id',
-            pagination=20  # シンプルなページネーション設定
+            pagination=20,  # シンプルなページネーション設定
+            selection='multiple'  # 複数選択可能
         ).classes('w-full sticky-header-table').style(
             'height: 100%; margin: 0; '
         ).props('dense flat virtual-scroll :virtual-scroll-sticky-size-start="48"')
         
-        # 行ダブルクリックイベントの追加
-        self.file_table.on('row-dblclick', lambda e: self._on_row_double_click(e.args[1]))
+        # 行クリックイベント（選択切り替え）
+        self.file_table.on('row-click', self._on_row_click)
+        
+        # 行ダブルクリックイベント（PDFプレビュー）
+        self.file_table.on('row-dblclick', self._on_row_double_click)
+        
+        # デバッグ用：クリックイベントのデータ構造を確認
+        ui.run_javascript('''
+            setTimeout(() => {
+                const table = document.querySelector('.q-table');
+                if (table) {
+                    table.addEventListener('dblclick', (e) => {
+                        const row = e.target.closest('tr');
+                        if (row && row.rowIndex > 0) {
+                            console.log('=== Double click debug ===');
+                            console.log('Row index:', row.rowIndex - 1);
+                            console.log('Row HTML:', row.innerHTML);
+                            console.log('Table data available in NiceGUI:', row._vnode);
+                        }
+                    });
+                }
+            }, 1000);
+        ''')
+        
+        # 選択変更イベント（選択数更新）
+        self.file_table.on('selection', self._on_selection_change)
+        
+        # データテーブルを保持
+        self.data_table = self.file_table
+    
+
+    
+    async def _on_row_double_click(self, e):
+        """行ダブルクリック時の処理 - PDFプレビュー"""
+        if e.args:
+            logger.info(f"Double click event args in files.py: {e.args}")
+            
+            if len(e.args) > 0:
+                row_data = e.args[0]
+                logger.info(f"Row data type: {type(row_data)}")
+                logger.info(f"Row data keys: {row_data.keys() if isinstance(row_data, dict) else 'Not a dict'}")
+                logger.info(f"Row data: {row_data}")
+                
+                if isinstance(row_data, dict):
+                    # file_idは直接データに含まれているはず
+                    file_id = row_data.get('file_id')
+                    
+                    # もし見つからない場合はraw_dataから探す
+                    if not file_id and 'raw_data' in row_data:
+                        file_id = row_data.get('raw_data', {}).get('file_id')
+                    
+                    filename = row_data.get('filename', '')
+                    
+                    logger.info(f"Extracted file_id: {file_id}, filename: {filename}")
+                    logger.info(f"Available keys in row_data: {list(row_data.keys())}")
+                    
+                    if file_id:
+                        try:
+                            # ファイル情報を取得してblobデータで判定
+                            file_info = self.file_service.get_file_info(file_id)
+                            if file_info:
+                                blob_data = file_info.get('blob_data')
+                                
+                                # blobデータの内容でPDF判定
+                                is_pdf = self.file_service.is_pdf_by_content(blob_data)
+                                
+                                logger.info(f"File: {filename}, ID: {file_id}, is_pdf_by_content: {is_pdf}")
+                                
+                                if is_pdf:
+                                    if self.pdf_viewer:
+                                        logger.info(f"Loading PDF in preview pane: {filename}")
+                                        # 右ペインにPDFを表示
+                                        await self.pdf_viewer.load_pdf(file_id, self.file_service)
+                                    else:
+                                        logger.warning(f"PDF viewer not initialized")
+                                        ui.notify("PDFプレビューの初期化に失敗しました", type='error')
+                                else:
+                                    ui.notify(f"このファイルはPDFではありません: {filename}", type='warning')
+                            else:
+                                ui.notify(f"ファイル情報を取得できませんでした", type='error')
+                        except Exception as ex:
+                            logger.error(f"Error checking PDF: {ex}")
+                            ui.notify(f"エラーが発生しました: {str(ex)}", type='error')
+                    else:
+                        ui.notify("ファイルIDが見つかりません", type='error')
     
     def _create_pdf_preview_pane(self):
-        """PDFプレビューペイン（chatの右下ペインと同構造）"""
-        # ヘッダーなしの直接コンテンツ表示
-        with ui.element('div').style(
-            'width: 100%; height: 100%; '
-            'background: white; border-radius: 12px; '
-            'box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); '
-            'border: 1px solid #e5e7eb; '
-            'display: flex; flex-direction: column; '
-            'overflow: hidden;'  # paddingを削除（ocr_adjustment.pyと同じ）
-        ):
-            # PDFビューアエリア
-            self.preview_container = ui.element('div').style(
-                'height: 100%; background: #f3f4f6; '
-                'display: flex; align-items: center; justify-content: center;'
-            )
-            with self.preview_container:
-                with ui.element('div').style('text-align: center; color: #6b7280;'):
-                    ui.icon('picture_as_pdf', size='48px').style('margin-bottom: 12px;')
-                    ui.label('PDFプレビュー').style('font-size: 16px; font-weight: 500; margin-bottom: 4px;')
-                    ui.label('ファイルを選択してプレビューを表示').style('font-size: 12px;')
-    
-    def _on_row_double_click(self, row_data):
-        """行ダブルクリック時の処理"""
-        if row_data and 'raw_data' in row_data:
-            file_id = row_data['raw_data'].get('file_id')
-            filename = row_data.get('filename', '')
-            
-            # PDFファイルかチェック
-            if filename.lower().endswith('.pdf'):
-                # プレビューエリアをクリア
-                self.preview_container.clear()
-                
-                # プレビュー表示
-                with self.preview_container:
-                    with ui.element('div').style('padding: 20px; text-align: center;'):
-                        ui.icon('picture_as_pdf', size='48px', color='blue-6').style('margin-bottom: 16px;')
-                        ui.label(f'📄 {filename}').style(
-                            'font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #1f2937;'
-                        )
-                        ui.label(f'ファイルID: {file_id}').style(
-                            'font-size: 12px; color: #6b7280; margin-bottom: 16px;'
-                        )
-                        ui.label('🔍 PDFプレビュー機能は現在実装中です').style(
-                            'color: #3b82f6; font-size: 14px;'
-                        )
-                        # 将来的にはここにPDFビューアを実装
-            else:
-                ui.notify(f'PDFファイルではありません: {filename}', type='warning')
+        """PDFプレビューペイン"""
+        with CommonPanel(
+            title="📄 PDFプレビュー",
+            gradient="#334155",
+            header_color="white",
+            width="100%",
+            height="100%",
+            content_padding="0"
+        ) as panel:
+            # PDFビューアを配置
+            self.pdf_viewer = PDFViewer(panel.content_element, height="100%", width="100%")
     
     def _apply_filters(self):
         """フィルタを適用"""
@@ -271,4 +344,43 @@ class FilesPage:
         # ui.tableの行データを更新（NiceGUIの標準的な方法）
         self.file_table.rows[:] = filtered_data
         self.file_table.update()
+    
+    def _on_row_click(self, e):
+        """行クリック時の処理 - 選択切り替え"""
+        if e.args and len(e.args) > 0:
+            row_data = e.args[0]
+            file_id = row_data.get('file_id') or (row_data.get('raw_data', {}).get('file_id') if 'raw_data' in row_data else None)
+            
+            if file_id:
+                # 選択状態を切り替え
+                if file_id in self.selected_files:
+                    self.selected_files.remove(file_id)
+                else:
+                    self.selected_files.add(file_id)
+                
+                # テーブルの選択状態を更新
+                selected_rows = []
+                for row in self.file_table.rows:
+                    row_file_id = row.get('file_id') or (row.get('raw_data', {}).get('file_id') if 'raw_data' in row else None)
+                    if row_file_id and row_file_id in self.selected_files:
+                        selected_rows.append(row)
+                
+                self.file_table.selected = selected_rows
+                self._update_selection_count()
+    
+    def _on_selection_change(self, e):
+        """選択変更時の処理"""
+        self.selected_files.clear()
+        if e.args:
+            for row in e.args:
+                file_id = row.get('file_id') or (row.get('raw_data', {}).get('file_id') if 'raw_data' in row else None)
+                if file_id:
+                    self.selected_files.add(file_id)
+        
+        self._update_selection_count()
+    
+    def _update_selection_count(self):
+        """選択数を更新"""
+        if self.selected_count_label:
+            self.selected_count_label.text = str(len(self.selected_files))
     

@@ -6,14 +6,16 @@ ARG TorchVer="2.6.0+cpu"
 ARG TorchVisionVer="0.21.0+cpu"
 
 # ---------- 2. OS パッケージ ----------
+# 対話抑止
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
       build-essential git curl ca-certificates \
-      tesseract-ocr tesseract-ocr-jpn libreoffice \
-      ghostscript ocrmypdf \
-      libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 \
-      libxrender-dev libgomp1 libgcc-s1 && \
+      tesseract-ocr tesseract-ocr-jpn \
+      libreoffice ghostscript ocrmypdf qpdf \
+      fonts-noto-cjk \
+      libglib2.0-0 libgomp1 libgcc-s1 && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- 3. 作業ディレクトリ ----------
@@ -30,6 +32,7 @@ RUN python3 -m pip install --no-cache-dir \
       git+https://github.com/huggingface/huggingface_hub.git@main
 
 # 残りの requirements を一括インストール
+# ※ OpenCV は opencv-python-headless を requirements.txt 側に入れる想定
 RUN python3 -m pip install --no-cache-dir --ignore-installed \
       -r /tmp/requirements.txt && \
     python3 -m pip install --no-cache-dir streamlit && \
@@ -44,9 +47,6 @@ RUN mkdir -p src scripts/views && \
     touch src/__init__.py \
           scripts/__init__.py \
           scripts/views/__init__.py
-
-# REM: Streamlit ポート公開（必要に応じてアンコメント）
-# EXPOSE 8501
 
 # REM: デフォルト起動コマンド（必要に応じてアンコメント）
 # CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

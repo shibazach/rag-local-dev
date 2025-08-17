@@ -1,19 +1,24 @@
-# REM_CPU構成（GPUドライバ無しホストでも動く最小構成）
+# -----------------------------------------------
+# GPU（軽量）: python:3.10-slim + PyTorch CUDA wheel
+#   - ホストに NVIDIA Driver + nvidia-container-toolkit が必要
+#   - 実行時: docker run --gpus all ...
+# -----------------------------------------------
 FROM python:3.10-slim
 
 # ---------- 1. Torch バージョンを固定 ARG として宣言 ----------
-ARG TorchVer="2.6.0+cpu"
-ARG TorchVisionVer="0.21.0+cpu"
+#   CUDA 12.1 用の wheel を想定（必要に応じて cu124 等に変更可能）
+ARG TorchVer="2.6.0+cu121"
+ARG TorchVisionVer="0.21.0+cu121"
 
-# ---------- 2. OS パッケージ ----------
+# ---------- 2. OS パッケージ（trixie対応・ヘッドレス最小） ----------
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && \
-    DEBIAN_FRONTEND=noninteractive \
     apt-get install -y --no-install-recommends \
       build-essential git curl ca-certificates \
-      tesseract-ocr tesseract-ocr-jpn libreoffice \
-      ghostscript ocrmypdf \
-      libgl1-mesa-glx libglib2.0-0 libsm6 libxext6 \
-      libxrender-dev libgomp1 libgcc-s1 && \
+      tesseract-ocr tesseract-ocr-jpn \
+      libreoffice ghostscript ocrmypdf qpdf \
+      fonts-noto-cjk \
+      libglib2.0-0 libgomp1 libgcc-s1 && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- 3. 作業ディレクトリ ----------
@@ -25,18 +30,19 @@ COPY requirements.txt /tmp/requirements.txt
 # pip／setuptools／wheel を最新化
 RUN python3 -m pip install --upgrade pip setuptools wheel
 
-# GitHub の main から huggingface_hub をインストール（1.x 系が手に入る）
+# GitHub の main から huggingface_hub をインストール
 RUN python3 -m pip install --no-cache-dir \
       git+https://github.com/huggingface/huggingface_hub.git@main
 
-# 残りの requirements を一括インストール
+# 残りの requirements を一括インストール（OpenCVは headless 推奨）
 RUN python3 -m pip install --no-cache-dir --ignore-installed \
       -r /tmp/requirements.txt && \
     python3 -m pip install --no-cache-dir streamlit && \
+    # --- PyTorch CUDA 版をインストール ---
     python3 -m pip install --no-cache-dir \
       torch=="${TorchVer}" \
       torchvision=="${TorchVisionVer}" \
-      --index-url https://download.pytorch.org/whl/cpu && \
+      --index-url https://download.pytorch.org/whl/cu121 && \
     rm /tmp/requirements.txt
 
 # ---------- 5. パッケージ化準備 ----------
@@ -44,9 +50,6 @@ RUN mkdir -p src scripts/views && \
     touch src/__init__.py \
           scripts/__init__.py \
           scripts/views/__init__.py
-
-# REM: Streamlit ポート公開（必要に応じてアンコメント）
-# EXPOSE 8501
 
 # REM: デフォルト起動コマンド（必要に応じてアンコメント）
 # CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]

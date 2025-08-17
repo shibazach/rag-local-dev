@@ -1,0 +1,6 @@
+2025-08-08 15:12:35,166 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+NiceGUI ready to go on http://localhost:8081, and http://172.19.0.4:8081
+http://localhost:8081/.well-known/appspecific/com.chrome.devtools.json not found
+http://localhost:8081/.well-known/appspecific/com.chrome.devtools.json not found
+2025-08-08 15:12:59,317 - rag_system - INFO - [UploadPage] ファイル選択ボタン押下: input[type=file] をクリック
+2025-08-08 15:13:00,821 - rag_system - INFO - ファイルアップロード成功: DB14-152_ 2014年10月度研究部部内会議議事録.pdf (ID: 2eafb339-842e-4738-bd6d-bed75b24be97)

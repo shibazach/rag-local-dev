@@ -15,6 +15,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # NiceGUI統合FastAPIアプリ設定
 from nicegui import app as nicegui_app
+from pathlib import Path
 
 # NiceGUIのFastAPIインスタンスを使用
 fastapi_app = nicegui_app
@@ -29,9 +30,19 @@ fastapi_app.add_middleware(
     allow_headers=["*"],
 )
 
+# 静的ファイルマウント（外部JS/CSS提供用）
+# app/static を /app-static で配信
+static_dir = Path(__file__).parent / 'app' / 'static'
+static_dir.mkdir(parents=True, exist_ok=True)
+nicegui_app.add_static_files('/app-static', str(static_dir))
+
 # セキュリティヘッダーミドルウェア追加
 from app.utils.security import add_security_headers
 fastapi_app.middleware("http")(add_security_headers)
+
+# APIルーターの追加
+from app.api import upload_logs
+fastapi_app.include_router(upload_logs.router, prefix="/api/upload", tags=["upload"])
 
 # グローバルCSS設定（UI設計ポリシー準拠・1箇所のみ定義）
 ui.add_head_html('''
@@ -208,8 +219,8 @@ async def upload_batch_files(files: List[UploadFile] = File(...)):
         BatchUploadResponse: バッチアップロード結果
     """
     try:
-        if len(files) > 50:
-            raise HTTPException(status_code=400, detail="一度にアップロードできるファイル数は50個までです")
+        if len(files) > 100:  # 制限を100に増やす
+            raise HTTPException(status_code=400, detail="一度にアップロードできるファイル数は100個までです")
         
         file_service = get_file_service()
         result = file_service.upload_batch_files(files)
@@ -339,16 +350,7 @@ async def preview_file(file_id: str):
         logger.error(f"ファイルプレビューエラー: {e}")
         raise HTTPException(status_code=500, detail=f"ファイルプレビューに失敗しました: {str(e)}")
 
-@fastapi_app.post("/api/upload/batch")
-async def upload_batch_files(files: List[UploadFile] = File(...)):
-    """バッチファイルアップロード"""
-    try:
-        file_service = get_file_service()
-        result = file_service.upload_batch_files(files)
-        return result
-    except Exception as e:
-        logger.error(f"バッチアップロードエラー: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+
 
 @fastapi_app.post("/api/upload/folder")
 async def upload_folder(folder_path: str = Form(...), include_subfolders: bool = Form(False)):

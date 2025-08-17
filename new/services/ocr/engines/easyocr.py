@@ -242,13 +242,7 @@ class EasyOCREngine(OCREngine):
             return OCRResult(
                 success=True,
                 text=extracted_text,
-                processing_time=processing_time,
-                metadata={
-                    "engine": "EasyOCR",
-                    "languages": kwargs.get('languages', ['ja', 'en']),
-                    "lines_detected": len(result) if result else 0,
-                    "decoder": decoder
-                }
+                processing_time=processing_time
             )
             
         except Exception as e:

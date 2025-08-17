@@ -6,7 +6,9 @@ from app.ui.components.layout import RAGHeader, RAGFooter, MainContentArea
 from app.ui.components.elements import CommonPanel
 from app.ui.components.common.layout import CommonSplitter
 from app.ui.components.base.button import BaseButton
+from app.ui.components.pdf_viewer import PDFViewer
 from app.core.db_simple import get_file_list
+from app.services.file_service import get_file_service
 import logging
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,8 @@ class DataRegistrationPage:
         self.current_status_filter = ""
         self.current_search_term = ""
         self.data_grid = None
+        self.pdf_viewer = None
+        self.file_service = get_file_service()
         
     def render(self):
         """ページレンダリング"""
@@ -64,9 +68,18 @@ class DataRegistrationPage:
             # 右スプリッター
             CommonSplitter.create_vertical(splitter_id="data-reg-splitter-2", width="4px")
             
-            # 右ペイン: ファイル選択（4fr）
-            with ui.element('div').style('width: 40%; height: 100%;'):
-                self._create_file_selection_pane()
+            # 右ペイン: ファイル選択とPDFプレビュー（4fr）
+            with ui.element('div').style('width: 40%; height: 100%; display: flex; flex-direction: column; gap: 4px;'):
+                # 上部: ファイル選択（60%）
+                with ui.element('div').style('height: 60%;'):
+                    self._create_file_selection_pane()
+                
+                # 水平スプリッター
+                CommonSplitter.create_horizontal(splitter_id="data-reg-h-splitter", height="4px")
+                
+                # 下部: PDFプレビュー（40%）
+                with ui.element('div').style('height: 40%;'):
+                    self._create_pdf_preview_pane()
     
     def _create_settings_pane(self):
         """左ペイン: 処理設定（2fr）"""
@@ -224,6 +237,19 @@ class DataRegistrationPage:
                         with ui.element('div').style('text-align: center; color: #9ca3af; padding: 20px;'):
                             ui.label('処理ログがここに表示されます').style('font-size: 14px;')
     
+    def _create_pdf_preview_pane(self):
+        """PDFプレビューペイン"""
+        with CommonPanel(
+            title="📄 PDFプレビュー",
+            gradient="#334155",
+            header_color="white",
+            width="100%",
+            height="100%",
+            content_padding="0"
+        ) as panel:
+            # PDFビューアを配置
+            self.pdf_viewer = PDFViewer(panel.content_element, height="100%", width="100%")
+    
     def _create_file_selection_pane(self):
         """右ペイン: ファイル選択（5fr）- new/系準拠チェックボックス付き"""
         with CommonPanel(
@@ -307,6 +333,9 @@ class DataRegistrationPage:
         # 選択変更イベント
         self.data_grid.on('selection', self._handle_selection_change)
         
+        # 行ダブルクリックイベント（PDFプレビュー）
+        self.data_grid.on('row-dblclick', self._handle_row_double_click)
+        
         # ファイルデータをロード
         self._load_file_data()
         
@@ -379,6 +408,12 @@ class DataRegistrationPage:
                 # ui.tableを更新
                 self.data_grid.rows[:] = self.file_data
                 self.data_grid.update()
+                
+                # デバッグ：最初の3行のデータ構造を確認  
+                logger.info("=== Table data structure debug (data_registration) ===")
+                for i, row in enumerate(self.file_data[:3]):
+                    logger.info(f"Row {i}: {row}")
+                    logger.info(f"Row {i} keys: {list(row.keys())}")
             else:
                 logger.warning("No files data received from database")
                 self.file_data = []
@@ -490,10 +525,15 @@ class DataRegistrationPage:
         # 選択された行のfile_idを取得
         self.selected_files.clear()
         if e.args:
-            for row in e.args:
-                file_id = row.get('file_id')
-                if file_id:
-                    self.selected_files.add(file_id)
+            # e.argsは選択された行のリスト
+            selected_rows = e.args
+            if isinstance(selected_rows, list):
+                for row in selected_rows:
+                    # rowが辞書型かチェック
+                    if isinstance(row, dict):
+                        file_id = row.get('file_id')
+                        if file_id:
+                            self.selected_files.add(file_id)
         
         self._update_selection_count()
         self._update_process_button()
@@ -517,6 +557,54 @@ class DataRegistrationPage:
         
         self._update_selection_count()
         self._update_process_button()
+    
+    async def _handle_row_double_click(self, e):
+        """行ダブルクリック時の処理 - PDFプレビュー"""
+        if e.args:
+            # e.argsの構造をログに出力してデバッグ
+            logger.info(f"Double click event args: {e.args}")
+            
+            # 最初の引数が行データ
+            if len(e.args) > 0:
+                row_data = e.args[0]
+                logger.info(f"Row data type: {type(row_data)}")
+                logger.info(f"Row data keys: {row_data.keys() if isinstance(row_data, dict) else 'Not a dict'}")
+                logger.info(f"Row data: {row_data}")
+                
+                if isinstance(row_data, dict):
+                    file_id = row_data.get('file_id')
+                    filename = row_data.get('filename')
+                    
+                    logger.info(f"Extracted file_id: {file_id}, filename: {filename}")
+                    
+                    if file_id:
+                        try:
+                            # ファイル情報を取得してblobデータで判定
+                            file_info = self.file_service.get_file_info(file_id)
+                            if file_info:
+                                blob_data = file_info.get('blob_data')
+                                
+                                # blobデータの内容でPDF判定
+                                is_pdf = self.file_service.is_pdf_by_content(blob_data)
+                                
+                                logger.info(f"File: {filename}, ID: {file_id}, is_pdf_by_content: {is_pdf}")
+                                
+                                if is_pdf:
+                                    if self.pdf_viewer:
+                                        logger.info(f"Loading PDF preview for file: {filename} (ID: {file_id})")
+                                        await self.pdf_viewer.load_pdf(file_id, self.file_service)
+                                    else:
+                                        logger.warning(f"PDF viewer not initialized")
+                                        ui.notify("PDFプレビューの初期化に失敗しました", type='error')
+                                else:
+                                    ui.notify(f"このファイルはPDFではありません: {filename}", type='warning')
+                            else:
+                                ui.notify(f"ファイル情報を取得できませんでした", type='error')
+                        except Exception as ex:
+                            logger.error(f"Error checking PDF: {ex}")
+                            ui.notify(f"エラーが発生しました: {str(ex)}", type='error')
+                    else:
+                        ui.notify("ファイルIDが見つかりません", type='error')
     
     def _update_selection_count(self):
         """選択数表示更新"""

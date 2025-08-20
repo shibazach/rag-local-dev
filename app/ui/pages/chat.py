@@ -31,6 +31,14 @@ class ChatPage:
     
     def render(self):
         """チャット画面を描画"""
+        # 認証チェック
+        from app.auth.session import SessionManager
+        
+        current_user = SessionManager.get_current_user()
+        if not current_user:
+            ui.navigate.to('/login?redirect=/chat')
+            return
+        
         # 共通ヘッダー
         RAGHeader(show_site_name=True, current_page="chat")
         

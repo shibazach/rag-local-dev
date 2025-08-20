@@ -93,10 +93,45 @@ class LoginPage:
                 ''')
     
     def _handle_login(self, username: str, password: str):
-        """ログイン処理"""
+        """ログイン処理（シンプルセッション管理 + リダイレクト対応）"""
         if username == "admin" and password == "password":
-            from app.utils.auth import SimpleAuth
-            SimpleAuth.login(username, password)
-            ui.navigate.to('/')
+            from app.auth.session_simple import SimpleSessionManager
+            
+            # ユーザーデータ準備
+            user_data = {
+                "id": 1,
+                "username": username,
+                "email": f"{username}@example.com",
+                "is_admin": True
+            }
+            
+            # シンプルセッション作成
+            session_id = SimpleSessionManager.create_session(user_data)
+            
+            if session_id:
+                ui.notify('ログインしました', color='positive')
+                
+                # 非同期リダイレクト処理をコールバック式に変更
+                self._perform_redirect()
+            else:
+                ui.notify('ログイン処理に失敗しました', color='negative')
         else:
             ui.notify('ユーザー名またはパスワードが正しくありません', type='negative')
+    
+    def _perform_redirect(self):
+        """非同期リダイレクト処理"""
+        # JavaScriptでリダイレクトURLを取得して直接遷移
+        ui.run_javascript('''
+            // URLパラメータからリダイレクト先を取得
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect') || '/';
+            
+            // ページ遷移を実行
+            console.log('リダイレクト先:', redirectUrl);
+            window.location.href = redirectUrl;
+        ''')
+    
+    def _get_redirect_url_sync(self) -> str:
+        """同期版リダイレクトURL取得（フォールバック用）"""
+        # シンプルなフォールバック: ホームページにリダイレクト
+        return '/'

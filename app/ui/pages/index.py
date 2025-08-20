@@ -4,6 +4,7 @@
 from nicegui import ui
 from app.ui.components.layout import RAGHeader, RAGFooter, MainContentArea
 from app.ui.components.sections import HeroSection, FeatureSection, StatusSection
+from app.services.stats_service import get_system_stats
 
 class IndexPage:
     """インデックスページクラス - UI設計ポリシー準拠・共通コンポーネント使用"""
@@ -93,15 +94,27 @@ class IndexPage:
             # スペーサー（主な機能とシステム状況の間隔）
             ui.element('div').style('height: 24px;')
             
-            # ステータスセクション（共通コンポーネント）
-            StatusSection(
-                title='システム状況',
-                stats=[
-                    {'value': '42', 'label': '登録ファイル数', 'color': '#3b82f6'},
-                    {'value': '3', 'label': 'チャットセッション数', 'color': '#10b981'},
-                    {'value': '1547', 'label': '埋め込みベクトル数', 'color': '#f59e0b'}
-                ]
-            )
+            # ステータスセクション（実際のDB統計）
+            try:
+                stats_data = get_system_stats()
+                StatusSection(
+                    title='システム状況',
+                    stats=[
+                        {'value': str(stats_data['file_count']), 'label': '登録ファイル数', 'color': '#3b82f6'},
+                        {'value': str(stats_data['session_count']), 'label': 'チャットセッション数', 'color': '#10b981'},
+                        {'value': str(stats_data['total_chunks']), 'label': '埋め込みベクトル数', 'color': '#f59e0b'}
+                    ]
+                )
+            except Exception as e:
+                # エラー時はフォールバック表示
+                StatusSection(
+                    title='システム状況',
+                    stats=[
+                        {'value': '0', 'label': '登録ファイル数', 'color': '#3b82f6'},
+                        {'value': '0', 'label': 'チャットセッション数', 'color': '#10b981'},
+                        {'value': '0', 'label': '埋め込みベクトル数', 'color': '#f59e0b'}
+                    ]
+                )
 
         # 共通フッター
         RAGFooter()

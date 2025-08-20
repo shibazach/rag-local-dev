@@ -1,35 +1,11 @@
 """
-共通レイアウトコンポーネント - new/系templates準拠
+共通レイアウトコンポーネント - new/系templates準拠（実際の認証状態対応）
 """
 
 from nicegui import ui
 from typing import Optional, Dict, Any
-
-# 絶対インポートでSimpleAuthを参照（相対インポート回避）
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-
-class SimpleAuth:
-    """簡易認証システム - 一時的に再定義（インポート問題回避）"""
-    _current_user: Optional[Dict[str, Any]] = None
-    
-    @classmethod
-    def get_current_user(cls) -> Optional[Dict[str, Any]]:
-        return cls._current_user
-    
-    @classmethod
-    def is_admin(cls) -> bool:
-        user = cls.get_current_user()
-        return user and user.get("role") == "admin"
-    
-    @classmethod
-    def is_authenticated(cls) -> bool:
-        return cls._current_user is not None
-    
-    @classmethod
-    def logout(cls):
-        cls._current_user = None
+from app.auth.session import SessionManager
+from app.config import logger
 
 class RAGHeader:
     """new/準拠の共通ヘッダー（98点仕様）"""
@@ -59,11 +35,9 @@ class RAGHeader:
                 self._nav_button('🧪', '配置テスト', '/arrangement-test', self.current_page == "arrangement-test")
                 self._nav_button('⚡', '管理', '/admin', self.current_page == "admin")
             
-            # 右側：認証部分（固定幅160px・右寄せ）
-            with ui.element('div').style('width:160px;display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-right:16px;'):
-                ui.label('●').style('color:#10b981;font-size:12px;')
-                ui.label('admin').style('color:white;font-size:14px;')
-                ui.button('ログアウト', on_click=lambda: ui.navigate.to('/login')).style('background:#3b82f6;color:white;border:none;padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;')
+            # 右側：認証部分（固定幅220px・右寄せ・実際の認証状態）
+            with ui.element('div').style('width:220px;display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-right:16px;'):
+                self._render_auth_section()
     
     def _nav_button(self, icon: str, label: str, path: str, is_current: bool = False):
         """ナビゲーションボタン（現在ページ対応・レスポンシブ・ホバー効果）"""
@@ -95,6 +69,68 @@ class RAGHeader:
             }}
             </style>
             ''')
+    
+    def _render_auth_section(self):
+        """認証セクション描画（シンプルセッション対応）"""
+        try:
+            from app.auth.session import SessionManager
+            current_user = SessionManager.get_current_user()
+            
+            if current_user:
+                # ログイン済みの場合
+                username = current_user.get('username', 'ユーザー')
+                is_admin = current_user.get('is_admin', False)
+                
+                # ステータスインジケーター（緑色）
+                ui.label('●').style('color:#10b981;font-size:12px;')
+                
+                # ユーザー名表示
+                ui.label(username).style('color:white;font-size:14px;')
+                
+                # ログアウトボタン
+                ui.button('ログアウト', on_click=self._handle_logout).style(
+                    'background:#3b82f6;color:white;border:none;'
+                    'padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;'
+                )
+                
+                logger.debug(f"認証済み表示: {username} (admin: {is_admin})")
+            else:
+                # 未ログインの場合
+                # ステータスインジケーター（赤色）
+                ui.label('●').style('color:#ef4444;font-size:12px;')
+                
+                # 未ログイン表示
+                ui.label('未ログイン').style('color:white;font-size:14px;white-space:nowrap;')
+                
+                # ログインボタン
+                ui.button('ログイン', on_click=lambda: ui.navigate.to('/login')).style(
+                    'background:#10b981;color:white;border:none;'
+                    'padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;'
+                )
+                
+                logger.debug("未ログイン状態で表示")
+                
+        except Exception as e:
+            logger.error(f"認証セクション描画エラー: {e}")
+            # エラー時は未ログイン扱い
+            ui.label('●').style('color:#ef4444;font-size:12px;')
+            ui.label('認証エラー').style('color:white;font-size:14px;')
+            ui.button('ログイン', on_click=lambda: ui.navigate.to('/login')).style(
+                'background:#10b981;color:white;border:none;'
+                'padding:4px 12px;border-radius:4px;font-size:12px;cursor:pointer;'
+            )
+    
+    def _handle_logout(self):
+        """ログアウト処理（シンプルセッション対応）"""
+        try:
+            from app.auth.session_simple import SimpleSessionManager
+            SimpleSessionManager.destroy_current_session()
+            ui.notify('ログアウトしました', color='positive')
+            ui.navigate.to('/')  # ログアウト後はトップページへ
+            logger.info("🗑️ シンプルログアウト実行")
+        except Exception as e:
+            logger.error(f"❌ シンプルログアウトエラー: {e}")
+            ui.notify('ログアウト処理でエラーが発生しました', color='negative')
 
 
 class RAGFooter:

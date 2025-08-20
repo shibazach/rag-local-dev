@@ -6,14 +6,15 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any, List, Optional
 import asyncio
-from sqlalchemy import text, create_engine
+from app.core.db_simple import fetch_all, fetch_one, execute
 from app.config import logger, config
 
 class UploadLogService:
     """アップロードログ管理サービス"""
     
     def __init__(self):
-        self.engine = create_engine(config.DATABASE_URL)
+        """初期化（db_simple.pyを使用するため特別な処理不要）"""
+        pass
     
     def create_session(self) -> str:
         """新しいアップロードセッションを作成"""
@@ -36,28 +37,26 @@ class UploadLogService:
         """
         try:
             log_id = str(uuid.uuid4())
-            query = text("""
+            query = """
                 INSERT INTO upload_logs (
                     id, session_id, file_name, file_size, 
                     status, message, metadata
                 ) VALUES (
-                    :id, :session_id, :file_name, :file_size,
-                    :status, :message, :metadata
+                    %s, %s, %s, %s, %s, %s, %s
                 )
-            """)
+            """
             
-            with self.engine.connect() as conn:
-                conn.execute(query, {
-                    "id": log_id,
-                    "session_id": session_id,
-                    "file_name": file_name,
-                    "file_size": file_size,
-                    "status": status,
-                    "message": message or "",
-                    "metadata": json.dumps(metadata or {})
-                })
-                conn.commit()
+            params = (
+                log_id,
+                session_id,
+                file_name,
+                file_size,
+                status,
+                message or "",
+                json.dumps(metadata or {})
+            )
             
+            execute(query, params)
             logger.info(f"Upload log created: {log_id} for {file_name}")
             return log_id
             
@@ -66,6 +65,7 @@ class UploadLogService:
             return None
     
     def update_log(
+        self,
         log_id: str,
         status: str = None,
         progress: int = None,
@@ -76,40 +76,41 @@ class UploadLogService:
         """アップロードログを更新"""
         try:
             updates = []
-            params = {"id": log_id}
+            params = []
             
             if status is not None:
-                updates.append("status = :status")
-                params["status"] = status
+                updates.append("status = %s")
+                params.append(status)
                 
             if progress is not None:
-                updates.append("progress = :progress")
-                params["progress"] = progress
+                updates.append("progress = %s")
+                params.append(progress)
                 
             if message is not None:
-                updates.append("message = :message")
-                params["message"] = message
+                updates.append("message = %s")
+                params.append(message)
                 
             if error_detail is not None:
-                updates.append("error_detail = :error_detail")
-                params["error_detail"] = error_detail
+                updates.append("error_detail = %s")
+                params.append(error_detail)
                 
             if metadata is not None:
-                updates.append("metadata = :metadata")
-                params["metadata"] = json.dumps(metadata)
+                updates.append("metadata = %s")
+                params.append(json.dumps(metadata))
             
             if not updates:
                 return True
                 
-            query = text(f"""
+            # log_idをparamsの最後に追加
+            params.append(log_id)
+            
+            query = f"""
                 UPDATE upload_logs 
                 SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP
-                WHERE id = :id
-            """)
+                WHERE id = %s
+            """
             
-            with self.engine.connect() as conn:
-                conn.execute(query, params)
-                conn.commit()
+            execute(query, tuple(params))
             return True
             
         except Exception as e:
@@ -124,22 +125,21 @@ class UploadLogService:
             ログのリスト
         """
         try:
-            query = text("""
+            query = """
                 SELECT 
                     id, session_id, file_name, file_size,
                     status, progress, message, error_detail,
                     metadata, created_at, updated_at
                 FROM upload_logs
                 ORDER BY created_at DESC
-                LIMIT :limit OFFSET :offset
-            """)
+                LIMIT %s OFFSET %s
+            """
             
-            with self.engine.connect() as conn:
-                result = conn.execute(query, {"limit": limit, "offset": offset})
+            result = fetch_all(query, (limit, offset))
             
             logs = []
             for row in result:
-                log_data = dict(row._mapping)
+                log_data = dict(row)
                 # JSONデータをパース
                 if log_data.get("metadata"):
                     try:
@@ -157,22 +157,21 @@ class UploadLogService:
     def get_session_logs(self, session_id: str) -> List[Dict[str, Any]]:
         """特定セッションのログを取得"""
         try:
-            query = text("""
+            query = """
                 SELECT 
                     id, session_id, file_name, file_size,
                     status, progress, message, error_detail,
                     metadata, created_at, updated_at
                 FROM upload_logs
-                WHERE session_id = :session_id
+                WHERE session_id = %s
                 ORDER BY created_at ASC
-            """)
+            """
             
-            with self.engine.connect() as conn:
-                result = conn.execute(query, {"session_id": session_id})
+            result = fetch_all(query, (session_id,))
             
             logs = []
             for row in result:
-                log_data = dict(row._mapping)
+                log_data = dict(row)
                 if log_data.get("metadata"):
                     try:
                         log_data["metadata"] = json.loads(log_data["metadata"])
@@ -191,7 +190,7 @@ class UploadLogService:
         未完了（pending / uploading / processing）のログを取得（最新順）
         """
         try:
-            query = text("""
+            query = """
                 SELECT 
                     id, session_id, file_name, file_size,
                     status, progress, message, error_detail,
@@ -199,13 +198,14 @@ class UploadLogService:
                 FROM upload_logs
                 WHERE status IN ('pending', 'uploading', 'processing')
                 ORDER BY updated_at DESC, created_at DESC
-                LIMIT :limit
-            """)
-            with self.engine.connect() as conn:
-                result = conn.execute(query, {"limit": limit})
+                LIMIT %s
+            """
+            
+            result = fetch_all(query, (limit,))
+            
             logs = []
             for row in result:
-                log_data = dict(row._mapping)
+                log_data = dict(row)
                 if log_data.get("metadata"):
                     try:
                         log_data["metadata"] = json.loads(log_data["metadata"])
@@ -230,22 +230,21 @@ class UploadLogService:
         while True:
             try:
                 # 最後のチェック以降の新しいログを取得
-                query = text("""
+                query = """
                     SELECT 
                         id, session_id, file_name, file_size,
                         status, progress, message, error_detail,
                         metadata, created_at, updated_at
                     FROM upload_logs
-                    WHERE created_at > :last_check OR updated_at > :last_check
+                    WHERE created_at > %s OR updated_at > %s
                     ORDER BY created_at DESC
-                """)
+                """
                 
-                with self.engine.connect() as conn:
-                    result = conn.execute(query, {"last_check": last_check})
+                result = fetch_all(query, (last_check, last_check))
                 
                 new_logs = []
                 for row in result:
-                    log_data = dict(row._mapping)
+                    log_data = dict(row)
                     if log_data.get("metadata"):
                         try:
                             log_data["metadata"] = json.loads(log_data["metadata"])

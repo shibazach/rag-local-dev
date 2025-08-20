@@ -9,10 +9,11 @@ class AdminPage:
     
     def render(self):
         """ページレンダリング"""
-        from app.utils.auth import SimpleAuth
+        from app.auth.session import SessionManager
         
-        if not SimpleAuth.is_authenticated():
-            ui.navigate.to('/login')
+        current_user = SessionManager.get_current_user()
+        if not current_user or not current_user.get('is_admin', False):
+            ui.navigate.to('/login?redirect=/admin')
             return
         
         # 共通ヘッダー

@@ -23,7 +23,8 @@ class PaddleOCREngine(OCREngine):
             import paddleocr
             # 依存のpaddle未導入でもimportは成功する場合があるため、軽く初期化を試す
             try:
-                _ = paddleocr.PaddleOCR(lang='en')  # 例外が出れば非対応とみなす
+                # ログ抑制して軽く初期化確認
+                _ = paddleocr.PaddleOCR(lang='en', show_log=False)  # 例外が出れば非対応とみなす
                 return True
             except Exception as e:
                 LOGGER.warning(f"PaddleOCR初期化確認に失敗: {e}")
@@ -180,10 +181,11 @@ class PaddleOCREngine(OCREngine):
             use_angle_cls = kwargs.get('use_angle_cls', True)
             lang = kwargs.get('lang', 'japan')
             
-            # 一部のバージョンでは show_log や use_gpu 引数が存在しないため渡さない
+            # ログ抑制とパラメータ設定
             self._ocr = paddleocr.PaddleOCR(
                 use_angle_cls=use_angle_cls,
-                lang=lang
+                lang=lang,
+                show_log=False  # DEBUGログを抑制
             )
             
         except Exception as e:

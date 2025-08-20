@@ -21,15 +21,18 @@
 
    // Pytestの設定
    "python.testing.pytestEnabled": true,
-"python.testing.pytestArgs": [
-    "tests"
-],
-"html.autoClosingTags": false,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
 
-"editor.formatOnSave": false,
-"editor.formatOnSaveMode": "file",
-"html.format.enable": false,
-"css.format.enable": false,
-"javascript.format.enable": false
+    // Pythonインタープリターの指定（Dockerコンテナ内のパスに合わせて変更）
+    //"python.defaultInterpreterPath": "/usr/bin/python3",
 
+    // フォーマット関連
+    "html.autoClosingTags": false,
+    "editor.formatOnSave": false,
+    "editor.formatOnSaveMode": "file",
+    "html.format.enable": false,
+    "css.format.enable": false,
+    "javascript.format.enable": false,
 }

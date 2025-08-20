@@ -103,9 +103,12 @@ class SessionManager:
             "last_activity": datetime.utcnow().isoformat()
         }
         
-        # NiceGUIストレージに保存
-        if ui.storage.user:
+        # NiceGUIストレージに保存（初期化も含む）
+        if hasattr(ui, 'storage') and ui.storage.user is not None:
             ui.storage.user['user'] = session_data
+        else:
+            # ストレージが未初期化の場合のフォールバック処理
+            logger.warning("NiceGUIストレージが未初期化のため、セッション保存をスキップ")
         
         logger.info(f"NiceGUIセッション作成: {user_data.get('username', 'unknown')}")
         return session_id
@@ -194,14 +197,14 @@ class SessionManager:
     
     @staticmethod
     def get_current_user() -> Optional[Dict[str, Any]]:
-        """現在のユーザー情報取得（統合版）"""
-        # NiceGUIストレージから確認（優先）
-        if hasattr(ui, 'storage') and ui.storage.user:
-            user_data = ui.storage.user.get('user')
-            if user_data:
-                return user_data
-        
-        return None
+        """現在のユーザー情報取得（シンプル統合版）"""
+        try:
+            # シンプルセッション管理を使用
+            from app.auth.session_simple import SimpleSessionManager
+            return SimpleSessionManager.get_current_user()
+        except Exception as e:
+            logger.error(f"❌ シンプル認証確認エラー: {e}")
+            return None
     
     @staticmethod
     def cleanup_expired_sessions():

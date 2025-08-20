@@ -28,6 +28,14 @@ class FilesPage:
     
     def render(self):
         """ページレンダリング"""
+        # 認証チェック
+        from app.auth.session import SessionManager
+        
+        current_user = SessionManager.get_current_user()
+        if not current_user:
+            ui.navigate.to('/login?redirect=/files')
+            return
+        
         RAGHeader(current_page="files")
         
         with MainContentArea():

@@ -9,13 +9,21 @@ ARG TorchVisionVer="0.21.0+cpu"
 # 対話抑止
 ENV DEBIAN_FRONTEND=noninteractive
 
+# システムライブラリ:
+#   - build-essential, git, curl: 基本的なビルドツール
+#   - tesseract-ocr-*: Tesseract OCRエンジン
+#   - libreoffice, ghostscript, ocrmypdf: 文書処理
+#   - libgl1-mesa-dev, libxext6, libxrender-dev: OpenGL/X11（PaddleOCR/EasyOCR用）
+#   - libglib2.0-0t64, libsm6, libgomp1: ランタイムライブラリ
+
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends \
       build-essential git curl ca-certificates \
       tesseract-ocr tesseract-ocr-jpn \
       libreoffice ghostscript ocrmypdf qpdf \
       fonts-noto-cjk \
-      libglib2.0-0 libgomp1 libgcc-s1 && \
+      libglib2.0-0 libgomp1 libgcc-s1 \
+      libgl1-mesa-dev libglib2.0-0t64 libsm6 libxext6 libxrender-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- 3. 作業ディレクトリ ----------

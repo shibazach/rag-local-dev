@@ -2,10 +2,15 @@
 RAG System - FastAPI + NiceGUI Router
 ルーティング定義のみ、具体的実装は各ui.pagesに分離
 """
+# PaddleOCR/PaddlePaddleログ抑制（import前に設定）
+import os
+os.environ['FLAGS_logtostderr'] = '0'
+os.environ['FLAGS_v'] = '-1'  # PaddlePaddleログレベル抑制
+os.environ['PADDLE_LOG_LEVEL'] = 'ERROR'  # ERROR以上のみ表示
+
 from fastapi import FastAPI, File, Form, UploadFile, HTTPException
 from nicegui import ui
 import sys
-import os
 from typing import List
 from app.config import logger
 from app.services.file_service import get_file_service
@@ -129,6 +134,13 @@ def ocr_adjustment():
     """OCR調整ページ"""
     from app.ui.pages.ocr_adjustment import OCRAdjustmentPage
     OCRAdjustmentPage().render()
+
+@ui.page('/dict-edit/{filename}')
+def dict_edit_page(filename: str, label: str = None, return_url: str = None):
+    """辞書編集専用ページ"""
+    from app.ui.pages.dict_editor import DictEditorPage
+    editor = DictEditorPage()
+    editor.render(filename, label, return_url)
 
 @ui.page('/data-registration')
 def data_registration():

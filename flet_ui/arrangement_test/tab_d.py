@@ -33,15 +33,15 @@ class TabD:
         # 説明エリア
         explanation = ft.Container(
             content=ft.Column([
-                ft.Text("⚡ 完璧配置版 - 青枠内完全収納縦スライダー", 
+                ft.Text("⚡ 純粋配置版 - 余白なし320px vs 36px勝負", 
                        size=16, weight=ft.FontWeight.BOLD),
                 ft.Container(height=4),
                 ft.Row([
-                    ft.Text("🔴 赤枠: 32px縦スライダー (はみ出しなし)", size=12, color=ft.Colors.RED_700),
+                    ft.Text("🔴 赤枠: 320px縦スライダー", size=12, color=ft.Colors.RED_700),
                     ft.Container(width=16),
-                    ft.Text("🔵 青枠: ガイドライン (36px幅)", size=12, color=ft.Colors.BLUE_700),
+                    ft.Text("🔵 青枠: 36px純粋幅（余白なし）", size=12, color=ft.Colors.BLUE_700),
                     ft.Container(width=16),
-                    ft.Text("✅ 完成: 赤枠完全収納 + 青枠中央配置", size=12, color=ft.Colors.GREEN_700),
+                    ft.Text("📐 調整: 144+32=176px", size=12, color=ft.Colors.GREEN_700),
                 ], alignment=ft.MainAxisAlignment.CENTER)
             ]),
             padding=ft.padding.all(12),
@@ -116,19 +116,32 @@ class TabD:
     def _create_overlay_layer(self) -> ft.Container:
         """オーバーレイレイヤー: 余白なし純粋配置で縦スライダー中央配置"""
         
-        # 縦スライダー作成（赤枠付きで可視化）
+        # 縦スライダー作成（デバッグ情報付き）
         def create_vslider(value=50, on_change=None):
-            return ft.Container(
-                width=SL_LEN,    # 320px
-                height=SL_THICK, # 22px
-                content=ft.Slider(
-                    min=1, max=5, value=value, divisions=4, label="{value}",
-                    rotate=math.pi / 2, on_change=on_change, width=300
-                ),
-                # 赤枠で可視化（位置確認用）
-                border=ft.border.all(2, ft.Colors.RED),
-                bgcolor="#ffcccc"  # 半透明赤背景
+            # デバッグ用テキスト追加
+            debug_text = ft.Text(
+                f"C:{SL_LEN}px\nS:300px\nL:-176px", 
+                size=8, color=ft.Colors.BLACK, weight=ft.FontWeight.BOLD
             )
+            return ft.Stack([
+                ft.Container(
+                    width=SL_LEN,    # 320px（Container）
+                    height=SL_THICK, # 22px
+                    content=ft.Slider(
+                        min=1, max=5, value=value, divisions=4, label="{value}",
+                        rotate=math.pi / 2, on_change=on_change, width=300  # 300px（Slider）
+                    ),
+                    # 赤枠で可視化（位置確認用）
+                    border=ft.border.all(2, ft.Colors.RED),
+                    bgcolor="#ffcccc"  # 半透明赤背景
+                ),
+                ft.Container(
+                    content=debug_text,
+                    top=0, right=0,  # 右上にデバッグ情報表示
+                    bgcolor=ft.Colors.WHITE,
+                    padding=2
+                )
+            ])
         
         left_slider = create_vslider(self.left_split_level, self.on_left_change)
         right_slider = create_vslider(self.right_split_level, self.on_right_change)
@@ -138,7 +151,12 @@ class TabD:
             # padding完全削除で純粋配置
             content=ft.Column([
                 ft.Row([
-                    ft.Container(width=36),  # 左ガイド36px（余白なし）
+                    # 左ガイド36px（寸法表示付き）
+                    ft.Container(
+                        width=36,
+                        content=ft.Text("L\n36px", size=8, color=ft.Colors.BLUE, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+                        alignment=ft.alignment.center
+                    ),
                     # 中央領域（余白なし）
                     ft.Container(
                         expand=True,
@@ -149,16 +167,29 @@ class TabD:
                             controls=[
                                 ft.Container(
                                     content=left_slider,
-                                    left=-((SL_LEN - 32) // 2),  # (320-32)÷2=144px
+                                    left=-176,  # 176px左にオフセット
                                 ),
                                 ft.Container(
                                     content=right_slider,
-                                    right=-((SL_LEN - 32) // 2),  # 玉32pxを青枠内に残す
+                                    right=-176,  # 176px右にオフセット
+                                ),
+                                # 中央基準線（デバッグ用）
+                                ft.Container(
+                                    width=2,
+                                    height=400,
+                                    bgcolor=ft.Colors.GREEN,
+                                    content=ft.Text("CENTER", size=8, color=ft.Colors.WHITE, rotate=math.pi/2),
+                                    alignment=ft.alignment.center
                                 ),
                             ],
                         ),
                     ),
-                    ft.Container(width=36),  # 右ガイド36px（余白なし）
+                    # 右ガイド36px（寸法表示付き）
+                    ft.Container(
+                        width=36,
+                        content=ft.Text("R\n36px", size=8, color=ft.Colors.BLUE, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
+                        alignment=ft.alignment.center
+                    ),
                 ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH),
                 
                 # 下部エリア（横スライダーと同じ高さ）

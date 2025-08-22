@@ -7,6 +7,7 @@ OCR調整ページの4分割+3スライダー構造の動作検証
 
 import flet as ft
 import math
+from ..shared.style_constants import CommonComponents
 
 # スライダー定数（縦操作領域確保版）
 SL_LEN = 320      # 縦スライダーの"横幅"（= Container.width）

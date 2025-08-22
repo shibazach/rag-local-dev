@@ -97,12 +97,14 @@ class TabD:
                 ft.Row([
                     # 左ガイド（青枠）純粋36px
                     ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                                border=ft.border.all(1, ft.Colors.BLUE_300)),
+                                border=ft.border.all(1, ft.Colors.BLUE_300),
+                                disabled=True),
                     # 中央領域（1パネル）
                     self.main_panel,
                     # 右ガイド（青枠）純粋36px
                     ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                                border=ft.border.all(1, ft.Colors.BLUE_300)),
+                                border=ft.border.all(1, ft.Colors.BLUE_300),
+                                disabled=True),
                 ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH),
                 
                 # 下部横スライダーエリア
@@ -139,12 +141,13 @@ class TabD:
             # padding完全削除で純粋配置
             content=ft.Column([
                 ft.Row([
-                    # 左ガイド36px（寸法表示付き・透明化）
+                    # 左ガイド36px（イベント処理無効化）
                     ft.Container(
                         width=36,
                         content=ft.Text("L\n36px", size=8, color=ft.Colors.BLUE, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
                         alignment=ft.alignment.center,
-                        bgcolor=ft.Colors.TRANSPARENT  # マウスイベント通過
+                        bgcolor=ft.Colors.TRANSPARENT,
+                        disabled=True  # マウスイベントを背後に伝播
                     ),
                     # 中央領域（余白なし）
                     ft.Container(
@@ -172,12 +175,13 @@ class TabD:
                             ],
                         ),
                     ),
-                    # 右ガイド36px（寸法表示付き・透明化）
+                    # 右ガイド36px（イベント処理無効化）
                     ft.Container(
                         width=36,
                         content=ft.Text("R\n36px", size=8, color=ft.Colors.BLUE, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
                         alignment=ft.alignment.center,
-                        bgcolor=ft.Colors.TRANSPARENT  # マウスイベント通過
+                        bgcolor=ft.Colors.TRANSPARENT,
+                        disabled=True  # マウスイベントを背後に伝播
                     ),
                 ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH),
                 

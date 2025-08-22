@@ -75,49 +75,31 @@ class TabD:
         )
     
     def _create_base_layout(self) -> ft.Container:
-        """本体レイアウト: 左右ガイド + 中央4分割パネル + 下部横スライダー"""
+        """本体レイアウト: 左右ガイド + 中央1パネル + 下部横スライダー（余白なし）"""
         
-        # 4つのペイン作成
-        self.top_left_container = ft.Container(expand=1)
-        self.bottom_left_container = ft.Container(expand=1)  
-        self.top_right_container = ft.Container(expand=1)
-        self.bottom_right_container = ft.Container(expand=1)
-        
-        # 左右カラム作成  
-        self.left_column = ft.Column([
-            self.top_left_container,
-            ft.Divider(height=1, thickness=1, color=ft.Colors.GREY_400),
-            self.bottom_left_container
-        ], spacing=0, expand=True)
-        
-        self.right_column = ft.Column([
-            self.top_right_container,
-            ft.Divider(height=1, thickness=1, color=ft.Colors.GREY_400),
-            self.bottom_right_container  
-        ], spacing=0, expand=True)
-        
-        # メイン行作成（中央4分割）
-        self.main_row = ft.Row([
-            ft.Container(content=self.left_column, expand=1),
-            ft.VerticalDivider(width=1, thickness=1, color=ft.Colors.GREY_400),
-            ft.Container(content=self.right_column, expand=1)
-        ], spacing=0, expand=True)
+        # 中央パネル（シンプル化）
+        self.main_panel = ft.Container(
+            content=ft.Text("メインパネル（テスト用）", size=20, weight=ft.FontWeight.BOLD),
+            expand=True,
+            alignment=ft.alignment.center,
+            bgcolor=ft.Colors.GREY_100
+        )
         
         # 横スライダー作成
         horizontal_slider = self._create_h_slider("左右分割", self.horizontal_level, self.on_horizontal_change)
         
         return ft.Container(
             expand=True,
-            padding=8,
+            # padding完全削除
             content=ft.Column([
-                # メイン行: 左ガイド + 中央4分割 + 右ガイド
+                # メイン行: 左ガイド + 中央1パネル + 右ガイド（余白なし）
                 ft.Row([
-                    # 左ガイド（青枠）
+                    # 左ガイド（青枠）純粋36px
                     ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
                                 border=ft.border.all(1, ft.Colors.BLUE_300)),
-                    # 中央領域（4分割パネル）
-                    ft.Container(content=self.main_row, expand=True),
-                    # 右ガイド（青枠）
+                    # 中央領域（1パネル）
+                    self.main_panel,
+                    # 右ガイド（青枠）純粋36px
                     ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
                                 border=ft.border.all(1, ft.Colors.BLUE_300)),
                 ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH),
@@ -132,13 +114,13 @@ class TabD:
         )
     
     def _create_overlay_layer(self) -> ft.Container:
-        """オーバーレイレイヤー: 本体と同じ構成で縦スライダーを中央配置"""
+        """オーバーレイレイヤー: 余白なし純粋配置で縦スライダー中央配置"""
         
         # 縦スライダー作成（赤枠付きで可視化）
         def create_vslider(value=50, on_change=None):
             return ft.Container(
-                width=SL_LEN,    # 見た目の"縦の長さ"
-                height=SL_THICK, # 太さ
+                width=SL_LEN,    # 320px
+                height=SL_THICK, # 22px
                 content=ft.Slider(
                     min=1, max=5, value=value, divisions=4, label="{value}",
                     rotate=math.pi / 2, on_change=on_change, width=300
@@ -153,33 +135,33 @@ class TabD:
         
         return ft.Container(
             expand=True,
-            padding=8,  # base_layerと同じ余白で位置同期
+            # padding完全削除で純粋配置
             content=ft.Column([
                 ft.Row([
-                    ft.Container(width=36),  # 左ガイドと同じ幅
-                    # 中央領域と同じ高さの箱（expand=True で自動高さ）
+                    ft.Container(width=36),  # 左ガイド36px（余白なし）
+                    # 中央領域（余白なし）
                     ft.Container(
                         expand=True,
-                        # 縦スライダーを中央配置 & 左右にはみ出し
+                        # 縦スライダーを純粋計算で配置
                         content=ft.Stack(
                             alignment=ft.alignment.center,        # 縦中央揃え
                             clip_behavior=ft.ClipBehavior.NONE,   # はみ出し許可
                             controls=[
                                 ft.Container(
                                     content=left_slider,
-                                    left=-((SL_LEN - 32) // 2),  # 320px-32px=288px, 288/2=144px
+                                    left=-((SL_LEN - 32) // 2),  # (320-32)÷2=144px
                                 ),
                                 ft.Container(
                                     content=right_slider,
-                                    right=-((SL_LEN - 32) // 2),  # 玉32pxを画面内に残す
+                                    right=-((SL_LEN - 32) // 2),  # 玉32pxを青枠内に残す
                                 ),
                             ],
                         ),
                     ),
-                    ft.Container(width=36),  # 右ガイドと同じ幅
+                    ft.Container(width=36),  # 右ガイド36px（余白なし）
                 ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH),
                 
-                # 下部エリア（横スライダーと同じ高さの透明エリア）
+                # 下部エリア（横スライダーと同じ高さ）
                 ft.Container(height=32),
             ], expand=True, spacing=0),
         )
@@ -212,32 +194,17 @@ class TabD:
         )
     
     def _update_layout(self):
-        """レイアウトを実際に更新"""
-        # 比率計算
-        left_top_ratio, left_bottom_ratio = self.ratios[self.left_split_level] 
-        right_top_ratio, right_bottom_ratio = self.ratios[self.right_split_level]
-        left_ratio, right_ratio = self.ratios[self.horizontal_level]
-        
-        # ペイン内容更新
-        self.top_left_container.content = self._create_demo_pane("OCR設定", ft.Colors.BLUE_100, "🔧")
-        self.bottom_left_container.content = self._create_demo_pane("OCR結果", ft.Colors.GREEN_100, "📄")
-        self.top_right_container.content = self._create_demo_pane("詳細設定", ft.Colors.ORANGE_100, "⚙️")
-        self.bottom_right_container.content = self._create_demo_pane("PDFプレビュー", ft.Colors.PURPLE_100, "📖")
-        
-        # 比率適用
-        self.top_left_container.expand = left_top_ratio
-        self.bottom_left_container.expand = left_bottom_ratio
-        self.top_right_container.expand = right_top_ratio  
-        self.bottom_right_container.expand = right_bottom_ratio
-        
-        # 左右比率
-        self.left_column.expand = left_ratio
-        self.right_column.expand = right_ratio
+        """レイアウトを実際に更新（シンプル1パネル版）"""
+        # メインパネル更新（シンプル版）
+        self.main_panel.content = ft.Text(
+            f"テストパネル\n左: {self.left_split_level}\n右: {self.right_split_level}\n横: {self.horizontal_level}",
+            size=16, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER
+        )
         
         # UI更新
         try:
-            if hasattr(self, 'main_row') and self.main_row.page:
-                self.main_row.update()
+            if hasattr(self, 'main_panel') and self.main_panel.page:
+                self.main_panel.update()
         except:
             pass
     

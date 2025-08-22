@@ -27,7 +27,7 @@ class AppState:
             "upload": "アップロード",
             "ocr": "OCR調整",
             "data": "データ登録",
-            "test": "配置テスト",
+            "arrangement_test": "配置テスト",
             "admin": "管理"
         }
     
@@ -62,8 +62,20 @@ class AppState:
             return show_home_page()
         elif self.current_page == "files":
             # ファイル管理ページ（コンテンツのみ）
-            from ..files.page_simple import show_files_page
-            return show_files_page()
+            from ..files.page import show_files_page
+            return show_files_page(self.page)
+        elif self.current_page == "upload":
+            # アップロードページ（コンテンツのみ）
+            from ..upload.page import show_upload_page
+            return show_upload_page(self.page)
+        elif self.current_page == "ocr":
+            # OCR調整ページ（コンテンツのみ）
+            from ..ocr_adjustment.page import show_ocr_adjustment_page
+            return show_ocr_adjustment_page(self.page)
+        elif self.current_page == "arrangement_test":
+            # 配置テストページ（コンテンツのみ）
+            from ..arrangement_test.page import show_arrangement_test_page
+            return show_arrangement_test_page(self.page)
         else:
             # その他のページはプレースホルダー
             display_name = self.page_names.get(self.current_page, self.current_page)
@@ -85,7 +97,7 @@ class AppState:
                     content=self.show_page_content(),
                     expand=True
                 ),
-                create_status_bar()
+                # create_status_bar()  # REM: ステータスバー表示停止
             ], spacing=0, expand=True)
         )
         self.page.update()

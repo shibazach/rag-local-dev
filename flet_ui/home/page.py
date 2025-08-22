@@ -6,6 +6,7 @@ Flet RAGシステム - ホームページ
 
 import flet as ft
 from .components import create_hero_section, create_features_section, create_stats_section
+from ..shared.style_constants import CommonComponents
 
 
 def show_home_page():
@@ -15,8 +16,8 @@ def show_home_page():
     Returns:
         ft.Container: ホームページコンテナ
     """
-    return ft.Container(
-        content=ft.Column([
+    return CommonComponents.create_standard_container(
+        CommonComponents.create_standard_column([
             # ヒーローセクション
             create_hero_section(),
             
@@ -25,7 +26,5 @@ def show_home_page():
             
             # システム状況セクション
             create_stats_section(),
-            
-        ], spacing=0),
-        expand=True
+        ])
     )

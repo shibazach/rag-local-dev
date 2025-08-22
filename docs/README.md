@@ -1,86 +1,76 @@
-# R&D RAGシステム ドキュメント
+# Cursor Rules - UI開発ガイドライン
 
-## 📁 ドキュメント構成
+このディレクトリには、RAGシステムのUI開発における設計ポリシーとガイドラインが含まれています。
 
-### 概要ドキュメント
-- [プロジェクト概要](./PROJECT_OVERVIEW.md) - システムの全体像と目的
-- [現在の状態](./CURRENT_STATUS.md) - 統合後の現在の状態
-- [技術選択比較分析](./技術選択比較分析.md) - 技術スタックの選定理由
-- [現在の課題と対応方針](./現在の課題と対応方針.md) - 既知の課題と解決方針
+## ドキュメント構成
 
-### アーキテクチャ
-- [システムアーキテクチャ](./architecture/ARCHITECTURE.md) - 全体設計
-- [設計原則](./architecture/DESIGN_PRINCIPLES.md) - 開発指針
-- [マルチモーダルLLM統合計画](./architecture/MULTIMODAL_LLM_INTEGRATION_PLAN.md) - 将来拡張
+### 📋 [ui-design-policy.md](./ui-design-policy.md)
+- UI設計の基本原則
+- 情報密度最大化の方針
+- 階層的CSS設計
+- 実装チェックリスト
+- 禁止事項
 
-### 統合プロセス
-- [統合計画書](./integration/INTEGRATION_PLAN.md) - 4システム統合の全体計画
-- [統合完了報告](./integration/INTEGRATION_COMPLETE.md) - 統合結果サマリー
-- [Phase 1報告](./integration/PHASE1_COMPLETION_REPORT.md) - エンタープライズ基盤
-- [Phase 2報告](./integration/PHASE2_COMPLETION_REPORT.md) - RAG機能
-- [Phase 3報告](./integration/PHASE3_COMPLETION_REPORT.md) - セキュリティ強化
-- [Phase 4報告](./integration/PHASE4_COMPLETION_REPORT.md) - 統合完成
-- [Phase 5報告](./integration/PHASE5_COMPLETION_REPORT.md) - クリーンアップ
+### 🎯 [nicegui-best-practices.md](./nicegui-best-practices.md)
+- NiceGUI特有のベストプラクティス
+- DOM構造の理解
+- 公式ドキュメント準拠のルール
+- コンポーネント階層構造
+- 技術仕様とデフォルト値
 
-### コンポーネントガイド
-- [BaseDataGridView マニュアル](./components/BaseDataGridView_Manual.md) - 高機能テーブルコンポーネント
+### 🎨 [css-guidelines.md](./css-guidelines.md)
+- CSS責任分離の原則
+- ファイル構成戦略
+- 共通設定の管理方法
+- paddingゼロ実現のノウハウ
+- デバッグ手順
 
-### APIドキュメント
-- [API リファレンス](./api/API_REFERENCE.md) - RESTful APIとWebSocket API仕様
+### 🏗️ [component-architecture.md](./component-architecture.md)
+- コンポーネント設計原則
+- ディレクトリ構造
+- 実験駆動開発のフロー
+- 継承ベースのアーキテクチャ
+- arrangement_test.pyの活用方法
 
-### 開発ガイド
-- [開発ガイド](./guides/DEVELOPMENT_GUIDE.md) - 環境構築、開発ルール、テスト方法
+### 🔧 [troubleshooting.md](./troubleshooting.md)
+- よくあるエラーと解決法
+- 白画面問題の診断
+- JavaScriptエラーの対処
+- 高さ制御の問題解決
+- デバッグテクニック
 
-## 📚 関連資料
+## 使用方法
 
-### 開発ルール
-- `.cursor/rules` - カーソルエディタ用開発ルール
-- `.kiro/steering` - プロジェクト方針
+1. **新機能開発時**: まず[component-architecture.md](./component-architecture.md)を参照し、arrangement_test.pyで実験
+2. **CSS実装時**: [css-guidelines.md](./css-guidelines.md)のルールに従う
+3. **NiceGUI使用時**: [nicegui-best-practices.md](./nicegui-best-practices.md)の公式推奨パターンを確認
+4. **問題発生時**: [troubleshooting.md](./troubleshooting.md)で解決方法を探す
+5. **全体方針確認**: [ui-design-policy.md](./ui-design-policy.md)で基本原則を確認
 
-### システム構成
-```
-app/                        # メインアプリケーション
-├── config/                 # 設定管理
-├── core/                   # コア機能（DB、モデル）
-├── auth/                   # 認証・セキュリティ
-├── services/               # ビジネスロジック
-│   ├── ocr/               # OCR処理
-│   ├── llm/               # LLM処理
-│   └── embedding/         # ベクトル検索
-├── ui/                    # ユーザーインターフェース
-│   ├── components/        # UIコンポーネント
-│   └── pages/            # ページ定義
-├── utils/                 # ユーティリティ
-└── prompts/              # プロンプトテンプレート
-```
+## 重要な原則
 
-## 🚀 クイックスタート
+### 🚫 絶対禁止
+- `!important`の使用
+- 複数ファイルでのCSS重複定義
+- 推測によるデフォルト値設定
+- 本番ページでの場当たり的調整
 
-1. **環境設定**
-   ```bash
-   cp .env.example .env
-   # 必要な環境変数を設定
-   ```
+### ✅ 必須事項
+- ブラウザ開発者ツールでの実測
+- arrangement_test.pyでの事前実験
+- 公式ドキュメントの確認
+- バックアップの作成
 
-2. **依存関係インストール**
-   ```bash
-   pip install -r requirements.txt
-   ```
+## メンテナンス
 
-3. **データベース初期化**
-   ```bash
-   cd app
-   python -c "from core.database import init_database; import asyncio; asyncio.run(init_database())"
-   ```
+これらのドキュメントは実際の開発経験に基づいて作成されており、新しい知見が得られた場合は随時更新してください。
 
-4. **アプリケーション起動**
-   ```bash
-   python main.py
-   ```
-
-## 📖 詳細情報
-
-各ドキュメントを参照して、システムの詳細を理解してください。
+更新時は以下を心がけてください：
+- 実証済みの内容のみ記載
+- 具体的なコード例を含める
+- エラーメッセージは正確に記載
+- 日付を含めて記録する
 
 ---
-*最終更新: 2025年1月*
+
+*最終更新: 2025年8月6日*

@@ -24,6 +24,7 @@ def create_placeholder_layout(page, current_page, current_user, page_name, displ
         logout_callback (function): ログアウトコールバック
         navigate_to_home_callback (function): ホームに戻るコールバック
     """
+    page.bgcolor = ft.Colors.GREY_50  # 全ページ統一背景色
     page.controls.clear()
     
     page.add(
@@ -40,8 +41,8 @@ def create_placeholder_layout(page, current_page, current_user, page_name, displ
                 content=create_placeholder_content(page_name, display_name, navigate_to_home_callback),
                 expand=True
             ),
-            # ステータスバー
-            create_status_bar()
+            # REM: ステータスバー表示停止
+            # create_status_bar()
         ], spacing=0, expand=True)
     )
     page.update()

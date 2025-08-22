@@ -14,6 +14,7 @@ def main(page: ft.Page):
     アプリケーションの状態管理を AppState に委譲
     """
     page.title = "RAG System - Refactored"
+    page.bgcolor = ft.Colors.GREY_50  # 全ページ統一背景色
     page.padding = 0
     
     # アプリケーション状態管理オブジェクト作成

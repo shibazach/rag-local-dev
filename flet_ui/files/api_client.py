@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Flet RAGシステム - ファイル管理API クライアント（実DB接続版）
-既存のapp/services/file_service.pyを活用
+Flet RAGシステム - ファイル管理クライアント（Flet専用版）
+NiceGUIとは完全分離したデータ構造
 """
 
 from typing import Dict, List, Optional, Any
@@ -10,8 +10,8 @@ from app.config import logger
 import math
 
 
-class FilesDBClient:
-    """ファイル管理DBクライアント（既存構造活用版）"""
+class FletFilesClient:
+    """ファイル管理クライアント（Flet専用・NiceGUI完全分離版）"""
     
     def __init__(self):
         self.file_service = get_file_service()
@@ -29,7 +29,7 @@ class FilesDBClient:
             search: ファイル名検索
             
         Returns:
-            ファイル一覧データ（NiceGUIレスポンス形式）
+            Flet専用データ構造（NiceGUI非依存）
         """
         try:
             # フィルタリングがある場合は全データを取得してクライアント側でフィルタリング
@@ -48,11 +48,11 @@ class FilesDBClient:
             
             if result.get("status") == "success" or files_data:  # 成功またはデータがある場合
                 
-                # NiceGUI形式に変換
+                # Flet専用形式に変換
                 processed_files = []
                 for file_data in files_data:
                     processed_files.append({
-                        "id": file_data.get("file_id"),  # file_idキーを使用
+                        "id": file_data.get("file_id"),  # DB直接取得
                         "file_name": file_data.get("filename", "Unknown"),
                         "file_size": file_data.get("file_size", 0),
                         "status": file_data.get("status", "unknown"),

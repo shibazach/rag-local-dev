@@ -253,3 +253,4 @@
 2025-08-22 07:26:00,493 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-22 08:00:09,268 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-22 08:58:25,419 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-22 09:20:58,699 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag

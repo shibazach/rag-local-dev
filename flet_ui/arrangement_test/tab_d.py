@@ -10,7 +10,7 @@ import math
 
 # スライダー定数（縦操作領域確保版）
 SL_LEN = 320      # 縦スライダーの"横幅"（= Container.width）
-SL_HEIGHT = 300   # 縦スライダーの"縦操作領域"（= Container.height）
+SL_HEIGHT = 200   # 縦スライダーの"縦操作領域"（= Container.height）
 SL_THICK = 22     # スライダーの"太さ"（参考値）
 GUIDE_WIDTH = 36  # 青枠（ガイドライン）の幅
 GUIDE_CENTER = 18 # 青枠の中央位置（36px / 2）
@@ -38,11 +38,11 @@ class TabD:
                        size=16, weight=ft.FontWeight.BOLD),
                 ft.Container(height=4),
                 ft.Row([
-                    ft.Text("🔴 赤枠: 320px×300px（操作可能）", size=12, color=ft.Colors.RED_700),
+                    ft.Text("🔴 赤枠: 200px×200px（操作領域確保）", size=12, color=ft.Colors.RED_700),
                     ft.Container(width=16),
                     ft.Text("🔵 青枠: 36px（中央基準）", size=12, color=ft.Colors.BLUE_700),
                     ft.Container(width=16),
-                    ft.Text("✅ 成功: -140px配置", size=12, color=ft.Colors.GREEN_700),
+                    ft.Text("✅ 完了: -84px配置・横共通コンポーネント適用", size=12, color=ft.Colors.GREEN_700),
                 ], alignment=ft.MainAxisAlignment.CENTER)
             ]),
             padding=ft.padding.all(12),
@@ -104,8 +104,10 @@ class TabD:
             ft.Container(content=self.right_column, expand=1)
         ], spacing=0, expand=True)
         
-        # 横スライダー作成
-        horizontal_slider = self._create_h_slider("左右分割", self.horizontal_level, self.on_horizontal_change)
+        # 横スライダー作成（OCR調整と同じ共通コンポーネント使用）
+        horizontal_slider = CommonComponents.create_horizontal_slider(
+            self.horizontal_level, self.on_horizontal_change
+        )
         
         return ft.Container(
             expand=True,
@@ -140,11 +142,11 @@ class TabD:
         # 縦スライダー作成（縦操作領域確保版）
         def create_vslider(value=50, on_change=None):
             return ft.Container(
-                width=SL_LEN,      # 320px（横幅）
-                height=SL_HEIGHT,  # 300px（縦操作領域）
+                width=200,         # Sliderの実サイズに合わせる
+                height=200,        # 操作可能領域確保
                 content=ft.Slider(
                     min=1, max=5, value=value, divisions=4,
-                    rotate=math.pi / 2, on_change=on_change, width=300
+                    rotate=math.pi / 2, on_change=on_change, width=200, height=30
                 ),
                 # 赤枠で可視化（位置確認用）
                 border=ft.border.all(2, ft.Colors.RED),
@@ -166,11 +168,11 @@ class TabD:
                     controls=[
                         ft.Container(
                             content=left_slider,
-                            left=-140,  # 176px-36px=140px（青枠削除分調整）
+                            left=-84,   # (200-32)/2=84px（200px基準）
                         ),
                         ft.Container(
                             content=right_slider,
-                            right=-140,  # 青枠36px分の基準位置修正
+                            right=-84,  # (200-32)/2=84px（200px基準）
                         ),
                     ],
                 ),
@@ -193,16 +195,7 @@ class TabD:
             margin=ft.margin.all(4), padding=ft.padding.all(8)
         )
     
-    def _create_h_slider(self, label: str, value: int, on_change) -> ft.Container:
-        """横スライダー作成（ラベルなし・中央配置精密版）"""
-        return ft.Container(
-            content=ft.Slider(
-                min=1, max=5, value=value, divisions=4,
-                on_change=on_change, width=300
-            ),
-            alignment=ft.alignment.center,
-            expand=True
-        )
+
     
     def _update_layout(self):
         """レイアウトを実際に更新（4分割版）"""

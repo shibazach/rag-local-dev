@@ -61,12 +61,11 @@ class FilesPage:
             if self.right_container.page:
                 self.right_container.update()
         except Exception as e:
-            print(f"[DEBUG] Container update error: {e}")
+            # Container update error occurred
+            pass
 
     def create_main_layout(self):
         """メインレイアウト作成（共通コンポーネント統一版）"""
-        print("[DEBUG] Creating files page with unified common components")
-
         try:
             # FilesTableにpage参照を設定
             self.files_table.page = self.page
@@ -102,8 +101,6 @@ class FilesPage:
             self.main_container = PageStyles.create_complete_layout_with_slider(
                 top_row, self.width_slider
             )
-
-            print("[DEBUG] Unified common components layout created successfully")
             
         except Exception as ex:
             import traceback

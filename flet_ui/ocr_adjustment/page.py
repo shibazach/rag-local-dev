@@ -24,7 +24,7 @@ class OCRAdjustmentPage:
 
     def create_main_layout(self):
         """メインレイアウト作成（4分割 + 3スライダー）"""
-        print("[DEBUG] OCR Adjustment create_main_layout called")
+
         
         # 4つのペイン作成
         top_left = self._create_ocr_settings_pane()
@@ -160,17 +160,17 @@ class OCRAdjustmentPage:
     def on_left_split_change(self, e):
         """左ペイン分割スライダー変更"""
         self.left_split_level = int(float(e.control.value))
-        print(f"[DEBUG] Left split level changed to: {self.left_split_level}")
+
 
     def on_right_split_change(self, e):
         """右ペイン分割スライダー変更"""
         self.right_split_level = int(float(e.control.value))
-        print(f"[DEBUG] Right split level changed to: {self.right_split_level}")
+
 
     def on_horizontal_change(self, e):
         """左右分割スライダー変更"""
         self.horizontal_level = int(float(e.control.value))
-        print(f"[DEBUG] Horizontal level changed to: {self.horizontal_level}")
+
 
 def show_ocr_adjustment_page(page: ft.Page = None):
     """OCR調整ページ表示関数"""

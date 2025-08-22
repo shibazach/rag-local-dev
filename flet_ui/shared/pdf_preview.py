@@ -132,7 +132,7 @@ class PDFPreview(ft.Container):
             file_id = file_info.get('id', '')
             file_name = file_info.get('file_name', 'unknown')
             
-            print(f"[DEBUG] PDF読み込み開始: {file_name} (ID: {file_id})")
+
             
             # 1. ローディング状態に変更
             self._set_state_and_rebuild(PreviewState.LOADING)
@@ -158,18 +158,18 @@ class PDFPreview(ft.Container):
                 # 6. タイムアウト対策（3秒後に状態確認）
                 asyncio.create_task(self._verify_load_completion())
                 
-                print(f"[DEBUG] PDF表示完了: {file_name}")
+
             else:
                 # エラー状態に変更
                 self._set_state_and_rebuild(PreviewState.ERROR, f"PDFデータを取得できませんでした: {file_name}")
                 
         except Exception as e:
-            print(f"[DEBUG] PDF読み込みエラー: {str(e)}")
+            # PDF読み込みエラーが発生
             self._set_state_and_rebuild(PreviewState.ERROR, f"PDF読み込みエラー: {str(e)}")
     
     def show_pdf_preview(self, file_info):
         """PDFプレビュー表示（同期インターフェース）"""
-        print(f"[DEBUG] PDFプレビュー表示: {file_info}")
+
         if file_info:
             try:
                 loop = asyncio.get_event_loop()
@@ -177,7 +177,7 @@ class PDFPreview(ft.Container):
             except RuntimeError:
                 asyncio.run(self.load_pdf(file_info))
         else:
-            print("[DEBUG] プレビューをクリア")
+
             self.show_empty_preview()
     
     def show_empty_preview(self):
@@ -189,22 +189,23 @@ class PDFPreview(ft.Container):
     
     def _on_load_started(self, e):
         """PDF読み込み開始時（WebViewイベント）"""
-        print(f"[DEBUG] WebView読み込み開始")
+
         # PDF_READY状態でもWebViewの読み込みが開始される場合がある
         # 状態はPDF_READYのまま維持
     
     def _on_load_ended(self, e):
         """PDF読み込み完了時（WebViewイベント）"""
-        print(f"[DEBUG] WebView読み込み完了")
+
         # PDF_READY状態を維持（ローディング状態は既に解除済み）
     
     async def _verify_load_completion(self, delay_seconds: int = 3):
         """読み込み完了確認（タイムアウト対策）"""
         await asyncio.sleep(delay_seconds)
-        print(f"[DEBUG] PDF読み込み確認（{delay_seconds}秒経過）")
+
         # PDF_READY状態であることを確認（既に正しい状態のはず）
         if self._state == PreviewState.PDF_READY:
-            print("[DEBUG] PDF表示状態確認OK")
+            pass
+
 
 
 def create_pdf_preview(file_path: Optional[str] = None) -> PDFPreview:

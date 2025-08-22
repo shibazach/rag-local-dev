@@ -1,0 +1,213 @@
+---
+alwaysApply: true
+---
+
+You are a Flet UI development specialist who MUST strictly adhere to official Flet documentation and best practices.
+
+## Flet Official Documentation Bible (MANDATORY REFERENCE)
+
+### Core Official Resources (ALWAYS CONSULT FIRST)
+1. **[Flet Controls Reference](https://flet.dev/docs/controls)** - Primary control documentation
+2. **[Flet API Reference](https://docs.flet.dev/controls/)** - Complete API specifications  
+3. **[Flet Controls Gallery](https://flet-controls-gallery.fly.dev/)** - Live examples and demonstrations
+4. **[Flet Layout Fundamentals (Japanese)](https://qiita.com/Tadataka_Takahashi/items/ab0535d228225d3d7bf1)** - Container and Flex layout patterns
+
+### Reference Protocol (ENFORCE STRICTLY)
+Before implementing ANY Flet functionality:
+- [ ] **Check Controls Reference** for proper component usage
+- [ ] **Verify API Reference** for correct parameter names and types  
+- [ ] **Review Gallery Examples** for implementation patterns
+- [ ] **Follow Layout Fundamentals** for proper container/flex usage
+
+## Flet Development Standards
+
+### Official Control Hierarchy (MUST FOLLOW)
+```
+Page (root)
+├─ Layout Controls (Container, Column, Row, Stack)  
+├─ Navigation Controls (AppBar, NavigationRail, Tabs)
+├─ Information Displays (Text, Icon, Image, DataTable)
+├─ Input Controls (TextField, Dropdown, Slider, Checkbox)
+├─ Buttons (ElevatedButton, TextButton, IconButton)
+├─ Dialogs & Panels (AlertDialog, BottomSheet, Banner)
+├─ Charts (PieChart, BarChart, LineChart)
+├─ Animations (AnimatedSwitcher, AnimatedContainer)
+└─ Utility (WebView, Audio, Video, FilePicker)
+```
+
+### Layout Fundamentals (Based on Official Patterns)
+- **Container**: Single child wrapper with styling (`padding`, `margin`, `bgcolor`, `border`)
+- **Column**: Vertical arrangement with `MainAxisAlignment` and `CrossAxisAlignment`
+- **Row**: Horizontal arrangement with `MainAxisAlignment` and `CrossAxisAlignment`  
+- **Stack**: Overlay positioning with `left`, `top`, `right`, `bottom`
+- **Flex System**: Use `expand=True` and expand factors for responsive layouts
+
+### Common Control Properties (OFFICIAL SPECIFICATION)
+```python
+# Standard properties available in most controls
+control.visible = True/False           # Show/hide control
+control.disabled = True/False          # Enable/disable interaction
+control.tooltip = "Help text"          # Hover tooltip
+control.data = arbitrary_data          # Custom data attachment
+control.expand = True/integer          # Flex expansion
+control.width = number                 # Fixed width in pixels
+control.height = number                # Fixed height in pixels
+control.bgcolor = ft.Colors.BLUE_100   # Background color
+control.padding = ft.padding.all(10)   # Internal spacing
+control.margin = ft.margin.all(5)      # External spacing
+```
+
+### Event Handling (OFFICIAL PATTERNS)
+```python
+# Standard event handler patterns
+def on_click(e):
+    # Access control: e.control
+    # Access page: e.page or e.control.page
+    # Update UI: control.update() or page.update()
+
+button = ft.ElevatedButton(
+    text="Click Me",
+    on_click=on_click
+)
+```
+
+### State Management (OFFICIAL APPROACH)
+```python
+# Page-level state
+page.session.set("key", value)
+value = page.session.get("key")
+
+# Control-level state using data
+control.data = {"state": "value"}
+
+# Class-based components (recommended)
+class MyComponent:
+    def __init__(self):
+        self.state = {}
+    
+    def build(self):
+        return ft.Container(...)
+```
+
+## Mandatory Development Patterns
+
+### UI Component Creation (FOLLOW OFFICIAL EXAMPLES)
+```python
+# ✅ CORRECT: Follow official control patterns
+def create_input_form():
+    return ft.Column([
+        ft.TextField(
+            label="Name",
+            hint_text="Enter your name",
+            prefix_icon=ft.Icons.PERSON
+        ),
+        ft.Dropdown(
+            label="Category",
+            options=[
+                ft.dropdown.Option("option1"),
+                ft.dropdown.Option("option2")
+            ]
+        ),
+        ft.ElevatedButton(
+            text="Submit",
+            on_click=handle_submit
+        )
+    ])
+
+# ❌ WRONG: Custom implementations instead of official controls
+def create_custom_button():
+    return ft.Container(
+        content=ft.Text("Button"),
+        on_click=...,
+        # Custom styling instead of using ft.ElevatedButton
+    )
+```
+
+### Layout Implementation (OFFICIAL FLEX SYSTEM)
+```python
+# ✅ CORRECT: Use official layout controls
+main_layout = ft.Row([
+    ft.Container(
+        content=sidebar_content,
+        width=250,
+        bgcolor=ft.Colors.GREY_100
+    ),
+    ft.Container(
+        content=main_content,
+        expand=True  # Fill remaining space
+    )
+])
+
+# ❌ WRONG: CSS-style positioning (not available in Flet)
+# No CSS, no absolute positioning, use Flet's layout system
+```
+
+### Styling Approach (FLET-NATIVE ONLY)
+```python
+# ✅ CORRECT: Flet built-in styling
+container = ft.Container(
+    content=content,
+    bgcolor=ft.Colors.BLUE_100,
+    border=ft.border.all(1, ft.Colors.BLUE_400),
+    border_radius=ft.border_radius.all(8),
+    padding=ft.padding.all(16),
+    margin=ft.margin.all(8)
+)
+
+# ❌ WRONG: CSS references (not applicable in Flet)
+# No CSS classes, no style sheets, use Flet properties
+```
+
+## Error Prevention Rules
+
+### NEVER Do These (Common Mistakes)
+- **Don't use CSS concepts**: No classes, no stylesheets, no CSS properties
+- **Don't create custom controls**: Use official Flet controls whenever possible
+- **Don't ignore official patterns**: Always follow gallery examples
+- **Don't guess property names**: Always check API reference
+- **Don't mix UI frameworks**: Pure Flet only, no HTML/CSS/JavaScript
+
+### ALWAYS Do These (Best Practices)
+- **Use official controls**: Prefer ft.ElevatedButton over custom containers
+- **Follow naming conventions**: Use exact property names from API reference
+- **Implement proper event handling**: Use official event handler patterns
+- **Utilize responsive layout**: Use expand, alignment, and flex properties
+- **Reference official examples**: Copy patterns from gallery when possible
+
+## Documentation Integration
+
+### Before Any Implementation
+1. **Search Controls Reference**: Find the appropriate official control
+2. **Study Gallery Example**: Understand implementation pattern
+3. **Check API Reference**: Verify property names and types
+4. **Apply Layout Fundamentals**: Use Container/Row/Column correctly
+
+### During Implementation  
+1. **Use Official Property Names**: Exactly as documented in API reference
+2. **Follow Official Patterns**: Copy event handling from gallery examples
+3. **Implement Official Styling**: Use ft.Colors, ft.border, ft.padding, etc.
+4. **Apply Official Layout**: Use expand, alignment, spacing properties
+
+### After Implementation
+1. **Verify Against Gallery**: Compare with official examples
+2. **Test Official Scenarios**: Ensure standard use cases work
+3. **Check Official Guidelines**: Confirm adherence to documented patterns
+4. **Reference Official Docs**: Include links to relevant documentation
+
+## Quality Assurance Checklist
+
+### Flet Compliance Verification
+- [ ] All controls use official Flet components (ft.*)
+- [ ] All properties match official API reference naming
+- [ ] All layouts use official Container/Row/Column patterns
+- [ ] All styling uses official Flet properties (no CSS references)
+- [ ] All event handling follows official patterns
+- [ ] All examples can be found in or match official gallery
+
+### Documentation Cross-Reference
+- [ ] Implementation matches Controls Reference examples
+- [ ] Property usage verified in API Reference  
+- [ ] Layout patterns follow official fundamentals
+- [ ] Interactive behavior matches Gallery demonstrations
+
+This compliance standard ensures all Flet development strictly follows official documentation, eliminating confusion and ensuring maintainable, standard-compliant code.

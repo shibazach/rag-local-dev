@@ -79,7 +79,7 @@ class FilesTable:
 
     def create_table_widget(self):
         """ファイルテーブルウィジェット作成（既存メソッド名保持 + 新共通コンポーネント使用）"""
-        print("[DEBUG] Creating files table widget with new common components")
+
         
         try:
             # ページネーション作成（動的更新対応版）
@@ -130,7 +130,7 @@ class FilesTable:
             )
             
             # デバッグ: APIレスポンス確認
-            print(f"[DEBUG] API Response: {self.files_data}")
+
             
             # ページネーション情報更新
             pagination = self.files_data.get('pagination', {})
@@ -139,9 +139,7 @@ class FilesTable:
             self.current_page = pagination.get('current_page', self.current_page)
             
             # デバッグ: ページネーション情報確認
-            print(f"[DEBUG] Pagination Info:")
-            print(f"  total_pages: {self.total_pages}")
-            print(f"  total_count: {self.total_count}")
+
             print(f"  current_page: {self.current_page}")
             print(f"  files_count: {len(self.files_data.get('files', []))}")
             
@@ -237,14 +235,14 @@ class FilesTable:
         if 1 <= page <= self.total_pages:
             self.current_page = page
             self.load_files()
-            print(f"[DEBUG] Page changed to: {self.current_page}")
+
 
     def _on_per_page_change(self, per_page: int):
         """1ページあたり件数変更処理（新共通コンポーネント対応）"""
         self.per_page = per_page
         self.current_page = 1
         self.load_files()
-        print(f"[DEBUG] Per page changed to: {self.per_page}")
+
 
     def _on_status_change(self, e):
         """ステータス変更処理（新共通コンポーネント対応）"""
@@ -286,9 +284,10 @@ class FilesTable:
                     self.pagination_controls.update()
             except AssertionError as e:
                 # Container がまだページに追加されていない場合はスキップ
-                print(f"[DEBUG] Pagination update skipped: {e}")
+                # Pagination update skipped: Container not yet added to page
+                pass
             
-            print(f"[DEBUG] Pagination updated: {self.total_count} items, {self.total_pages} pages")
+
 
 
 # 既存の古いクラス・関数は完全削除（新共通コンポーネントに統合済み）

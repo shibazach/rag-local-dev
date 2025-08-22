@@ -1,0 +1,6 @@
+ERROR:    [Errno 98] error while attempting to bind on address ('0.0.0.0', 8500): address already in use
+🚀 Flet RAGシステム起動中（リファクタリング版）...
+📍 URL: http://localhost:8500
+📝 ログイン情報: admin / password
+📁 構造: コンポーネント分離済み
+==================================================

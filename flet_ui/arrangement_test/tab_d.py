@@ -8,8 +8,8 @@ OCR調整ページの4分割+3スライダー構造の動作検証
 import flet as ft
 import math
 
-# スライダー定数
-SL_LEN = 320      # 縦スライダーの"縦の長さ"（= Slider.width）
+# スライダー定数（操作性重視・現実的サイズ）
+SL_LEN = 320      # 縦スライダーの"縦の長さ"（= Slider.width）操作性確保
 SL_THICK = 22     # スライダーの太さ（= Slider.height）
 GUIDE_WIDTH = 36  # 青枠（ガイドライン）の幅
 GUIDE_CENTER = 18 # 青枠の中央位置（36px / 2）
@@ -33,15 +33,15 @@ class TabD:
         # 説明エリア
         explanation = ft.Container(
             content=ft.Column([
-                ft.Text("⚡ 隙間なし完璧版 - 真のオーバーレイ縦スライダー", 
+                ft.Text("⚡ 完璧配置版 - 青枠内完全収納縦スライダー", 
                        size=16, weight=ft.FontWeight.BOLD),
                 ft.Container(height=4),
                 ft.Row([
-                    ft.Text("🔴 赤枠: 縦スライダー可視化枠", size=12, color=ft.Colors.RED_700),
+                    ft.Text("🔴 赤枠: 32px縦スライダー (はみ出しなし)", size=12, color=ft.Colors.RED_700),
                     ft.Container(width=16),
                     ft.Text("🔵 青枠: ガイドライン (36px幅)", size=12, color=ft.Colors.BLUE_700),
                     ft.Container(width=16),
-                    ft.Text("🎯 目標: 赤枠中央 = 青枠中央", size=12, color=ft.Colors.GREEN_700),
+                    ft.Text("✅ 完成: 赤枠完全収納 + 青枠中央配置", size=12, color=ft.Colors.GREEN_700),
                 ], alignment=ft.MainAxisAlignment.CENTER)
             ]),
             padding=ft.padding.all(12),
@@ -141,7 +141,7 @@ class TabD:
                 height=SL_THICK, # 太さ
                 content=ft.Slider(
                     min=1, max=5, value=value, divisions=4, label="{value}",
-                    rotate=math.pi / 2, on_change=on_change
+                    rotate=math.pi / 2, on_change=on_change, width=300
                 ),
                 # 赤枠で可視化（位置確認用）
                 border=ft.border.all(2, ft.Colors.RED),
@@ -167,11 +167,11 @@ class TabD:
                             controls=[
                                 ft.Container(
                                     content=left_slider,
-                                    left=-(GUIDE_CENTER + SL_THICK // 2),
+                                    left=-((SL_LEN - 32) // 2),  # 320px-32px=288px, 288/2=144px
                                 ),
                                 ft.Container(
                                     content=right_slider,
-                                    right=-(GUIDE_CENTER + SL_THICK // 2),
+                                    right=-((SL_LEN - 32) // 2),  # 玉32pxを画面内に残す
                                 ),
                             ],
                         ),
@@ -244,18 +244,18 @@ class TabD:
     def on_left_change(self, e):
         """左スライダー変更（実動作）"""
         self.left_split_level = int(float(e.control.value))
-        print(f"[DEBUG] 左分割レベル: {self.left_split_level}")
+
         self._update_layout()
     
     def on_right_change(self, e):
         """右スライダー変更（実動作）"""
         self.right_split_level = int(float(e.control.value))
-        print(f"[DEBUG] 右分割レベル: {self.right_split_level}") 
+ 
         self._update_layout()
     
     def on_horizontal_change(self, e):
         """横スライダー変更（実動作）"""
         self.horizontal_level = int(float(e.control.value))
-        print(f"[DEBUG] 左右分割レベル: {self.horizontal_level}")
+
         self._update_layout()
 

@@ -198,7 +198,7 @@ class TabD:
         return ft.Container(
             content=ft.Slider(
                 min=1, max=5, value=value, divisions=4,
-                on_change=on_change, width=200
+                on_change=on_change, width=300
             ),
             alignment=ft.alignment.center,
             expand=True

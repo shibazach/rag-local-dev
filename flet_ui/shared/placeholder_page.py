@@ -5,6 +5,7 @@ Flet RAGシステム - プレースホルダーページ（改良版）
 """
 
 import flet as ft
+from .common_buttons import create_light_button, create_action_button
 from .menu import create_header
 from .status_bar import create_status_bar
 
@@ -84,15 +85,13 @@ def create_placeholder_content(page_name, display_name, navigate_to_home_callbac
             ),
             ft.Container(height=30),
             ft.Row([
-                ft.ElevatedButton(
+                create_action_button(
                     "ホームに戻る",
                     on_click=lambda _: navigate_to_home_callback(),
-                    bgcolor=ft.Colors.BLUE_600,
-                    color=ft.Colors.WHITE,
                     width=200
                 ),
                 ft.Container(width=20),
-                ft.OutlinedButton(
+                create_light_button(
                     "機能一覧",
                     on_click=lambda _: navigate_to_home_callback(),
                     width=200

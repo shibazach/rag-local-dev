@@ -5,6 +5,7 @@ Flet RAGシステム - ログインページコンポーネント
 """
 
 import flet as ft
+from flet_ui.shared.common_buttons import create_action_button
 
 
 def show_login_page(page: ft.Page, on_login_success_callback):
@@ -60,11 +61,9 @@ def show_login_page(page: ft.Page, on_login_success_callback):
             password_field,
             message_text,
             ft.Container(height=20),
-            ft.ElevatedButton(
+            create_action_button(
                 "ログイン",
                 on_click=handle_login,
-                bgcolor=ft.Colors.BLUE_600,
-                color=ft.Colors.WHITE,
                 width=300
             ),
         ], 

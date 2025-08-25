@@ -30,30 +30,28 @@ def create_ocrmypdf_panel_content() -> ft.Control:
         if param_type == "select":
             options = param.get("options", [])
             dropdown_options = [ft.dropdown.Option(key=str(opt["value"]), text=opt["label"]) for opt in options]
-            return ft.Dropdown(options=dropdown_options, value=str(param_default), width=200)
+            return ft.Container(
+                ft.Dropdown(options=dropdown_options, value=str(param_default), width=200),
+                margin=ft.margin.symmetric(vertical=2)
+            )
         elif param_type == "number":
-            return ft.TextField(value=str(param_default), width=80, height=32, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter())
+            return ft.TextField(value=str(param_default), width=80, height=40, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter(), text_align=ft.TextAlign.CENTER)
         elif param_type in ["boolean", "checkbox"]:
             return ft.Switch(value=bool(param_default))
         else:
-            return ft.TextField(value=str(param_default), width=150, height=32)
+            return ft.TextField(value=str(param_default), width=150, height=40)
     
     def _create_row(param: dict) -> ft.Control:
         """1行形式でパラメータを表示"""
         return ft.Row([
-            ft.Container(ft.Text(f"{param['label']}:", size=12, weight=ft.FontWeight.W_500), width=120, alignment=ft.alignment.center_left),
+            ft.Container(ft.Text(f"{param['label']}:", size=13, weight=ft.FontWeight.W_500), width=120, alignment=ft.alignment.center_left),
             _create_control(param),
-            ft.Text(param.get("description", ""), size=10, color=ft.Colors.GREY_600, expand=True)
-        ], spacing=8)
+            ft.Text(param.get("description", ""), size=11, color=ft.Colors.GREY_600, expand=True)
+        ], spacing=8, alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER)
     
-    # シンプルな縦並びレイアウト
-    return ft.Container(
-        content=ft.Column([
-            ft.Text("PDF処理設定", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.INDIGO_800),
-            ft.Divider(height=1, color=ft.Colors.INDIGO_200),
-            *[_create_row(p) for p in params]
-        ], spacing=6),
-        padding=ft.padding.all(12),
-        border=ft.border.all(1, ft.Colors.INDIGO_100),
-        border_radius=6
+    # シンプルな縦並びレイアウト（リトラクタブル）
+    return ft.ExpansionTile(
+        title=ft.Container(ft.Text("PDF処理設定", size=14, weight=ft.FontWeight.BOLD), alignment=ft.alignment.center_left),
+        controls=[ft.Container(_create_row(p), padding=ft.padding.only(left=16)) for p in params],
+        initially_expanded=True
     )

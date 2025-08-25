@@ -23,7 +23,7 @@ def get_tesseract_parameters() -> list:
     ]
 
 def create_tesseract_panel_content() -> ft.Control:
-    """Tesseract専用レイアウト表示（2x2グリッド）"""
+    """Tesseract専用レイアウト表示（1行形式）"""
     params = get_tesseract_parameters()
     
     def _create_control(param: dict) -> ft.Control:
@@ -34,28 +34,26 @@ def create_tesseract_panel_content() -> ft.Control:
         if param_type == "select":
             options = param.get("options", [])
             dropdown_options = [ft.dropdown.Option(key=str(opt["value"]), text=opt["label"]) for opt in options]
-            return ft.Dropdown(options=dropdown_options, value=str(param_default), width=200)
+            return ft.Container(
+                ft.Dropdown(options=dropdown_options, value=str(param_default), width=200),
+                margin=ft.margin.symmetric(vertical=2)
+            )
         elif param_type == "number":
-            return ft.TextField(value=str(param_default), width=100, height=32, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter())
+            return ft.TextField(value=str(param_default), width=100, height=40, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter(), text_align=ft.TextAlign.CENTER)
         else:
-            return ft.TextField(value=str(param_default), width=150, height=32)
+            return ft.TextField(value=str(param_default), width=150, height=40)
     
-    def _create_param_box(param: dict) -> ft.Control:
-        """パラメータをボックス形式で表示"""
-        return ft.Container(
-            content=ft.Column([
-                ft.Text(param["label"], size=12, weight=ft.FontWeight.W_500),
-                _create_control(param),
-                ft.Text(param.get("description", ""), size=9, color=ft.Colors.GREY_600, max_lines=2)
-            ], spacing=4, alignment=ft.MainAxisAlignment.START),
-            padding=ft.padding.all(8),
-            border=ft.border.all(1, ft.Colors.GREY_300),
-            border_radius=4,
-            width=280
-        )
+    def _create_row(param: dict) -> ft.Control:
+        """1行形式でパラメータを表示"""
+        return ft.Row([
+            ft.Container(ft.Text(f"{param['label']}:", size=13, weight=ft.FontWeight.W_500), width=140, alignment=ft.alignment.center_left),
+            _create_control(param),
+            ft.Text(param.get("description", ""), size=11, color=ft.Colors.GREY_600, expand=True)
+        ], spacing=8, alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER)
     
-    # 2x2グリッドレイアウト
-    return ft.Column([
-        ft.Row([_create_param_box(params[0]), _create_param_box(params[1])], spacing=12),  # PSM, OEM
-        ft.Row([_create_param_box(params[2]), _create_param_box(params[3])], spacing=12),  # 言語, DPI
-    ], spacing=12)
+    # 1行形式レイアウト（リトラクタブル）
+    return ft.ExpansionTile(
+        title=ft.Container(ft.Text("Tesseract設定", size=14, weight=ft.FontWeight.BOLD), alignment=ft.alignment.center_left),
+        controls=[ft.Container(_create_row(p), padding=ft.padding.only(left=16)) for p in params],
+        initially_expanded=True
+    )

@@ -69,29 +69,24 @@ class OCRAdjustmentPage:
         panel_content = ft.Container(
             content=ft.Column([
                 # ファイル選択情報
-                ft.Container(
-                    content=ft.Row([
-                        ft.Container(
-                            content=ft.Text("ファイル:", weight=ft.FontWeight.BOLD, size=12),
-                            width=100,
-                            alignment=ft.alignment.center_left
-                        ),
-                        ft.TextField(
-                            hint_text="選択されたファイル名", 
-                            read_only=True,
-                            expand=True,
-                            height=40
-                        ),
-                        ft.IconButton(
-                            icon=ft.Icons.FOLDER_OPEN,
-                            icon_size=20,
-                            tooltip="ファイル選択"
-                        )
-                    ], alignment=ft.MainAxisAlignment.START),
-                    padding=ft.padding.all(8),
-                    bgcolor=ft.Colors.GREY_100,
-                    border_radius=8
-                ),
+                ft.Row([
+                    ft.Container(
+                        content=ft.Text("ファイル:", weight=ft.FontWeight.BOLD, size=12),
+                        width=100,
+                        alignment=ft.alignment.center_left
+                    ),
+                    ft.TextField(
+                        hint_text="選択されたファイル名", 
+                        read_only=True,
+                        expand=True,
+                        height=40
+                    ),
+                    ft.IconButton(
+                        icon=ft.Icons.FOLDER_OPEN,
+                        icon_size=20,
+                        tooltip="ファイル選択"
+                    )
+                ], alignment=ft.MainAxisAlignment.START),
                 
                         # OCRエンジン選択
                         ft.Container(
@@ -149,8 +144,7 @@ class OCRAdjustmentPage:
                     padding=ft.padding.all(4)
                 ),
                 
-                # 区切り線
-                ft.Divider(height=1, color=ft.Colors.GREY_400),
+
                 
                 # 辞書ボタン（横並び、予備は除く）
                 ft.Container(
@@ -251,7 +245,7 @@ class OCRAdjustmentPage:
             # 右側：ボタン群
             ft.Row([
                 create_light_button("読込", ft.Icons.UPLOAD_FILE),
-                create_dark_button("保存", ft.Icons.SAVE_ALT)
+                create_action_button("保存", ft.Icons.SAVE_ALT)
             ], spacing=6)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
         
@@ -307,7 +301,7 @@ class OCRAdjustmentPage:
             ),
             # 右側：ボタン群
             ft.Row([
-                create_action_button("クリア", on_click=self._clear_results),
+                create_light_button("クリア", on_click=self._clear_results),
                 create_action_button("出力", on_click=self._export_results)
             ], spacing=6)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)

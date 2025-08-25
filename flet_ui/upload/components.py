@@ -5,6 +5,7 @@ Flet RAGシステム - アップロードページコンポーネント
 """
 
 import flet as ft
+from flet_ui.shared.common_buttons import create_light_button
 from typing import Dict, List, Any, Optional
 from flet_ui.shared.panel_components import (
     PanelHeaderConfig, PanelConfig, create_panel, create_upload_panel_config
@@ -32,10 +33,10 @@ class FileUploadArea(ft.Container):
                 ft.Text("ファイルをドラッグ&ドロップ", size=16, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
                 ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
                 ft.Container(height=8),
-                ft.ElevatedButton(
+                create_light_button(
                     "ファイル選択",
-                    icon=ft.Icons.FOLDER_OPEN,
-                    on_click=self._on_file_select
+                    ft.Icons.FOLDER_OPEN,
+                    self._on_file_select
                 ),
                 ft.Container(height=16),
                 ft.Text("対応形式: PDF, DOCX, TXT, PNG, JPG", 
@@ -93,10 +94,10 @@ class FolderUploadArea(ft.Container):
                 ft.Text("フォルダをドラッグ&ドロップ", size=16, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
                 ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
                 ft.Container(height=8),
-                ft.ElevatedButton(
+                create_light_button(
                     "フォルダ選択",
-                    icon=ft.Icons.FOLDER_OPEN,
-                    on_click=self._on_folder_select
+                    ft.Icons.FOLDER_OPEN,
+                    self._on_folder_select
                 ),
                 ft.Container(height=16),
                 upload_mode,

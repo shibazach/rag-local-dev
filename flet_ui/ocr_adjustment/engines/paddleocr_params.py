@@ -38,56 +38,42 @@ def create_paddleocr_panel_content() -> ft.Control:
         if param_type == "select":
             options = param.get("options", [])
             dropdown_options = [ft.dropdown.Option(key=str(opt["value"]), text=opt["label"]) for opt in options]
-            return ft.Dropdown(options=dropdown_options, value=str(param_default), width=160)
+            return ft.Container(
+                ft.Dropdown(options=dropdown_options, value=str(param_default), width=160),
+                margin=ft.margin.symmetric(vertical=2)
+            )
         elif param_type == "number":
-            return ft.TextField(value=str(param_default), width=80, height=32, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter())
+            return ft.TextField(value=str(param_default), width=80, height=40, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter(), text_align=ft.TextAlign.CENTER)
         elif param_type == "boolean":
             return ft.Switch(value=bool(param_default))
         else:
-            return ft.TextField(value=str(param_default), width=150, height=32)
+            return ft.TextField(value=str(param_default), width=150, height=40)
     
     def _create_row(param: dict) -> ft.Control:
         """1行形式でパラメータを表示"""
         return ft.Row([
-            ft.Container(ft.Text(f"{param['label']}:", size=12, weight=ft.FontWeight.W_500), width=140, alignment=ft.alignment.center_left),
+            ft.Container(ft.Text(f"{param['label']}:", size=13, weight=ft.FontWeight.W_500), width=140, alignment=ft.alignment.center_left),
             _create_control(param),
-            ft.Text(param.get("description", ""), size=10, color=ft.Colors.GREY_600, expand=True)
-        ], spacing=8)
+            ft.Text(param.get("description", ""), size=11, color=ft.Colors.GREY_600, expand=True)
+        ], spacing=8, alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER)
     
-    # セクション分け：基本設定、検出設定、認識設定
-    basic_section = ft.Container(
-        content=ft.Column([
-            ft.Text("基本設定", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_800),
-            ft.Divider(height=1, color=ft.Colors.GREEN_200),
-            *[_create_row(p) for p in params[:6]]  # 言語〜認識実行
-        ], spacing=4),
-        padding=ft.padding.all(12),
-        border=ft.border.all(1, ft.Colors.GREEN_100),
-        border_radius=6,
-        margin=ft.margin.only(bottom=8)
+    # セクション分け：基本設定、検出設定、認識設定（リトラクタブル）
+    basic_section = ft.ExpansionTile(
+        title=ft.Container(ft.Text("基本設定", size=14, weight=ft.FontWeight.BOLD), alignment=ft.alignment.center_left),
+        controls=[ft.Container(_create_row(p), padding=ft.padding.only(left=16)) for p in params[:6]],  # 言語〜認識実行
+        initially_expanded=True
     )
     
-    detection_section = ft.Container(
-        content=ft.Column([
-            ft.Text("検出設定", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.PURPLE_800),
-            ft.Divider(height=1, color=ft.Colors.PURPLE_200),
-            *[_create_row(p) for p in params[6:11]]  # 検出アルゴリズム〜アンクリップ比率
-        ], spacing=4),
-        padding=ft.padding.all(12),
-        border=ft.border.all(1, ft.Colors.PURPLE_100),
-        border_radius=6,
-        margin=ft.margin.only(bottom=8)
+    detection_section = ft.ExpansionTile(
+        title=ft.Container(ft.Text("検出設定", size=14, weight=ft.FontWeight.BOLD), alignment=ft.alignment.center_left),
+        controls=[ft.Container(_create_row(p), padding=ft.padding.only(left=16)) for p in params[6:11]],  # 検出アルゴリズム〜アンクリップ比率
+        initially_expanded=True
     )
     
-    recognition_section = ft.Container(
-        content=ft.Column([
-            ft.Text("認識設定", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.TEAL_800),
-            ft.Divider(height=1, color=ft.Colors.TEAL_200),
-            _create_row(params[11])  # 認識バッチサイズ
-        ], spacing=4),
-        padding=ft.padding.all(12),
-        border=ft.border.all(1, ft.Colors.TEAL_100),
-        border_radius=6
+    recognition_section = ft.ExpansionTile(
+        title=ft.Container(ft.Text("認識設定", size=14, weight=ft.FontWeight.BOLD), alignment=ft.alignment.center_left),
+        controls=[ft.Container(_create_row(params[11]), padding=ft.padding.only(left=16))],  # 認識バッチサイズ
+        initially_expanded=True
     )
     
     return ft.Column([basic_section, detection_section, recognition_section], spacing=8)

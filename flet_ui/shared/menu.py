@@ -150,7 +150,7 @@ def create_header(current_page, current_user, navigate_callback, logout_callback
             create_user_menu(current_user, logout_callback)
         ], alignment=ft.MainAxisAlignment.START),
         bgcolor=ft.Colors.GREY_50,  # 全ページ統一背景色
-        padding=ft.padding.symmetric(horizontal=8, vertical=4),
+        padding=ft.padding.symmetric(horizontal=8, vertical=2),
         margin=ft.margin.all(0)
     )
 

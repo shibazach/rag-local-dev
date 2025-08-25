@@ -63,8 +63,8 @@ class FilesTable:
                 key="created_at",
                 title="登録日時",
                 column_type="datetime",
-                width=200,  # さらに幅を増加
-                alignment="center"
+                width=150,  # upload/page.pyと同様に調整
+                alignment="right"  # 右寄せに変更
             )
         ]
         
@@ -194,7 +194,7 @@ class FilesTable:
                     dt = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
                     # UTC+9に変換
                     jst = dt.astimezone(timezone(timedelta(hours=9)))
-                    created_at = jst.strftime('%m/%d %H:%M')  # 短縮フォーマット
+                    created_at = jst.strftime('%Y-%m-%d %H:%M:%S')  # upload/page.pyと同じフォーマット
                 except:
                     # パースエラー時はフォールバック
                     date_part, time_part = created_at.split('T')

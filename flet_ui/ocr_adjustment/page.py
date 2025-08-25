@@ -37,27 +37,17 @@ class OCRAdjustmentPage:
         self.main_row = None
 
     def create_main_layout(self):
-        """メインレイアウト作成（tab_d.py構造適用: ft.Stack + 部分オーバーレイ）"""
+        """メインレイアウト作成（一体型コンポーネント適用）"""
         
-        # ===== 下層: 本体レイアウト =====
-        base_layer = self._create_base_layout()
+        # 4分割メインコンテンツ作成
+        main_4quad_content = self._create_4quad_layout()
         
-        # ===== 上層: 部分オーバーレイ（左右端の縦スライダーのみ） =====
-        overlay_elements = self._create_overlay_layer()
-        
-        # 初期レイアウト適用（コンテナ作成後）
-        self._update_layout()
-        
-        # ===== ルート: 部分オーバーレイでStack構成 =====
-        main_content = ft.Stack(
-            expand=True,
-            clip_behavior=ft.ClipBehavior.NONE,  # 画面端からのはみ出し許可
-            controls=[base_layer] + overlay_elements,  # 背景 + 左右端オーバーレイ
-        )
-        
-        return ft.Container(
-            content=main_content,
-            expand=True
+        # 完全一体型レイアウト適用
+        return CommonComponents.create_complete_layout_with_full_sliders(
+            main_4quad_content,
+            self.left_split_level, self.on_left_split_change,
+            self.right_split_level, self.on_right_split_change, 
+            self.horizontal_level, self.on_horizontal_change
         )
 
     def _create_ocr_settings_pane(self):
@@ -136,8 +126,8 @@ class OCRAdjustmentPage:
             # marginは削除（PDFPreviewは全域使用）
         )
     
-    def _create_base_layout(self) -> ft.Container:
-        """本体レイアウト: 4分割ペイン + 下部横スライダー（tab_d.py構造準拠）"""
+    def _create_4quad_layout(self) -> ft.Container:
+        """4分割レイアウトのみ作成（ガイドエリア・スライダーは一体型コンポーネントが担当）"""
         
         # 4つのペインコンテナ作成
         self.top_left_container = ft.Container(expand=1)
@@ -158,50 +148,22 @@ class OCRAdjustmentPage:
             self.bottom_right_container
         ], spacing=0, expand=True)
         
-        # Container参照保持（files/page.pyパターン適用）
+        # Container参照保持（比率更新用）
         self.left_container = ft.Container(content=self.left_column, expand=1)
         self.right_container = ft.Container(content=self.right_column, expand=1)
         
-        # メイン行作成（中央4分割）
+        # 4分割メイン行作成
         self.main_row = ft.Row([
             self.left_container,
             ft.VerticalDivider(width=1, thickness=1, color=ft.Colors.GREY_400),
             self.right_container
         ], spacing=0, expand=True)
         
-        # 横スライダー作成
-        horizontal_slider = CommonComponents.create_horizontal_slider(
-            self.horizontal_level, self.on_horizontal_change
-        )
+        # 初期レイアウト適用
+        self._update_layout()
         
-        # メインコンテンツ部分（左右ガイド + 中央4分割）
-        main_content = ft.Container(
-            expand=True,
-            content=ft.Row([
-                # 左ガイド（青枠）純粋36px
-                ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                            border=ft.border.all(1, ft.Colors.BLUE_300),
-                            disabled=True),
-                # 中央領域（4分割パネル）
-                ft.Container(content=self.main_row, expand=True),
-                # 右ガイド（青枠）純粋36px
-                ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                            border=ft.border.all(1, ft.Colors.BLUE_300),
-                            disabled=True),
-            ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH)
-        )
-        
-        # 完全レイアウト（共通スタイル適用）
-        return PageStyles.create_complete_layout_with_slider(
-            main_content, horizontal_slider
-        )
-    
-    def _create_overlay_layer(self):
-        """部分オーバーレイ: 共通コンポーネント使用"""
-        return CommonComponents.create_vertical_slider_overlay_elements(
-            self.left_split_level, self.on_left_split_change,
-            self.right_split_level, self.on_right_split_change
-        )
+        # 4分割部分のみ返す
+        return ft.Container(content=self.main_row, expand=True)
     
     def _update_layout(self):
         """レイアウトを実際に更新（4分割版）"""

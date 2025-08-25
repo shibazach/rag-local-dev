@@ -8,7 +8,7 @@ from .tab_a import TabA
 from .tab_b import TabB
 from .tab_c import TabC
 from .tab_d import TabD
-from .tab_e_working import TabEWorking
+from .tab_e import TabE
 from ..shared.style_constants import PageStyles
 
 
@@ -24,7 +24,7 @@ class ArrangementTestPage:
         self.tab_b = TabB()
         self.tab_c = TabC()
         self.tab_d = TabD()
-        self.tab_e = TabEWorking()
+        self.tab_e = TabE()
     
     def create_main_layout(self):
         """メインレイアウト作成"""

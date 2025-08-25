@@ -84,7 +84,13 @@ def _create_cell_content(config: TableColumnConfig, row_data: Dict[str, Any]) ->
     value = row_data.get(config.key, "")
     
     if config.column_type == "text":
-        return ft.Text(str(value), size=14, color=ft.Colors.BLACK87)
+        return ft.Text(
+            str(value), 
+            size=14, 
+            color=ft.Colors.BLACK87,
+            overflow=ft.TextOverflow.ELLIPSIS,  # 長いテキストを...で省略
+            max_lines=1  # 1行に制限
+        )
     
     elif config.column_type == "size":
         if isinstance(value, (int, float)) and value > 0:
@@ -103,7 +109,9 @@ def _create_cell_content(config: TableColumnConfig, row_data: Dict[str, Any]) ->
         return create_status_badge(str(value))
     
     elif config.column_type == "datetime":
-        return ft.Text(str(value), size=12, color=ft.Colors.BLACK87, text_align=ft.TextAlign.CENTER)
+        text_align = ft.TextAlign.RIGHT if config.alignment == "right" else \
+                    ft.TextAlign.CENTER if config.alignment == "center" else ft.TextAlign.LEFT
+        return ft.Text(str(value), size=12, color=ft.Colors.BLACK87, text_align=text_align)
     
     elif config.column_type == "checkbox":
         return ft.Checkbox(value=bool(value), disabled=True)

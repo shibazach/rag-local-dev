@@ -31,9 +31,15 @@ class FilesPage:
         self.pdf_preview = PDFPreview()
         self.page = None
 
-        # 5段階比率: 共通定数使用
-        self.level = 3  # 初期値は3:3
-        self.ratios = SLIDER_RATIOS
+        # 5段階比率: 独自設定（0:4 ～ 4:0）
+        self.level = 3  # 初期値は2:2
+        self.ratios = {
+            1: (0, 4),  # 0:4
+            2: (1, 3),  # 1:3  
+            3: (2, 2),  # 2:2
+            4: (3, 1),  # 3:1
+            5: (4, 0),  # 4:0
+        }
 
         # UI参照
         self.main_container: ft.Container | None = None
@@ -42,12 +48,26 @@ class FilesPage:
         self.width_slider: ft.Slider | None = None
 
     def _apply_ratios(self):
-        """expand比率反映"""
+        """expand比率反映（比率0の場合は最小幅制御）"""
         if not self.left_container or not self.right_container:
             return
         left_expand, right_expand = self.ratios[self.level]
-        self.left_container.expand = left_expand
-        self.right_container.expand = right_expand
+        
+        # 比率0の場合は最小幅で表示（完全非表示回避）
+        if left_expand == 0:
+            self.left_container.expand = None
+            self.left_container.width = 1  # 最小可視幅
+        else:
+            self.left_container.expand = left_expand
+            self.left_container.width = None
+            
+        if right_expand == 0:
+            self.right_container.expand = None
+            self.right_container.width = 1  # 最小可視幅
+        else:
+            self.right_container.expand = right_expand
+            self.right_container.width = None
+            
         # ページに追加済みの場合のみ更新
         try:
             if self.left_container.page:

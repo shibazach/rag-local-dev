@@ -33,7 +33,7 @@ class FileUploadArea(ft.Container):
                 ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
                 ft.Container(height=8),
                 ft.ElevatedButton(
-                    "📁 ファイル選択",
+                    "ファイル選択",
                     icon=ft.Icons.FOLDER_OPEN,
                     on_click=self._on_file_select
                 ),
@@ -52,7 +52,7 @@ class FileUploadArea(ft.Container):
         # パネル設定
         panel_config = create_upload_panel_config(
             title="ファイルアップロード",
-            title_icon="📄",
+            title_icon=ft.Icons.DESCRIPTION,
             show_file_select=True,
             file_select_callback=self._on_file_select
         )
@@ -94,7 +94,7 @@ class FolderUploadArea(ft.Container):
                 ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
                 ft.Container(height=8),
                 ft.ElevatedButton(
-                    "📁 フォルダ選択",
+                    "フォルダ選択",
                     icon=ft.Icons.FOLDER_OPEN,
                     on_click=self._on_folder_select
                 ),
@@ -115,7 +115,7 @@ class FolderUploadArea(ft.Container):
         # パネル設定
         panel_config = create_upload_panel_config(
             title="フォルダアップロード",
-            title_icon="📁",
+            title_icon=ft.Icons.FOLDER,
             show_file_select=True,
             file_select_callback=self._on_folder_select
         )
@@ -177,7 +177,7 @@ class RealTimeLogArea(ft.Container):
         # パネル設定
         panel_config = create_upload_panel_config(
             title="アップロードログ",
-            title_icon="📋",
+            title_icon=ft.Icons.LIST_ALT,
             show_status=True,
             show_search=True,
             status_callback=self._on_status_change,

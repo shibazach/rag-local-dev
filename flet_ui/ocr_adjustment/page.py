@@ -58,12 +58,21 @@ class OCRAdjustmentPage:
                 # ファイル選択情報
                 ft.Container(
                     content=ft.Row([
-                        ft.Text("ファイル:", weight=ft.FontWeight.BOLD, size=12),
+                        ft.Container(
+                            content=ft.Text("ファイル:", weight=ft.FontWeight.BOLD, size=12),
+                            width=100,
+                            alignment=ft.alignment.center_left
+                        ),
                         ft.TextField(
                             hint_text="選択されたファイル名", 
                             read_only=True,
                             expand=True,
                             height=40
+                        ),
+                        ft.IconButton(
+                            icon=ft.Icons.FOLDER_OPEN,
+                            icon_size=20,
+                            tooltip="ファイル選択"
                         )
                     ], alignment=ft.MainAxisAlignment.START),
                     padding=ft.padding.all(8),
@@ -74,7 +83,11 @@ class OCRAdjustmentPage:
                 # OCRエンジン選択
                 ft.Container(
                     content=ft.Row([
-                        ft.Text("OCRエンジン:", size=13, weight=ft.FontWeight.W_500, width=100),
+                        ft.Container(
+                            content=ft.Text("OCRエンジン:", size=13, weight=ft.FontWeight.W_500),
+                            width=100,
+                            alignment=ft.alignment.center_left
+                        ),
                         ft.Dropdown(
                             options=[
                                 ft.dropdown.Option("EasyOCR"),
@@ -94,12 +107,21 @@ class OCRAdjustmentPage:
                     content=ft.Row([
                         # 処理ページ
                         ft.Row([
-                            ft.Text("処理ページ:", size=13, weight=ft.FontWeight.W_500),
-                            ft.TextField(
-                                value="1",
-                                width=80,
-                                height=40,
-                                text_align=ft.TextAlign.CENTER
+                            ft.Container(
+                                content=ft.Text("処理ページ:", size=13, weight=ft.FontWeight.W_500),
+                                width=100,
+                                alignment=ft.alignment.center_left
+                            ),
+                            ft.Container(
+                                content=ft.TextField(
+                                    value="1",
+                                    width=80,
+                                    height=40,
+                                    text_align=ft.TextAlign.CENTER,
+                                    keyboard_type=ft.KeyboardType.NUMBER,
+                                    input_filter=ft.NumbersOnlyInputFilter()
+                                ),
+                                width=80
                             ),
                             ft.Text("0=全て", size=11, color=ft.Colors.GREY_600)
                         ], spacing=6),
@@ -131,7 +153,7 @@ class OCRAdjustmentPage:
                         ),
                         ft.ElevatedButton(
                             "誤字修正", 
-                            icon=ft.Icons.SPELL_CHECK,
+                            icon=ft.Icons.CHECK_CIRCLE,
                             bgcolor=ft.Colors.GREY_300
                         ),
                         ft.ElevatedButton(
@@ -178,14 +200,9 @@ class OCRAdjustmentPage:
             ),
             # 右側：ボタン群
             ft.Row([
-                ft.IconButton(
-                    icon=ft.Icons.FOLDER_OPEN,
-                    icon_color=ft.Colors.WHITE,
-                    icon_size=20,
-                    tooltip="ファイル選択"
-                ),
                 ft.ElevatedButton(
-                    "OCR実行",
+                    "実行",
+                    icon=ft.Icons.PLAY_ARROW,
                     bgcolor=ft.Colors.GREEN,
                     color=ft.Colors.WHITE,
                     height=32
@@ -211,14 +228,55 @@ class OCRAdjustmentPage:
             expand=True, alignment=ft.alignment.center
         )
         
-        # 共通パネル設定
-        panel_config = PanelConfig(
-            header_config=CommonComponents.create_standard_panel_header_config(
-                "詳細設定", ft.Icons.BUILD
-            )
+        # ヘッダー設定
+        header_config = PanelHeaderConfig(
+            title="詳細設定",
+            title_icon=ft.Icons.BUILD,
+            bgcolor=ft.Colors.BLUE_GREY_800,
+            text_color=ft.Colors.WHITE
         )
         
-        return create_panel(panel_config, panel_content)
+        panel_config = PanelConfig(header_config=header_config)
+        
+        # パネル作成
+        panel = create_panel(panel_config, panel_content)
+        
+        # ヘッダーにボタンを追加（右寄せ）
+        header_container = panel.content.controls[0]  # ヘッダー部分
+        
+        # 新しいヘッダー内容（タイトル + 右側のボタン群）
+        new_header_content = ft.Row([
+            # 左側：タイトル部分
+            ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.BUILD, size=20, color=ft.Colors.WHITE),
+                    ft.Text("詳細設定", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
+                ], spacing=8),
+                expand=True
+            ),
+            # 右側：ボタン群
+            ft.Row([
+                ft.ElevatedButton(
+                    "読込",
+                    icon=ft.Icons.UPLOAD_FILE,
+                    bgcolor=ft.Colors.GREY_600,
+                    color=ft.Colors.WHITE,
+                    height=32
+                ),
+                ft.ElevatedButton(
+                    "保存",
+                    icon=ft.Icons.SAVE_ALT,
+                    bgcolor=ft.Colors.BLUE,
+                    color=ft.Colors.WHITE,
+                    height=32
+                )
+            ], spacing=6)
+        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+        
+        # ヘッダーコンテンツを置き換え
+        header_container.content = new_header_content
+        
+        return panel
 
     def _create_ocr_results_pane(self):
         """左下: OCR結果ペイン（共通コンポーネント版）"""

@@ -72,7 +72,7 @@ class FilesTable:
             # 新共通コンポーネント使用でパネル作成
             panel_config = create_files_panel_config(
                 title="ファイル一覧",
-                title_icon="📁",
+                title_icon=ft.Icons.FOLDER,
                 show_status=True,
                 show_search=True,
                 status_callback=self._on_status_change,

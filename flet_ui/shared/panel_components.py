@@ -43,12 +43,8 @@ def create_panel_header(config: PanelHeaderConfig) -> ft.Container:
     # タイトル部分
     title_controls = []
     if config.title_icon:
-        if isinstance(config.title_icon, str) and (config.title_icon.startswith('�') or config.title_icon in ['📁', '📄', '📋', '⚙️']):
-            # 絵文字の場合
-            title_controls.append(ft.Text(config.title_icon, size=20, color=config.text_color))
-        else:
-            # ft.Iconsの場合
-            title_controls.append(ft.Icon(config.title_icon, size=20, color=config.text_color))
+        # ft.Icons（Material Icons）のみをサポート
+        title_controls.append(ft.Icon(config.title_icon, size=20, color=config.text_color))
     title_controls.append(ft.Text(config.title, size=16, weight=ft.FontWeight.BOLD, color=config.text_color))
     
     title_row = ft.Row(title_controls, alignment=ft.MainAxisAlignment.START)

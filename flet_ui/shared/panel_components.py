@@ -125,9 +125,16 @@ def create_panel(config: PanelConfig, content: ft.Control) -> ft.Container:
     """統一パネル作成"""
     header = create_panel_header(config.header_config)
     
+    # コンテンツ部分をスクロール対応のColumnでラップ
+    scrollable_content = ft.Column(
+        controls=[content],
+        expand=True,
+        scroll=ft.ScrollMode.AUTO  # 縦方向にはみ出た場合にスクロールバー表示
+    )
+    
     panel_content = ft.Column([
         header,
-        ft.Container(content=content, expand=True)
+        scrollable_content
     ], spacing=0, expand=True)
     
     return ft.Container(

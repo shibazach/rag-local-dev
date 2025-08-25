@@ -9,6 +9,12 @@ import math
 from flet_ui.shared.panel_components import create_panel, PanelHeaderConfig, PanelConfig
 from flet_ui.shared.pdf_preview import PDFPreview
 from flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
+from .engines.easyocr_params import get_easyocr_parameters, create_easyocr_panel_content
+from .engines.tesseract_params import get_tesseract_parameters, create_tesseract_panel_content
+from .engines.paddleocr_params import get_paddleocr_parameters, create_paddleocr_panel_content
+from .engines.ocrmypdf_params import get_ocrmypdf_parameters, create_ocrmypdf_panel_content
+from .dictionary_manager import create_dictionary_buttons
+from flet_ui.shared.common_buttons import create_light_button, create_dark_button, create_action_button
 
 class OCRAdjustmentPage:
     """OCR調整ページ（4分割レイアウト + 3スライダー制御）"""
@@ -87,7 +93,7 @@ class OCRAdjustmentPage:
                     border_radius=8
                 ),
                 
-                                        # OCRエンジン選択
+                        # OCRエンジン選択
                         ft.Container(
                             content=ft.Row([
                                 ft.Container(
@@ -148,28 +154,7 @@ class OCRAdjustmentPage:
                 
                 # 辞書ボタン（横並び、予備は除く）
                 ft.Container(
-                    content=ft.Row([
-                        ft.ElevatedButton(
-                            "一般用語", 
-                            icon=ft.Icons.BOOK,
-                            bgcolor=ft.Colors.GREY_300
-                        ),
-                        ft.ElevatedButton(
-                            "専門用語", 
-                            icon=ft.Icons.LIBRARY_BOOKS,
-                            bgcolor=ft.Colors.GREY_300
-                        ),
-                        ft.ElevatedButton(
-                            "誤字修正", 
-                            icon=ft.Icons.CHECK_CIRCLE,
-                            bgcolor=ft.Colors.GREY_300
-                        ),
-                        ft.ElevatedButton(
-                            "ユーザー辞書", 
-                            icon=ft.Icons.PERSON,
-                            bgcolor=ft.Colors.GREY_300
-                        )
-                    ], wrap=True, spacing=6),
+                    content=ft.Row(create_dictionary_buttons(), wrap=True, spacing=6),
                     padding=ft.padding.all(4)
                 )
             ], spacing=10, expand=True),
@@ -208,14 +193,7 @@ class OCRAdjustmentPage:
             ),
             # 右側：ボタン群
             ft.Row([
-                ft.ElevatedButton(
-                    "実行",
-                    icon=ft.Icons.PLAY_ARROW,
-                    bgcolor=ft.Colors.GREEN,
-                    color=ft.Colors.WHITE,
-                    height=32,
-                    on_click=self._execute_ocr_test
-                )
+                create_action_button("実行", ft.Icons.PLAY_ARROW, self._execute_ocr_test)
             ], spacing=6)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
         
@@ -272,20 +250,8 @@ class OCRAdjustmentPage:
             ),
             # 右側：ボタン群
             ft.Row([
-                ft.ElevatedButton(
-                    "読込",
-                    icon=ft.Icons.UPLOAD_FILE,
-                    bgcolor=ft.Colors.GREY_600,
-                    color=ft.Colors.WHITE,
-                    height=32
-                ),
-                ft.ElevatedButton(
-                    "保存",
-                    icon=ft.Icons.SAVE_ALT,
-                    bgcolor=ft.Colors.BLUE,
-                    color=ft.Colors.WHITE,
-                    height=32
-                )
+                create_light_button("読込", ft.Icons.UPLOAD_FILE),
+                create_dark_button("保存", ft.Icons.SAVE_ALT)
             ], spacing=6)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
         
@@ -304,8 +270,7 @@ class OCRAdjustmentPage:
             spacing=8
         )
         
-        # 初期プレースホルダー表示
-        self._show_results_placeholder()
+        # 初期状態は空のコンテナ
         
         # パネル内容
         panel_content = ft.Container(
@@ -342,20 +307,8 @@ class OCRAdjustmentPage:
             ),
             # 右側：ボタン群
             ft.Row([
-                ft.ElevatedButton(
-                    "クリア",
-                    bgcolor=ft.Colors.GREY_600,
-                    color=ft.Colors.WHITE,
-                    height=32,
-                    on_click=self._clear_results
-                ),
-                ft.ElevatedButton(
-                    "出力",
-                    bgcolor=ft.Colors.BLUE,
-                    color=ft.Colors.WHITE,
-                    height=32,
-                    on_click=self._export_results
-                )
+                create_action_button("クリア", on_click=self._clear_results),
+                create_action_button("出力", on_click=self._export_results)
             ], spacing=6)
         ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
         
@@ -460,6 +413,37 @@ class OCRAdjustmentPage:
         self._update_layout()
     
     # ========= OCR機能 =========
+    def _update_engine_details(self):
+        """エンジン詳細設定を更新（専用レイアウト使用）"""
+        if not self.engine_details_container:
+            return
+        
+        # エンジンごとの専用レイアウト表示メソッドを呼び出し
+        engine_layout_functions = {
+            "EasyOCR": create_easyocr_panel_content,
+            "Tesseract": create_tesseract_panel_content,
+            "PaddleOCR": create_paddleocr_panel_content,
+            "OCRMyPDF": create_ocrmypdf_panel_content
+        }
+        
+        if self.selected_engine in engine_layout_functions:
+            # 専用レイアウトを使用
+            content = engine_layout_functions[self.selected_engine]()
+        else:
+            # フォールバック表示
+            content = ft.Container(
+                content=ft.Text(
+                    f"{self.selected_engine} の設定項目は未定義です",
+                    size=14,
+                    color=ft.Colors.GREY_600,
+                    text_align=ft.TextAlign.CENTER
+                ),
+                alignment=ft.alignment.center,
+                expand=True
+            )
+        
+        self.engine_details_container.controls = [content]
+
     def _on_engine_change(self, e):
         """OCRエンジン変更イベント"""
         self.selected_engine = e.control.value
@@ -467,235 +451,6 @@ class OCRAdjustmentPage:
         if hasattr(self, 'engine_details_container') and self.engine_details_container.page:
             self.engine_details_container.update()
     
-    def _show_results_placeholder(self):
-        """OCR結果プレースホルダー表示"""
-        if not self.results_container:
-            return
-        
-        placeholder = ft.Container(
-            content=ft.Column([
-                ft.Icon(ft.Icons.TEXT_SNIPPET, size=64, color=ft.Colors.GREY_400),
-                ft.Text("OCR実行すると", size=14, color=ft.Colors.GREY_600),
-                ft.Text("結果がここに表示されます", size=14, color=ft.Colors.GREY_600),
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            expand=True,
-            alignment=ft.alignment.center
-        )
-        
-        self.results_container.controls = [placeholder]
-    
-    def _update_engine_details(self):
-        """エンジン詳細設定を更新"""
-        if not self.engine_details_container:
-            return
-        
-        # エンジン固有のパラメータを模擬実装（実際の実装では OCREngineFactory を使用）
-        params = self._get_engine_parameters(self.selected_engine)
-        
-        controls = []
-        for param in params:
-            control_row = self._create_parameter_control(param)
-            if control_row:
-                controls.append(control_row)
-        
-        if not controls:
-            controls.append(
-                ft.Container(
-                    content=ft.Text("このエンジンに設定項目はありません", 
-                                   size=14, color=ft.Colors.GREY_600),
-                    alignment=ft.alignment.center,
-                    expand=True
-                )
-            )
-        
-        self.engine_details_container.controls = controls
-    
-    def _get_engine_parameters(self, engine_name: str) -> list:
-        """エンジン別パラメータ定義（模擬実装）"""
-        params_map = {
-            "EasyOCR": [
-                {
-                    "name": "languages",
-                    "label": "認識言語",
-                    "type": "select",
-                    "default": "日本語 + 英語",
-                    "options": ["日本語のみ", "英語のみ", "日本語 + 英語", "中国語", "韓国語"],
-                    "description": "OCR認識対象言語"
-                },
-                {
-                    "name": "use_gpu",
-                    "label": "GPU使用",
-                    "type": "boolean",
-                    "default": False,
-                    "description": "GPU加速を使用（CUDA対応GPU必要）"
-                },
-                {
-                    "name": "zoom_factor",
-                    "label": "画像拡大倍率",
-                    "type": "number",
-                    "default": 2.0,
-                    "min": 1.0,
-                    "max": 4.0,
-                    "step": 0.5,
-                    "description": "画像の拡大倍率（高いほど精度向上、処理時間増加）"
-                }
-            ],
-            "Tesseract": [
-                {
-                    "name": "psm",
-                    "label": "ページセグメンテーションモード",
-                    "type": "select",
-                    "default": "6: 単一の均一テキストブロック",
-                    "options": [
-                        "3: 完全自動ページセグメンテーション",
-                        "6: 単一の均一テキストブロック",
-                        "7: 単一テキスト行",
-                        "8: 単一単語"
-                    ],
-                    "description": "テキスト認識のセグメンテーション方法"
-                },
-                {
-                    "name": "language",
-                    "label": "認識言語",
-                    "type": "select",
-                    "default": "jpn+eng",
-                    "options": ["jpn", "eng", "jpn+eng", "chi_sim", "kor"],
-                    "description": "OCR認識対象言語"
-                }
-            ],
-            "PaddleOCR": [
-                {
-                    "name": "lang",
-                    "label": "認識言語",
-                    "type": "select", 
-                    "default": "japan",
-                    "options": ["japan", "ch", "en", "korean", "french"],
-                    "description": "OCR認識対象言語"
-                },
-                {
-                    "name": "use_gpu",
-                    "label": "GPU使用",
-                    "type": "boolean",
-                    "default": False,
-                    "description": "GPU加速を使用"
-                }
-            ],
-            "OCRMyPDF": [
-                {
-                    "name": "language",
-                    "label": "認識言語",
-                    "type": "select",
-                    "default": "jpn+eng",
-                    "options": ["jpn", "eng", "jpn+eng", "chi_sim", "kor"],
-                    "description": "OCR認識対象言語"
-                },
-                {
-                    "name": "dpi",
-                    "label": "DPI設定",
-                    "type": "number",
-                    "default": 300,
-                    "min": 150,
-                    "max": 600,
-                    "step": 50,
-                    "description": "画像解像度（高いほど精度向上）"
-                },
-                {
-                    "name": "optimize",
-                    "label": "PDF最適化レベル",
-                    "type": "select",
-                    "default": "1: 軽度最適化（推奨）",
-                    "options": [
-                        "0: 最適化なし",
-                        "1: 軽度最適化（推奨）",
-                        "2: 中程度最適化",
-                        "3: 高度最適化"
-                    ],
-                    "description": "出力PDFの最適化レベル"
-                }
-            ]
-        }
-        
-        return params_map.get(engine_name, [])
-    
-    def _create_parameter_control(self, param: dict) -> ft.Control:
-        """パラメータコントロールを作成"""
-        param_name = param.get("name", "")
-        param_label = param.get("label", param_name)
-        param_type = param.get("type", "text")
-        param_default = param.get("default")
-        param_description = param.get("description", "")
-        
-        # ラベル部分
-        label_container = ft.Container(
-            content=ft.Text(f"{param_label}:", size=13, weight=ft.FontWeight.W_500),
-            width=120,
-            alignment=ft.alignment.center_left
-        )
-        
-        # コントロール作成
-        control_widget = None
-        if param_type == "select":
-            options = param.get("options", [])
-            control_widget = ft.Dropdown(
-                options=[ft.dropdown.Option(opt) for opt in options],
-                value=param_default if param_default in options else None,
-                expand=True
-            )
-        elif param_type == "number":
-            control_widget = ft.TextField(
-                value=str(param_default) if param_default is not None else "0",
-                width=100,
-                height=40,
-                text_align=ft.TextAlign.CENTER,
-                keyboard_type=ft.KeyboardType.NUMBER,
-                input_filter=ft.NumbersOnlyInputFilter()
-            )
-        elif param_type == "boolean":
-            control_widget = ft.Switch(value=bool(param_default))
-        else:
-            control_widget = ft.TextField(
-                value=str(param_default) if param_default is not None else "",
-                expand=True,
-                height=40
-            )
-        
-        # 説明部分（小さいテキスト）
-        desc_text = ft.Text(
-            param_description, 
-            size=11, 
-            color=ft.Colors.GREY_600,
-            max_lines=2,
-            overflow=ft.TextOverflow.ELLIPSIS
-        ) if param_description else None
-        
-        # 行全体を作成
-        row_content = [label_container, control_widget]
-        
-        return ft.Container(
-            content=ft.Column([
-                ft.Row(row_content, alignment=ft.MainAxisAlignment.START),
-                desc_text
-            ], spacing=4),
-            padding=ft.padding.all(4)
-        )
-    
-    def add_ocr_result(self, result_data: dict):
-        """OCR結果をリトラクタブルセクションとして追加"""
-        if not self.results_container:
-            return
-        
-        # プレースホルダーがある場合は削除
-        if (self.results_container.controls and 
-            len(self.results_container.controls) == 1 and 
-            isinstance(self.results_container.controls[0].content, ft.Column)):
-            self.results_container.controls.clear()
-        
-        # 新しい結果セクションを作成して最上位に追加
-        new_section = self._create_retractable_section(result_data)
-        self.results_container.controls.insert(0, new_section)
-        
-        if self.results_container.page:
-            self.results_container.update()
     
     def _create_retractable_section(self, result_data: dict) -> ft.Control:
         """リトラクタブルな結果セクションを作成"""
@@ -782,9 +537,7 @@ class OCRAdjustmentPage:
                 self.results_container.controls.remove(control)
                 break
         
-        # 結果が空の場合はプレースホルダーを表示
-        if not self.results_container.controls:
-            self._show_results_placeholder()
+        # 結果が空の場合は空のまま
         
         if self.results_container.page:
             self.results_container.update()

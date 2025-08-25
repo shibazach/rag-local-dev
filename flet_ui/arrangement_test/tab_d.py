@@ -54,17 +54,17 @@ class TabD:
         # ===== 下層: 本体レイアウト =====
         base_layer = self._create_base_layout()
         
-        # ===== 上層: オーバーレイレイヤー（縦スライダー配置） =====
-        overlay_layer = self._create_overlay_layer()
+        # ===== 上層: 部分オーバーレイ（左右端の縦スライダーのみ） =====
+        overlay_elements = self._create_overlay_layer()
         
         # 初期レイアウト適用（コンテナ作成後）
         self._update_layout()
         
-        # ===== ルート: 2層をStackで重ね =====
+        # ===== ルート: 部分オーバーレイでStack構成 =====
         main_content = ft.Stack(
             expand=True,
             clip_behavior=ft.ClipBehavior.NONE,  # 画面端からのはみ出し許可
-            controls=[base_layer, overlay_layer],
+            controls=[base_layer] + overlay_elements,  # 背景 + 左右端オーバーレイ
         )
         
         return ft.Container(
@@ -127,75 +127,62 @@ class TabD:
             ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH)
         )
         
-        # OCR調整と全く同じ実装：共通コンポーネントで横スライダー配置
-        # 横スライダーに赤枠追加（可視化分析用）
-        red_bordered_slider = ft.Container(
-            content=horizontal_slider,
-            border=ft.border.all(2, ft.Colors.RED)
-        )
-        complete_layout = PageStyles.create_complete_layout_with_slider(
-            main_content, red_bordered_slider
-        )
-        # 横スライダー収容コンテナに青枠追加（階層可視化用）
-        return ft.Container(
-            content=complete_layout,
-            border=ft.border.all(2, ft.Colors.BLUE)
+        # 元の構造に復旧：PageStyles.create_complete_layout_with_slider使用
+        return PageStyles.create_complete_layout_with_slider(
+            main_content, horizontal_slider
         )
     
-    def _create_overlay_layer(self) -> ft.Container:
-        """オーバーレイレイヤー: 余白なし純粋配置で縦スライダー中央配置"""
+    def _create_overlay_layer(self):
+        """部分オーバーレイ: 左右端の縦スライダーのみ配置（中央エリア自由確保）"""
         
-        # 縦スライダー作成（縦操作領域確保版）
-        def create_vslider(value=50, on_change=None):
+        # 縦スライダー作成（元のサイズ維持版）
+        def create_vslider(value, on_change):
             return ft.Container(
-                width=200,         # Sliderの実サイズに合わせる
-                height=200,        # 操作可能領域確保
+                width=200,         # 元と同じサイズ
+                height=200,        # 元と同じサイズ  
                 content=ft.Slider(
                     min=1, max=5, value=value, divisions=4,
-                    rotate=math.pi / 2, on_change=on_change, width=200, height=30
+                    rotate=math.pi / 2, on_change=on_change, 
+                    width=200, height=30  # 回転時の実効サイズ
                 ),
-                # 赤枠で可視化（位置確認用）
+                # 赤枠復旧：サイズ確認用（元の通り）
                 border=ft.border.all(2, ft.Colors.RED),
-                bgcolor=ft.Colors.TRANSPARENT  # 透明化で内部確認
+                bgcolor=ft.Colors.TRANSPARENT  # 元の通り
             )
         
-        left_slider = create_vslider(self.left_split_level, self.on_left_change)
-        right_slider = create_vslider(self.right_split_level, self.on_right_change)
+        left_vslider = create_vslider(self.left_split_level, self.on_left_change)
+        right_vslider = create_vslider(self.right_split_level, self.on_right_change)
         
-        return ft.Container(
-            expand=True,
-            # padding完全削除で純粋配置
-            content=ft.Column([
-                # スライダーのみ直接配置（青枠削除）
-                ft.Stack(
-                    alignment=ft.alignment.center,
-                    clip_behavior=ft.ClipBehavior.NONE,
-                    expand=True,
-                    controls=[
-                        ft.Container(
-                            content=left_slider,
-                            left=-84,   # (200-32)/2=84px（200px基準）
-                        ),
-                        ft.Container(
-                            content=right_slider,
-                            right=-84,  # (200-32)/2=84px（200px基準）
-                        ),
-                    ],
-                ),
-                
-                # 下部エリア（横スライダーと同じ高さ）
-                ft.Container(height=32),
-            ], expand=True, spacing=0),
-        )
+        # 部分オーバーレイ構成：左右端のみ配置（元のはみ出し量で調整）
+        return [
+            # 左端オーバーレイ（元の-84pxはみ出しを再現）
+            ft.Container(
+                content=left_vslider,
+                left=-84, top=0, bottom=32,  # 元のはみ出し量で配置
+            ),
+            # 右端オーバーレイ（元の-84pxはみ出しを再現） 
+            ft.Container(
+                content=right_vslider,
+                right=-84, top=0, bottom=32,  # 元のはみ出し量で配置
+            )
+        ]
     
     def _create_demo_pane(self, title: str, bgcolor: str, icon: str) -> ft.Container:
         """デモ用ペイン作成"""
+        # 基本コンテンツ
+        content_items = [
+            ft.Text(f"{icon} {title}", size=16, weight=ft.FontWeight.BOLD),
+            ft.Text("レスポンシブ動作確認", size=12, color=ft.Colors.GREY_600),
+            ft.Text("スライダーで比率変更", size=12, color=ft.Colors.GREY_600)
+        ]
+        
+        # OCR設定ペインのみフォーカステスト用ボタン追加（機能なし）
+        if title == "OCR設定":
+            content_items.append(ft.Container(height=8))
+            content_items.append(ft.ElevatedButton("テストボタン"))
+        
         return ft.Container(
-            content=ft.Column([
-                ft.Text(f"{icon} {title}", size=16, weight=ft.FontWeight.BOLD),
-                ft.Text("レスポンシブ動作確認", size=12, color=ft.Colors.GREY_600),
-                ft.Text("スライダーで比率変更", size=12, color=ft.Colors.GREY_600)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            content=ft.Column(content_items, horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             expand=True, alignment=ft.alignment.center,
             bgcolor=bgcolor, border_radius=8,
             margin=ft.margin.all(4), padding=ft.padding.all(8)

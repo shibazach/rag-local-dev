@@ -6,7 +6,7 @@ Flet RAGシステム - 共通パネルコンポーネント
 
 import flet as ft
 from dataclasses import dataclass
-from typing import Optional, Callable, Any
+from typing import Optional, Callable, Any, List
 
 
 @dataclass
@@ -36,6 +36,7 @@ class PanelConfig:
     bgcolor: str = ft.Colors.WHITE
     border_radius: int = 8
     border: ft.Border = ft.border.all(1, ft.Colors.GREY_300)
+    enable_scroll: bool = True  # パネル内スクロール有効/無効
 
 
 def create_panel_header(config: PanelHeaderConfig) -> ft.Container:
@@ -125,16 +126,21 @@ def create_panel(config: PanelConfig, content: ft.Control) -> ft.Container:
     """統一パネル作成"""
     header = create_panel_header(config.header_config)
     
-    # コンテンツ部分をスクロール対応のColumnでラップ
-    scrollable_content = ft.Column(
-        controls=[content],
-        expand=True,
-        scroll=ft.ScrollMode.AUTO  # 縦方向にはみ出た場合にスクロールバー表示
-    )
+    # スクロール制御：テーブル系パネルでは無効、詳細設定系では有効
+    if config.enable_scroll:
+        # スクロール対応のColumnでラップ
+        content_wrapper = ft.Column(
+            controls=[content],
+            expand=True,
+            scroll=ft.ScrollMode.AUTO  # 縦方向にはみ出た場合にスクロールバー表示
+        )
+    else:
+        # スクロール無効：テーブル独自スクロールを優先
+        content_wrapper = content
     
     panel_content = ft.Column([
         header,
-        scrollable_content
+        content_wrapper
     ], spacing=0, expand=True)
     
     return ft.Container(
@@ -224,3 +230,69 @@ def create_status_badge(status: str) -> ft.Container:
         border_radius=12,
         alignment=ft.alignment.center  # センタリング追加
     )
+
+
+def create_styled_expansion_tile(
+    title: str, 
+    controls: List[ft.Control], 
+    initially_expanded: bool = True
+) -> ft.ExpansionTile:
+    """OCR詳細設定用の統一スタイル ExpansionTile 作成"""
+    return ft.ExpansionTile(
+        title=ft.Container(
+            ft.Text(
+                title, 
+                size=14, 
+                weight=ft.FontWeight.BOLD, 
+                color=ft.Colors.GREY_700
+            ), 
+            alignment=ft.alignment.center_left,
+            bgcolor=ft.Colors.WHITE,  # 白背景で線を隠す
+            padding=ft.padding.only(left=4, top=8, right=8, bottom=8),
+            border_radius=4
+        ),
+        controls=controls,
+        initially_expanded=initially_expanded,
+        collapsed_icon_color=ft.Colors.GREY_400,
+        icon_color=ft.Colors.GREY_400
+    )
+
+
+def create_parameter_control(param: dict) -> ft.Control:
+    """OCRパラメータ用コントロール作成（共通）"""
+    param_type = param.get("type", "text")
+    param_default = param.get("default")
+    
+    if param_type == "select":
+        options = param.get("options", [])
+        dropdown_options = [ft.dropdown.Option(key=str(opt["value"]), text=opt["label"]) for opt in options]
+        return ft.Container(
+            ft.Dropdown(options=dropdown_options, value=str(param_default), width=180),
+            margin=ft.margin.symmetric(vertical=2)
+        )
+    elif param_type == "number":
+        return ft.TextField(
+            value=str(param_default), 
+            width=80, 
+            height=40, 
+            keyboard_type=ft.KeyboardType.NUMBER, 
+            input_filter=ft.NumbersOnlyInputFilter(), 
+            text_align=ft.TextAlign.CENTER
+        )
+    elif param_type == "boolean":
+        return ft.Switch(value=bool(param_default))
+    else:
+        return ft.TextField(value=str(param_default), width=150, height=40)
+
+
+def create_parameter_row(param: dict) -> ft.Control:
+    """OCRパラメータ1行表示（共通）"""
+    return ft.Row([
+        ft.Container(
+            ft.Text(f"{param['label']}:", size=13, weight=ft.FontWeight.W_500), 
+            width=140, 
+            alignment=ft.alignment.center_left
+        ),
+        create_parameter_control(param),
+        ft.Text(param.get("description", ""), size=11, color=ft.Colors.GREY_600, expand=True)
+    ], spacing=8, alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER)

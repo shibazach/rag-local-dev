@@ -3,6 +3,7 @@
 EasyOCR エンジン設定パラメータ定義とレイアウト
 """
 import flet as ft
+from app.flet_ui.shared.panel_components import create_styled_expansion_tile, create_parameter_row
 
 def get_easyocr_parameters() -> list:
     """EasyOCR のパラメータ定義"""
@@ -26,44 +27,17 @@ def create_easyocr_panel_content() -> ft.Control:
     """EasyOCR専用レイアウト表示"""
     params = get_easyocr_parameters()
     
-    def _create_control(param: dict) -> ft.Control:
-        """パラメータコントロール作成"""
-        param_type = param.get("type", "text")
-        param_default = param.get("default")
-        
-        if param_type == "select":
-            options = param.get("options", [])
-            dropdown_options = [ft.dropdown.Option(key=str(opt["value"]), text=opt["label"]) for opt in options]
-            return ft.Container(
-                ft.Dropdown(options=dropdown_options, value=str(param_default), width=180),
-                margin=ft.margin.symmetric(vertical=2)
-            )
-        elif param_type == "number":
-            return ft.TextField(value=str(param_default), width=80, height=40, keyboard_type=ft.KeyboardType.NUMBER, input_filter=ft.NumbersOnlyInputFilter(), text_align=ft.TextAlign.CENTER)
-        elif param_type == "boolean":
-            return ft.Switch(value=bool(param_default))
-        else:
-            return ft.TextField(value=str(param_default), width=150, height=40)
+
     
-    def _create_row(param: dict) -> ft.Control:
-        """1行形式でパラメータを表示"""
-        return ft.Row([
-            ft.Container(ft.Text(f"{param['label']}:", size=13, weight=ft.FontWeight.W_500), width=120, alignment=ft.alignment.center_left),
-            _create_control(param),
-            ft.Text(param.get("description", ""), size=11, color=ft.Colors.GREY_600, expand=True)
-        ], spacing=8, alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER)
-    
-    # セクション化されたレイアウト（リトラクタブル）
-    basic_section = ft.ExpansionTile(
-        title=ft.Container(ft.Text("基本設定", size=14, weight=ft.FontWeight.BOLD), alignment=ft.alignment.center_left),
-        controls=[ft.Container(_create_row(p), padding=ft.padding.only(left=16)) for p in params[:4]],  # 言語、GPU、拡大倍率、詳細情報
-        initially_expanded=True
+    # セクション化されたレイアウト（共通スタイル使用）
+    basic_section = create_styled_expansion_tile(
+        "基本設定",
+        [ft.Container(create_parameter_row(p), padding=ft.padding.only(left=16)) for p in params[:4]]  # 言語、GPU、拡大倍率、詳細情報
     )
     
-    advanced_section = ft.ExpansionTile(
-        title=ft.Container(ft.Text("高精度設定", size=14, weight=ft.FontWeight.BOLD), alignment=ft.alignment.center_left),
-        controls=[ft.Container(_create_row(p), padding=ft.padding.only(left=16)) for p in params[4:]],  # 段落モード以降
-        initially_expanded=True
+    advanced_section = create_styled_expansion_tile(
+        "高精度設定",
+        [ft.Container(create_parameter_row(p), padding=ft.padding.only(left=16)) for p in params[4:]]  # 段落モード以降
     )
     
     return ft.Column([basic_section, advanced_section], spacing=8)

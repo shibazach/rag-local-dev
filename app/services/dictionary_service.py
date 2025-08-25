@@ -12,7 +12,7 @@ from pathlib import Path
 class DictionaryService:
     """辞書ファイルの操作を管理するサービス"""
     
-    def __init__(self, dict_base_path: str = "config/dictionaries"):
+    def __init__(self, dict_base_path: str = "app/config/ocr/dic"):
         """
         辞書サービスを初期化
         

@@ -6,7 +6,7 @@ Flet RAGシステム - アップロードページメイン
 
 import flet as ft
 from .components import FileUploadArea, FolderUploadArea, RealTimeLogArea
-from flet_ui.shared.style_constants import CommonComponents, PageStyles
+from app.flet_ui.shared.style_constants import CommonComponents, PageStyles
 
 def show_upload_page(page: ft.Page = None):
     """アップロードページ表示関数"""
@@ -19,7 +19,7 @@ def show_upload_page(page: ft.Page = None):
     
     left_pane = CommonComponents.create_standard_column([
         file_upload_area,
-        CommonComponents.create_spacing_container(),
+        CommonComponents.create_spacing_container(4),  # 8px → 4px（margin削除により調整）
         folder_upload_area
     ])
     
@@ -32,7 +32,6 @@ def show_upload_page(page: ft.Page = None):
     # メインレイアウト（左右1:2分割）
     main_layout = CommonComponents.create_standard_row([
         left_pane,
-        CommonComponents.create_width_spacing_container(),
         right_pane
     ])
     

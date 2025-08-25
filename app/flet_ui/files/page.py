@@ -6,9 +6,9 @@ Flet RAGシステム - ファイル管理ページ（完全共通コンポーネ
 
 import flet as ft
 from .table import FilesTable
-from flet_ui.shared.pdf_preview import PDFPreview
-from flet_ui.shared.panel_components import create_panel, create_files_panel_config
-from flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
+from app.flet_ui.shared.pdf_preview import PDFPreview
+from app.flet_ui.shared.panel_components import create_panel, create_files_panel_config
+from app.flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
 
 
 def show_files_page(page=None):

@@ -5,8 +5,8 @@ Flet RAGシステム - アプリケーション状態管理
 """
 
 import flet as ft
-from ..auth.login import show_login_page
-from ..home.page import show_home_page
+from app.flet_ui.auth.login import show_login_page
+from app.flet_ui.home.page import show_home_page
 from .menu import create_header
 from .status_bar import create_status_bar
 from .placeholder_page import show_placeholder_page
@@ -62,19 +62,19 @@ class AppState:
             return show_home_page()
         elif self.current_page == "files":
             # ファイル管理ページ（コンテンツのみ）
-            from ..files.page import show_files_page
+            from app.flet_ui.files.page import show_files_page
             return show_files_page(self.page)
         elif self.current_page == "upload":
             # アップロードページ（コンテンツのみ）
-            from ..upload.page import show_upload_page
+            from app.flet_ui.upload.page import show_upload_page
             return show_upload_page(self.page)
         elif self.current_page == "ocr":
             # OCR調整ページ（コンテンツのみ）
-            from ..ocr_adjustment.page import show_ocr_adjustment_page
+            from app.flet_ui.ocr_adjustment.page import show_ocr_adjustment_page
             return show_ocr_adjustment_page(self.page)
         elif self.current_page == "arrangement_test":
             # 配置テストページ（コンテンツのみ）
-            from ..arrangement_test.page import show_arrangement_test_page
+            from app.flet_ui.arrangement_test.page import show_arrangement_test_page
             return show_arrangement_test_page(self.page)
         else:
             # その他のページはプレースホルダー

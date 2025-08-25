@@ -7,10 +7,10 @@ Flet RAGシステム - ファイル一覧テーブル
 import flet as ft
 from typing import Dict, List, Optional, Any
 from .api_client import FletFilesClient
-from flet_ui.shared.panel_components import (
+from app.flet_ui.shared.panel_components import (
     PanelHeaderConfig, PanelConfig, create_panel, create_files_panel_config
 )
-from flet_ui.shared.table_components import (
+from app.flet_ui.shared.table_components import (
     TableColumnConfig, FlexibleDataTable, create_pagination_controls, StandardColumns
 )
 
@@ -78,6 +78,7 @@ class FilesTable:
                 status_callback=self._on_status_change,
                 search_callback=self._on_search_change
             )
+            panel_config.enable_scroll = False  # テーブル独自スクロール使用のため無効化
 
             
             return create_panel(panel_config, panel_content)

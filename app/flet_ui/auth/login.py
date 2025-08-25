@@ -5,7 +5,7 @@ Flet RAGシステム - ログインページコンポーネント
 """
 
 import flet as ft
-from flet_ui.shared.common_buttons import create_action_button
+from app.flet_ui.shared.common_buttons import create_action_button
 
 
 def show_login_page(page: ft.Page, on_login_success_callback):

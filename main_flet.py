@@ -5,7 +5,7 @@ Flet RAGシステム - メインエントリーポイント
 """
 
 import flet as ft
-from flet_ui.shared.app_state import AppState
+from app.flet_ui.shared.app_state import AppState
 
 
 def main(page: ft.Page):

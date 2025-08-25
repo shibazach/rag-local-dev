@@ -6,15 +6,15 @@ Flet RAGシステム - OCR調整ページメイン
 
 import flet as ft
 import math
-from flet_ui.shared.panel_components import create_panel, PanelHeaderConfig, PanelConfig
-from flet_ui.shared.pdf_preview import PDFPreview
-from flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
+from app.flet_ui.shared.panel_components import create_panel, PanelHeaderConfig, PanelConfig
+from app.flet_ui.shared.pdf_preview import PDFPreview
+from app.flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
 from .engines.easyocr_params import get_easyocr_parameters, create_easyocr_panel_content
 from .engines.tesseract_params import get_tesseract_parameters, create_tesseract_panel_content
 from .engines.paddleocr_params import get_paddleocr_parameters, create_paddleocr_panel_content
 from .engines.ocrmypdf_params import get_ocrmypdf_parameters, create_ocrmypdf_panel_content
 from .dictionary_manager import create_dictionary_buttons
-from flet_ui.shared.common_buttons import create_light_button, create_dark_button, create_action_button
+from app.flet_ui.shared.common_buttons import create_light_button, create_dark_button, create_action_button
 
 class OCRAdjustmentPage:
     """OCR調整ページ（4分割レイアウト + 3スライダー制御）"""
@@ -68,11 +68,11 @@ class OCRAdjustmentPage:
         # パネル内容（実際のOCR設定項目）
         panel_content = ft.Container(
             content=ft.Column([
-                # ファイル選択情報
+                # ファイル選択情報（統一レイアウト）
                 ft.Row([
                     ft.Container(
                         content=ft.Text("ファイル:", weight=ft.FontWeight.BOLD, size=12),
-                        width=100,
+                        width=120,  # 統一幅
                         alignment=ft.alignment.center_left
                     ),
                     ft.TextField(
@@ -88,61 +88,58 @@ class OCRAdjustmentPage:
                     )
                 ], alignment=ft.MainAxisAlignment.START),
                 
-                        # OCRエンジン選択
-                        ft.Container(
-                            content=ft.Row([
-                                ft.Container(
-                                    content=ft.Text("OCRエンジン:", size=13, weight=ft.FontWeight.W_500),
-                                    width=100,
-                                    alignment=ft.alignment.center_left
-                                ),
-                                ft.Dropdown(
-                                    options=[
-                                        ft.dropdown.Option("EasyOCR"),
-                                        ft.dropdown.Option("Tesseract"),
-                                        ft.dropdown.Option("PaddleOCR"),
-                                        ft.dropdown.Option("OCRMyPDF")
-                                    ],
-                                    value="EasyOCR",
-                                    expand=True,
-                                    on_change=self._on_engine_change
-                                )
-                            ]),
-                            padding=ft.padding.all(4)
-                        ),
+                # OCRエンジン選択（統一レイアウト、余計なContainer削除）
+                ft.Row([
+                    ft.Container(
+                        content=ft.Text("OCRエンジン:", weight=ft.FontWeight.BOLD, size=12),
+                        width=120,  # 統一幅
+                        alignment=ft.alignment.center_left
+                    ),
+                    ft.Dropdown(
+                        options=[
+                            ft.dropdown.Option("EasyOCR"),
+                            ft.dropdown.Option("Tesseract"),
+                            ft.dropdown.Option("PaddleOCR"),
+                            ft.dropdown.Option("OCRMyPDF")
+                        ],
+                        value="EasyOCR",
+                        width=200,
+                        on_change=self._on_engine_change
+                    )
+                ], alignment=ft.MainAxisAlignment.START),
                 
-                # 処理ページと誤字修正（横並び）
-                ft.Container(
-                    content=ft.Row([
-                        # 処理ページ
-                        ft.Row([
-                            ft.Container(
-                                content=ft.Text("処理ページ:", size=13, weight=ft.FontWeight.W_500),
-                                width=100,
-                                alignment=ft.alignment.center_left
-                            ),
-                            ft.Container(
-                                content=ft.TextField(
-                                    value="1",
-                                    width=80,
-                                    height=40,
-                                    text_align=ft.TextAlign.CENTER,
-                                    keyboard_type=ft.KeyboardType.NUMBER,
-                                    input_filter=ft.NumbersOnlyInputFilter()
-                                ),
-                                width=80
-                            ),
-                            ft.Text("0=全て", size=11, color=ft.Colors.GREY_600)
-                        ], spacing=6),
-                        
-                        # 誤字修正
-                        ft.Row([
-                            ft.Switch(value=True),
-                            ft.Text("誤字修正", size=13)
-                        ], spacing=6)
-                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
-                    padding=ft.padding.all(4)
-                ),
+                # 処理ページ（統一レイアウト）
+                ft.Row([
+                    ft.Container(
+                        content=ft.Text("処理ページ:", weight=ft.FontWeight.BOLD, size=12),
+                        width=120,  # 統一幅
+                        alignment=ft.alignment.center_left
+                    ),
+                    ft.TextField(
+                        value="1",
+                        width=80,
+                        height=40,
+                        text_align=ft.TextAlign.CENTER,
+                        keyboard_type=ft.KeyboardType.NUMBER,
+                        input_filter=ft.NumbersOnlyInputFilter(),
+                    ),
+                    ft.Text("0=全て", size=10, color=ft.Colors.GREY_600)
+                ], spacing=8, alignment=ft.MainAxisAlignment.START),
+                
+                # 誤字修正（統一レイアウト）
+                ft.Row([
+                    ft.Container(
+                        content=ft.Text("誤字修正:", weight=ft.FontWeight.BOLD, size=12),
+                        width=120,  # 統一幅
+                        alignment=ft.alignment.center_left
+                    ),
+                    ft.Switch(
+                        value=True,
+                        scale=0.8,
+                        active_color=ft.Colors.BLUE_600,
+                        active_track_color=ft.Colors.BLUE_200
+                    )
+                ], spacing=8, alignment=ft.MainAxisAlignment.START),
                 
 
                 

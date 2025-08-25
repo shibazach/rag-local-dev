@@ -10,8 +10,8 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
 
 import flet as ft
-from flet_ui.ocr_adjustment.page import show_ocr_adjustment_page
-from flet_ui.shared.style_constants import PageStyles
+from app.flet_ui.ocr_adjustment.page import show_ocr_adjustment_page
+from app.flet_ui.shared.style_constants import PageStyles
 
 def main(page: ft.Page):
     """OCR調整ページテスト用メイン関数"""

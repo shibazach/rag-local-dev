@@ -5,12 +5,12 @@ Flet RAGシステム - アップロードページコンポーネント
 """
 
 import flet as ft
-from flet_ui.shared.common_buttons import create_light_button
+from app.flet_ui.shared.common_buttons import create_light_button
 from typing import Dict, List, Any, Optional
-from flet_ui.shared.panel_components import (
+from app.flet_ui.shared.panel_components import (
     PanelHeaderConfig, PanelConfig, create_panel, create_upload_panel_config
 )
-from flet_ui.shared.table_components import (
+from app.flet_ui.shared.table_components import (
     TableColumnConfig, FlexibleDataTable, create_pagination_controls, StandardColumns
 )
 
@@ -25,38 +25,34 @@ class FileUploadArea(ft.Container):
     
     def _create_content(self):
         """コンテンツ作成"""
-        # ドラッグ&ドロップエリア
-        drop_area = ft.Container(
-            content=ft.Column([
-                ft.Icon(ft.Icons.CLOUD_UPLOAD, size=48, color=ft.Colors.GREY_400),
-                ft.Container(height=12),
-                ft.Text("ファイルをドラッグ&ドロップ", size=16, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
-                ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
-                ft.Container(height=8),
-                create_light_button(
-                    "ファイル選択",
-                    ft.Icons.FOLDER_OPEN,
-                    self._on_file_select
-                ),
-                ft.Container(height=16),
-                ft.Text("対応形式: PDF, DOCX, TXT, PNG, JPG", 
-                       size=12, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            expand=True,
-            alignment=ft.alignment.center,
-            border=ft.border.all(2, ft.Colors.GREY_300),
-            border_radius=8,
-            bgcolor=ft.Colors.GREY_50,
-            padding=ft.padding.all(20)
-        )
+        # ドラッグ&ドロップエリア（パネル内部いっぱいに拡張）
+        drop_area = ft.Column([
+            ft.Icon(ft.Icons.CLOUD_UPLOAD, size=48, color=ft.Colors.GREY_400),
+            ft.Container(height=12),
+            ft.Text("ファイルをドラッグ&ドロップ", size=16, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
+            ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
+            ft.Container(height=8),
+            create_light_button(
+                "ファイル選択",
+                ft.Icons.FOLDER_OPEN,
+                self._on_file_select
+            ),
+            ft.Container(height=16),
+            ft.Text("対応形式: PDF, DOCX, TXT, PNG, JPG", 
+                   size=12, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER)
+        ], 
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER, 
+        expand=True, 
+        alignment=ft.MainAxisAlignment.CENTER)
         
-        # パネル設定
+        # パネル設定（margin削除でギャップ調整）
         panel_config = create_upload_panel_config(
             title="ファイルアップロード",
             title_icon=ft.Icons.DESCRIPTION,
             show_file_select=True,
             file_select_callback=self._on_file_select
         )
+
         
         # パネル作成
         panel = create_panel(panel_config, drop_area)
@@ -86,40 +82,55 @@ class FolderUploadArea(ft.Container):
             value="single"
         )
         
-        # フォルダ選択エリア
-        folder_area = ft.Container(
-            content=ft.Column([
-                ft.Icon(ft.Icons.FOLDER, size=48, color=ft.Colors.GREY_400),
-                ft.Container(height=12),
-                ft.Text("フォルダをドラッグ&ドロップ", size=16, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
-                ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
-                ft.Container(height=8),
-                create_light_button(
-                    "フォルダ選択",
-                    ft.Icons.FOLDER_OPEN,
-                    self._on_folder_select
+        # フォルダ選択エリア（OCR調整と同じテキストボックス+ボタン形式）
+        folder_area = ft.Column([
+            # フォルダパス表示（統一レイアウト）
+            ft.Row([
+                ft.Container(
+                    content=ft.Text("フォルダ:", weight=ft.FontWeight.BOLD, size=12),
+                    width=120,  # OCR調整と統一
+                    alignment=ft.alignment.center_left
                 ),
-                ft.Container(height=16),
-                upload_mode,
-                ft.Container(height=8),
-                ft.Text("対応形式: PDF, DOCX, TXT, PNG, JPG", 
-                       size=12, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            expand=True,
-            alignment=ft.alignment.center,
-            border=ft.border.all(2, ft.Colors.GREY_300),
-            border_radius=8,
-            bgcolor=ft.Colors.GREY_50,
-            padding=ft.padding.all(20)
-        )
+                ft.TextField(
+                    hint_text="選択されたフォルダパス", 
+                    read_only=True,
+                    expand=True,
+                    height=40
+                ),
+                ft.IconButton(
+                    icon=ft.Icons.FOLDER_OPEN,
+                    icon_size=20,
+                    tooltip="フォルダ選択",
+                    on_click=self._on_folder_select
+                )
+            ], alignment=ft.MainAxisAlignment.START),
+            
+            ft.Container(height=16),
+            
+            # アップロード方式
+            ft.Row([
+                ft.Container(
+                    content=ft.Text("方式:", weight=ft.FontWeight.BOLD, size=12),
+                    width=120,
+                    alignment=ft.alignment.center_left
+                ),
+                upload_mode
+            ], alignment=ft.MainAxisAlignment.START),
+            
+            ft.Container(height=12),
+            
+            ft.Text("対応形式: PDF, DOCX, TXT, PNG, JPG", 
+                   size=12, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER)
+        ], expand=True)
         
-        # パネル設定
+        # パネル設定（margin削除でギャップ調整）
         panel_config = create_upload_panel_config(
             title="フォルダアップロード",
             title_icon=ft.Icons.FOLDER,
-            show_file_select=True,
+            show_file_select=False,  # ヘッダーボタン不要（内容にボタンあり）
             file_select_callback=self._on_folder_select
         )
+
         
         # パネル作成
         panel = create_panel(panel_config, folder_area)
@@ -175,7 +186,7 @@ class RealTimeLogArea(ft.Container):
             )
         ], spacing=0, expand=True)
         
-        # パネル設定
+        # パネル設定（margin削除でギャップ調整）
         panel_config = create_upload_panel_config(
             title="アップロードログ",
             title_icon=ft.Icons.LIST_ALT,
@@ -184,6 +195,8 @@ class RealTimeLogArea(ft.Container):
             status_callback=self._on_status_change,
             search_callback=self._on_search_change
         )
+
+        panel_config.enable_scroll = False  # テーブル独自スクロール使用のため無効化
         
         # パネル作成
         panel = create_panel(panel_config, table_content)

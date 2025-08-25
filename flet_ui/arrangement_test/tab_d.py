@@ -7,14 +7,9 @@ OCR調整ページの4分割+3スライダー構造の動作検証
 
 import flet as ft
 import math
-from ..shared.style_constants import CommonComponents, PageStyles
+from ..shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
 
-# スライダー定数（縦操作領域確保版）
-SL_LEN = 320      # 縦スライダーの"横幅"（= Container.width）
-SL_HEIGHT = 200   # 縦スライダーの"縦操作領域"（= Container.height）
-SL_THICK = 22     # スライダーの"太さ"（参考値）
-GUIDE_WIDTH = 36  # 青枠（ガイドライン）の幅
-GUIDE_CENTER = 18 # 青枠の中央位置（36px / 2）
+
 
 
 class TabD:
@@ -26,8 +21,8 @@ class TabD:
         self.right_split_level = 3  # 右側の上下比率
         self.horizontal_level = 3   # 左右比率
         
-        # 比率テーブル（1:5 ～ 5:1）
-        self.ratios = {1: (1, 5), 2: (2, 4), 3: (3, 3), 4: (4, 2), 5: (5, 1)}
+        # 共通比率テーブル使用
+        self.ratios = SLIDER_RATIOS
     
     def create_content(self) -> ft.Control:
         """真のオーバーレイ縦スライダー実装（定数なし・自動レイアウト対応）"""
@@ -137,39 +132,11 @@ class TabD:
         )
     
     def _create_overlay_layer(self):
-        """部分オーバーレイ: 左右端の縦スライダーのみ配置（中央エリア自由確保）"""
-        
-        # 縦スライダー作成（元のサイズ維持版）
-        def create_vslider(value, on_change):
-            return ft.Container(
-                width=200,         # 元と同じサイズ
-                height=200,        # 元と同じサイズ  
-                content=ft.Slider(
-                    min=1, max=5, value=value, divisions=4,
-                    rotate=math.pi / 2, on_change=on_change, 
-                    width=200, height=30  # 回転時の実効サイズ
-                ),
-                # 赤枠復旧：サイズ確認用（元の通り）
-                border=ft.border.all(2, ft.Colors.RED),
-                bgcolor=ft.Colors.TRANSPARENT  # 元の通り
-            )
-        
-        left_vslider = create_vslider(self.left_split_level, self.on_left_change)
-        right_vslider = create_vslider(self.right_split_level, self.on_right_change)
-        
-        # 部分オーバーレイ構成：左右端のみ配置（元のはみ出し量で調整）
-        return [
-            # 左端オーバーレイ（元の-84pxはみ出しを再現）
-            ft.Container(
-                content=left_vslider,
-                left=-84, top=0, bottom=32,  # 元のはみ出し量で配置
-            ),
-            # 右端オーバーレイ（元の-84pxはみ出しを再現） 
-            ft.Container(
-                content=right_vslider,
-                right=-84, top=0, bottom=32,  # 元のはみ出し量で配置
-            )
-        ]
+        """部分オーバーレイ: 共通コンポーネント使用"""
+        return CommonComponents.create_vertical_slider_overlay_elements(
+            self.left_split_level, self.on_left_change,
+            self.right_split_level, self.on_right_change
+        )
     
     def _create_demo_pane(self, title: str, bgcolor: str, icon: str) -> ft.Container:
         """デモ用ペイン作成"""

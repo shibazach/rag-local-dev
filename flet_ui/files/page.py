@@ -8,7 +8,7 @@ import flet as ft
 from .table import FilesTable
 from ..shared.pdf_preview import PDFPreview
 from ..shared.panel_components import create_panel, create_files_panel_config
-from ..shared.style_constants import CommonComponents, PageStyles
+from ..shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
 
 
 def show_files_page(page=None):
@@ -31,15 +31,9 @@ class FilesPage:
         self.pdf_preview = PDFPreview()
         self.page = None
 
-        # 5段階比率: 1:5, 2:4, 3:3, 4:2, 5:1
+        # 5段階比率: 共通定数使用
         self.level = 3  # 初期値は3:3
-        self.ratios = {
-            1: (1, 5),  # 左:1, 右:5
-            2: (2, 4),  # 左:2, 右:4  
-            3: (3, 3),  # 左:3, 右:3
-            4: (4, 2),  # 左:4, 右:2
-            5: (5, 1),  # 左:5, 右:1
-        }
+        self.ratios = SLIDER_RATIOS
 
         # UI参照
         self.main_container: ft.Container | None = None

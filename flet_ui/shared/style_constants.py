@@ -10,6 +10,9 @@ import math
 
 # プロジェクト専用の組み込み設定のため、定数クラスは不要
 
+# 共通スライダー設定
+SLIDER_RATIOS = {1: (1, 5), 2: (2, 4), 3: (3, 3), 4: (4, 2), 5: (5, 1)}  # 1:5 ～ 5:1の5段階
+
 
 class CommonComponents:
     """共通コンポーネント・スタイル定義"""
@@ -33,12 +36,40 @@ class CommonComponents:
         )
     
     @staticmethod
-    def create_vertical_slider(value: float, on_change) -> ft.Slider:
-        """垂直スライダー（プロジェクト標準: 1-5段階、90度回転）"""
-        return ft.Slider(
-            min=1, max=5, value=value, divisions=4, label="{value}",
-            on_change=on_change, expand=1, height=30, rotate=math.pi / 2
+    def create_vertical_slider(value: float, on_change) -> ft.Container:
+        """垂直スライダー（プロジェクト標準: 1-5段階、90度回転、赤枠付き）"""
+        return ft.Container(
+            width=200,         # 操作領域確保
+            height=200,        # 操作領域確保
+            content=ft.Slider(
+                min=1, max=5, value=value, divisions=4,
+                rotate=math.pi / 2, on_change=on_change, 
+                width=200, height=30  # 回転時の実効サイズ
+            ),
+            # 赤枠でサイズ確認用
+            border=ft.border.all(2, ft.Colors.RED),
+            bgcolor=ft.Colors.TRANSPARENT
         )
+    
+    @staticmethod
+    def create_vertical_slider_overlay_elements(left_value: float, left_on_change, 
+                                              right_value: float, right_on_change) -> list:
+        """縦スライダー部分オーバーレイ要素作成（左右端配置、中央エリア自由確保）"""
+        left_vslider = CommonComponents.create_vertical_slider(left_value, left_on_change)
+        right_vslider = CommonComponents.create_vertical_slider(right_value, right_on_change)
+        
+        return [
+            # 左端オーバーレイ（-84pxはみ出し配置）
+            ft.Container(
+                content=left_vslider,
+                left=-84, top=0, bottom=32,  # 下32px空けて横スライダーと重複回避
+            ),
+            # 右端オーバーレイ（-84pxはみ出し配置） 
+            ft.Container(
+                content=right_vslider,
+                right=-84, top=0, bottom=32,  # 下32px空けて横スライダーと重複回避
+            )
+        ]
     
     @staticmethod
     def create_sidebar_container(content: ft.Control, position: str = "left") -> ft.Container:

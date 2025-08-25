@@ -98,11 +98,15 @@ class TabD:
             self.bottom_right_container  
         ], spacing=0, expand=True)
         
-        # メイン行作成（中央4分割）
+        # Container参照保持（files/page.pyパターン適用）
+        self.left_container = ft.Container(content=self.left_column, expand=1)
+        self.right_container = ft.Container(content=self.right_column, expand=1)
+        
+        # メイン行作成（中央4分割）- 参照使用
         self.main_row = ft.Row([
-            ft.Container(content=self.left_column, expand=1),
+            self.left_container,    # 参照使用
             ft.VerticalDivider(width=1, thickness=1, color=ft.Colors.GREY_400),
-            ft.Container(content=self.right_column, expand=1)
+            self.right_container    # 参照使用
         ], spacing=0, expand=True)
         
         # 横スライダー作成（OCR調整と同じ共通コンポーネント使用）
@@ -209,14 +213,16 @@ class TabD:
         self.top_right_container.expand = right_top_ratio  
         self.bottom_right_container.expand = right_bottom_ratio
         
-        # 左右比率
-        self.left_column.expand = left_ratio
-        self.right_column.expand = right_ratio
+        # 左右比率（files/page.pyパターン適用：Container直接更新）
+        self.left_container.expand = left_ratio
+        self.right_container.expand = right_ratio
         
-        # UI更新
+        # UI更新（Container直接更新）
         try:
-            if hasattr(self, 'main_row') and self.main_row.page:
-                self.main_row.update()
+            if hasattr(self, 'left_container') and self.left_container.page:
+                self.left_container.update()
+            if hasattr(self, 'right_container') and self.right_container.page:
+                self.right_container.update()
         except:
             pass
     

@@ -5,6 +5,7 @@ Flet RAGシステム - 配置テスト タブA (レイアウト)
 """
 
 import flet as ft
+from ..shared.style_constants import CommonComponents
 
 
 class TabA:
@@ -16,12 +17,24 @@ class TabA:
     def create_content(self) -> ft.Control:
         """タブAコンテンツ作成"""
         # 4つのペイン作成
+        
+        # 横スライダーテスト用ハンドラー
+        def on_slider_change(e):
+            print(f"スライダー値: {e.control.value}")
+        
+        # 共通コンポーネント横スライダーをテスト配置
+        test_slider = CommonComponents.create_horizontal_slider(3, on_slider_change)
+        
         top_left = ft.Container(
-            content=ft.Text("左上", size=20, text_align=ft.TextAlign.CENTER),
+            content=ft.Column([
+                ft.Text("左上 - 横スライダーテスト", size=16, text_align=ft.TextAlign.CENTER),
+                test_slider
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
             bgcolor=ft.Colors.RED_100,
             alignment=ft.alignment.center,
             expand=True,
-            border=ft.border.all(2, ft.Colors.RED_300)
+            border=ft.border.all(2, ft.Colors.RED_300),
+            padding=ft.padding.all(10)
         )
         
         bottom_left = ft.Container(

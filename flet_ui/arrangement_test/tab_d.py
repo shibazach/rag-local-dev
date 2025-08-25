@@ -7,7 +7,7 @@ OCR調整ページの4分割+3スライダー構造の動作検証
 
 import flet as ft
 import math
-from ..shared.style_constants import CommonComponents
+from ..shared.style_constants import CommonComponents, PageStyles
 
 # スライダー定数（縦操作領域確保版）
 SL_LEN = 320      # 縦スライダーの"横幅"（= Container.width）
@@ -110,31 +110,36 @@ class TabD:
             self.horizontal_level, self.on_horizontal_change
         )
         
-        return ft.Container(
+        # メインコンテンツ部分のみ返す（横スライダーは共通コンポーネントで配置）
+        main_content = ft.Container(
             expand=True,
-            # padding完全削除
-            content=ft.Column([
-                # メイン行: 左ガイド + 中央1パネル + 右ガイド（余白なし）
-                ft.Row([
-                    # 左ガイド（青枠）純粋36px
-                    ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                                border=ft.border.all(1, ft.Colors.BLUE_300),
-                                disabled=True),
-                    # 中央領域（4分割パネル）
-                    ft.Container(content=self.main_row, expand=True),
-                    # 右ガイド（青枠）純粋36px
-                    ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                                border=ft.border.all(1, ft.Colors.BLUE_300),
-                                disabled=True),
-                ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH),
-                
-                # 下部横スライダーエリア
-                ft.Container(
-                    content=ft.Row([horizontal_slider], alignment=ft.MainAxisAlignment.CENTER),
-                    height=32, bgcolor=ft.Colors.RED_50,
-                    border=ft.border.all(2, ft.Colors.RED_400)
-                )
-            ], expand=True, spacing=0),
+            content=ft.Row([
+                # 左ガイド（青枠）純粋36px
+                ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
+                            border=ft.border.all(1, ft.Colors.BLUE_300),
+                            disabled=True),
+                # 中央領域（4分割パネル）
+                ft.Container(content=self.main_row, expand=True),
+                # 右ガイド（青枠）純粋36px
+                ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
+                            border=ft.border.all(1, ft.Colors.BLUE_300),
+                            disabled=True),
+            ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH)
+        )
+        
+        # OCR調整と全く同じ実装：共通コンポーネントで横スライダー配置
+        # 横スライダーに赤枠追加（可視化分析用）
+        red_bordered_slider = ft.Container(
+            content=horizontal_slider,
+            border=ft.border.all(2, ft.Colors.RED)
+        )
+        complete_layout = PageStyles.create_complete_layout_with_slider(
+            main_content, red_bordered_slider
+        )
+        # 横スライダー収容コンテナに青枠追加（階層可視化用）
+        return ft.Container(
+            content=complete_layout,
+            border=ft.border.all(2, ft.Colors.BLUE)
         )
     
     def _create_overlay_layer(self) -> ft.Container:

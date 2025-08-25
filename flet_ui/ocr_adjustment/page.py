@@ -45,12 +45,24 @@ class OCRAdjustmentPage:
         # メインROW（左右分割）
         main_row = CommonComponents.create_main_layout_row(left_column, right_column)
         
-        # 3つのスライダー作成（共通コンポーネント使用）
-        left_slider = CommonComponents.create_vertical_slider(
+        # 縦スライダー作成（tab_d.py動作実装版）
+        def create_working_vslider(value, on_change):
+            return ft.Container(
+                width=200, height=200,  # 操作領域確保
+                content=ft.Slider(
+                    min=1, max=5, value=value, divisions=4,
+                    rotate=math.pi / 2, on_change=on_change, 
+                    width=200, height=30
+                ),
+                border=ft.border.all(2, ft.Colors.RED),  # 動作確認用赤枠
+                bgcolor=ft.Colors.TRANSPARENT
+            )
+        
+        left_slider = create_working_vslider(
             self.left_split_level, self.on_left_split_change
         )
         
-        right_slider = CommonComponents.create_vertical_slider(
+        right_slider = create_working_vslider(
             self.right_split_level, self.on_right_split_change
         )
         

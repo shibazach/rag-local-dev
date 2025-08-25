@@ -24,7 +24,7 @@ class Sliders:
     
     @staticmethod
     def create_vertical(value: float, on_change) -> ft.Container:
-        """垂直スライダー（1-5段階、90度回転、赤枠200×200px）"""
+        """垂直スライダー（1-5段階、90度回転、200×200px）"""
         return ft.Container(
             width=200, height=200,
             content=ft.Slider(
@@ -32,7 +32,6 @@ class Sliders:
                 rotate=math.pi / 2, on_change=on_change, 
                 width=200, height=30
             ),
-            border=ft.border.all(2, ft.Colors.RED),
             bgcolor=ft.Colors.TRANSPARENT
         )
     
@@ -60,15 +59,13 @@ class Sliders:
         # 横スライダー
         horizontal_slider = Sliders.create_horizontal(horizontal_value, horizontal_on_change)
         
-        # ガイドエリア付きメインコンテンツ（左右36px青枠）
+        # ガイドエリア付きメインコンテンツ（左右36pxエリア確保）
         main_with_guides = ft.Container(
             expand=True,
             content=ft.Row([
-                ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                           border=ft.border.all(1, ft.Colors.BLUE_300), disabled=True),
+                ft.Container(width=36, disabled=True),
                 ft.Container(content=main_content, expand=True),
-                ft.Container(width=36, bgcolor=ft.Colors.BLUE_50,
-                           border=ft.border.all(1, ft.Colors.BLUE_300), disabled=True),
+                ft.Container(width=36, disabled=True),
             ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH)
         )
         
@@ -231,34 +228,53 @@ class Styles:
         )
 
 
-# 後方互換性エイリアス（段階的移行用）
-CommonComponents = Sliders
-PageStyles = Styles
+# 後方互換性エイリアス（完全版）
+class CommonComponents:
+    """統合コンポーネントクラス（全機能アクセス）"""
+    
+    # Sliders
+    create_horizontal_slider = staticmethod(Sliders.create_horizontal)
+    create_vertical_slider = staticmethod(Sliders.create_vertical)
+    create_vertical_slider_overlay_elements = staticmethod(Sliders.create_overlay_elements)
+    create_complete_layout_with_full_sliders = staticmethod(Sliders.create_complete_layout)
+    
+    # Layouts
+    create_main_layout_row = staticmethod(Layouts.create_row)
+    create_main_layout_column = staticmethod(Layouts.create_column)
+    create_sidebar_container = staticmethod(Layouts.create_sidebar)
+    create_bottombar_container = staticmethod(Layouts.create_bottombar)
+    create_spacing_container = staticmethod(Layouts.create_spacing)
+    create_width_spacing_container = staticmethod(Layouts.create_width_spacing)
+    create_standard_container = staticmethod(Layouts.create_container)
+    
+    @staticmethod
+    def create_standard_column(contents: list, expand: bool = True) -> ft.Column:
+        """標準Column（リスト引数版）"""
+        return ft.Column(contents, expand=expand, spacing=0)
+    
+    @staticmethod  
+    def create_standard_row(contents: list, expand: bool = True) -> ft.Row:
+        """標準Row（リスト引数版）"""
+        return ft.Row(contents, expand=expand, spacing=0)
+    
+    # Components
+    create_horizontal_divider = staticmethod(Components.create_divider)
+    create_vertical_divider = staticmethod(Components.create_vertical_divider)
+    create_primary_button = staticmethod(Components.create_primary_button)
+    create_secondary_button = staticmethod(Components.create_secondary_button)
+    create_standard_text = staticmethod(Components.create_text)
+    create_standard_icon = staticmethod(Components.create_icon)
+    create_standard_panel_header_config = staticmethod(Components.create_panel_header_config)
+
+
+class PageStyles:
+    """ページスタイル統合クラス"""
+    
+    set_page_background = staticmethod(Styles.set_page_background)
+    create_main_layout_container = staticmethod(Styles.create_main_container)
+    create_complete_layout_with_slider = staticmethod(Layouts.create_with_bottom_slider)
+    create_error_container = staticmethod(Styles.create_error_container)
+
+
+# 定数エイリアス
 SLIDER_RATIOS = Sliders.RATIOS
-
-# 旧メソッド名エイリアス
-CommonComponents.create_horizontal_slider = Sliders.create_horizontal
-CommonComponents.create_vertical_slider = Sliders.create_vertical
-CommonComponents.create_vertical_slider_overlay_elements = Sliders.create_overlay_elements
-CommonComponents.create_complete_layout_with_full_sliders = Sliders.create_complete_layout
-CommonComponents.create_horizontal_divider = Components.create_divider
-CommonComponents.create_vertical_divider = Components.create_vertical_divider
-CommonComponents.create_primary_button = Components.create_primary_button
-CommonComponents.create_secondary_button = Components.create_secondary_button
-CommonComponents.create_standard_text = Components.create_text
-CommonComponents.create_standard_icon = Components.create_icon
-CommonComponents.create_standard_panel_header_config = Components.create_panel_header_config
-CommonComponents.create_sidebar_container = Layouts.create_sidebar
-CommonComponents.create_bottombar_container = Layouts.create_bottombar
-CommonComponents.create_spacing_container = Layouts.create_spacing
-CommonComponents.create_width_spacing_container = Layouts.create_width_spacing
-CommonComponents.create_main_layout_row = Layouts.create_row
-CommonComponents.create_main_layout_column = Layouts.create_column
-CommonComponents.create_standard_column = Layouts.create_column
-CommonComponents.create_standard_row = Layouts.create_row
-CommonComponents.create_standard_container = Layouts.create_container
-
-PageStyles.set_page_background = Styles.set_page_background
-PageStyles.create_main_layout_container = Styles.create_main_container
-PageStyles.create_complete_layout_with_slider = Layouts.create_with_bottom_slider
-PageStyles.create_error_container = Styles.create_error_container

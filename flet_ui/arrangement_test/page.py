@@ -9,7 +9,7 @@ from .tab_b import TabB
 from .tab_c import TabC
 from .tab_d import TabD
 from .tab_e import TabE
-from ..shared.style_constants import PageStyles
+from flet_ui.shared.style_constants import PageStyles
 
 
 class ArrangementTestPage:

@@ -6,11 +6,11 @@ Flet RAGシステム - アップロードページコンポーネント
 
 import flet as ft
 from typing import Dict, List, Any, Optional
-from ..shared.panel_components import (
+from flet_ui.shared.panel_components import (
     PanelHeaderConfig, PanelConfig, create_panel, create_upload_panel_config
 )
-from ..shared.table_components import (
-    TableColumnConfig, FlexibleDataTable, create_pagination_controls
+from flet_ui.shared.table_components import (
+    TableColumnConfig, FlexibleDataTable, create_pagination_controls, StandardColumns
 )
 
 
@@ -145,37 +145,8 @@ class RealTimeLogArea(ft.Container):
         # ログデータ（サンプル）
         self.log_data = self._generate_sample_log_data()
         
-        # テーブル設定
-        self.column_configs = [
-            TableColumnConfig(
-                key="filename",
-                title="ファイル名",
-                column_type="text",
-                width=None,
-                alignment="left"
-            ),
-            TableColumnConfig(
-                key="file_size",
-                title="サイズ",
-                column_type="size",
-                width=100,
-                alignment="right"
-            ),
-            TableColumnConfig(
-                key="status",
-                title="ステータス",
-                column_type="status_badge",
-                width=120,
-                alignment="center"
-            ),
-            TableColumnConfig(
-                key="created_at",
-                title="登録日時",
-                column_type="datetime",
-                width=150,
-                alignment="center"
-            )
-        ]
+        # テーブル設定（標準カラムセット使用）
+        self.column_configs = StandardColumns.create_upload_table_columns()
         
         # テーブル作成
         self.data_table = FlexibleDataTable(

@@ -6,7 +6,7 @@ Flet RAGシステム - ホームページ
 
 import flet as ft
 from .components import create_hero_section, create_features_section, create_stats_section
-from ..shared.style_constants import CommonComponents
+from flet_ui.shared.style_constants import CommonComponents
 
 
 def show_home_page():

@@ -20,6 +20,74 @@ class TableColumnConfig:
     alignment: str = "left"  # "left", "center", "right"
 
 
+class StandardColumns:
+    """標準テーブルカラム設定"""
+    
+    @staticmethod
+    def create_filename_column(width: Optional[int] = None, alignment: str = "left") -> TableColumnConfig:
+        """ファイル名カラム（可変幅、省略表示対応）"""
+        return TableColumnConfig(
+            key="filename",
+            title="ファイル名",
+            column_type="text",
+            width=width,
+            alignment=alignment
+        )
+    
+    @staticmethod
+    def create_filesize_column(width: int = 100, alignment: str = "right") -> TableColumnConfig:
+        """ファイルサイズカラム（MB/KB/B表示）"""
+        return TableColumnConfig(
+            key="file_size",
+            title="サイズ",
+            column_type="size",
+            width=width,
+            alignment=alignment
+        )
+    
+    @staticmethod
+    def create_status_column(width: int = 120, alignment: str = "center") -> TableColumnConfig:
+        """ステータスカラム（バッジ表示）"""
+        return TableColumnConfig(
+            key="status",
+            title="ステータス",
+            column_type="status_badge",
+            width=width,
+            alignment=alignment
+        )
+    
+    @staticmethod
+    def create_datetime_column(width: int = 150, alignment: str = "center") -> TableColumnConfig:
+        """日時カラム（yyyy-mm-dd hh:mm:ss形式）"""
+        return TableColumnConfig(
+            key="created_at",
+            title="登録日時",
+            column_type="datetime",
+            width=width,
+            alignment=alignment
+        )
+    
+    @staticmethod
+    def create_file_table_columns(datetime_alignment: str = "center") -> List[TableColumnConfig]:
+        """ファイル管理用標準カラムセット"""
+        return [
+            StandardColumns.create_filename_column(),
+            StandardColumns.create_filesize_column(),
+            StandardColumns.create_status_column(),
+            StandardColumns.create_datetime_column(alignment=datetime_alignment)
+        ]
+    
+    @staticmethod
+    def create_upload_table_columns() -> List[TableColumnConfig]:
+        """アップロード用標準カラムセット（日時中央揃え）"""
+        return StandardColumns.create_file_table_columns(datetime_alignment="center")
+    
+    @staticmethod
+    def create_files_table_columns() -> List[TableColumnConfig]:
+        """ファイル一覧用標準カラムセット（日時中央揃え）"""
+        return StandardColumns.create_file_table_columns(datetime_alignment="center")
+
+
 def create_simple_table(column_configs: List[TableColumnConfig], rows_data: List[Dict[str, Any]], selected_row_id: Optional[str] = None, row_click_handler: Optional[Callable] = None) -> ft.Column:
     """シンプルなテーブル作成"""
     

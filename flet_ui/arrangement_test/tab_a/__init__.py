@@ -5,7 +5,7 @@ Flet RAGシステム - 配置テスト タブA (レイアウト)
 """
 
 import flet as ft
-from ..shared.style_constants import CommonComponents
+from flet_ui.shared.style_constants import CommonComponents
 
 
 class TabA:

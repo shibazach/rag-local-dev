@@ -7,7 +7,7 @@ OCR調整ページの4分割+3スライダー構造の動作検証
 
 import flet as ft
 import math
-from ..shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
+from flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
 
 
 

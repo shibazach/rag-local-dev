@@ -7,11 +7,11 @@ Flet RAGシステム - ファイル一覧テーブル
 import flet as ft
 from typing import Dict, List, Optional, Any
 from .api_client import FletFilesClient
-from ..shared.panel_components import (
+from flet_ui.shared.panel_components import (
     PanelHeaderConfig, PanelConfig, create_panel, create_files_panel_config
 )
-from ..shared.table_components import (
-    TableColumnConfig, FlexibleDataTable, create_pagination_controls
+from flet_ui.shared.table_components import (
+    TableColumnConfig, FlexibleDataTable, create_pagination_controls, StandardColumns
 )
 
 
@@ -36,37 +36,8 @@ class FilesTable:
         # ページネーション動的更新用の参照
         self.pagination_controls = None
         
-        # ファイル一覧用カラム設定（新共通コンポーネント使用）
-        self.column_configs = [
-            TableColumnConfig(
-                key="filename",
-                title="ファイル名",
-                column_type="text",
-                width=None,  # 可変幅（残り幅使用）
-                alignment="left"
-            ),
-            TableColumnConfig(
-                key="file_size", 
-                title="サイズ",
-                column_type="size",
-                width=100,
-                alignment="right"
-            ),
-            TableColumnConfig(
-                key="status",
-                title="ステータス",
-                column_type="status_badge",
-                width=120,
-                alignment="center"
-            ),
-            TableColumnConfig(
-                key="created_at",
-                title="登録日時",
-                column_type="datetime",
-                width=150,  # upload/page.pyと同様に調整
-                alignment="right"  # 右寄せに変更
-            )
-        ]
+        # ファイル一覧用カラム設定（標準カラムセット使用）
+        self.column_configs = StandardColumns.create_files_table_columns()
         
         # 新共通コンポーネント使用
         self.data_table = FlexibleDataTable(

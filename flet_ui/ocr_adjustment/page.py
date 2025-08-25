@@ -6,9 +6,9 @@ Flet RAGシステム - OCR調整ページメイン
 
 import flet as ft
 import math
-from ..shared.panel_components import create_panel, PanelHeaderConfig, PanelConfig
-from ..shared.pdf_preview import PDFPreview
-from ..shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
+from flet_ui.shared.panel_components import create_panel, PanelHeaderConfig, PanelConfig
+from flet_ui.shared.pdf_preview import PDFPreview
+from flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
 
 class OCRAdjustmentPage:
     """OCR調整ページ（4分割レイアウト + 3スライダー制御）"""
@@ -52,26 +52,151 @@ class OCRAdjustmentPage:
 
     def _create_ocr_settings_pane(self):
         """左上: OCR設定ペイン（共通コンポーネント版）"""
-        # パネル内容
+        # パネル内容（実際のOCR設定項目）
         panel_content = ft.Container(
             content=ft.Column([
-                CommonComponents.create_standard_text("ファイルをドラッグ&ドロップ\nまたはボタンで選択"),
-                CommonComponents.create_spacing_container(),
-                CommonComponents.create_secondary_button("📁 ファイル選択"),
-                CommonComponents.create_spacing_container(),
-                CommonComponents.create_primary_button("🚀 OCR実行")
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            expand=True, alignment=ft.alignment.center
+                # ファイル選択情報
+                ft.Container(
+                    content=ft.Row([
+                        ft.Text("ファイル:", weight=ft.FontWeight.BOLD, size=12),
+                        ft.TextField(
+                            hint_text="選択されたファイル名", 
+                            read_only=True,
+                            expand=True,
+                            height=40
+                        )
+                    ], alignment=ft.MainAxisAlignment.START),
+                    padding=ft.padding.all(8),
+                    bgcolor=ft.Colors.GREY_100,
+                    border_radius=8
+                ),
+                
+                # OCRエンジン選択
+                ft.Container(
+                    content=ft.Row([
+                        ft.Text("OCRエンジン:", size=13, weight=ft.FontWeight.W_500, width=100),
+                        ft.Dropdown(
+                            options=[
+                                ft.dropdown.Option("EasyOCR"),
+                                ft.dropdown.Option("Tesseract"),
+                                ft.dropdown.Option("PaddleOCR"),
+                                ft.dropdown.Option("OCRMyPDF")
+                            ],
+                            value="EasyOCR",
+                            expand=True
+                        )
+                    ]),
+                    padding=ft.padding.all(4)
+                ),
+                
+                # 処理ページと誤字修正（横並び）
+                ft.Container(
+                    content=ft.Row([
+                        # 処理ページ
+                        ft.Row([
+                            ft.Text("処理ページ:", size=13, weight=ft.FontWeight.W_500),
+                            ft.TextField(
+                                value="1",
+                                width=80,
+                                height=40,
+                                text_align=ft.TextAlign.CENTER
+                            ),
+                            ft.Text("0=全て", size=11, color=ft.Colors.GREY_600)
+                        ], spacing=6),
+                        
+                        # 誤字修正
+                        ft.Row([
+                            ft.Switch(value=True),
+                            ft.Text("誤字修正", size=13)
+                        ], spacing=6)
+                    ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+                    padding=ft.padding.all(4)
+                ),
+                
+                # 区切り線
+                ft.Divider(height=1, color=ft.Colors.GREY_400),
+                
+                # 辞書ボタン（横並び、予備は除く）
+                ft.Container(
+                    content=ft.Row([
+                        ft.ElevatedButton(
+                            "一般用語", 
+                            icon=ft.Icons.BOOK,
+                            bgcolor=ft.Colors.GREY_300
+                        ),
+                        ft.ElevatedButton(
+                            "専門用語", 
+                            icon=ft.Icons.LIBRARY_BOOKS,
+                            bgcolor=ft.Colors.GREY_300
+                        ),
+                        ft.ElevatedButton(
+                            "誤字修正", 
+                            icon=ft.Icons.SPELL_CHECK,
+                            bgcolor=ft.Colors.GREY_300
+                        ),
+                        ft.ElevatedButton(
+                            "ユーザー辞書", 
+                            icon=ft.Icons.PERSON,
+                            bgcolor=ft.Colors.GREY_300
+                        )
+                    ], wrap=True, spacing=6),
+                    padding=ft.padding.all(4)
+                )
+            ], spacing=10, expand=True),
+            padding=ft.padding.all(8),
+            expand=True
         )
         
-        # 共通パネル設定
-        panel_config = PanelConfig(
-            header_config=CommonComponents.create_standard_panel_header_config(
-                "OCR設定", ft.Icons.SETTINGS
-            )
+        # ヘッダー設定（ボタン付き）
+        header_config = PanelHeaderConfig(
+            title="OCR設定",
+            title_icon=ft.Icons.SETTINGS,
+            bgcolor=ft.Colors.BLUE_GREY_800,
+            text_color=ft.Colors.WHITE
         )
         
-        return create_panel(panel_config, panel_content)
+        panel_config = PanelConfig(header_config=header_config)
+        
+        # パネル作成
+        panel = create_panel(panel_config, panel_content)
+        
+        # ヘッダーにボタンを追加（手動で実装）
+        header_container = panel.content.controls[0]  # ヘッダー部分
+        
+        # 既存のヘッダー内容を取得
+        existing_content = header_container.content
+        
+        # 新しいヘッダー内容（タイトル + 右側のボタン群）
+        new_header_content = ft.Row([
+            # 左側：既存のタイトル部分
+            ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.SETTINGS, size=20, color=ft.Colors.WHITE),
+                    ft.Text("OCR設定", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
+                ], spacing=8),
+                expand=True
+            ),
+            # 右側：ボタン群
+            ft.Row([
+                ft.IconButton(
+                    icon=ft.Icons.FOLDER_OPEN,
+                    icon_color=ft.Colors.WHITE,
+                    icon_size=20,
+                    tooltip="ファイル選択"
+                ),
+                ft.ElevatedButton(
+                    "OCR実行",
+                    bgcolor=ft.Colors.GREEN,
+                    color=ft.Colors.WHITE,
+                    height=32
+                )
+            ], spacing=6)
+        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+        
+        # ヘッダーコンテンツを置き換え
+        header_container.content = new_header_content
+        
+        return panel
 
     def _create_engine_details_pane(self):
         """右上: エンジン詳細設定ペイン（共通コンポーネント版）"""
@@ -100,22 +225,67 @@ class OCRAdjustmentPage:
         # パネル内容
         panel_content = ft.Container(
             content=ft.Column([
-                CommonComponents.create_standard_icon(ft.Icons.TEXT_SNIPPET),
-                CommonComponents.create_spacing_container(12),
-                CommonComponents.create_standard_text("OCR実行すると"),
-                CommonComponents.create_standard_text("結果がここに表示されます"),
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
-            expand=True, alignment=ft.alignment.center
+                # OCR実行前のプレースホルダー
+                ft.Container(
+                    content=ft.Column([
+                        ft.Icon(ft.Icons.TEXT_SNIPPET, size=64, color=ft.Colors.GREY_400),
+                        ft.Text("OCR実行すると", size=14, color=ft.Colors.GREY_600),
+                        ft.Text("結果がここに表示されます", size=14, color=ft.Colors.GREY_600),
+                    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+                    expand=True,
+                    alignment=ft.alignment.center
+                )
+            ], expand=True),
+            expand=True
         )
         
-        # 共通パネル設定
-        panel_config = PanelConfig(
-            header_config=CommonComponents.create_standard_panel_header_config(
-                "OCR結果", ft.Icons.TEXT_SNIPPET
-            )
+        # ヘッダー設定
+        header_config = PanelHeaderConfig(
+            title="OCR結果",
+            title_icon=ft.Icons.TEXT_SNIPPET,
+            bgcolor=ft.Colors.BLUE_GREY_800,
+            text_color=ft.Colors.WHITE
         )
         
-        return create_panel(panel_config, panel_content)
+        panel_config = PanelConfig(header_config=header_config)
+        
+        # パネル作成
+        panel = create_panel(panel_config, panel_content)
+        
+        # ヘッダーにボタンを追加（右寄せ）
+        header_container = panel.content.controls[0]  # ヘッダー部分
+        
+        # 新しいヘッダー内容（タイトル + 右側のボタン群）
+        new_header_content = ft.Row([
+            # 左側：タイトル部分
+            ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.TEXT_SNIPPET, size=20, color=ft.Colors.WHITE),
+                    ft.Text("OCR結果", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
+                ], spacing=8),
+                expand=True
+            ),
+            # 右側：ボタン群
+            ft.Row([
+                ft.ElevatedButton(
+                    "クリア",
+                    bgcolor=ft.Colors.GREY_600,
+                    color=ft.Colors.WHITE,
+                    height=32
+                ),
+                ft.ElevatedButton(
+                    "出力",
+                    bgcolor=ft.Colors.BLUE,
+                    color=ft.Colors.WHITE,
+                    height=32
+                )
+            ], spacing=6)
+        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
+        
+        # ヘッダーコンテンツを置き換え
+        header_container.content = new_header_content
+        
+        return panel
 
     def _create_pdf_preview_pane(self):
         """右下: PDFプレビューペイン（共通コンポーネント版）"""

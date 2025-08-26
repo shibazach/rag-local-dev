@@ -147,14 +147,18 @@ def create_simple_table(column_configs: List[TableColumnConfig], rows_data: List
     return ft.Column(table_content, spacing=0, expand=True)
 
 
-def _create_cell_content(config: TableColumnConfig, row_data: Dict[str, Any]) -> ft.Control:
-    """セル内容作成"""
+def _create_cell_content(config: TableColumnConfig, row_data: Dict[str, Any], compact_mode: bool = False) -> ft.Control:
+    """セル内容作成（コンパクトモード対応）"""
     value = row_data.get(config.key, "")
+    
+    # コンパクトモード時のサイズ調整
+    text_size = 11 if compact_mode else 14
+    status_text_size = 10 if compact_mode else 12
     
     if config.column_type == "text":
         return ft.Text(
             str(value), 
-            size=14, 
+            size=text_size, 
             color=ft.Colors.BLACK87,
             overflow=ft.TextOverflow.ELLIPSIS,  # 長いテキストを...で省略
             max_lines=1  # 1行に制限
@@ -171,7 +175,7 @@ def _create_cell_content(config: TableColumnConfig, row_data: Dict[str, Any]) ->
         else:
             size_text = "-"
         text_align = ft.TextAlign.RIGHT if config.alignment == "right" else ft.TextAlign.LEFT
-        return ft.Text(size_text, size=14, color=ft.Colors.BLACK87, text_align=text_align)
+        return ft.Text(size_text, size=text_size, color=ft.Colors.BLACK87, text_align=text_align)
     
     elif config.column_type == "status_badge":
         return create_status_badge(str(value))
@@ -179,13 +183,13 @@ def _create_cell_content(config: TableColumnConfig, row_data: Dict[str, Any]) ->
     elif config.column_type == "datetime":
         text_align = ft.TextAlign.RIGHT if config.alignment == "right" else \
                     ft.TextAlign.CENTER if config.alignment == "center" else ft.TextAlign.LEFT
-        return ft.Text(str(value), size=12, color=ft.Colors.BLACK87, text_align=text_align)
+        return ft.Text(str(value), size=status_text_size, color=ft.Colors.BLACK87, text_align=text_align)
     
     elif config.column_type == "checkbox":
         return ft.Checkbox(value=bool(value), disabled=True)
     
     else:
-        return ft.Text(str(value), size=14, color=ft.Colors.BLACK87)
+        return ft.Text(str(value), size=text_size, color=ft.Colors.BLACK87)
 
 
 class FlexibleDataTable(ft.Column):
@@ -198,6 +202,9 @@ class FlexibleDataTable(ft.Column):
         self.rows_data = []
         self.selected_row_id = None
         self.expand = True
+        
+        # コンパクトモードフラグ（ダイアログ等での使用時）
+        self._compact_mode = False
         
         # ヘッダー行作成
         self.header_row = self._create_header_row()
@@ -216,16 +223,20 @@ class FlexibleDataTable(ft.Column):
         """ヘッダー行作成"""
         header_cells = []
         for config in self.column_configs:
+            # コンパクトモード対応（ヘッダー）
+            header_size = 12 if self._compact_mode else 14
+            header_padding = ft.padding.symmetric(horizontal=8, vertical=4) if self._compact_mode else ft.padding.symmetric(horizontal=12, vertical=8)
+            
             cell = ft.Container(
                 content=ft.Text(
                     config.title,
-                    size=14,
+                    size=header_size,
                     weight=ft.FontWeight.BOLD,
                     color=ft.Colors.BLACK87,
                     text_align=ft.TextAlign.LEFT if config.alignment == "left" else 
                               ft.TextAlign.CENTER if config.alignment == "center" else ft.TextAlign.RIGHT
                 ),
-                padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                padding=header_padding,
                 width=config.width,
                 expand=True if config.width is None else False
             )
@@ -252,7 +263,7 @@ class FlexibleDataTable(ft.Column):
             
             row_cells = []
             for config in self.column_configs:
-                cell_content = _create_cell_content(config, row_data)
+                cell_content = _create_cell_content(config, row_data, self._compact_mode)
                 
                 # セルの配置設定
                 if config.alignment == "center":
@@ -262,9 +273,12 @@ class FlexibleDataTable(ft.Column):
                 else:
                     alignment = ft.alignment.center_left
                 
+                # コンパクトモード対応（データ行）
+                data_padding = ft.padding.symmetric(horizontal=8, vertical=4) if self._compact_mode else ft.padding.symmetric(horizontal=12, vertical=8)
+                
                 cell = ft.Container(
                     content=cell_content,
-                    padding=ft.padding.symmetric(horizontal=12, vertical=8),
+                    padding=data_padding,
                     width=config.width,
                     expand=True if config.width is None else False,
                     alignment=alignment

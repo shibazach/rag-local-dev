@@ -6,9 +6,11 @@ Flet RAGシステム - OCR調整ページメイン
 
 import flet as ft
 import math
+from typing import Dict, Any, Optional
 from app.flet_ui.shared.panel_components import create_panel, PanelHeaderConfig, PanelConfig
 from app.flet_ui.shared.pdf_preview import PDFPreview
 from app.flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
+from app.flet_ui.shared.file_selection_dialog import create_file_selection_dialog
 from .engines.easyocr_params import get_easyocr_parameters, create_easyocr_panel_content
 from .engines.tesseract_params import get_tesseract_parameters, create_tesseract_panel_content
 from .engines.paddleocr_params import get_paddleocr_parameters, create_paddleocr_panel_content
@@ -50,6 +52,11 @@ class OCRAdjustmentPage:
         self.ocr_results = []  # OCR結果履歴
         self.results_container = None  # 結果表示コンテナ
         self.engine_details_container = None  # エンジン詳細コンテナ
+        
+        # ファイル選択関連
+        self.selected_file_info: Optional[Dict[str, Any]] = None
+        self.file_display_field: Optional[ft.TextField] = None  # ファイル表示フィールド
+        self.file_selection_dialog = None  # ダイアログインスタンス
 
     def create_main_layout(self):
         """メインレイアウト作成（一体型コンポーネント適用）"""
@@ -77,16 +84,12 @@ class OCRAdjustmentPage:
                         width=120,  # 統一幅
                         alignment=ft.alignment.center_left
                     ),
-                    ft.TextField(
-                        hint_text="選択されたファイル名", 
-                        read_only=True,
-                        expand=True,
-                        height=40
-                    ),
+                    self._create_file_display_field(),
                     ft.IconButton(
                         icon=ft.Icons.FOLDER_OPEN,
                         icon_size=20,
-                        tooltip="ファイル選択"
+                        tooltip="ファイル選択",
+                        on_click=self._on_file_select_click
                     )
                 ], alignment=ft.MainAxisAlignment.START),
                 
@@ -404,6 +407,57 @@ class OCRAdjustmentPage:
         """左右分割スライダー変更"""
         self.horizontal_level = int(float(e.control.value))
         self._update_layout()
+    
+    # ========= ファイル選択機能 =========
+    
+    def _create_file_display_field(self) -> ft.TextField:
+        """ファイル表示用テキストフィールド作成"""
+        self.file_display_field = ft.TextField(
+            hint_text="選択されたファイル名", 
+            read_only=True,
+            expand=True,
+            height=40
+        )
+        return self.file_display_field
+    
+    def _on_file_select_click(self, e):
+        """ファイル選択ボタンクリック"""
+        print("ファイル選択がクリックされました")
+        if not self.file_selection_dialog:
+            self.file_selection_dialog = create_file_selection_dialog(
+                page=self.page,
+                on_file_selected=self._on_file_selected
+            )
+        
+        self.file_selection_dialog.show_dialog()
+    
+    def _on_file_selected(self, file_info: Dict[str, Any]):
+        """ファイル選択完了時の処理"""
+        self.selected_file_info = file_info
+        
+        # ファイル表示フィールドに選択されたファイル名を表示
+        if self.file_display_field and file_info:
+            filename = file_info.get("filename", "")
+            self.file_display_field.value = filename
+            self.file_display_field.update()
+            
+            # OCR結果をクリア（新しいファイル選択時）
+            self._clear_ocr_results()
+            
+            # ステータス表示等の更新
+            self._update_file_selection_status(file_info)
+    
+    def _update_file_selection_status(self, file_info: Dict[str, Any]):
+        """ファイル選択状態の更新"""
+        # 後で拡張: ファイル情報表示、プレビューエリア更新等
+        pass
+    
+    def _clear_ocr_results(self):
+        """OCR結果をクリア"""
+        if self.results_container:
+            self.results_container.controls.clear()
+            if self.results_container.page:
+                self.results_container.update()
     
     # ========= OCR機能 =========
     def _update_engine_details(self):

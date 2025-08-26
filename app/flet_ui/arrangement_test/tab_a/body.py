@@ -40,6 +40,38 @@ class TabA:
             
         ], spacing=4, scroll=ft.ScrollMode.AUTO, tight=True)
         
+        # 根本問題修正テスト（Web検索結果の解決法適用）
+        def test_dialog_click(e):
+            def close_dialog(e):
+                page.close(dialog)
+                print("ダイアログを閉じました")
+            
+            def on_dismiss(e):
+                print("ダイアログがdismissされました")
+            
+            dialog = ft.AlertDialog(
+                title=ft.Text("🚨 根本問題修正テスト"),
+                content=ft.Text("page.open()方式でのダイアログテストです"),
+                actions=[ft.TextButton("OK", on_click=close_dialog)],
+                on_dismiss=on_dismiss,
+                modal=True
+            )
+            
+            # Web検索結果の推奨方法: page.open(dlg)
+            page.open(dialog)
+            print(f"🔍 page.open()でダイアログを開きました")
+        
+        # テストボタンをフォントテスト下部に追加
+        font_test_content.controls.extend([
+            ft.Container(height=16),
+            ft.ElevatedButton(
+                text="🧪 ダイアログテスト (縦スライダーなし)",
+                on_click=test_dialog_click,
+                bgcolor=ft.Colors.BLUE_100,
+                width=300
+            )
+        ])
+        
         top_left = ft.Container(
             content=font_test_content,
             bgcolor=ft.Colors.RED_100,

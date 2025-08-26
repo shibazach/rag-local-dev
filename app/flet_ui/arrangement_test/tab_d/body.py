@@ -115,10 +115,41 @@ class TabD:
             ft.Text("スライダーで比率変更", size=12, color=ft.Colors.GREY_600)
         ]
         
-        # OCR設定ペインのみフォーカステスト用ボタン追加（機能なし）
+        # OCR設定ペインのみダイアログテスト用ボタン追加
         if title == "OCR設定":
             content_items.append(ft.Container(height=8))
-            content_items.append(ft.ElevatedButton("テストボタン"))
+            
+            def test_dialog_click(e):
+                dialog = ft.AlertDialog(
+                    title=ft.Text("🧪 tab_d ダイアログテスト", size=16, weight=ft.FontWeight.BOLD),
+                    content=ft.Container(
+                        content=ft.Text("縦スライダーあり環境でのダイアログ表示テスト\n\nこのダイアログが見えていますか？"),
+                        width=400,
+                        height=150,
+                        bgcolor=ft.Colors.ORANGE_50,
+                        border=ft.border.all(2, ft.Colors.ORANGE),
+                        padding=ft.padding.all(20)
+                    ),
+                    actions=[
+                        ft.TextButton("閉じる", on_click=lambda e: close_dialog(e, dialog))
+                    ],
+                    modal=True
+                )
+                # ページ取得 - コンテナから遡る
+                current_page = e.control.page
+                current_page.dialog = dialog
+                dialog.open = True
+                current_page.update()
+            
+            def close_dialog(e, dialog):
+                dialog.open = False
+                e.control.page.update()
+            
+            content_items.append(ft.ElevatedButton(
+                text="🧪 ダイアログテスト",
+                on_click=test_dialog_click,
+                bgcolor=ft.Colors.ORANGE_100
+            ))
         
         return ft.Container(
             content=ft.Column(content_items, horizontal_alignment=ft.CrossAxisAlignment.CENTER),

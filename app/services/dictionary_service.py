@@ -25,7 +25,7 @@ class DictionaryService:
         self.dict_files = {
             "一般用語": "known_words_common.csv",
             "専門用語": "known_words_custom.csv", 
-            "誤字修正": "word_mistakes.csv",
+            "誤字修正": "ocr_word_mistakes.csv",
             "ユーザー辞書": "user_dict.csv"
         }
     

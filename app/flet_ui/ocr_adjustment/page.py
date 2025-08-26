@@ -19,8 +19,10 @@ from app.flet_ui.shared.common_buttons import create_light_button, create_dark_b
 class OCRAdjustmentPage:
     """OCR調整ページ（4分割レイアウト + 3スライダー制御）"""
     
-    def __init__(self):
+    def __init__(self, page: ft.Page = None):
         """初期化"""
+        # ページ参照（アコーディオン用）
+        self.page = page
         self.left_split_level = 3
         self.right_split_level = 3
         self.horizontal_level = 3
@@ -418,8 +420,8 @@ class OCRAdjustmentPage:
         }
         
         if self.selected_engine in engine_layout_functions:
-            # 専用レイアウトを使用
-            content = engine_layout_functions[self.selected_engine]()
+            # 専用レイアウトを使用（pageパラメータを渡す）
+            content = engine_layout_functions[self.selected_engine](page=self.page)
         else:
             # フォールバック表示
             content = ft.Container(
@@ -551,7 +553,7 @@ def show_ocr_adjustment_page(page: ft.Page = None):
     if page:
         PageStyles.set_page_background(page)
     
-    ocr_page = OCRAdjustmentPage()
+    ocr_page = OCRAdjustmentPage(page=page)  # pageインスタンス渡し
     layout = ocr_page.create_main_layout()
     return layout
 

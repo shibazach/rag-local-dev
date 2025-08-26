@@ -29,8 +29,8 @@ class FileUploadArea(ft.Container):
         drop_area = ft.Column([
             ft.Icon(ft.Icons.CLOUD_UPLOAD, size=48, color=ft.Colors.GREY_400),
             ft.Container(height=12),
-            ft.Text("ファイルをドラッグ&ドロップ", size=16, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
-            ft.Text("または", size=14, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER),
+            ft.Text("ファイルをドラッグ&ドロップ", size=16, color=ft.Colors.BLACK, text_align=ft.TextAlign.CENTER),
+            ft.Text("または", size=14, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER),
             ft.Container(height=8),
             create_light_button(
                 "ファイル選択",
@@ -39,7 +39,7 @@ class FileUploadArea(ft.Container):
             ),
             ft.Container(height=16),
             ft.Text("対応形式: PDF, DOCX, TXT, PNG, JPG", 
-                   size=12, color=ft.Colors.GREY_500, text_align=ft.TextAlign.CENTER)
+                   size=12, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER)
         ], 
         horizontal_alignment=ft.CrossAxisAlignment.CENTER, 
         expand=True, 

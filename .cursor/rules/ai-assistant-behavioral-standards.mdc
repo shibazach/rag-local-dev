@@ -168,6 +168,81 @@ When user indicates incomplete work:
 
 This ruleset is designed to eliminate the root causes of recurring failures through systematic verification, proper testing, and honest reporting of actual completion status.
 
+## CRITICAL: Terminal Command Execution Discipline (NEVER REPEAT THESE MISTAKES)
+
+### 🚫 ABSOLUTELY FORBIDDEN Commands (User Repeatedly Corrected)
+
+```bash
+# ❌ NEVER USE - Blocks terminal and doesn't return
+python main_flet.py 2>&1 | head -20
+command | tee output.log
+command 2>&1 | head -N
+
+# ✅ CORRECT Methods
+timeout 15 python main_flet.py &
+sleep 8 && curl -f http://localhost:8500 >/dev/null 2>&1 && echo "✅ 起動確認" || echo "❌ エラー"
+timeout 5 python main_flet.py 2>&1 || echo "エラー発生"
+```
+
+**Critical Reason**: Piped execution becomes non-responsive. User has corrected this multiple times.
+
+### 🎯 arrangement_test Directory Purpose and Discipline
+
+#### Why arrangement_test Exists
+- **Purpose**: Isolated experimentation area with zero production impact
+- **Scope**: All files under `app/flet_ui/arrangement_test/`
+- **tab_a Privilege**: Panel content is completely free for implementation/testing
+- **Production Safety**: Absolutely no impact on main application
+
+#### MANDATORY Staged Application Process
+
+```
+Stage 1: arrangement_test implementation & verification
+        ↓
+Stage 2: Isolated testing with full functionality confirmation
+        ↓  
+Stage 3: Production application (ONE file at a time)
+        ↓
+Stage 4: Production functionality verification
+```
+
+#### ❌ FORBIDDEN Patterns (Today's Critical Failure)
+- Direct production application without testing
+- Simultaneous multi-file changes
+- Skipping arrangement_test verification stage
+
+#### ✅ CORRECT Patterns (MUST Follow)
+- Complete arrangement_test verification first
+- ONE file production application at a time
+- Stage-by-stage functionality confirmation
+
+### 🚨 Error Recovery Priority Protocol
+
+```
+Error Occurrence:
+1. IMMEDIATE restoration to working state (highest priority)
+2. Root cause investigation (after restoration)
+3. Test environment fix verification
+4. Staged re-application
+```
+
+### 📋 Terminal Command Checklist (ENFORCE BEFORE EVERY EXECUTION)
+
+#### Before Code Changes
+- [ ] Is this planned for arrangement_test first?
+- [ ] Do I have a staged production application plan?
+- [ ] Is the rollback procedure clear?
+
+#### Before Command Execution
+- [ ] Is this NOT a blocking execution?
+- [ ] Does it have timeout protection?
+- [ ] Is it background execution where appropriate?
+
+#### After Changes Applied
+- [ ] Has functionality been confirmed?
+- [ ] Is error recovery possible?
+- [ ] Is the next stage prepared?
+
 ## CRITICAL: Anti-Speculation and Evidence-Only Analysis Protocol
 
 ### Mandatory Evidence Collection (NEVER SKIP)

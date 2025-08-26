@@ -3,7 +3,8 @@
 PaddleOCR エンジン設定パラメータ定義とレイアウト
 """
 import flet as ft
-from app.flet_ui.shared.panel_components import create_styled_expansion_tile, create_parameter_row
+from app.flet_ui.shared.panel_components import create_indented_parameter_row
+from app.flet_ui.shared.custom_accordion import create_ocr_detail_accordion
 
 def get_paddleocr_parameters() -> list:
     """PaddleOCR のパラメータ定義"""
@@ -27,26 +28,32 @@ def get_paddleocr_parameters() -> list:
         {"name": "rec_batch_num", "label": "認識バッチサイズ", "type": "number", "default": 6, "min": 1, "max": 20, "step": 1, "description": "認識バッチサイズ"}
     ]
 
-def create_paddleocr_panel_content() -> ft.Control:
-    """PaddleOCR専用レイアウト表示（セクション分け）"""
+def create_paddleocr_panel_content(page: ft.Page = None) -> ft.Control:
+    """PaddleOCR専用レイアウト表示（関数型アコーディオン版）"""
     params = get_paddleocr_parameters()
     
-
+    # 基本設定パラメータ（言語〜認識実行）
+    basic_controls = [create_indented_parameter_row(p) for p in params[:6]]
+    basic_content = ft.Column(basic_controls, spacing=4, tight=True)
     
-    # セクション分け：基本設定、検出設定、認識設定（共通スタイル使用）
-    basic_section = create_styled_expansion_tile(
-        "基本設定",
-        [ft.Container(create_parameter_row(p), padding=ft.padding.only(left=16)) for p in params[:6]]  # 言語〜認識実行
-    )
+    # 検出設定パラメータ（検出アルゴリズム〜アンクリップ比率）
+    detection_controls = [create_indented_parameter_row(p) for p in params[6:11]]
+    detection_content = ft.Column(detection_controls, spacing=4, tight=True)
     
-    detection_section = create_styled_expansion_tile(
-        "検出設定",
-        [ft.Container(create_parameter_row(p), padding=ft.padding.only(left=16)) for p in params[6:11]]  # 検出アルゴリズム〜アンクリップ比率
-    )
+    # 認識設定パラメータ（認識バッチサイズ）
+    recognition_controls = [create_indented_parameter_row(params[11])]
+    recognition_content = ft.Column(recognition_controls, spacing=4, tight=True)
     
-    recognition_section = create_styled_expansion_tile(
-        "認識設定",
-        [ft.Container(create_parameter_row(params[11]), padding=ft.padding.only(left=16))]  # 認識バッチサイズ
-    )
+    # アコーディオン項目定義（title, content, initially_expanded）
+    accordion_items = [
+        ("基本設定", basic_content, True),        # デフォルト展開
+        ("検出設定", detection_content, False),   # デフォルト閉じる
+        ("認識設定", recognition_content, False)  # デフォルト閉じる
+    ]
     
-    return ft.Column([basic_section, detection_section, recognition_section], spacing=8)
+    # 関数型アコーディオン適用（詳細設定風スタイル）
+    if page:
+        return create_ocr_detail_accordion(page, accordion_items)
+    else:
+        # page未指定時のフォールバック（後方互換性）
+        return ft.Column([basic_content, detection_content, recognition_content], spacing=8)

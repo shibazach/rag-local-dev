@@ -3,7 +3,8 @@
 Tesseract エンジン設定パラメータ定義とレイアウト
 """
 import flet as ft
-from app.flet_ui.shared.panel_components import create_styled_expansion_tile, create_parameter_row
+from app.flet_ui.shared.panel_components import create_indented_parameter_row
+from app.flet_ui.shared.custom_accordion import create_ocr_detail_accordion
 
 def get_tesseract_parameters() -> list:
     """Tesseract のパラメータ定義"""
@@ -23,14 +24,22 @@ def get_tesseract_parameters() -> list:
         {"name": "dpi", "label": "DPI設定", "type": "number", "default": 300, "min": 150, "max": 600, "step": 50, "description": "画像解像度（精度↑時間↑）"}
     ]
 
-def create_tesseract_panel_content() -> ft.Control:
-    """Tesseract専用レイアウト表示（1行形式）"""
+def create_tesseract_panel_content(page: ft.Page = None) -> ft.Control:
+    """Tesseract専用レイアウト表示（関数型アコーディオン版）"""
     params = get_tesseract_parameters()
     
-
+    # Tesseract設定パラメータ
+    controls = [create_indented_parameter_row(p) for p in params]
+    content = ft.Column(controls, spacing=4, tight=True)
     
-    # 1行形式レイアウト（共通スタイル使用）
-    return create_styled_expansion_tile(
-        "Tesseract設定",
-        [ft.Container(create_parameter_row(p), padding=ft.padding.only(left=16)) for p in params]
-    )
+    # 単一アコーディオン項目定義（title, content, initially_expanded）
+    accordion_items = [
+        ("Tesseract設定", content, True)  # デフォルト展開
+    ]
+    
+    # 関数型アコーディオン適用（詳細設定風スタイル）
+    if page:
+        return create_ocr_detail_accordion(page, accordion_items)
+    else:
+        # page未指定時のフォールバック（後方互換性）
+        return content

@@ -3,7 +3,8 @@
 EasyOCR エンジン設定パラメータ定義とレイアウト
 """
 import flet as ft
-from app.flet_ui.shared.panel_components import create_styled_expansion_tile, create_parameter_row
+from app.flet_ui.shared.panel_components import create_indented_parameter_row
+from app.flet_ui.shared.custom_accordion import create_ocr_detail_accordion
 
 def get_easyocr_parameters() -> list:
     """EasyOCR のパラメータ定義"""
@@ -23,21 +24,27 @@ def get_easyocr_parameters() -> list:
         {"name": "mag_ratio", "label": "拡大比率", "type": "number", "default": 1.5, "min": 1.0, "max": 3.0, "step": 0.1, "description": "高精度時拡大比率"}
     ]
 
-def create_easyocr_panel_content() -> ft.Control:
-    """EasyOCR専用レイアウト表示"""
+def create_easyocr_panel_content(page: ft.Page = None) -> ft.Control:
+    """EasyOCR専用レイアウト表示（関数型アコーディオン版）"""
     params = get_easyocr_parameters()
     
-
+    # 基本設定パラメータ
+    basic_controls = [create_indented_parameter_row(p) for p in params[:4]]  # 言語、GPU、拡大倍率、詳細情報
+    basic_content = ft.Column(basic_controls, spacing=4, tight=True)
     
-    # セクション化されたレイアウト（共通スタイル使用）
-    basic_section = create_styled_expansion_tile(
-        "基本設定",
-        [ft.Container(create_parameter_row(p), padding=ft.padding.only(left=16)) for p in params[:4]]  # 言語、GPU、拡大倍率、詳細情報
-    )
+    # 高精度設定パラメータ  
+    advanced_controls = [create_indented_parameter_row(p) for p in params[4:]]  # 段落モード以降
+    advanced_content = ft.Column(advanced_controls, spacing=4, tight=True)
     
-    advanced_section = create_styled_expansion_tile(
-        "高精度設定",
-        [ft.Container(create_parameter_row(p), padding=ft.padding.only(left=16)) for p in params[4:]]  # 段落モード以降
-    )
+    # アコーディオン項目定義（title, content, initially_expanded）
+    accordion_items = [
+        ("基本設定", basic_content, True),      # デフォルト展開
+        ("高精度設定", advanced_content, False)  # デフォルト閉じる
+    ]
     
-    return ft.Column([basic_section, advanced_section], spacing=8)
+    # 関数型アコーディオン適用（詳細設定風スタイル）
+    if page:
+        return create_ocr_detail_accordion(page, accordion_items)
+    else:
+        # page未指定時のフォールバック（後方互換性）
+        return ft.Column([basic_content, advanced_content], spacing=8)

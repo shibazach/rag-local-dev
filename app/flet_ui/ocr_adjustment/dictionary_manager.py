@@ -52,15 +52,20 @@ def _open_dictionary(e, dict_type: str):
             # 特に何もしない（ダイアログが自動で閉じる）
             pass
         
-        # テキスト編集ダイアログを表示
+        # テキスト編集ダイアログを表示（ユーザー辞書は大サイズ）
+        if dict_type == "ユーザー辞書":
+            dialog_width, dialog_height = 1400, 900  # 大サイズ
+        else:
+            dialog_width, dialog_height = 900, 700   # 標準サイズ
+            
         show_text_edit_dialog(
             page=page,
             title=title,
             content=current_content,
             on_save=on_save,
             on_cancel=on_cancel,
-            width=900,
-            height=700
+            width=dialog_width,
+            height=dialog_height
         )
         
     except Exception as error:
@@ -71,7 +76,7 @@ def _show_success_message(page: ft.Page, message: str):
     """成功メッセージを表示"""
     snack_bar = ft.SnackBar(
         content=ft.Text(message, color=ft.Colors.WHITE),
-        bgcolor=ft.Colors.GREEN_600,
+        bgcolor=ft.Colors.GREEN_800,  # 統一色（濃い目）
         duration=3000
     )
     page.overlay.append(snack_bar)
@@ -83,7 +88,7 @@ def _show_error_message(page: ft.Page, message: str):
     """エラーメッセージを表示"""
     snack_bar = ft.SnackBar(
         content=ft.Text(message, color=ft.Colors.WHITE),
-        bgcolor=ft.Colors.RED_600,
+        bgcolor=ft.Colors.RED_800,  # 統一色（濃い目）
         duration=5000
     )
     page.overlay.append(snack_bar)

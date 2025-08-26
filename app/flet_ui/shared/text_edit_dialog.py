@@ -79,11 +79,12 @@ class TextEditDialog:
         )
         
         # テキスト編集フィールド（ダイアログ下部まで最大拡張）
+        # データ量に関係なく、常にダイアログ下部まで拡張
         self.text_field = ft.TextField(
             value=self.content,
             multiline=True,
             expand=True,  # 公式: expandでコンテナ内最大高さまで拡張
-            min_lines=20,  # 最小行数増加
+            min_lines=1,   # 最小行数を1に変更（データ量に関係なくanchor有効）
             max_lines=None,  # 無制限（expandで制限）
             border_color=ft.Colors.BLUE_200,
             focused_border_color=ft.Colors.BLUE_400,

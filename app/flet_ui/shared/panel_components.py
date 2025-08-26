@@ -9,6 +9,56 @@ from dataclasses import dataclass
 from typing import Optional, Callable, Any, List
 
 
+# OCR詳細設定パネル統一スタイル定数
+class OCRPanelStyles:
+    """OCR詳細設定パネル用統一スタイル定義"""
+    
+    # フォント・文字設定
+    SECTION_TITLE_SIZE = 15           # セクションタイトル（「基本設定」等）
+    SECTION_TITLE_WEIGHT = ft.FontWeight.BOLD
+    SECTION_TITLE_COLOR = ft.Colors.GREY_700
+    
+    ITEM_LABEL_SIZE = 14              # 項目名（「認識言語」等）
+    ITEM_LABEL_WEIGHT = ft.FontWeight.W_500  
+    ITEM_LABEL_COLOR = ft.Colors.BLACK87
+    ITEM_LABEL_WIDTH = 140            # 項目名ラベル固定幅
+    
+    DESCRIPTION_SIZE = 11             # 簡易説明文字サイズ
+    DESCRIPTION_COLOR = ft.Colors.GREY_600
+    
+    # コントロール設定
+    CONTROL_HEIGHT = 40               # TextField、Dropdown等の高さ統一
+    SWITCH_HEIGHT = 32                # Switch高さ
+    
+    # レイアウト・間隔設定
+    SECTION_HEADER_LEFT_PADDING = 0   # セクションヘッド左padding（左寄せ強化）
+    SECTION_CONTENT_LEFT_INDENT = 20  # セクション内容の字下げ
+    ITEM_ROW_SPACING = 8              # 項目間の縦間隔
+    CONTROL_MARGIN_VERTICAL = 2       # コントロール上下margin（小さめ）
+    
+    # 色・背景設定
+    SECTION_HEADER_BG_COLOR = ft.Colors.WHITE  # セクションヘッド背景（線隠し）
+    PANEL_BG_COLOR = ft.Colors.WHITE           # パネル全体背景
+
+
+def create_ocr_divider_theme() -> ft.Theme:
+    """OCR詳細設定用テーマ（参考情報完全適用版）"""
+    return ft.Theme(
+        use_material3=True,
+        divider_theme=ft.DividerThemeData(
+            color=ft.Colors.TRANSPARENT,   # 区切り線の色を透明に
+            thickness=0,                   # 太さを0に
+            space=0,                       # 上下の余白も0に
+        ),
+        # 📋 参考情報：リスト系の区切り線も完全制御
+        list_tile_theme=ft.ListTileThemeData(
+            shape=ft.RoundedRectangleBorder(
+                side=ft.BorderSide(0, ft.Colors.TRANSPARENT)
+            )
+        )
+    )
+
+
 @dataclass
 class PanelHeaderConfig:
     """パネルヘッダ設定クラス"""
@@ -235,31 +285,53 @@ def create_status_badge(status: str) -> ft.Container:
 def create_styled_expansion_tile(
     title: str, 
     controls: List[ft.Control], 
-    initially_expanded: bool = True
-) -> ft.ExpansionTile:
-    """OCR詳細設定用の統一スタイル ExpansionTile 作成"""
-    return ft.ExpansionTile(
-        title=ft.Container(
+    initially_expanded: bool = True,
+    page: ft.Page = None
+) -> ft.Control:
+    """OCR詳細設定用の統一スタイル アコーディオン作成（暫定: 元のContainer実装）"""
+    
+    # 🚧 暫定措置: 元の静的Container実装に戻す（tab_aテスト成功後に関数型適用）
+    
+    # ヘッダー部分
+    header = ft.Container(
+        content=ft.Row([
+            ft.Icon(
+                ft.Icons.EXPAND_MORE if initially_expanded else ft.Icons.CHEVRON_RIGHT,
+                size=16,
+                color=ft.Colors.GREY_600
+            ),
             ft.Text(
                 title, 
                 size=14, 
-                weight=ft.FontWeight.BOLD, 
-                color=ft.Colors.GREY_700
-            ), 
-            alignment=ft.alignment.center_left,
-            bgcolor=ft.Colors.WHITE,  # 白背景で線を隠す
-            padding=ft.padding.only(left=4, top=8, right=8, bottom=8),
-            border_radius=4
-        ),
-        controls=controls,
-        initially_expanded=initially_expanded,
-        collapsed_icon_color=ft.Colors.GREY_400,
-        icon_color=ft.Colors.GREY_400
+                weight=ft.FontWeight.W_500, 
+                color=ft.Colors.BLACK87
+            )
+        ], spacing=8, alignment=ft.MainAxisAlignment.START),
+        bgcolor=ft.Colors.BLUE_50,
+        padding=ft.padding.all(8),
+        border_radius=ft.border_radius.only(top_left=4, top_right=4)
+    )
+    
+    # コンテンツ部分
+    content = ft.Container(
+        content=ft.Column(controls, spacing=4, tight=True),
+        padding=ft.padding.all(8),
+        bgcolor=ft.Colors.WHITE,
+        visible=initially_expanded
+    )
+    
+    # 全体コンテナ（線なし）
+    return ft.Container(
+        content=ft.Column([header, content], spacing=0, tight=True),
+        margin=ft.margin.symmetric(vertical=2),
+        border_radius=4,
+        border=ft.border.all(1, ft.Colors.GREY_200),  # 薄いボーダーのみ
+        bgcolor=ft.Colors.WHITE
     )
 
 
 def create_parameter_control(param: dict) -> ft.Control:
-    """OCRパラメータ用コントロール作成（共通）"""
+    """OCRパラメータ用コントロール作成（統一スタイル適用）"""
     param_type = param.get("type", "text")
     param_default = param.get("default")
     
@@ -267,32 +339,66 @@ def create_parameter_control(param: dict) -> ft.Control:
         options = param.get("options", [])
         dropdown_options = [ft.dropdown.Option(key=str(opt["value"]), text=opt["label"]) for opt in options]
         return ft.Container(
-            ft.Dropdown(options=dropdown_options, value=str(param_default), width=180),
-            margin=ft.margin.symmetric(vertical=2)
+            ft.Dropdown(
+                options=dropdown_options, 
+                value=str(param_default), 
+                width=180
+                # height パラメータは ft.Dropdown に存在しないため削除
+            ),
+            margin=ft.margin.symmetric(vertical=OCRPanelStyles.CONTROL_MARGIN_VERTICAL)  # 統一margin
         )
     elif param_type == "number":
         return ft.TextField(
             value=str(param_default), 
             width=80, 
-            height=40, 
+            height=OCRPanelStyles.CONTROL_HEIGHT,  # 統一高さ
             keyboard_type=ft.KeyboardType.NUMBER, 
             input_filter=ft.NumbersOnlyInputFilter(), 
             text_align=ft.TextAlign.CENTER
         )
     elif param_type == "boolean":
-        return ft.Switch(value=bool(param_default))
+        return ft.Container(
+            ft.Switch(
+                value=bool(param_default),
+                height=OCRPanelStyles.SWITCH_HEIGHT  # 統一Switch高さ
+            ),
+            height=OCRPanelStyles.SWITCH_HEIGHT,
+            alignment=ft.alignment.center_left
+        )
     else:
-        return ft.TextField(value=str(param_default), width=150, height=40)
+        return ft.TextField(
+            value=str(param_default), 
+            width=150, 
+            height=OCRPanelStyles.CONTROL_HEIGHT  # 統一高さ
+        )
 
 
 def create_parameter_row(param: dict) -> ft.Control:
-    """OCRパラメータ1行表示（共通）"""
+    """OCRパラメータ1行表示（統一スタイル適用）"""
     return ft.Row([
         ft.Container(
-            ft.Text(f"{param['label']}:", size=13, weight=ft.FontWeight.W_500), 
-            width=140, 
+            ft.Text(
+                f"{param['label']}:", 
+                size=OCRPanelStyles.ITEM_LABEL_SIZE, 
+                weight=OCRPanelStyles.ITEM_LABEL_WEIGHT, 
+                color=OCRPanelStyles.ITEM_LABEL_COLOR
+            ), 
+            width=OCRPanelStyles.ITEM_LABEL_WIDTH,  # 統一ラベル幅
             alignment=ft.alignment.center_left
         ),
         create_parameter_control(param),
-        ft.Text(param.get("description", ""), size=11, color=ft.Colors.GREY_600, expand=True)
-    ], spacing=8, alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER)
+        ft.Text(
+            param.get("description", ""), 
+            size=OCRPanelStyles.DESCRIPTION_SIZE, 
+            color=OCRPanelStyles.DESCRIPTION_COLOR, 
+            expand=True
+        )
+    ], spacing=OCRPanelStyles.ITEM_ROW_SPACING, alignment=ft.MainAxisAlignment.START, vertical_alignment=ft.CrossAxisAlignment.CENTER)
+
+
+def create_indented_parameter_row(param: dict) -> ft.Control:
+    """セクション内字下げされたパラメータ行（統一スタイル）"""
+    return ft.Container(
+        create_parameter_row(param), 
+        padding=ft.padding.only(left=OCRPanelStyles.SECTION_CONTENT_LEFT_INDENT)
+    )

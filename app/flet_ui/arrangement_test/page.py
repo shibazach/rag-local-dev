@@ -65,7 +65,7 @@ class ArrangementTestPage:
     def _create_tab_content(self, tab_index: int):
         """タブコンテンツ作成"""
         if tab_index == 0:
-            content = self.tab_a.create_content()
+            content = self.tab_a.create_content(page=self.page)  # ページ渡し修正
         elif tab_index == 1:
             content = self.tab_b.create_content()
         elif tab_index == 2:
@@ -86,4 +86,5 @@ def show_arrangement_test_page(page: ft.Page = None):
         PageStyles.set_page_background(page)
     
     arrangement_page = ArrangementTestPage()
+    arrangement_page.page = page  # ページインスタンス設定
     return arrangement_page.create_main_layout()

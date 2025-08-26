@@ -120,6 +120,9 @@ class TabD:
             content_items.append(ft.Container(height=8))
             
             def test_dialog_click(e):
+                def close_dialog(e):
+                    e.control.page.close(dialog)
+                
                 dialog = ft.AlertDialog(
                     title=ft.Text("🧪 tab_d ダイアログテスト", size=16, weight=ft.FontWeight.BOLD),
                     content=ft.Container(
@@ -131,19 +134,13 @@ class TabD:
                         padding=ft.padding.all(20)
                     ),
                     actions=[
-                        ft.TextButton("閉じる", on_click=lambda e: close_dialog(e, dialog))
+                        ft.TextButton("閉じる", on_click=close_dialog)
                     ],
                     modal=True
                 )
-                # ページ取得 - コンテナから遡る
+                # tab_a成功方式: page.open()
                 current_page = e.control.page
-                current_page.dialog = dialog
-                dialog.open = True
-                current_page.update()
-            
-            def close_dialog(e, dialog):
-                dialog.open = False
-                e.control.page.update()
+                current_page.open(dialog)
             
             content_items.append(ft.ElevatedButton(
                 text="🧪 ダイアログテスト",

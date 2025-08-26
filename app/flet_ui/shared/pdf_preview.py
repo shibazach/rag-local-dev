@@ -122,6 +122,40 @@ class PDFPreview(ft.Container):
         except:
             pass
     
+    def load_file(self, file_path: str):
+        """ファイルパス文字列からPDFをロード（同期版）"""
+        if not file_path:
+            self.show_empty_preview()
+            return
+        
+        # ファイル情報辞書を作成
+        file_info = {"file_path": file_path, "filename": file_path.split("/")[-1]}
+        
+        # 非同期メソッドを呼び出し
+        import asyncio
+        try:
+            asyncio.create_task(self.load_pdf(file_info))
+        except RuntimeError:
+            # イベントループがない場合は同期処理
+            self._sync_load_pdf(file_info)
+    
+    def _sync_load_pdf(self, file_info: Dict[str, Any]):
+        """同期版PDFロード"""
+        file_path = file_info.get("file_path", "")
+        if not file_path:
+            self.show_error_preview("ファイルパスが無効です")
+            return
+            
+        try:
+            # WebViewでPDFを表示
+            self.web_view.src = file_path
+            self._state = PreviewState.PDF_READY
+            self._rebuild_content()
+            if hasattr(self, 'page') and self.page:
+                self.page.update()
+        except Exception as e:
+            self.show_error_preview(f"PDF表示エラー: {str(e)}")
+    
     async def load_pdf(self, file_info: Dict[str, Any]):
         """PDFを実際に読み込んで表示（状態管理版）"""
         if not file_info:

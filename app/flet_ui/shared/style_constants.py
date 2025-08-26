@@ -24,7 +24,7 @@ class Sliders:
     
     @staticmethod
     def create_vertical(value: float, on_change) -> ft.Container:
-        """垂直スライダー（1-5段階、90度回転、200×200px）"""
+        """垂直スライダー（1-5段階、90度回転、デバッグ用赤枠付き）"""
         return ft.Container(
             width=200, height=200,
             content=ft.Slider(
@@ -32,20 +32,52 @@ class Sliders:
                 rotate=math.pi / 2, on_change=on_change, 
                 width=200, height=30
             ),
-            bgcolor=ft.Colors.TRANSPARENT
+            # デバッグ用：オーバーレイ範囲を可視化
+            bgcolor=ft.Colors.TRANSPARENT,
+            border=ft.border.all(2, ft.Colors.RED)
         )
     
     @staticmethod
     def create_overlay_elements(left_value: float, left_on_change, 
                               right_value: float, right_on_change) -> list:
-        """縦スライダー部分オーバーレイ要素（左右端-84px配置）"""
+        """縦スライダー部分オーバーレイ要素（レスポンシブ中央配置）"""
         left_vslider = Sliders.create_vertical(left_value, left_on_change)
         right_vslider = Sliders.create_vertical(right_value, right_on_change)
         
-        return [
-            ft.Container(content=left_vslider, left=-84, top=0, bottom=32),
-            ft.Container(content=right_vslider, right=-84, top=0, bottom=32)
-        ]
+        # 四象限パネル基準の中央配置：25%-50%-25%（横スライダー32px除外）
+        left_overlay = ft.Container(
+            content=ft.Column([
+                ft.Container(expand=1),  # 上部（25%）
+                ft.Container(
+                    content=left_vslider,
+                    expand=2,  # 中央部分（50%）
+                    alignment=ft.alignment.center,
+                    bgcolor="#FFCCCC"  # デバッグ用
+                ),
+                ft.Container(expand=1),  # 下部（25%）
+            ], spacing=0),
+            left=-84,
+            top=0, bottom=32,  # 32px = 横スライダー高さを除外
+            width=200,
+        )
+        
+        right_overlay = ft.Container(
+            content=ft.Column([
+                ft.Container(expand=1),  # 上部（25%）
+                ft.Container(
+                    content=right_vslider,
+                    expand=2,  # 中央部分（50%）
+                    alignment=ft.alignment.center,
+                    bgcolor="#FFCCCC"  # デバッグ用
+                ),
+                ft.Container(expand=1),  # 下部（25%）
+            ], spacing=0),
+            right=-84,
+            top=0, bottom=32,  # 32px = 横スライダー高さを除外
+            width=200,
+        )
+        
+        return [left_overlay, right_overlay]
     
     @staticmethod  
     def create_complete_layout(

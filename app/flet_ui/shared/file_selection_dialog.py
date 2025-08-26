@@ -34,13 +34,28 @@ class FileSelectionDialog:
         self.left_expand = 2
         self.right_expand = 1
 
-    def _on_table_file_select(self, file_info: Dict[str, Any]):
+    def _on_table_file_select(self, file_id_or_info):
         """テーブルからのファイル選択イベント"""
+        # file_idが渡された場合は実際のファイル情報を取得
+        if isinstance(file_id_or_info, str):
+            file_info = self._get_file_info_by_id(file_id_or_info)
+        else:
+            file_info = file_id_or_info
+            
         self.selected_file_info = file_info
         
         # PDFプレビューを更新
         if file_info and file_info.get("filename", "").lower().endswith(".pdf"):
             self.pdf_preview.load_file(file_info.get("file_path", ""))
+    
+    def _get_file_info_by_id(self, file_id):
+        """ファイルIDから実際のファイル情報を取得"""
+        # FilesTableから現在のファイル一覧を取得
+        if hasattr(self.files_table, 'current_files'):
+            for file_info in self.files_table.current_files:
+                if str(file_info.get("id", "")) == str(file_id):
+                    return file_info
+        return None
     
     def _on_select_click(self, e):
         """選択ボタンクリック"""

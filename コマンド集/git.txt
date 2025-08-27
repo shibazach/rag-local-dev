@@ -34,3 +34,16 @@ git push --force-with-lease origin main
 git fetch origin
 git reset --hard origin/main  # ブランチ名がmainの場合。他のブランチなら適宜変更
 git clean -fd
+
+
+
+GitHub 側での公開鍵の登録手順
+ブラウザで GitHub にログイン
+右上のプロフィールアイコン → Settings
+左のメニュー → SSH and GPG keys
+New SSH key をクリック
+Title: 任意（例: Xubuntu Dev Machine）
+Key type: Authentication Key のまま
+Key: 先ほどコピーした公開鍵の内容をペースト
+Add SSH key を押す
+

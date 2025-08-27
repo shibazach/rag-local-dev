@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
 Flet RAGシステム - 配置テスト タブC (大容量PDF表示テスト)
-全面的な大容量PDF対応機能テスト
+V4画像変換方式専用テスト
+
+V4版: Image変換 + ft.Image (全プラットフォーム対応・右ペイン内表示)
+- PyMuPDF画像変換エンジン
+- 400倍キャッシュ高速化
+- ページナビゲーション・ズーム機能
+- Linux/Windows完全対応
 """
 
 import flet as ft
@@ -10,7 +16,7 @@ from typing import Optional
 
 
 class TabC:
-    """タブC: 大容量PDF表示テスト（全面表示）"""
+    """タブC: 大容量PDF表示テスト（V4専用・シンプル版）"""
     
     def __init__(self):
         self.current_status = "待機中"
@@ -20,11 +26,9 @@ class TabC:
         """タブCコンテンツ作成"""
         self.page = page  # ページ参照を保存
         
-        # V3版PDFプレビューコンポーネント（プラットフォーム適応版）
-        from app.flet_ui.shared.pdf_large_preview_v3 import create_large_pdf_preview_v3
-        self.pdf_preview_v3 = create_large_pdf_preview_v3(self.page)
-        
-        self.current_pdf_version = "v3"  # V3版のみ使用
+        # V4版PDFプレビューコンポーネント（画像変換版）
+        from app.flet_ui.shared.pdf_large_preview_v4 import create_large_pdf_preview_v4
+        self.pdf_preview_v4 = create_large_pdf_preview_v4(self.page)
         
         # ステータス表示
         self.status_text = ft.Text(
@@ -42,12 +46,22 @@ class TabC:
             expand=True  # 親コンテナに合わせて拡張
         )
         
-        # シンプルテストボタン（V3版のみ）
+        # シンプルテストボタン（V4専用）
         test_buttons = ft.Row([
             ft.ElevatedButton(
-                text="🚀 V3版PDFテスト実行",
-                on_click=self._simple_v3_test,
-                bgcolor=ft.Colors.GREEN_100,
+                text="🧪 Phase1テスト",
+                on_click=self._phase1_test,
+                bgcolor=ft.Colors.BLUE_300,
+                width=150,
+                height=50,
+                style=ft.ButtonStyle(
+                    text_style=ft.TextStyle(size=14, weight=ft.FontWeight.BOLD)
+                )
+            ),
+            ft.ElevatedButton(
+                text="🖼️ 大容量PDFテスト実行",
+                on_click=self._simple_v4_test,
+                bgcolor=ft.Colors.ORANGE_300,
                 width=200,
                 height=50,
                 style=ft.ButtonStyle(
@@ -61,18 +75,21 @@ class TabC:
                 width=120,
                 height=50
             )
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=15)
         
-        # 上部コントロールバー（薄く）
+        # 上部コントロールバー（V4専用・シンプル）
         control_bar = ft.Container(
             content=ft.Column([
-                ft.Text("大容量PDF対応機能テスト（左右ペイン表示）", size=16, weight=ft.FontWeight.BOLD),
+                ft.Text("大容量PDF表示テスト（V4画像変換方式）", size=16, weight=ft.FontWeight.BOLD),
+                ft.Text("✅ 全プラットフォーム対応・右ペイン内表示・400倍キャッシュ高速化", 
+                       size=12, color=ft.Colors.ORANGE_700, weight=ft.FontWeight.BOLD),
+                ft.Container(height=8),
                 test_buttons,
                 self.status_text
             ], spacing=6),
             padding=ft.padding.all(12),
             bgcolor=ft.Colors.WHITE,
-            border=ft.border.only(bottom=ft.BorderSide(2, ft.Colors.BLUE_200))
+            border=ft.border.only(bottom=ft.BorderSide(2, ft.Colors.ORANGE_200))
         )
         
         # 左ペイン: ログ表示エリア（大きく）
@@ -94,9 +111,9 @@ class TabC:
             border=ft.border.only(right=ft.BorderSide(2, ft.Colors.GREY_300))
         )
         
-                # 右ペイン: PDFプレビューエリア（V3版専用・シンプル）
+        # 右ペイン: PDFプレビューエリア（V4専用）
         self.pdf_container = ft.Container(
-            content=self.pdf_preview_v3,  # V3版のみ使用
+            content=self.pdf_preview_v4,  # V4版専用
             expand=True,
             padding=ft.padding.all(4),
             bgcolor=ft.Colors.GREY_50,
@@ -182,19 +199,21 @@ class TabC:
     
     # V1用メソッド削除済み
     
-    def _simple_v3_test(self, e):
-        """シンプルV3版PDFテスト（ワンクリック）"""
-        self._add_log("🚀 V3版PDFテスト開始")
-        self._update_status("PDFテスト実行中")
+    # V3テスト機能削除（V4専用化）
+
+    def _simple_v4_test(self, e):
+        """シンプルV4版PDFテスト（画像変換版）"""
+        self._add_log("🖼️ V4版PDFテスト開始")
+        self._update_status("V4版PDFテスト実行中")
         
         if self.page:
-            self.page.run_task(self._async_simple_v3_test)
+            self.page.run_task(self._async_simple_v4_test)
         else:
             import threading
-            threading.Thread(target=lambda: asyncio.run(self._async_simple_v3_test())).start()
+            threading.Thread(target=lambda: asyncio.run(self._async_simple_v4_test())).start()
 
-    async def _async_simple_v3_test(self):
-        """シンプルV3版非同期テスト"""
+    async def _async_simple_v4_test(self):
+        """シンプルV4版非同期テスト"""
         try:
             from app.core.db_simple import fetch_one
             
@@ -216,32 +235,47 @@ class TabC:
             size_mb = test_pdf['blob_size'] / (1024 * 1024)
             self._add_log(f"📄 テスト用PDF: {test_pdf['file_name']} ({size_mb:.2f}MB)")
             
-            # V3版で直接表示
-            self._add_log("⚡ V3版でPDF表示中...")
-            await self.pdf_preview_v3.load_pdf(test_pdf, test_pdf['blob_data'])
+            # V4版で直接表示（画像変換）
+            self._add_log("🖼️ V4版で画像変換・表示中...")
+            await self.pdf_preview_v4.load_pdf(test_pdf, test_pdf['blob_data'])
             
-            self._add_log("✅ V3版PDF表示完了")
-            self._update_status("PDF表示完了")
+            self._add_log("✅ V4版PDF表示完了")
+            self._update_status("V4版PDF表示完了")
             
         except Exception as e:
-            error_msg = f"❌ V3版PDFテストエラー: {str(e)}"
+            error_msg = f"❌ V4版PDFテストエラー: {str(e)}"
             self._add_log(error_msg)
             self._update_status("エラー発生")
             import traceback
-            print(f"[PDF-V3-SIMPLE-ERROR] {traceback.format_exc()}")
+            print(f"[PDF-V4-SIMPLE-ERROR] {traceback.format_exc()}")
+
+    def _phase1_test(self, e):
+        """Phase 1: 基本画像表示テスト"""
+        self._add_log("🧪 Phase1: 基本画像表示テスト開始")
+        self._update_status("Phase1テスト実行中")
+        
+        try:
+            # V4プレビューの基本画像表示テスト実行
+            self.pdf_preview_v4.test_basic_image_display()
+            self._add_log("✅ Phase1テスト完了")
+            self._update_status("Phase1テスト完了")
+            
+        except Exception as ex:
+            import traceback
+            self._add_log(f"❌ Phase1テストエラー: {ex}")
+            self._update_status("Phase1テストエラー")
+            print(f"[PDF-PHASE1-ERROR] {traceback.format_exc()}")
 
     def _clear_preview(self, e=None):
-        """プレビュークリア（V3版専用・シンプル）"""
+        """プレビュークリア（V4専用）"""
         if e is not None:
             self._add_log("🗑️ クリア実行中...")
         
-        # V3版プレビューをクリア
-        self.pdf_preview_v3.clear_preview()
+        # V4版プレビューをクリア
+        self.pdf_preview_v4.clear_preview()
             
         if e is not None:
             self._update_status("待機中")
             self._add_log("✅ クリア完了")
 
-    # V1/V2 切り替えメソッド削除済み（V3専用化）
-
-    # V2/V3 重複メソッド削除済み（_simple_v3_testに統一）
+    # ==================== V4専用化完了 ==================== 

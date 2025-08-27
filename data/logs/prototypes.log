@@ -460,3 +460,15 @@ LINE 19:             WHERE fb.id = 'non-existent-file-id'
 2025-08-27 04:21:03,375 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-27 04:25:37,348 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-27 04:35:02,590 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 05:28:10,008 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 05:33:36,231 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 05:35:04,847 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 06:01:12,656 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 06:11:22,884 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 06:25:03,096 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 11:55:22,228 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 12:01:40,520 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 12:05:37,412 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 12:17:22,231 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 12:19:14,765 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 12:27:03,441 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag

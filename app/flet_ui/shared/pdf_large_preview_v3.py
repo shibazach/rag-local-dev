@@ -362,26 +362,61 @@ class LargePDFPreviewV3(ft.Container):
             try:
                 logger.info(f"[V3-UI] 右ペイン内PDF表示開始: {self._last_viewer_url}")
                 
-                # HTMLコントロールでiframeを使用してPDF表示
-                html_content = f"""
-                <div style="width:100%; height:800px;">
-                    <iframe 
-                        src="{self._last_viewer_url}" 
-                        width="100%" 
-                        height="100%" 
-                        frameborder="0"
-                        style="border: 1px solid #ccc;">
-                    </iframe>
-                </div>
-                """
+                # WebViewまたはURL表示でPDF表示（HTMLコントロール代替）
+                # 方法1: WebViewを試行（可能な場合）
+                try:
+                    webview_control = ft.WebView(
+                        url=self._last_viewer_url,
+                        expand=True,
+                        width=800,
+                        height=600
+                    )
+                    pdf_display_control = webview_control
+                    logger.info("[V3-UI] WebView使用でPDF表示")
                 
-                html_control = ft.Html(
-                    html=html_content,
-                    expand=True
-                )
+                except Exception as webview_error:
+                    logger.warning(f"[V3-UI] WebView失敗、URL表示にフォールバック: {webview_error}")
+                    # 方法2: URL表示（フォールバック）
+                    pdf_display_control = ft.Column(
+                        controls=[
+                            ft.Icon(ft.Icons.PICTURE_AS_PDF, size=80, color=ft.Colors.BLUE_400),
+                            ft.Container(height=20),
+                            ft.Text("PDF表示", size=20, color=ft.Colors.BLUE_700, weight=ft.FontWeight.BOLD),
+                            ft.Container(height=16),
+                            ft.Text("以下のURLで表示されています:", size=14, color=ft.Colors.GREY_700),
+                            ft.Container(height=8),
+                            ft.SelectableText(
+                                value=self._last_viewer_url,
+                                size=12,
+                                color=ft.Colors.BLUE_600,
+                                selectable=True
+                            ),
+                            ft.Container(height=20),
+                            ft.Row(
+                                controls=[
+                                    ft.ElevatedButton(
+                                        text="🌐 新しいタブで開く",
+                                        on_click=lambda e: self._open_external_tab(),
+                                        height=40
+                                    ),
+                                    ft.ElevatedButton(
+                                        text="📋 URLコピー",
+                                        on_click=lambda e: self._copy_url_to_clipboard(),
+                                        height=40
+                                    )
+                                ],
+                                alignment=ft.MainAxisAlignment.CENTER,
+                                spacing=10
+                            )
+                        ],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=0,
+                        expand=True,
+                        scroll=ft.ScrollMode.AUTO
+                    )
                 
                 # 右ペインにPDFビューア表示
-                self._overlay_container.content = html_control
+                self._overlay_container.content = pdf_display_control
                 self._overlay_container.alignment = None  # 中央寄せを解除
                 self._overlay_container.bgcolor = ft.Colors.WHITE
                 
@@ -437,6 +472,26 @@ class LargePDFPreviewV3(ft.Container):
             
         except Exception as ex:
             logger.error(f"[V3-UI] プレビュー戻りエラー: {ex}")
+    
+    def _open_external_tab(self):
+        """外部タブでPDFを開く"""
+        if self._last_viewer_url and self.page:
+            try:
+                logger.info(f"[V3-UI] 外部タブでPDF表示: {self._last_viewer_url}")
+                self.page.launch_url(self._last_viewer_url)
+            except Exception as ex:
+                logger.error(f"[V3-UI] 外部タブ表示エラー: {ex}")
+    
+    def _copy_url_to_clipboard(self):
+        """URLをクリップボードにコピー"""
+        if self._last_viewer_url and self.page:
+            try:
+                logger.info("[V3-UI] URLクリップボードコピー")
+                self.page.set_clipboard(self._last_viewer_url)
+                # 成功通知（簡易版）
+                logger.info("[V3-UI] URLコピー完了")
+            except Exception as ex:
+                logger.error(f"[V3-UI] URLコピーエラー: {ex}")
     
     # 削除：不要なメソッドを整理
 

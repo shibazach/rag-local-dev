@@ -152,11 +152,11 @@ class TabA:
         )
         
         # 右下：大容量PDF対応プレビューテスト
-        from app.flet_ui.shared.pdf_large_preview import create_large_pdf_preview
+        from app.flet_ui.shared.pdf_large_preview_v3 import create_large_pdf_preview_v3
         from app.services.file_service import get_file_service
         
         # 大容量PDFプレビュー作成
-        pdf_preview = create_large_pdf_preview()
+        pdf_preview = create_large_pdf_preview_v3()
         
         def test_large_pdf_click(e):
             """大容量PDFテストボタン"""
@@ -226,8 +226,8 @@ class TabA:
                     print(f"🖼️ 画像モード強制テスト開始: {file_info['file_name']} ({size_mb:.2f}MB)")
                     print(f"   ファイルID: {file_info['id']}")
                     
-                    # 強制的に画像モードに設定
-                    pdf_preview._force_image_mode = True
+                    # V3版では画像モード強制は不要（HTTP統一方式）
+                    # pdf_preview._force_image_mode = True  # V3版では非対応
                     pdf_preview.show_pdf_preview(file_info)
                 else:
                     print("❌ 画像モードテスト: PDFファイルが見つかりません")
@@ -284,7 +284,7 @@ class TabA:
             try:
                 print("🧹 プレビューをクリアします")
                 pdf_preview.show_empty_preview()
-                pdf_preview._force_image_mode = False  # 画像モード強制フラグリセット
+                # pdf_preview._force_image_mode = False  # V3版では非対応
                 print("✅ プレビュークリア完了")
             except Exception as e:
                 print(f"❌ プレビュークリアエラー: {e}")

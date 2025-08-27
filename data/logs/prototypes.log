@@ -452,3 +452,4 @@ LINE 19:             WHERE fb.id = 'non-existent-file-id'
 2025-08-27 01:46:37,671 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-27 01:57:14,304 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-27 02:04:41,266 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-27 02:09:07,490 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag

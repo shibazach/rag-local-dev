@@ -2,6 +2,11 @@
 """
 大容量PDF対応プレビューコンポーネント（V2版）
 V2ストリーミングサーバ対応版
+
+重要な変更：
+- data:URL方式を廃止（WebViewプラットフォーム制限：Android/iOS/macOSのみサポート）
+- 全サイズのPDFでHTTPストリーミング方式または画像レンダリング方式を使用
+- Webブラウザ環境での互換性を確保
 """
 
 import flet as ft
@@ -22,7 +27,7 @@ logger = logging.getLogger(__name__)
 class LargePreviewState(Enum):
     EMPTY = "empty"
     LOADING = "loading"
-    DATA_URL_READY = "data_url_ready"
+    # DATA_URL_READY = "data_url_ready"  # 廃止：WebViewプラットフォーム制限
     PREPARING_STREAM = "preparing_stream"
     STREAM_READY = "stream_ready"
     IMAGE_RENDERING = "image_rendering"
@@ -31,10 +36,10 @@ class LargePreviewState(Enum):
 
 
 class PDFSizeThreshold:
-    """PDF サイズによる処理方式閾値"""
-    SMALL_PDF = 1.5 * 1024 * 1024  # 1.5MB未満: data:URL
-    LARGE_PDF = 20 * 1024 * 1024   # 20MB未満: HTTPストリーミング
-    # 20MB以上: 画像レンダリング
+    """PDF サイズによる処理方式閾値（WebView data:URL制限対応）"""
+    SMALL_PDF = 0  # data:URL廃止：常にHTTPストリーミング使用
+    LARGE_PDF = 50 * 1024 * 1024   # 50MB未満: HTTPストリーミング
+    # 50MB以上: 画像レンダリング
 
 
 class LargePDFPreviewV2(ft.Container):
@@ -82,7 +87,7 @@ class LargePDFPreviewV2(ft.Container):
         self.overlay_container = ft.Container(
             expand=True,
             alignment=ft.alignment.center,
-            bgcolor=ft.colors.with_opacity(0.8, ft.colors.WHITE)
+            bgcolor=ft.Colors.with_opacity(0.8, ft.Colors.WHITE)
         )
         
         # コントロールバー
@@ -163,11 +168,11 @@ class LargePDFPreviewV2(ft.Container):
         if self.current_state == LargePreviewState.EMPTY:
             self.overlay_container.content = ft.Column(
                 controls=[
-                    ft.Icon(ft.icons.PICTURE_AS_PDF, size=64, color=ft.colors.GREY_400),
+                    ft.Icon(ft.Icons.PICTURE_AS_PDF, size=64, color=ft.Colors.GREY_400),
                     ft.Text(
                         "ファイルを選択すると\n大容量PDF対応プレビューが表示されます",
                         size=16,
-                        color=ft.colors.GREY_600,
+                        color=ft.Colors.GREY_600,
                         text_align=ft.TextAlign.CENTER
                     )
                 ],
@@ -183,7 +188,7 @@ class LargePDFPreviewV2(ft.Container):
             self.overlay_container.content = ft.Column(
                 controls=[
                     ft.ProgressRing(),
-                    ft.Text("PDFを分析中...", size=14, color=ft.colors.GREY_700)
+                    ft.Text("PDFを分析中...", size=14, color=ft.Colors.GREY_700)
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -197,7 +202,7 @@ class LargePDFPreviewV2(ft.Container):
             self.overlay_container.content = ft.Column(
                 controls=[
                     ft.ProgressRing(),
-                    ft.Text("ストリーミング準備中...", size=14, color=ft.colors.BLUE_700)
+                    ft.Text("ストリーミング準備中...", size=14, color=ft.Colors.BLUE_700)
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -209,7 +214,7 @@ class LargePDFPreviewV2(ft.Container):
             self.overlay_container.content = ft.Column(
                 controls=[
                     ft.ProgressRing(),
-                    ft.Text("PDFを分析中...", size=14, color=ft.colors.PURPLE_700)
+                    ft.Text("PDFを分析中...", size=14, color=ft.Colors.PURPLE_700)
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 horizontal_alignment=ft.CrossAxisAlignment.CENTER,
@@ -217,7 +222,7 @@ class LargePDFPreviewV2(ft.Container):
             )
             self.overlay_container.visible = True
             
-        elif self.current_state in [LargePreviewState.DATA_URL_READY, LargePreviewState.STREAM_READY]:
+        elif self.current_state == LargePreviewState.STREAM_READY:
             self.overlay_container.visible = False
             self.web_view.visible = True
             self.image_container.visible = False
@@ -230,11 +235,11 @@ class LargePDFPreviewV2(ft.Container):
         elif self.current_state == LargePreviewState.ERROR:
             self.overlay_container.content = ft.Column(
                 controls=[
-                    ft.Icon(ft.icons.ERROR, size=48, color=ft.colors.RED_400),
+                    ft.Icon(ft.Icons.ERROR, size=48, color=ft.Colors.RED_400),
                     ft.Text(
                         f"エラーが発生しました:\n{self.current_error_message}",
                         size=14,
-                        color=ft.colors.RED_700,
+                        color=ft.Colors.RED_700,
                         text_align=ft.TextAlign.CENTER
                     )
                 ],
@@ -334,26 +339,17 @@ class LargePDFPreviewV2(ft.Container):
             self._set_state_and_rebuild(LargePreviewState.ERROR, f"ストリーミング準備エラー: {str(e)}")
 
     async def _handle_data_url_mode(self, file_info: Dict[str, Any], blob_data: bytes):
-        """data:URLモード処理"""
+        """data:URLモード処理（廃止予定：WebViewプラットフォーム制限対応）"""
         try:
-            logger.info(f"[V2-DATA] data:URLモード開始")
+            logger.warning(f"[V2-DATA] data:URLモードは廃止されました（WebViewプラットフォーム制限）")
             
-            # Base64エンコード
-            pdf_base64 = base64.b64encode(blob_data).decode('utf-8')
-            data_url = f"data:application/pdf;base64,{pdf_base64}"
-            
-            # WebViewに直接設定
-            self.web_view.url = data_url
-            self.current_file_info = file_info
-            
-            # 表示準備完了
-            self._set_state_and_rebuild(LargePreviewState.DATA_URL_READY)
-            
-            logger.info(f"[V2-DATA] data:URLモード準備完了")
+            # data:URL方式の代わりにHTTPストリーミング方式を使用
+            logger.info(f"[V2-DATA] HTTPストリーミング方式に自動切り替え")
+            await self._handle_streaming_mode_v2(file_info, blob_data)
             
         except Exception as e:
-            logger.error(f"[V2-DATA] data:URLモードエラー: {e}")
-            self._set_state_and_rebuild(LargePreviewState.ERROR, f"data:URL準備エラー: {str(e)}")
+            logger.error(f"[V2-DATA] data:URL代替処理エラー: {e}")
+            self._set_state_and_rebuild(LargePreviewState.ERROR, f"data:URL代替処理エラー: {str(e)}")
 
     async def _handle_image_mode_v2(self, file_info: Dict[str, Any], blob_data: bytes):
         """画像モード処理（V2版）"""

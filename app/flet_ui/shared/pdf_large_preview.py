@@ -30,8 +30,8 @@ class LargePreviewState(Enum):
 
 
 class PDFSizeThreshold:
-    """PDFサイズ判定閾値"""
-    SMALL_PDF = 1.5 * 1024 * 1024    # 1.5MB - data:URL方式
+    """PDFサイズ判定閾値（WebView data:URL制限対応）"""
+    SMALL_PDF = 0                    # data:URL廃止：常にストリーミング方式
     LARGE_PDF = 20 * 1024 * 1024     # 20MB - HTTPストリーミング
     HUGE_PDF = 100 * 1024 * 1024     # 100MB - 画像レンダ推奨
 
@@ -529,18 +529,12 @@ class LargePDFPreview(ft.Container):
             self._set_state_and_rebuild(LargePreviewState.ERROR, f"ストリーミング準備エラー: {str(e)}")
     
     async def _handle_data_url_mode(self, file_info: Dict[str, Any], blob_data: bytes):
-        """data:URLモード処理（従来の小容量向け）"""
+        """data:URLモード処理（WebViewプラットフォーム制限対応：ストリーミング方式に変更）"""
         try:
-            # Base64エンコード
-            pdf_base64 = base64.b64encode(blob_data).decode('utf-8')
-            pdf_url = f'data:application/pdf;base64,{pdf_base64}'
+            logger.warning("[V1-DATA] data:URLモードはWebViewプラットフォーム制限のためストリーミング方式に変更します")
             
-            # WebViewにPDF URL設定
-            self.web_view.url = pdf_url
-            self.current_file_info = file_info
-            
-            # ストリーミング表示状態に設定（UIは同じ）
-            self._set_state_and_rebuild(LargePreviewState.STREAM_READY)
+            # data:URL方式の代わりにストリーミング方式を使用
+            await self._handle_streaming_mode(file_info, blob_data)
             
             logger.info(f"data:URLモード準備完了")
             

@@ -35,7 +35,7 @@ class ArrangementTestPage:
             tabs=[
                 ft.Tab(text="レイアウト", icon=ft.Icons.GRID_VIEW),
                 ft.Tab(text="コンポーネント", icon=ft.Icons.WIDGETS),
-                ft.Tab(text="縦スライダーテスト", icon=ft.Icons.TUNE),
+                ft.Tab(text="PDF大容量表示テスト", icon=ft.Icons.PICTURE_AS_PDF),
                 ft.Tab(text="縦スライダーレイヤー検討", icon=ft.Icons.LAYERS),
                 ft.Tab(text="総合展示", icon=ft.Icons.VIEW_MODULE)
             ]

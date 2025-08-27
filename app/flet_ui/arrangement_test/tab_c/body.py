@@ -20,9 +20,11 @@ class TabC:
         """タブCコンテンツ作成"""
         self.page = page  # ページ参照を保存
         
-        # 大容量PDFプレビューコンポーネント
-        from app.flet_ui.shared.pdf_large_preview import create_large_pdf_preview
-        self.pdf_preview = create_large_pdf_preview()
+        # V3版PDFプレビューコンポーネント（シンプル版）
+        from app.flet_ui.shared.pdf_large_preview_v3 import create_large_pdf_preview_v3
+        self.pdf_preview_v3 = create_large_pdf_preview_v3()
+        
+        self.current_pdf_version = "v3"  # V3版のみ使用
         
         # ステータス表示
         self.status_text = ft.Text(
@@ -40,37 +42,26 @@ class TabC:
             expand=True  # 親コンテナに合わせて拡張
         )
         
-        # テストボタン群
+        # シンプルテストボタン（V3版のみ）
         test_buttons = ft.Row([
             ft.ElevatedButton(
-                text="🎯 最大サイズPDFテスト",
-                on_click=self._test_largest_pdf,
-                bgcolor=ft.Colors.ORANGE_100,
+                text="🚀 V3版PDFテスト実行",
+                on_click=self._simple_v3_test,
+                bgcolor=ft.Colors.GREEN_100,
                 width=200,
-                height=40
+                height=50,
+                style=ft.ButtonStyle(
+                    text_style=ft.TextStyle(size=16, weight=ft.FontWeight.BOLD)
+                )
             ),
             ft.ElevatedButton(
-                text="🖼️ 画像モード強制テスト", 
-                on_click=self._test_image_mode,
-                bgcolor=ft.Colors.PURPLE_100,
-                width=200,
-                height=40
-            ),
-            ft.ElevatedButton(
-                text="🌐 ストリーミングテスト",
-                on_click=self._test_streaming,
-                bgcolor=ft.Colors.BLUE_100,
-                width=200,
-                height=40
-            ),
-            ft.ElevatedButton(
-                text="🧹 クリア",
+                text="🗑️ クリア",
                 on_click=self._clear_preview,
                 bgcolor=ft.Colors.GREY_200,
                 width=120,
-                height=40
+                height=50
             )
-        ], alignment=ft.MainAxisAlignment.CENTER, spacing=10)
+        ], alignment=ft.MainAxisAlignment.CENTER, spacing=20)
         
         # 上部コントロールバー（薄く）
         control_bar = ft.Container(
@@ -103,17 +94,19 @@ class TabC:
             border=ft.border.only(right=ft.BorderSide(2, ft.Colors.GREY_300))
         )
         
-        # 右ペイン: PDFプレビューエリア
+                # 右ペイン: PDFプレビューエリア（V3版専用・シンプル）
+        self.pdf_container = ft.Container(
+            content=self.pdf_preview_v3,  # V3版のみ使用
+            expand=True,
+            padding=ft.padding.all(4),
+            bgcolor=ft.Colors.GREY_50,
+            border_radius=4
+        )
+        
         pdf_panel = ft.Container(
             content=ft.Column([
                 ft.Text("📄 PDFプレビュー", size=14, weight=ft.FontWeight.BOLD, color=ft.Colors.GREEN_700),
-                ft.Container(
-                    content=self.pdf_preview,
-            expand=True,
-                    padding=ft.padding.all(4),
-                    bgcolor=ft.Colors.GREY_50,
-                    border_radius=4
-                )
+                self.pdf_container
             ], spacing=8, expand=True),
             padding=ft.padding.all(8),
             expand=True,  # 残り全幅を使用
@@ -185,172 +178,238 @@ class TabC:
             pass
         self._add_log(f"ステータス変更: {status}")
     
-    def _test_largest_pdf(self, e):
-        """最大サイズPDFテスト"""
-        self._add_log("🔍 DB内最大サイズPDFを検索中...")
-        self._update_status("DB検索中")
-        
-        # Flet用非同期実行
-        if self.page:
-            self.page.run_task(self._async_test_largest_pdf)
-        else:
-            # フォールバック（通常は使用されない）
-            import threading
-            threading.Thread(target=lambda: asyncio.run(self._async_test_largest_pdf())).start()
+    # ==================== V1/V2 メソッド削除（V3専用化） ==================== 
     
-    async def _async_test_largest_pdf(self):
-        """最大サイズPDF非同期テスト"""
-        try:
-            from app.core.db_simple import fetch_all
-            
-            # DB内最大PDFを取得
-            pdf_files = fetch_all('''
-                SELECT fb.id, fm.file_name, fm.mime_type, LENGTH(fb.blob_data) as blob_size
-                FROM files_blob fb
-                LEFT JOIN files_meta fm ON fb.id = fm.blob_id
-                WHERE fm.file_name LIKE '%.pdf' OR fm.mime_type LIKE '%pdf%'
-                ORDER BY LENGTH(fb.blob_data) DESC
-                LIMIT 1
-            ''')
-            
-            if not pdf_files:
-                self._add_log("❌ PDFファイルが見つかりません")
-                self._update_status("エラー: PDFなし")
-                return
-            
-            largest_pdf = pdf_files[0]
-            size_mb = largest_pdf['blob_size'] / (1024 * 1024) if largest_pdf['blob_size'] else 0
-            
-            file_info = {
-                'id': largest_pdf['id'],
-                'file_name': largest_pdf['file_name'],
-                'mime_type': largest_pdf['mime_type']
-            }
-            
-            self._add_log(f"✅ 最大PDF発見: {file_info['file_name']} ({size_mb:.1f}MB)")
-            self._update_status("PDF表示準備中")
-            
-            # PDF表示実行
-            self.pdf_preview.show_pdf_preview(file_info)
-            self._add_log("🚀 PDF表示コマンド実行完了")
-            self._update_status(f"表示中: {size_mb:.1f}MB")
-            
-        except Exception as e:
-            error_msg = f"❌ 最大PDFテストエラー: {str(e)}"
-            self._add_log(error_msg)
-            self._update_status("エラー発生")
-            import traceback
-            print(f"[PDF-TEST-ERROR] {traceback.format_exc()}")
+    # V1用メソッド削除済み
     
-    def _test_image_mode(self, e):
-        """画像モード強制テスト"""
-        self._add_log("🖼️ 画像モード強制テスト開始")
-        self._update_status("画像モード準備中")
+    def _simple_v3_test(self, e):
+        """シンプルV3版PDFテスト（ワンクリック）"""
+        self._add_log("🚀 V3版PDFテスト開始")
+        self._update_status("PDFテスト実行中")
         
         if self.page:
-            self.page.run_task(self._async_test_image_mode)
+            self.page.run_task(self._async_simple_v3_test)
         else:
             import threading
-            threading.Thread(target=lambda: asyncio.run(self._async_test_image_mode())).start()
-    
-    async def _async_test_image_mode(self):
-        """画像モード非同期テスト"""
-        try:
-            from app.core.db_simple import fetch_all
-            
-            # 中程度サイズのPDFで画像モードテスト
-            pdf_files = fetch_all('''
-                SELECT fb.id, fm.file_name, fm.mime_type, LENGTH(fb.blob_data) as blob_size
-                FROM files_blob fb
-                LEFT JOIN files_meta fm ON fb.id = fm.blob_id
-                WHERE fm.file_name LIKE '%.pdf'
-                ORDER BY LENGTH(fb.blob_data) ASC
-                LIMIT 1 OFFSET 2
-            ''')
-            
-            if pdf_files:
-                test_pdf = pdf_files[0]
-                size_mb = test_pdf['blob_size'] / (1024 * 1024)
-                
-                file_info = {
-                    'id': test_pdf['id'],
-                    'file_name': test_pdf['file_name'],
-                    'mime_type': test_pdf['mime_type']
-                }
-                
-                self._add_log(f"✅ テスト対象: {file_info['file_name']} ({size_mb:.2f}MB)")
-                
-                # 強制的に画像モードに設定
-                self.pdf_preview._force_image_mode = True
-                self.pdf_preview.show_pdf_preview(file_info)
-                
-                self._add_log("🎯 画像モード強制実行")
-                self._update_status("画像レンダリング中")
-            else:
-                self._add_log("❌ テスト用PDFが見つかりません")
-                self._update_status("エラー: ファイルなし")
-                
-        except Exception as e:
-            error_msg = f"❌ 画像モードテストエラー: {str(e)}"
-            self._add_log(error_msg)
-            self._update_status("エラー発生")
-    
-    def _test_streaming(self, e):
-        """ストリーミング直接テスト"""
-        self._add_log("🌐 ストリーミングサーバ直接テスト開始")
-        self._update_status("サーバテスト中")
-        
-        if self.page:
-            self.page.run_task(self._async_test_streaming)
-        else:
-            import threading
-            threading.Thread(target=lambda: asyncio.run(self._async_test_streaming())).start()
-    
-    async def _async_test_streaming(self):
-        """ストリーミング直接非同期テスト"""
+            threading.Thread(target=lambda: asyncio.run(self._async_simple_v3_test())).start()
+
+    async def _async_simple_v3_test(self):
+        """シンプルV3版非同期テスト"""
         try:
             from app.core.db_simple import fetch_one
             
-            # テスト用PDFデータ取得
+            # 適度なサイズのPDFを自動選択
             test_pdf = fetch_one('''
                 SELECT fb.id, fm.file_name, LENGTH(fb.blob_data) as blob_size, fb.blob_data
                 FROM files_blob fb
                 LEFT JOIN files_meta fm ON fb.id = fm.blob_id
-                WHERE fm.file_name LIKE '%.pdf'
-                ORDER BY LENGTH(fb.blob_data)
-                LIMIT 1 OFFSET 1
+                WHERE fm.file_name LIKE '%.pdf' AND LENGTH(fb.blob_data) < 10000000
+                ORDER BY LENGTH(fb.blob_data) DESC
+                LIMIT 1
             ''')
             
-            if test_pdf:
-                size_mb = test_pdf['blob_size'] / (1024 * 1024)
-                self._add_log(f"📄 テスト用PDF: {test_pdf['file_name']} ({size_mb:.2f}MB)")
-                
-                # PDFストリーミングサーバ開始
-                from app.flet_ui.shared.pdf_stream_server import serve_pdf_from_bytes
-                pdf_url, server = await serve_pdf_from_bytes(test_pdf['blob_data'], test_pdf['id'])
-                
-                self._add_log(f"✅ ストリーミングURL生成: {pdf_url}")
-                self._update_status("ストリーミング成功")
-                
-                # HTTPクライアントテスト
-                import aiohttp
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(pdf_url) as response:
-                        self._add_log(f"🔗 HTTPテスト: {response.status} ({response.headers.get('Content-Length', '不明')} bytes)")
-                        
-            else:
+            if not test_pdf:
                 self._add_log("❌ テスト用PDFが見つかりません")
-                self._update_status("エラー: ファイルなし")
-                
+                self._update_status("エラー発生")
+                return
+            
+            size_mb = test_pdf['blob_size'] / (1024 * 1024)
+            self._add_log(f"📄 テスト用PDF: {test_pdf['file_name']} ({size_mb:.2f}MB)")
+            
+            # V3版で直接表示
+            self._add_log("⚡ V3版でPDF表示中...")
+            await self.pdf_preview_v3.load_pdf(test_pdf, test_pdf['blob_data'])
+            
+            self._add_log("✅ V3版PDF表示完了")
+            self._update_status("PDF表示完了")
+            
         except Exception as e:
-            error_msg = f"❌ ストリーミングテストエラー: {str(e)}"
+            error_msg = f"❌ V3版PDFテストエラー: {str(e)}"
             self._add_log(error_msg)
             self._update_status("エラー発生")
+            import traceback
+            print(f"[PDF-V3-SIMPLE-ERROR] {traceback.format_exc()}")
+
+    def _clear_preview(self, e=None):
+        """プレビュークリア（V3版専用・シンプル）"""
+        if e is not None:
+            self._add_log("🗑️ クリア実行中...")
+        
+        # V3版プレビューをクリア
+        self.pdf_preview_v3.clear_preview()
+            
+        if e is not None:
+            self._update_status("待機中")
+            self._add_log("✅ クリア完了")
+
+    def _switch_to_version(self, version: str):
+        """PDF表示バージョン切り替え（V1/V2/V3）"""
+        try:
+            # 現在のバージョンをクリア
+            self._clear_preview()
+            
+            # バージョン切り替え
+            if version == "v1":
+                self.current_pdf_version = "v1"
+                self.pdf_container.content = self.pdf_preview
+                self.version_text.value = "使用中: V1版"
+                self.version_text.color = ft.Colors.BLUE_700
+                self._add_log("🔄 V1版（従来版）に切り替えました")
+            elif version == "v2":
+                self.current_pdf_version = "v2"
+                self.pdf_container.content = self.pdf_preview_v2
+                self.version_text.value = "使用中: V2版"
+                self.version_text.color = ft.Colors.GREEN_700
+                self._add_log("🚀 V2版（改良版）に切り替えました")
+            elif version == "v3":
+                self.current_pdf_version = "v3"
+                self.pdf_container.content = self.pdf_preview_v3
+                self.version_text.value = "使用中: V3版"
+                self.version_text.color = ft.Colors.PURPLE_700
+                self._add_log("🎯 V3版（最新・HTTP統一版）に切り替えました")
+            
+            self._update_status(f"{self.current_pdf_version.upper()}版使用中")
+            
+            # UI更新
+            if hasattr(self, 'pdf_container'):
+                self.pdf_container.update()
+            if hasattr(self, 'version_text'):
+                self.version_text.update()
+                
+        except Exception as error:
+            error_msg = f"❌ バージョン切り替えエラー: {str(error)}"
+            self._add_log(error_msg)
+            print(f"[PDF-TEST-ERROR] {error_msg}")
+
+    def _toggle_pdf_version(self, e):
+        """既存API互換（V1⇔V2切り替え）"""
+        if self.current_pdf_version == "v1":
+            self._switch_to_version("v2")
+        else:
+            self._switch_to_version("v1")
+
+    def _test_streaming_v2(self, e):
+        """V2版ストリーミング直接テスト"""
+        self._add_log("🌟 V2版ストリーミングサーバ直接テスト開始")
+        self._update_status("V2サーバテスト中")
+        
+        if self.page:
+            self.page.run_task(self._async_test_streaming_v2)
+        else:
+            import threading
+            threading.Thread(target=lambda: asyncio.run(self._async_test_streaming_v2())).start()
     
-    def _clear_preview(self, e):
-        """プレビュークリア"""
-        self._add_log("🧹 プレビューをクリア中...")
-        self.pdf_preview.show_empty_preview()
-        self.pdf_preview._force_image_mode = False  # 画像モード強制フラグをリセット
-        self._update_status("待機中")
-        self._add_log("✅ クリア完了")
+    async def _async_test_streaming_v2(self):
+        """V2版ストリーミング直接非同期テスト"""
+        try:
+            from app.core.db_simple import fetch_one
+            
+            # テスト用PDFを取得
+            test_pdf = fetch_one('''
+                SELECT fb.id, fm.file_name, LENGTH(fb.blob_data) as blob_size, fb.blob_data
+                FROM files_blob fb
+                LEFT JOIN files_meta fm ON fb.id = fm.blob_id
+                WHERE fm.file_name LIKE '%.pdf' AND LENGTH(fb.blob_data) < 1000000
+                ORDER BY LENGTH(fb.blob_data) DESC
+                LIMIT 1
+            ''')
+            
+            if not test_pdf:
+                self._add_log("❌ テスト用PDFファイルが見つかりません")
+                self._update_status("エラー発生")
+                return
+            
+            size_mb = test_pdf['blob_size'] / (1024 * 1024)
+            self._add_log(f"📄 テスト用PDF: {test_pdf['file_name']} ({size_mb:.2f}MB)")
+            
+            # V2版ストリーミングサーバ直接テスト
+            from app.flet_ui.shared.pdf_stream_server_v2 import serve_pdf_from_bytes_v2
+            
+            self._add_log("🌟 V2版serve_pdf_from_bytes_v2 呼び出し中...")
+            pdf_url, server = await serve_pdf_from_bytes_v2(test_pdf['blob_data'], test_pdf['id'])
+            
+            self._add_log(f"✅ V2版ストリーミングURL生成: {pdf_url}")
+            self._update_status("V2ストリーミング成功")
+            
+            # サーバ情報表示
+            self._add_log(f"📊 V2サーバ情報: host={server.host}:{server.actual_port}, public={server.public_host}")
+            
+            # 現在V2版を使用している場合は実際に表示
+            if self.current_pdf_version == "v2":
+                self._add_log("🎯 V2版で実際の表示テスト実行")
+                await self.pdf_preview_v2.load_pdf(test_pdf, test_pdf['blob_data'])
+                self._update_status("V2版表示完了")
+            else:
+                self._add_log("💡 V2版に切り替えて表示テストを実行してください")
+                
+        except Exception as e:
+            error_msg = f"❌ V2版ストリーミングテストエラー: {str(e)}"
+            self._add_log(error_msg)
+            self._update_status("エラー発生")
+            import traceback
+            print(f"[PDF-V2-TEST-ERROR] {traceback.format_exc()}")
+
+    def _test_streaming_v3(self, e):
+        """V3版ストリーミング直接テスト（最新・HTTP統一版）"""
+        self._add_log("⚡ V3版ストリーミングサーバ直接テスト開始")
+        self._update_status("V3サーバテスト中")
+        
+        if self.page:
+            self.page.run_task(self._async_test_streaming_v3)
+        else:
+            import threading
+            threading.Thread(target=lambda: asyncio.run(self._async_test_streaming_v3())).start()
+    
+    async def _async_test_streaming_v3(self):
+        """V3版ストリーミング直接非同期テスト（HTTP統一）"""
+        try:
+            from app.core.db_simple import fetch_one
+            
+            # テスト用PDFを取得（サイズ制限を緩和）
+            test_pdf = fetch_one('''
+                SELECT fb.id, fm.file_name, LENGTH(fb.blob_data) as blob_size, fb.blob_data
+                FROM files_blob fb
+                LEFT JOIN files_meta fm ON fb.id = fm.blob_id
+                WHERE fm.file_name LIKE '%.pdf' AND LENGTH(fb.blob_data) < 5000000
+                ORDER BY LENGTH(fb.blob_data) DESC
+                LIMIT 1
+            ''')
+            
+            if not test_pdf:
+                self._add_log("❌ テスト用PDFファイルが見つかりません")
+                self._update_status("エラー発生")
+                return
+            
+            size_mb = test_pdf['blob_size'] / (1024 * 1024)
+            self._add_log(f"📄 テスト用PDF: {test_pdf['file_name']} ({size_mb:.2f}MB)")
+            
+            # V3版ストリーミングサーバ直接テスト
+            from app.flet_ui.shared.pdf_stream_server_v3 import serve_pdf_from_bytes_v3
+            
+            self._add_log("⚡ V3版serve_pdf_from_bytes_v3 呼び出し中...")
+            pdf_url, server = await serve_pdf_from_bytes_v3(test_pdf['blob_data'], test_pdf['id'])
+            
+            self._add_log(f"✅ V3版ストリーミングURL生成: {pdf_url}")
+            
+            # V3版の主要機能：ビューアURL生成テスト
+            viewer_url = server.get_viewer_url(pdf_url)
+            self._add_log(f"✅ V3版ビューアURL生成: {viewer_url}")
+            
+            # サーバ状態取得テスト
+            status = server.get_status()
+            self._add_log(f"📊 V3サーバ状況: {status['version']}, ファイル数:{status['registered_files']}, 稼働状態:{status['is_running']}")
+            
+            # 現在V3版を使用している場合は実際に表示
+            if self.current_pdf_version == "v3":
+                self._add_log("🎯 V3版で実際の表示テスト実行")
+                await self.pdf_preview_v3.load_pdf(test_pdf, test_pdf['blob_data'])
+                self._update_status("V3版表示完了")
+            else:
+                self._add_log("💡 V3版に切り替えて表示テストを実行してください")
+                
+        except Exception as e:
+            error_msg = f"❌ V3版ストリーミングテストエラー: {str(e)}"
+            self._add_log(error_msg)
+            self._update_status("エラー発生")
+            import traceback
+            print(f"[PDF-V3-TEST-ERROR] {traceback.format_exc()}")

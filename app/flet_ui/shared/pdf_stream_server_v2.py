@@ -66,8 +66,7 @@ class PDFStreamServerV2:
         self._setup_routes()
 
     def _setup_routes(self):
-        self.app.router.add_get("/pdf/{file_id}", self._serve_pdf)
-        self.app.router.add_head("/pdf/{file_id}", self._serve_pdf)  # HEAD も同ハンドラでOK
+        self.app.router.add_get("/pdf/{file_id}", self._serve_pdf)  # GETルートでHEADも自動対応
         self.app.router.add_route("OPTIONS", "/pdf/{file_id}", self._options_pdf)  # CORSプリフライト
         self.app.router.add_get("/health", self._health_check)
 

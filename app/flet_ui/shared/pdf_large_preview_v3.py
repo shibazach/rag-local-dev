@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """
 大容量PDF対応プレビューコンポーネント（V3専用版）
-完全HTTP統一方式・シンプル実装・実用優先
+右ペイン内表示・完全HTTP統一方式
 
 主要機能:
-- V3サーバー専用（完全HTTP統一）
-- data:URL完全廃止（WebView制限対応）
-- 大容量PDFストリーミング表示
-- 必要最小限のUI（実用重視）
-- エラーハンドリング強化
+- V3サーバー専用（完全HTTP統一）  
+- 右ペイン内PDF表示（HTMLコントロール+iframe使用）
+- WebView完全廃止（プラットフォーム統一）
+- data:URL完全廃止（サイズ制限対応）
+- 戻るボタン付きナビゲーション
 """
 
 import flet as ft
 import asyncio
 import uuid
 import logging
+import sys
 from typing import Dict, Any, Optional
 from enum import Enum
 
@@ -33,17 +34,24 @@ class PreviewState(Enum):
     ERROR = "error"
 
 
+# プラットフォーム判定削除 - 全プラットフォームで右ペイン内表示統一
+
+
 class LargePDFPreviewV3(ft.Container):
-    """大容量PDF対応プレビューコンポーネント（V3専用・シンプル版）"""
+    """大容量PDF対応プレビューコンポーネント（V3版・右ペイン内表示）"""
     
-    def __init__(self):
+    def __init__(self, page: Optional[ft.Page] = None):
         super().__init__()
+        
+        # ページ参照保持（右ペイン表示用）
+        self.page = page
         
         # 状態管理
         self.state = PreviewState.EMPTY
         self.current_file_info: Optional[Dict[str, Any]] = None
         self.current_file_id: Optional[str] = None
         self.error_message = ""
+        self._last_viewer_url: Optional[str] = None
         
         # UI要素初期化
         self._init_ui()
@@ -52,70 +60,66 @@ class LargePDFPreviewV3(ft.Container):
         self._build_layout()
 
     def _init_ui(self):
-        """UI要素初期化（最小構成）"""
+        """UI要素初期化（外部ブラウザ統一版）"""
         
-        # WebView（HTTPストリーミング専用）
-        self.web_view = ft.WebView(
-            url="about:blank",
-            expand=True,
-            on_page_started=self._on_page_started,
-            on_page_ended=self._on_page_ended,
-            on_web_resource_error=self._on_page_error
-        )
+        # WebView完全廃止 - 全プラットフォーム外部ブラウザ統一
         
         # ステータス表示
         self.status_text = ft.Text(
-            "PDFファイルを選択してください",
-            size=14,
+            "PDFファイルを選択してください", 
+            size=14, 
             color=ft.Colors.GREY_600,
             text_align=ft.TextAlign.CENTER
         )
         
-        # コントロールボタン（最小限）
+        # コントロールボタン
         self.reload_button = ft.ElevatedButton(
-            text="🔄 再読み込み",
+            text="🔄 再読み込み", 
             on_click=self._on_reload,
-            height=32,
+            height=32, 
             disabled=True
         )
         
         self.clear_button = ft.ElevatedButton(
-            text="🗑️ クリア",
-            on_click=self._on_clear,
+            text="🗑️ クリア", 
+            on_click=self._on_clear, 
             height=32
+        )
+        
+        # 右ペイン内表示ボタン
+        self.open_external_button = ft.ElevatedButton(
+            text="📱 右ペインで表示", 
+            on_click=self._show_in_right_pane, 
+            height=32, 
+            visible=False  # PDF準備完了時に表示
         )
 
     def _build_layout(self):
-        """レイアウト構築（シンプル構成）"""
+        """レイアウト構築（右ペイン表示特化）"""
         
         # コントロールバー
         control_bar = ft.Row(
             controls=[
                 self.reload_button,
                 self.clear_button,
+                self.open_external_button,
                 ft.Container(expand=True),  # スペーサー
                 self.status_text
             ],
-            height=40,
+            height=40, 
             spacing=8
         )
         
-        # メイン表示エリア
-        main_area = ft.Stack(
-            controls=[
-                # WebView（バックグラウンド）
-                self.web_view,
-                # オーバーレイ（状態表示）
-                ft.Container(
-                    content=self._build_overlay(),
-                    expand=True,
-                    bgcolor=ft.Colors.with_opacity(0.9, ft.Colors.WHITE),
-                    alignment=ft.alignment.center,
-                    visible=True  # 初期状態は表示
-                )
-            ],
-            expand=True
+        # メイン表示エリア（右ペイン専用）
+        self._overlay_container = ft.Container(
+            content=self._build_overlay(),
+            expand=True,
+            bgcolor=ft.Colors.WHITE,
+            alignment=ft.alignment.center,
+            visible=True
         )
+        
+        main_area = self._overlay_container  # シンプル化
         
         # 全体レイアウト
         self.content = ft.Column(
@@ -138,7 +142,7 @@ class LargePDFPreviewV3(ft.Container):
         self.expand = True
 
     def _build_overlay(self) -> ft.Control:
-        """状態別オーバーレイ構築"""
+        """状態別オーバーレイ構築（プラットフォーム適応版）"""
         
         if self.state == PreviewState.EMPTY:
             return ft.Column(
@@ -146,7 +150,7 @@ class LargePDFPreviewV3(ft.Container):
                     ft.Icon(ft.Icons.PICTURE_AS_PDF, size=80, color=ft.Colors.GREY_400),
                     ft.Container(height=16),
                     ft.Text(
-                        "V3版 大容量PDFプレビュー\n完全HTTP統一方式",
+                        "V3 大容量PDFプレビュー（HTTP統一・プラットフォーム適応）",
                         size=16,
                         color=ft.Colors.GREY_600,
                         text_align=ft.TextAlign.CENTER
@@ -194,25 +198,29 @@ class LargePDFPreviewV3(ft.Container):
                 spacing=0
             )
             
-        # PreviewState.READYの場合はオーバーレイ非表示
+        elif self.state == PreviewState.READY:
+            return ft.Column(
+                controls=[
+                    ft.Icon(ft.Icons.CHECK_CIRCLE, size=64, color=ft.Colors.GREEN_400),
+                    ft.Container(height=16),
+                    ft.Text("PDF表示準備完了", size=16, color=ft.Colors.GREEN_700, weight=ft.FontWeight.BOLD),
+                    ft.Container(height=8),
+                    ft.Text("「📱 右ペインで表示」ボタンを押してください", size=12, color=ft.Colors.GREY_600),
+                ],
+                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                spacing=0
+            )
+            
+        # デフォルト
         return ft.Container()
 
     def _update_ui(self):
-        """UI更新（状態に応じた表示変更）"""
+        """UI更新（右ペイン表示版）"""
         
-        # オーバーレイの表示/非表示
-        if hasattr(self.content, 'controls') and len(self.content.controls) >= 2:
-            main_area = self.content.controls[1]  # Stack
-            if hasattr(main_area, 'controls') and len(main_area.controls) >= 2:
-                overlay = main_area.controls[1]  # オーバーレイContainer
-                
-                if self.state == PreviewState.READY:
-                    overlay.visible = False
-                    self.web_view.visible = True
-                else:
-                    overlay.visible = True
-                    overlay.content = self._build_overlay()
-                    self.web_view.visible = False
+        # オーバーレイ表示制御（常に表示・内容のみ切り替え）
+        if self._overlay_container:
+            self._overlay_container.visible = True
+            self._overlay_container.content = self._build_overlay()
         
         # ステータステキスト更新
         if self.current_file_info:
@@ -223,6 +231,8 @@ class LargePDFPreviewV3(ft.Container):
         
         # ボタン状態更新
         self.reload_button.disabled = (self.state == PreviewState.EMPTY)
+        # 右ペイン表示ボタンは、PDFが準備できた時のみ表示
+        self.open_external_button.visible = (self.state == PreviewState.READY) and (self._last_viewer_url is not None)
         
         # UI更新
         try:
@@ -279,7 +289,7 @@ class LargePDFPreviewV3(ft.Container):
         return result['blob_data']
 
     async def _handle_streaming_v3(self, file_info: Dict[str, Any], blob_data: bytes):
-        """V3ストリーミング処理（完全HTTP統一）"""
+        """V3ストリーミング処理（プラットフォーム適応版）"""
         try:
             logger.info("[V3-UI] ストリーミング処理開始")
             self._set_state(PreviewState.STREAMING)
@@ -297,19 +307,21 @@ class LargePDFPreviewV3(ft.Container):
             viewer_url = server.get_viewer_url(pdf_url)
             logger.info(f"[V3-UI] Viewer URL: {viewer_url}")
             
-            # WebViewにビューア読み込み（完全HTTP統一）
-            self.web_view.url = viewer_url
+            # ビューアURLを保存（右ペイン表示用）
+            self._last_viewer_url = viewer_url
             
-            # 表示準備完了
+            # 右ペイン表示準備完了
+            logger.info("[V3-UI] 右ペイン表示準備完了")
             self._set_state(PreviewState.READY)
-            logger.info("[V3-UI] ストリーミング表示準備完了")
+            self.open_external_button.visible = True  # 右ペイン表示ボタンを表示
+            self.update()
             
         except Exception as e:
             logger.error(f"[V3-UI] ストリーミング処理エラー: {e}")
             self._set_state(PreviewState.ERROR, f"ストリーミング処理エラー: {str(e)}")
 
     def clear_preview(self):
-        """プレビュークリア"""
+        """プレビュークリア（プラットフォーム適応版）"""
         logger.info("[V3-UI] プレビュークリア")
         
         # V3サーバーからPDF登録解除
@@ -324,7 +336,8 @@ class LargePDFPreviewV3(ft.Container):
         # 状態リセット
         self.current_file_info = None
         self.current_file_id = None
-        self.web_view.url = "about:blank"
+        self._last_viewer_url = None
+        self.open_external_button.visible = False
         self._set_state(PreviewState.EMPTY)
 
     # ==================== イベントハンドラ ====================
@@ -341,18 +354,91 @@ class LargePDFPreviewV3(ft.Container):
         """クリアボタン"""
         self.clear_preview()
 
-    def _on_page_started(self, e):
-        """WebView読み込み開始"""
-        logger.debug("[V3-UI] WebView読み込み開始")
+    # WebView関連イベントハンドラ削除（右ペイン表示統一のため）
 
-    def _on_page_ended(self, e):
-        """WebView読み込み完了"""
-        logger.info("[V3-UI] WebView読み込み完了")
-
-    def _on_page_error(self, e):
-        """WebView読み込みエラー"""
-        logger.error(f"[V3-UI] WebView読み込みエラー: {e}")
-        self._set_state(PreviewState.ERROR, f"WebView読み込みエラー: {str(e)}")
+    def _show_in_right_pane(self, e):
+        """右ペイン内でPDFを表示"""
+        if self._last_viewer_url:
+            try:
+                logger.info(f"[V3-UI] 右ペイン内PDF表示開始: {self._last_viewer_url}")
+                
+                # HTMLコントロールでiframeを使用してPDF表示
+                html_content = f"""
+                <div style="width:100%; height:800px;">
+                    <iframe 
+                        src="{self._last_viewer_url}" 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0"
+                        style="border: 1px solid #ccc;">
+                    </iframe>
+                </div>
+                """
+                
+                html_control = ft.Html(
+                    html=html_content,
+                    expand=True
+                )
+                
+                # 右ペインにPDFビューア表示
+                self._overlay_container.content = html_control
+                self._overlay_container.alignment = None  # 中央寄せを解除
+                self._overlay_container.bgcolor = ft.Colors.WHITE
+                
+                # ボタンを一時的に非表示
+                self.open_external_button.visible = False
+                
+                # 戻るボタンを追加
+                back_button = ft.ElevatedButton(
+                    text="← 戻る",
+                    on_click=self._back_to_preview,
+                    height=32
+                )
+                
+                # コントロールバーに戻るボタンを追加
+                if len(self.content.controls) > 0 and hasattr(self.content.controls[0], 'content'):
+                    control_bar = self.content.controls[0].content
+                    if hasattr(control_bar, 'controls'):
+                        # 戻るボタンを先頭に挿入
+                        control_bar.controls.insert(0, back_button)
+                
+                self.update()
+                logger.info("[V3-UI] 右ペイン内PDF表示完了")
+                
+            except Exception as ex:
+                logger.error(f"[V3-UI] 右ペイン表示エラー: {ex}")
+                self._set_state(PreviewState.ERROR, f"右ペイン表示エラー: {str(ex)}")
+        else:
+            self._set_state(PreviewState.ERROR, "表示するPDFがありません")
+    
+    def _back_to_preview(self, e):
+        """PDFビューアから通常プレビューに戻る"""
+        try:
+            logger.info("[V3-UI] 通常プレビューに戻る")
+            
+            # オーバーレイを元に戻す
+            self._overlay_container.content = self._build_overlay()
+            self._overlay_container.alignment = ft.alignment.center
+            self._overlay_container.bgcolor = ft.Colors.WHITE
+            
+            # 右ペイン表示ボタンを再表示
+            self.open_external_button.visible = True
+            
+            # 戻るボタンをコントロールバーから削除
+            if len(self.content.controls) > 0 and hasattr(self.content.controls[0], 'content'):
+                control_bar = self.content.controls[0].content
+                if hasattr(control_bar, 'controls') and len(control_bar.controls) > 0:
+                    # 戻るボタン（先頭）を削除
+                    if hasattr(control_bar.controls[0], 'text') and "戻る" in control_bar.controls[0].text:
+                        control_bar.controls.pop(0)
+            
+            self.update()
+            logger.info("[V3-UI] 通常プレビューに戻り完了")
+            
+        except Exception as ex:
+            logger.error(f"[V3-UI] プレビュー戻りエラー: {ex}")
+    
+    # 削除：不要なメソッドを整理
 
     # ==================== レガシーAPI互換 ====================
     
@@ -377,9 +463,9 @@ class LargePDFPreviewV3(ft.Container):
 
 # ==================== 作成関数 ====================
 
-def create_large_pdf_preview_v3() -> LargePDFPreviewV3:
-    """大容量PDF対応プレビューコンポーネント作成（V3版）"""
-    return LargePDFPreviewV3()
+def create_large_pdf_preview_v3(page: Optional[ft.Page] = None) -> LargePDFPreviewV3:
+    """大容量PDF対応プレビューコンポーネント作成（V3版・プラットフォーム適応）"""
+    return LargePDFPreviewV3(page)
 
 
 # ==================== テスト・デバッグ用 ====================

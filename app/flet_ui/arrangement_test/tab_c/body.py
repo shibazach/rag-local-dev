@@ -20,9 +20,9 @@ class TabC:
         """タブCコンテンツ作成"""
         self.page = page  # ページ参照を保存
         
-        # V3版PDFプレビューコンポーネント（シンプル版）
+        # V3版PDFプレビューコンポーネント（プラットフォーム適応版）
         from app.flet_ui.shared.pdf_large_preview_v3 import create_large_pdf_preview_v3
-        self.pdf_preview_v3 = create_large_pdf_preview_v3()
+        self.pdf_preview_v3 = create_large_pdf_preview_v3(self.page)
         
         self.current_pdf_version = "v3"  # V3版のみ使用
         

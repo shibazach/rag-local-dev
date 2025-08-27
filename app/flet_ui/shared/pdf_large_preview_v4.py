@@ -84,6 +84,13 @@ class PDFImagePreviewV4(ft.Container):
         self._current_image_url: Optional[str] = None
         self._prefetch_running = False
         
+        # スクロール制御
+        self._last_scroll_time = 0.0
+        self._scroll_debounce_ms = 500  # 500ms デバウンス
+        
+        # 回転制御
+        self._rotation = 0  # 0, 90, 180, 270度
+        
         # UI初期化
         self._init_ui()
         self._build_layout()
@@ -94,8 +101,8 @@ class PDFImagePreviewV4(ft.Container):
         # メイン画像表示
         self._image_display = ft.Image(
             src=None,  # 初期値をNoneに設定
-            fit=ft.ImageFit.CONTAIN,
-            expand=True,
+            fit=ft.ImageFit.FIT_WIDTH,  # 🎯 幅方向全体フィット（初期表示最適化）
+            width=None,  # fitに任せる
             border_radius=ft.border_radius.all(4),
             gapless_playback=True,  # 画像切替時のちらつき抑制
             visible=False,  # 初期は非表示
@@ -109,9 +116,21 @@ class PDFImagePreviewV4(ft.Container):
             )
         )
         
-        # ツールバー
-        self._page_info = ft.Text(
-            "0 / 0", 
+        # ページ入力ボックス
+        self._page_input = ft.TextField(
+            value="1",
+            width=50,
+            height=32,
+            text_size=12,
+            text_align=ft.TextAlign.CENTER,
+            border_color=ft.Colors.GREY_400,
+            focused_border_color=ft.Colors.BLUE_400,
+            on_submit=self._on_page_input,
+            tooltip="ページ番号を入力してEnter"
+        )
+        
+        self._total_pages_text = ft.Text(
+            "/ 0", 
             size=14, 
             color=ft.Colors.GREY_600,
             weight=ft.FontWeight.BOLD
@@ -174,6 +193,32 @@ class PDFImagePreviewV4(ft.Container):
             disabled=True
         )
         
+        # ダウンロードボタン
+        self._download_button = ft.IconButton(
+            icon=ft.Icons.DOWNLOAD,
+            icon_size=20,
+            tooltip="PDFダウンロード",
+            on_click=self._on_download,
+            disabled=True
+        )
+        
+        # 回転ボタン
+        self._rotate_left_button = ft.IconButton(
+            icon=ft.Icons.ROTATE_LEFT,
+            icon_size=20,
+            tooltip="左に90度回転",
+            on_click=self._on_rotate_left,
+            disabled=True
+        )
+        
+        self._rotate_right_button = ft.IconButton(
+            icon=ft.Icons.ROTATE_RIGHT,
+            icon_size=20,
+            tooltip="右に90度回転",
+            on_click=self._on_rotate_right,
+            disabled=True
+        )
+        
         self._clear_button = ft.ElevatedButton(
             text="🗑️ クリア",
             height=32,
@@ -196,7 +241,8 @@ class PDFImagePreviewV4(ft.Container):
             content=ft.Row([
                 # ページナビゲーション
                 self._prev_button,
-                self._page_info,
+                self._page_input,
+                self._total_pages_text,
                 self._next_button,
                 
                 ft.VerticalDivider(width=1, color=ft.Colors.GREY_300),
@@ -209,8 +255,15 @@ class PDFImagePreviewV4(ft.Container):
                 
                 ft.VerticalDivider(width=1, color=ft.Colors.GREY_300),
                 
-                # 制御
+                # 回転制御
+                self._rotate_left_button,
+                self._rotate_right_button,
+                
+                ft.VerticalDivider(width=1, color=ft.Colors.GREY_300),
+                
+                # その他制御
                 self._reload_button,
+                self._download_button,
                 
                 # 右寄せ
                 ft.Container(expand=True),
@@ -223,10 +276,32 @@ class PDFImagePreviewV4(ft.Container):
             height=48
         )
         
-        # メイン表示エリア
+        # スクロール可能な画像表示エリア（縦横両方向対応）
+        scrollable_image = ft.Column([
+            ft.Container(height=10),  # 上部余白（ツールバー重なり回避）
+            ft.Row([
+                ft.Container(
+                    content=self._image_display,
+                    alignment=ft.alignment.center,
+                    expand=False
+                )
+            ], 
+            alignment=ft.MainAxisAlignment.CENTER,
+            scroll=ft.ScrollMode.AUTO  # 横スクロール
+            ),
+            ft.Container(height=20)   # 下部余白
+        ], 
+        spacing=0,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        scroll=ft.ScrollMode.AUTO,  # 縦スクロール
+        on_scroll=self._on_scroll,
+        expand=True
+        )
+        
+        # メイン表示エリア（スタック構造維持）
         display_area = ft.Stack([
-            # 画像表示
-            self._image_display,
+            # スクロール可能画像表示
+            scrollable_image,
             
             # ステータスオーバーレイ
             self._status_container
@@ -248,14 +323,20 @@ class PDFImagePreviewV4(ft.Container):
                 ft.Container(height=16),
                 ft.Text("PDF未選択", size=16, color=ft.Colors.GREY_600),
                 ft.Text("PDFを読み込んでください", size=12, color=ft.Colors.GREY_500)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=0)
+            ], 
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,  # 🎯 縦方向センタリング修正
+            spacing=0)
             
         elif self._state == PreviewState.LOADING:
             return ft.Column([
                 ft.ProgressRing(width=40, height=40, color=ft.Colors.BLUE_400),
                 ft.Container(height=16),
                 ft.Text("PDF読み込み中...", size=16, color=ft.Colors.BLUE_600)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=0)
+            ], 
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER, 
+            alignment=ft.MainAxisAlignment.CENTER,  # 🎯 縦方向センタリング修正
+            spacing=0)
             
         elif self._state == PreviewState.ANALYZING:
             return ft.Column([
@@ -263,7 +344,10 @@ class PDFImagePreviewV4(ft.Container):
                 ft.Container(height=16),
                 ft.Text("PDF解析中...", size=16, color=ft.Colors.GREEN_600),
                 ft.Text("ページ数・サイズ情報取得中", size=12, color=ft.Colors.GREEN_500)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=0)
+            ], 
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,  # 🎯 縦方向センタリング修正
+            spacing=0)
             
         elif self._state == PreviewState.RENDERING:
             return ft.Column([
@@ -271,7 +355,10 @@ class PDFImagePreviewV4(ft.Container):
                 ft.Container(height=16),
                 ft.Text("画像生成中...", size=16, color=ft.Colors.ORANGE_600),
                 ft.Text(f"ページ {self._current_page + 1} / {self._total_pages}", size=12, color=ft.Colors.ORANGE_500)
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=0)
+            ], 
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,  # 🎯 縦方向センタリング修正
+            spacing=0)
             
         elif self._state == PreviewState.ERROR:
             return ft.Column([
@@ -286,7 +373,10 @@ class PDFImagePreviewV4(ft.Container):
                     text_align=ft.TextAlign.CENTER,
                     selectable=True
                 )
-            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=0)
+            ], 
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+            alignment=ft.MainAxisAlignment.CENTER,  # 🎯 縦方向センタリング修正
+            spacing=0)
             
         else:
             # READY, DISPLAYED
@@ -328,12 +418,17 @@ class PDFImagePreviewV4(ft.Container):
             self._zoom_fit_button.disabled = not buttons_enabled
             
             self._reload_button.disabled = not buttons_enabled
+            self._download_button.disabled = not buttons_enabled
+            self._rotate_left_button.disabled = not buttons_enabled
+            self._rotate_right_button.disabled = not buttons_enabled
             
             # 情報表示更新
             if self._total_pages > 0:
-                self._page_info.value = f"{self._current_page + 1} / {self._total_pages}"
+                self._page_input.value = str(self._current_page + 1)
+                self._total_pages_text.value = f"/ {self._total_pages}"
             else:
-                self._page_info.value = "0 / 0"
+                self._page_input.value = "1"
+                self._total_pages_text.value = "/ 0"
                 
             self._zoom_info.value = f"{int(self._current_zoom * 100)}%"
             
@@ -403,9 +498,9 @@ class PDFImagePreviewV4(ft.Container):
             if not self._server or not self._file_id:
                 raise RuntimeError("Server or file_id not available")
             
-            # 画像URL生成・取得・表示（簡潔化）
+            # 画像URL生成・取得・表示（回転対応）
             image_url = self._server.get_image_url(
-                self._file_id, page_index, width=self._image_width, dpr=self._dpr, fmt="png"
+                self._file_id, page_index, width=self._image_width, dpr=self._dpr, fmt="png", rotation=self._rotation
             )
             
             if not image_url:
@@ -427,6 +522,17 @@ class PDFImagePreviewV4(ft.Container):
                         data_url = f"data:image/png;base64,{image_b64}"
                         
                         self._image_display.src = data_url
+                        
+                        # 表示方法最適化：zoom=1.0なら幅フィット、それ以外は実サイズ
+                        if self._current_zoom == 1.0:
+                            self._image_display.fit = ft.ImageFit.FIT_WIDTH
+                            self._image_display.width = None
+                            self._image_display.expand = False
+                        else:
+                            self._image_display.fit = ft.ImageFit.NONE  
+                            self._image_display.width = self._image_width
+                            self._image_display.expand = False
+                            
                         self._image_display.visible = True
                         self._image_display.update()
                         
@@ -525,6 +631,20 @@ class PDFImagePreviewV4(ft.Container):
         self._current_zoom = zoom
         self._image_width = int(1200 * zoom)
         
+        # ズーム設定に応じて表示方法を最適化
+        if zoom == 1.0:
+            # 標準サイズ：幅方向フィット（表示領域に合わせる）
+            self._image_display.fit = ft.ImageFit.FIT_WIDTH
+            self._image_display.width = None
+            self._image_display.expand = False
+        else:
+            # 拡大時：実サイズ表示（スクロール対応）
+            self._image_display.fit = ft.ImageFit.NONE
+            self._image_display.width = self._image_width
+            self._image_display.expand = False
+            
+        self._image_display.update()
+        
         # 現在ページ再レンダリング
         if self._state == PreviewState.DISPLAYED and self.page:
             async def rerender_current():
@@ -537,6 +657,90 @@ class PDFImagePreviewV4(ft.Container):
             async def reload_current():
                 await self._render_and_display_page(self._current_page)
             self.page.run_task(reload_current)
+    
+    def _on_scroll(self, e):
+        """スクロールイベント処理（端部ページ遷移）"""
+        import time
+        
+        # デバウンシング：短時間の連続実行を防止
+        current_time = time.time() * 1000  # ミリ秒
+        if (current_time - self._last_scroll_time) < self._scroll_debounce_ms:
+            return
+            
+        if not hasattr(e, 'pixels') or not hasattr(e, 'max_scroll_extent'):
+            return
+            
+        # スクロール情報取得
+        current_position = e.pixels
+        max_scroll = e.max_scroll_extent
+        
+        # スクロール範囲の安全性チェック
+        if max_scroll <= 0 or current_position < 0:
+            return
+        
+        # 端部判定の閾値（30px - より敏感に）
+        threshold = 30.0
+        
+        # 上端到達時：前ページ
+        if current_position <= threshold and self._current_page > 0:
+            if self._state == PreviewState.DISPLAYED:
+                self._last_scroll_time = current_time  # デバウンス更新
+                self._on_prev_page(e)
+                
+        # 下端到達時：次ページ  
+        elif (max_scroll - current_position) <= threshold and self._current_page < (self._total_pages - 1):
+            if self._state == PreviewState.DISPLAYED:
+                self._last_scroll_time = current_time  # デバウンス更新
+                self._on_next_page(e)
+
+    def _on_page_input(self, e):
+        """ページ番号入力処理"""
+        try:
+            page_num = int(self._page_input.value)
+            target_page = max(1, min(page_num, self._total_pages)) - 1
+            
+            if target_page != self._current_page and self._state == PreviewState.DISPLAYED:
+                if self.page:
+                    async def go_to_page():
+                        await self._render_and_display_page(target_page)
+                    self.page.run_task(go_to_page)
+            else:
+                # 無効な値の場合、現在ページに戻す
+                self._page_input.value = str(self._current_page + 1)
+                self._page_input.update()
+                
+        except ValueError:
+            # 数値以外の場合、現在ページに戻す
+            self._page_input.value = str(self._current_page + 1)
+            self._page_input.update()
+
+    def _on_download(self, e):
+        """PDFダウンロード処理"""
+        if not self._server or not self._file_id:
+            return
+            
+        # PDFファイルのダウンロードURL生成
+        download_url = self._server.get_pdf_download_url(self._file_id)
+        if download_url and self.page:
+            # 新しいタブでダウンロードURL開く
+            self.page.launch_url(download_url)
+
+    def _on_rotate_left(self, e):
+        """左回転（反時計回り90度）"""
+        self._rotation = (self._rotation - 90) % 360
+        self._apply_rotation()
+
+    def _on_rotate_right(self, e):
+        """右回転（時計回り90度）"""
+        self._rotation = (self._rotation + 90) % 360
+        self._apply_rotation()
+        
+    def _apply_rotation(self):
+        """回転適用"""
+        if self._state == PreviewState.DISPLAYED and self.page:
+            async def rerender_rotated():
+                await self._render_and_display_page(self._current_page)
+            self.page.run_task(rerender_rotated)
 
     def _on_clear(self, e):
         """クリア"""
@@ -565,10 +769,13 @@ class PDFImagePreviewV4(ft.Container):
             self._image_width = 1200
             self._dpr = 1.0
             self._current_image_url = None
+            self._rotation = 0  # 回転状態リセット
             
             # 画像クリア
             self._image_display.src = None
             self._image_display.visible = False  # 画像非表示
+            self._image_display.fit = ft.ImageFit.FIT_WIDTH  # 初期状態に戻す
+            self._image_display.width = None  # 初期状態に戻す
             self._image_display.update()  # 🔥 CRITICAL: クリア時UI更新
             
             # 状態変更

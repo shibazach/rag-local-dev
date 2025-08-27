@@ -77,7 +77,7 @@ def _normalize_dpr(dpr: float) -> float:
             return tier
     return max(DPR_TIERS)
 
-def _get_cache_key(path: str, page: int, width: int, dpr: float, format_type: str) -> str:
+def _get_cache_key(path: str, page: int, width: int, dpr: float, format_type: str, rotation: int = 0) -> str:
     """キャッシュキー生成"""
     # ファイル変更時間も含めてキャッシュ無効化対応
     try:
@@ -85,7 +85,7 @@ def _get_cache_key(path: str, page: int, width: int, dpr: float, format_type: st
     except:
         mtime = 0
     
-    key_str = f"{path}:{page}:{width}:{dpr}:{format_type}:{mtime}"
+    key_str = f"{path}:{page}:{width}:{dpr}:{format_type}:{rotation}:{mtime}"
     return hashlib.md5(key_str.encode()).hexdigest()
 
 def _get_or_open_document(path: str) -> fitz.Document:
@@ -138,7 +138,8 @@ def _render_page_to_bytes(
     page_index: int, 
     width: int, 
     dpr: float,
-    format_type: Literal["png", "webp", "jpeg"] = "png"
+    format_type: Literal["png", "webp", "jpeg"] = "png",
+    rotation: int = 0
 ) -> bytes:
     """ページを画像バイトに変換（実際のレンダリング処理）"""
     try:
@@ -157,8 +158,13 @@ def _render_page_to_bytes(
         zoom = (width / base_width) * dpr
         zoom = max(0.1, min(zoom, 10.0))  # zoom制限
         
-        # レンダリング
+        # 回転行列作成（回転→拡大の順）
         matrix = fitz.Matrix(zoom, zoom)
+        if rotation != 0:
+            # 回転角度を度からラジアンに変換して回転行列適用
+            rotation_matrix = fitz.Matrix(rotation)
+            matrix = rotation_matrix * matrix
+        
         pixmap = page.get_pixmap(matrix=matrix, alpha=False)
         
         # フォーマット別バイト変換
@@ -186,10 +192,10 @@ def _render_page_to_bytes(
 # メモリLRUキャッシュ（小さなファイル用）
 @lru_cache(maxsize=128)
 def _render_cached_memory(
-    path: str, page: int, width: int, dpr: float, format_type: str, cache_key: str
+    path: str, page: int, width: int, dpr: float, format_type: str, rotation: int, cache_key: str
 ) -> bytes:
     """メモリLRUキャッシュ（cache_keyは無視、LRUキー用）"""
-    return _render_page_to_bytes(path, page, width, dpr, format_type)
+    return _render_page_to_bytes(path, page, width, dpr, format_type, rotation)
 
 def _get_disk_cache_path(cache_key: str, format_type: str) -> Path:
     """ディスクキャッシュパス取得"""
@@ -220,7 +226,8 @@ def render_page_image(
     width: int = 1200,
     dpr: float = 1.0,
     format_type: Literal["png", "webp", "jpeg"] = "png",
-    use_cache: bool = True
+    use_cache: bool = True,
+    rotation: int = 0
 ) -> bytes:
     """
     ページ画像レンダリング（メイン関数・同期版）
@@ -242,10 +249,10 @@ def render_page_image(
         norm_dpr = _normalize_dpr(dpr)
         
         if not use_cache:
-            return _render_page_to_bytes(path, page_index, norm_width, norm_dpr, format_type)
+            return _render_page_to_bytes(path, page_index, norm_width, norm_dpr, format_type, rotation)
         
         # キャッシュキー生成
-        cache_key = _get_cache_key(path, page_index, norm_width, norm_dpr, format_type)
+        cache_key = _get_cache_key(path, page_index, norm_width, norm_dpr, format_type, rotation)
         
         # ディスクキャッシュ確認
         disk_cache_path = _get_disk_cache_path(cache_key, format_type)
@@ -256,7 +263,7 @@ def render_page_image(
         
         # メモリキャッシュ確認＆レンダリング
         try:
-            image_data = _render_cached_memory(path, page_index, norm_width, norm_dpr, format_type, cache_key)
+            image_data = _render_cached_memory(path, page_index, norm_width, norm_dpr, format_type, rotation, cache_key)
             
             # ディスクキャッシュに保存
             _save_to_disk_cache(disk_cache_path, image_data)
@@ -274,7 +281,8 @@ async def render_page_image_async(
     width: int = 1200,
     dpr: float = 1.0,
     format_type: Literal["png", "webp", "jpeg"] = "png",
-    use_cache: bool = True
+    use_cache: bool = True,
+    rotation: int = 0
 ) -> bytes:
     """ページ画像レンダリング（非同期版）"""
     import asyncio
@@ -282,7 +290,7 @@ async def render_page_image_async(
     return await loop.run_in_executor(
         _thread_pool,
         render_page_image,
-        path, page_index, width, dpr, format_type, use_cache
+        path, page_index, width, dpr, format_type, use_cache, rotation
     )
 
 def get_pdf_page_count(path: str) -> int:

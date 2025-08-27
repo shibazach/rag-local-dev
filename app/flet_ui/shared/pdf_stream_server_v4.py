@@ -247,6 +247,7 @@ class PDFStreamServerV4:
             dpr = float(request.query.get("dpr", str(DEFAULT_DPR)))
             format_type = request.query.get("fmt", DEFAULT_FORMAT).lower()
             quality = int(request.query.get("q", "85"))  # 品質 (JPEG/WebP用)
+            rotation = int(request.query.get("rotation", "0"))  # 回転角度
             
             # パラメータ検証
             if width <= 0 or width > 4000:
@@ -257,15 +258,18 @@ class PDFStreamServerV4:
                 format_type = DEFAULT_FORMAT
             if quality < 10 or quality > 100:
                 quality = 85
+            if rotation not in [0, 90, 180, 270]:
+                rotation = 0
                 
         except ValueError:
             width = DEFAULT_IMAGE_WIDTH
             dpr = DEFAULT_DPR
             format_type = DEFAULT_FORMAT
             quality = 85
+            rotation = 0
 
-        # ETag生成 (キャッシュ制御)
-        etag_data = f"{file_id}:{page_index}:{width}:{dpr}:{format_type}:{os.path.getmtime(path)}"
+        # ETag生成 (キャッシュ制御・回転含む)
+        etag_data = f"{file_id}:{page_index}:{width}:{dpr}:{format_type}:{rotation}:{os.path.getmtime(path)}"
         etag = f'"{hash(etag_data) & 0x7FFFFFFF:08x}"'
         
         # クライアントETag確認
@@ -274,10 +278,10 @@ class PDFStreamServerV4:
             self.stats["cache_hits"] += 1
             return web.Response(status=304)  # Not Modified
 
-        # 画像レンダリング
+        # 画像レンダリング（回転対応）
         try:
             image_data = await render_page_image_async(
-                path, page_index, width, dpr, format_type, use_cache=True
+                path, page_index, width, dpr, format_type, use_cache=True, rotation=rotation
             )
             
             # Content-Type決定
@@ -473,7 +477,7 @@ class PDFStreamServerV4:
         return None
 
     def get_image_url(self, file_id: str, page_index: int, **params) -> Optional[str]:
-        """画像URL取得"""
+        """画像URL取得（回転対応）"""
         if file_id not in self.pdf_files or not self.actual_port:
             return None
         
@@ -489,6 +493,8 @@ class PDFStreamServerV4:
         if "format" in params or "fmt" in params:
             fmt = params.get("format", params.get("fmt"))
             query_parts.append(f"fmt={fmt}")
+        if "rotation" in params and params["rotation"] != 0:
+            query_parts.append(f"rotation={params['rotation']}")
         
         if query_parts:
             return f"{base_url}?{'&'.join(query_parts)}"
@@ -498,6 +504,12 @@ class PDFStreamServerV4:
         """PDF情報URL取得"""
         if file_id in self.pdf_files and self.actual_port:
             return f"http://{self.public_host}:{self.actual_port}/info/{file_id}"
+        return None
+
+    def get_pdf_download_url(self, file_id: str) -> Optional[str]:
+        """PDFダウンロードURL取得"""
+        if file_id in self.pdf_files and self.actual_port:
+            return f"http://{self.public_host}:{self.actual_port}/pdf/{file_id}"
         return None
 
 

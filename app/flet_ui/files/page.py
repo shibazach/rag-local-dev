@@ -31,15 +31,10 @@ class FilesPage:
         self.pdf_preview = PDFPreview()
         self.page = None
 
-        # 5段階比率: 独自設定（0:4 ～ 4:0）
+        # 共通比率テーブル使用（全ページ統一）
+        from app.flet_ui.shared.style_constants import SLIDER_RATIOS
         self.level = 3  # 初期値は2:2
-        self.ratios = {
-            1: (0, 4),  # 0:4
-            2: (1, 3),  # 1:3  
-            3: (2, 2),  # 2:2
-            4: (3, 1),  # 3:1
-            5: (4, 0),  # 4:0
-        }
+        self.ratios = SLIDER_RATIOS
 
         # UI参照
         self.main_container: ft.Container | None = None
@@ -48,35 +43,11 @@ class FilesPage:
         self.width_slider: ft.Slider | None = None
 
     def _apply_ratios(self):
-        """expand比率反映（比率0の場合は最小幅制御）"""
-        if not self.left_container or not self.right_container:
-            return
-        left_expand, right_expand = self.ratios[self.level]
-        
-        # 比率0の場合は最小幅で表示（完全非表示回避）
-        if left_expand == 0:
-            self.left_container.expand = None
-            self.left_container.width = 1  # 最小可視幅
-        else:
-            self.left_container.expand = left_expand
-            self.left_container.width = None
-            
-        if right_expand == 0:
-            self.right_container.expand = None
-            self.right_container.width = 1  # 最小可視幅
-        else:
-            self.right_container.expand = right_expand
-            self.right_container.width = None
-            
-        # ページに追加済みの場合のみ更新
-        try:
-            if self.left_container.page:
-                self.left_container.update()
-            if self.right_container.page:
-                self.right_container.update()
-        except Exception as e:
-            # Container update error occurred
-            pass
+        """expand比率反映（共通メソッド使用）"""
+        if hasattr(self, 'main_row') and self.main_row:
+            CommonComponents.apply_slider_ratios_to_row(
+                self.main_row, self.ratios, self.level
+            )
 
     def create_main_layout(self):
         """メインレイアウト作成（共通コンポーネント統一版）"""
@@ -90,30 +61,28 @@ class FilesPage:
             # 右ペイン：PDFプレビュー
             right_pane = self.pdf_preview
 
-            # 左右コンテナ（expandで比率制御、共通設計準拠）
-            left_expand, right_expand = self.ratios[self.level]
-            self.left_container = ft.Container(
-                content=left_pane,
-                expand=left_expand,
-            )
-            self.right_container = ft.Container(
-                content=right_pane,
-                expand=right_expand
-            )
-
             # 5段階スライダー（共通コンポーネント使用）
             self.width_slider = CommonComponents.create_horizontal_slider(
                 self.level, self.on_slider_change
             )
 
-            # 上段：左右Row（共通コンポーネント使用）
-            top_row = CommonComponents.create_main_layout_row(
-                self.left_container, self.right_container
+            # 上段：左右Row（共通コンポーネント使用、0対策自動適用）
+            self.main_row = CommonComponents.create_main_layout_row(
+                left_pane, right_pane
             )
+            
+            # 初期比率適用（共通メソッド使用）
+            CommonComponents.apply_slider_ratios_to_row(
+                self.main_row, self.ratios, self.level
+            )
+            
+            # 後方互換性：個別コンテナ参照を保持
+            self.left_container = self.main_row.controls[0]
+            self.right_container = self.main_row.controls[1]
 
             # 完全レイアウト（上部コンテンツ + 下部スライダーバー）
             self.main_container = PageStyles.create_complete_layout_with_slider(
-                top_row, self.width_slider
+                self.main_row, self.width_slider
             )
             
         except Exception as ex:

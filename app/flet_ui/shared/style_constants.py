@@ -11,8 +11,8 @@ import math
 class Sliders:
     """スライダー関連コンポーネント"""
     
-    # スライダー比率設定（1:5 ～ 5:1の5段階）
-    RATIOS = {1: (1, 5), 2: (2, 4), 3: (3, 3), 4: (4, 2), 5: (5, 1)}
+    # スライダー比率設定（filesページの元々の正しい設定に復旧）
+    RATIOS = {1: (0, 4), 2: (1, 3), 3: (2, 2), 4: (3, 1), 5: (4, 0)}
     
     @staticmethod
     def create_horizontal(value: float, on_change) -> ft.Slider:
@@ -79,44 +79,45 @@ class Sliders:
         
         return [left_overlay, right_overlay]
     
-    @staticmethod  
-    def create_complete_layout(
-        main_content: ft.Control,
-        left_value: float, left_on_change,
-        right_value: float, right_on_change,
-        horizontal_value: float, horizontal_on_change
-    ) -> ft.Container:
-        """完全一体型レイアウト：ガイド+縦スライダー+横スライダー"""
-        
-        # 横スライダー
-        horizontal_slider = Sliders.create_horizontal(horizontal_value, horizontal_on_change)
-        
-        # ガイドエリア付きメインコンテンツ（左右36pxエリア確保）
-        main_with_guides = ft.Container(
-            expand=True,
-            content=ft.Row([
-                ft.Container(width=36, disabled=True),
-                ft.Container(content=main_content, expand=True),
-                ft.Container(width=36, disabled=True),
-            ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH)
-        )
-        
-        # 基本レイアウト（ガイド + 横スライダー）
-        base_layer = Layouts.create_with_bottom_slider(main_with_guides, horizontal_slider)
-        
-        # 縦スライダーオーバーレイ
-        overlay_elements = Sliders.create_overlay_elements(
-            left_value, left_on_change, right_value, right_on_change
-        )
-        
-        # Stack構成
-        return ft.Container(
-            content=ft.Stack(
-                expand=True, clip_behavior=ft.ClipBehavior.NONE,
-                controls=[base_layer] + overlay_elements
-            ),
-            expand=True
-        )
+    # @staticmethod  
+    # def create_complete_layout(  # 廃止：横+縦分離構造により不要
+    #     main_content: ft.Control,
+    #     left_value: float, left_on_change,
+    #     right_value: float, right_on_change,
+    #     horizontal_value: float, horizontal_on_change
+    # ) -> ft.Container:
+    #     """完全一体型レイアウト：ガイド+縦スライダー+横スライダー"""
+    #     
+    #     # 横スライダー
+    #     horizontal_slider = Sliders.create_horizontal(horizontal_value, horizontal_on_change)
+    #     
+    #     # ガイドエリア付きメインコンテンツ（左右36pxエリア確保）
+    #     main_with_guides = ft.Container(
+    #         expand=True,
+    #         content=ft.Row([
+    #             ft.Container(width=36, disabled=True),
+    #             ft.Container(content=main_content, expand=True),
+    #             ft.Container(width=36, disabled=True),
+    #         ], expand=True, spacing=0, vertical_alignment=ft.CrossAxisAlignment.STRETCH)
+    #     )
+    #     
+    #     # 基本レイアウト（ガイド + 横スライダー）
+    #     base_layer = Layouts.create_with_bottom_slider(main_with_guides, horizontal_slider)
+    #     
+    #     # 縦スライダーオーバーレイ
+    #     overlay_elements = Sliders.create_overlay_elements(
+    #         left_value, left_on_change, right_value, right_on_change
+    #     )
+    #     
+    #     # Stack構成
+    #     return ft.Container(
+    #         content=ft.Stack(
+    #             expand=True, clip_behavior=ft.ClipBehavior.NONE,
+    #             controls=[base_layer] + overlay_elements
+    #         ),
+    #         expand=True
+    #     )
+    pass  # 廃止済みメソッドのプレースホルダー
 
 
 class Layouts:
@@ -124,8 +125,12 @@ class Layouts:
     
     @staticmethod
     def create_row(left: ft.Control, right: ft.Control, spacing: int = 0) -> ft.Row:
-        """標準左右分割Row"""
-        return ft.Row([left, right], spacing=spacing, expand=True, 
+        """標準左右分割Row（0対策付きコンテナ自動適用）"""
+        # 共通ルール：常に0対策付きコンテナでラップ
+        left_container = ft.Container(content=left, expand=1)  # デフォルトexpand
+        right_container = ft.Container(content=right, expand=1)  # デフォルトexpand
+        
+        return ft.Row([left_container, right_container], spacing=spacing, expand=True, 
                      vertical_alignment=ft.CrossAxisAlignment.STRETCH)
     
     @staticmethod
@@ -157,12 +162,16 @@ class Layouts:
     
     @staticmethod
     def create_with_bottom_slider(top_content: ft.Control, slider: ft.Slider) -> ft.Container:
-        """上部コンテンツ + 下部スライダー"""
+        """上部コンテンツ + 下部スライダー（強制センタリング）"""
         return ft.Container(
             content=ft.Column([
                 ft.Container(content=top_content, expand=True),
                 Layouts.create_bottombar(
-                    ft.Row([slider], alignment=ft.MainAxisAlignment.CENTER)
+                    ft.Container(
+                        content=slider,
+                        alignment=ft.alignment.center,
+                        expand=True
+                    )
                 )
             ], spacing=0, expand=True),
             expand=True
@@ -268,10 +277,57 @@ class CommonComponents:
     create_horizontal_slider = staticmethod(Sliders.create_horizontal)
     create_vertical_slider = staticmethod(Sliders.create_vertical)
     create_vertical_slider_overlay_elements = staticmethod(Sliders.create_overlay_elements)
-    create_complete_layout_with_full_sliders = staticmethod(Sliders.create_complete_layout)
+    # create_complete_layout_with_full_sliders = 廃止（横+縦分離構造により不要）
     
     # Layouts
     create_main_layout_row = staticmethod(Layouts.create_row)
+    
+    @staticmethod
+    def apply_slider_ratios_to_row(row: ft.Row, ratios: dict, level: int) -> bool:
+        """共通Rowに対するスライダー比率適用（0対策自動適用、VerticalDivider対応）"""
+        if not row or len(row.controls) < 2:
+            return False
+        
+        # コンテナを自動検出（VerticalDivider等を除外）
+        containers = [control for control in row.controls 
+                     if isinstance(control, ft.Container)]
+        
+        if len(containers) < 2:
+            return False
+            
+        left_container = containers[0]  # 左コンテナ
+        right_container = containers[1]  # 右コンテナ（最後から2番目以降）
+        # 右コンテナは最後の要素を取得
+        if len(containers) >= 2:
+            right_container = containers[-1]  # 最後のコンテナ
+        
+        left_ratio, right_ratio = ratios[level]
+        
+        # 0対策付き比率適用（共通ルール：常に適用）
+        if left_ratio == 0:
+            left_container.expand = None
+            left_container.width = 1  # 最小可視幅（完全非表示回避）
+        else:
+            left_container.expand = left_ratio
+            left_container.width = None
+        
+        if right_ratio == 0:
+            right_container.expand = None
+            right_container.width = 1  # 最小可視幅（完全非表示回避）
+        else:
+            right_container.expand = right_ratio
+            right_container.width = None
+        
+        # UI更新（ページに追加済みの場合のみ）
+        try:
+            if hasattr(left_container, 'page') and left_container.page:
+                left_container.update()
+            if hasattr(right_container, 'page') and right_container.page:
+                right_container.update()
+        except Exception:
+            pass
+        
+        return True
     create_main_layout_column = staticmethod(Layouts.create_column)
     create_sidebar_container = staticmethod(Layouts.create_sidebar)
     create_bottombar_container = staticmethod(Layouts.create_bottombar)

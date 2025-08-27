@@ -151,10 +151,181 @@ class TabA:
             border=ft.border.all(2, ft.Colors.GREEN_300)
         )
         
+        # 右下：大容量PDF対応プレビューテスト
+        from app.flet_ui.shared.pdf_large_preview import create_large_pdf_preview
+        from app.services.file_service import get_file_service
+        
+        # 大容量PDFプレビュー作成
+        pdf_preview = create_large_pdf_preview()
+        
+        def test_large_pdf_click(e):
+            """大容量PDFテストボタン"""
+            try:
+                from app.core.db_simple import fetch_all
+                
+                # DB直接アクセスで大容量PDFを取得
+                pdf_files = fetch_all('''
+                    SELECT fb.id, fm.file_name, fm.mime_type, LENGTH(fb.blob_data) as blob_size
+                    FROM files_blob fb
+                    LEFT JOIN files_meta fm ON fb.id = fm.blob_id
+                    WHERE fm.file_name LIKE '%.pdf' OR fm.mime_type LIKE '%pdf%'
+                    ORDER BY LENGTH(fb.blob_data) DESC
+                    LIMIT 5
+                ''')
+                
+                if not pdf_files:
+                    print("❌ テスト用PDFファイルがDBに存在しません")
+                    return
+                
+                # 最大サイズのPDFでテスト
+                largest_pdf = pdf_files[0]
+                size_mb = largest_pdf['blob_size'] / (1024 * 1024) if largest_pdf['blob_size'] else 0
+                
+                # ファイル情報を適切な形式に変換
+                file_info = {
+                    'id': largest_pdf['id'],
+                    'file_name': largest_pdf['file_name'],
+                    'mime_type': largest_pdf['mime_type']
+                }
+                
+                print(f"🚀 大容量PDFテスト開始: {file_info['file_name']} ({size_mb:.1f}MB)")
+                print(f"   ファイルID: {file_info['id']}")
+                pdf_preview.show_pdf_preview(file_info)
+                    
+            except Exception as e:
+                print(f"❌ 大容量PDFテストエラー: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        def test_image_mode_click(e):
+            """画像モード強制テスト"""
+            try:
+                from app.core.db_simple import fetch_all
+                
+                # 中程度サイズのPDFで画像モードテスト（レンダリング時間短縮）
+                pdf_files = fetch_all('''
+                    SELECT fb.id, fm.file_name, fm.mime_type, LENGTH(fb.blob_data) as blob_size
+                    FROM files_blob fb
+                    LEFT JOIN files_meta fm ON fb.id = fm.blob_id
+                    WHERE fm.file_name LIKE '%.pdf' OR fm.mime_type LIKE '%pdf%'
+                    ORDER BY LENGTH(fb.blob_data) ASC
+                    LIMIT 5
+                ''')
+                
+                if pdf_files:
+                    # 中程度のPDFで画像モードテスト
+                    test_pdf = pdf_files[min(2, len(pdf_files)-1)]  # 3番目の小さなPDF
+                    size_mb = test_pdf['blob_size'] / (1024 * 1024) if test_pdf['blob_size'] else 0
+                    
+                    file_info = {
+                        'id': test_pdf['id'],
+                        'file_name': test_pdf['file_name'],
+                        'mime_type': test_pdf['mime_type']
+                    }
+                    
+                    print(f"🖼️ 画像モード強制テスト開始: {file_info['file_name']} ({size_mb:.2f}MB)")
+                    print(f"   ファイルID: {file_info['id']}")
+                    
+                    # 強制的に画像モードに設定
+                    pdf_preview._force_image_mode = True
+                    pdf_preview.show_pdf_preview(file_info)
+                else:
+                    print("❌ 画像モードテスト: PDFファイルが見つかりません")
+                    
+            except Exception as e:
+                print(f"❌ 画像モードテストエラー: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        def test_stream_server_click(e):
+            """PDFストリーミングサーバテスト"""
+            try:
+                from app.core.db_simple import fetch_one
+                import asyncio
+                
+                # 中程度サイズのPDFでストリーミングテスト
+                test_pdf = fetch_one('''
+                    SELECT fb.id, fm.file_name, LENGTH(fb.blob_data) as blob_size, fb.blob_data
+                    FROM files_blob fb
+                    LEFT JOIN files_meta fm ON fb.id = fm.blob_id
+                    WHERE fm.file_name LIKE '%.pdf'
+                    ORDER BY LENGTH(fb.blob_data)
+                    LIMIT 1 OFFSET 3
+                ''')
+                
+                if test_pdf:
+                    size_mb = test_pdf['blob_size'] / (1024 * 1024)
+                    print(f"🌐 PDFストリーミングサーバテスト: {test_pdf['file_name']} ({size_mb:.2f}MB)")
+                    
+                    # ストリーミングサーバを直接テスト
+                    async def test_streaming():
+                        from app.flet_ui.shared.pdf_stream_server import serve_pdf_from_bytes
+                        pdf_url, server = await serve_pdf_from_bytes(test_pdf['blob_data'], test_pdf['id'])
+                        print(f"✅ PDFストリーミングURL生成完了: {pdf_url}")
+                        return pdf_url
+                    
+                    # 非同期実行
+                    try:
+                        loop = asyncio.get_event_loop()
+                        loop.create_task(test_streaming())
+                    except RuntimeError:
+                        asyncio.run(test_streaming())
+                        
+                else:
+                    print("❌ ストリーミングテスト用PDFが見つかりません")
+                    
+            except Exception as e:
+                print(f"❌ ストリーミングサーバテストエラー: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        def test_clear_preview_click(e):
+            """プレビュークリア/リセットテスト"""
+            try:
+                print("🧹 プレビューをクリアします")
+                pdf_preview.show_empty_preview()
+                pdf_preview._force_image_mode = False  # 画像モード強制フラグリセット
+                print("✅ プレビュークリア完了")
+            except Exception as e:
+                print(f"❌ プレビュークリアエラー: {e}")
+        
+        test_buttons = ft.Column([
+            ft.Text("大容量PDF対応テスト", size=14, weight=ft.FontWeight.BOLD),
+            ft.Row([
+                ft.ElevatedButton(
+                    text="最大サイズPDFテスト",
+                    on_click=test_large_pdf_click,
+                    width=180,
+                    bgcolor=ft.Colors.ORANGE_100
+                ),
+                ft.ElevatedButton(
+                    text="画像モード強制テスト",
+                    on_click=test_image_mode_click,
+                    width=180,
+                    bgcolor=ft.Colors.PURPLE_100
+                )
+            ], spacing=8),
+            ft.Row([
+                ft.ElevatedButton(
+                    text="ストリーミング直接テスト",
+                    on_click=test_stream_server_click,
+                    width=180,
+                    bgcolor=ft.Colors.BLUE_100
+                ),
+                ft.ElevatedButton(
+                    text="プレビュークリア",
+                    on_click=test_clear_preview_click,
+                    width=180,
+                    bgcolor=ft.Colors.GREY_200
+                )
+            ], spacing=8),
+            pdf_preview
+        ], tight=True, spacing=8)
+        
         bottom_right = ft.Container(
-            content=ft.Text("右下", size=20, text_align=ft.TextAlign.CENTER),
+            content=test_buttons,
             bgcolor=ft.Colors.YELLOW_100,
-            alignment=ft.alignment.center,
+            padding=ft.padding.all(8),
             expand=True,
             border=ft.border.all(2, ft.Colors.YELLOW_600)
         )

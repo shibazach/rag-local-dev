@@ -67,7 +67,7 @@ class ArrangementTestPage:
         if tab_index == 0:
             content = self.tab_a.create_content(page=self.page)  # ページ渡し修正
         elif tab_index == 1:
-            content = self.tab_b.create_content()
+            content = self.tab_b.create_content(page=self.page)
         elif tab_index == 2:
             content = self.tab_c.create_content()
         elif tab_index == 3:

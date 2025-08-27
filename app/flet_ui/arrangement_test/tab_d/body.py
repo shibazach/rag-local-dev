@@ -46,16 +46,29 @@ class TabD:
             border_radius=8
         )
         
-        # ===== 一体型コンポーネントでワンアクション配置 =====
+        # ===== 分離型コンポーネントで横+縦組み合わせ実装 =====
         # 4分割メインコンテンツ作成
         main_4quad_content = self._create_4quad_layout()
         
-        # 完全一体型レイアウト適用
-        main_content = CommonComponents.create_complete_layout_with_full_sliders(
-            main_4quad_content,
-            self.left_split_level, self.on_left_change,
-            self.right_split_level, self.on_right_change, 
+        # 横スライダー（共通化済み）
+        horizontal_slider = CommonComponents.create_horizontal_slider(
             self.horizontal_level, self.on_horizontal_change
+        )
+        
+        # 基本レイアウト（横スライダー付き）
+        base_layout = PageStyles.create_complete_layout_with_slider(
+            main_4quad_content, horizontal_slider
+        )
+        
+        # 縦スライダーオーバーレイ要素作成
+        vertical_overlays = self._create_vertical_slider_overlays()
+        
+        # Stack構成（基本レイアウト + 縦スライダーオーバーレイ）
+        main_content = ft.Container(
+            content=ft.Stack([
+                base_layout
+            ] + vertical_overlays, expand=True, clip_behavior=ft.ClipBehavior.NONE),
+            expand=True
         )
         
         return ft.Container(
@@ -101,10 +114,58 @@ class TabD:
         ], spacing=0, expand=True)
         
         # 初期レイアウト適用
-        self._update_layout()
+        self._update_vertical_layout()
         
         # 4分割部分のみ返す
         return ft.Container(content=self.main_row, expand=True)
+    
+    def _create_vertical_slider_overlays(self) -> list:
+        """縦スライダーオーバーレイ要素作成（共通コンポーネント分離版）"""
+        # 左縦スライダー
+        left_vslider = CommonComponents.create_vertical_slider(
+            self.left_split_level, self.on_left_change
+        )
+        
+        # 右縦スライダー
+        right_vslider = CommonComponents.create_vertical_slider(
+            self.right_split_level, self.on_right_change
+        )
+        
+        # 左オーバーレイ配置
+        left_overlay = ft.Container(
+            content=ft.Column([
+                ft.Container(expand=1),  # 上部（25%）
+                ft.Container(
+                    content=left_vslider,
+                    expand=2,  # 中央部分（50%）
+                    alignment=ft.alignment.center,
+                    bgcolor="#FFCCCC"  # デバッグ用
+                ),
+                ft.Container(expand=1),  # 下部（25%）
+            ], spacing=0),
+            left=-84,  # 標準配置位置
+            top=0, bottom=32,  # 32px = 横スライダー高さを除外
+            width=200,
+        )
+        
+        # 右オーバーレイ配置
+        right_overlay = ft.Container(
+            content=ft.Column([
+                ft.Container(expand=1),  # 上部（25%）
+                ft.Container(
+                    content=right_vslider,
+                    expand=2,  # 中央部分（50%）
+                    alignment=ft.alignment.center,
+                    bgcolor="#FFCCCC"  # デバッグ用
+                ),
+                ft.Container(expand=1),  # 下部（25%）
+            ], spacing=0),
+            right=-84,  # 標準配置位置
+            top=0, bottom=32,  # 32px = 横スライダー高さを除外
+            width=200,
+        )
+        
+        return [left_overlay, right_overlay]
     
     def _create_demo_pane(self, title: str, bgcolor: str, icon: str) -> ft.Container:
         """デモ用ペイン作成"""
@@ -157,53 +218,55 @@ class TabD:
     
 
     
-    def _update_layout(self):
-        """レイアウトを実際に更新（4分割版）"""
-        # 比率計算
+    def _update_vertical_layout(self):
+        """縦スライダーのみレイアウト更新（横スライダーは共通メソッドが担当）"""
+        # 縦比率計算
         left_top_ratio, left_bottom_ratio = self.ratios[self.left_split_level] 
         right_top_ratio, right_bottom_ratio = self.ratios[self.right_split_level]
-        left_ratio, right_ratio = self.ratios[self.horizontal_level]
         
-        # ペイン内容更新
-        self.top_left_container.content = self._create_demo_pane("OCR設定", ft.Colors.BLUE_100, "🔧")
-        self.bottom_left_container.content = self._create_demo_pane("OCR結果", ft.Colors.GREEN_100, "📄")
-        self.top_right_container.content = self._create_demo_pane("詳細設定", ft.Colors.ORANGE_100, "⚙️")
-        self.bottom_right_container.content = self._create_demo_pane("PDFプレビュー", ft.Colors.PURPLE_100, "📖")
+        # ペイン内容更新（初回のみ）
+        if not self.top_left_container.content:
+            self.top_left_container.content = self._create_demo_pane("OCR設定", ft.Colors.BLUE_100, "🔧")
+            self.bottom_left_container.content = self._create_demo_pane("OCR結果", ft.Colors.GREEN_100, "📄")
+            self.top_right_container.content = self._create_demo_pane("詳細設定", ft.Colors.ORANGE_100, "⚙️")
+            self.bottom_right_container.content = self._create_demo_pane("PDFプレビュー", ft.Colors.PURPLE_100, "📖")
         
-        # 比率適用
+        # 縦比率適用
         self.top_left_container.expand = left_top_ratio
         self.bottom_left_container.expand = left_bottom_ratio
         self.top_right_container.expand = right_top_ratio  
         self.bottom_right_container.expand = right_bottom_ratio
         
-        # 左右比率（files/page.pyパターン適用：Container直接更新）
-        self.left_container.expand = left_ratio
-        self.right_container.expand = right_ratio
-        
-        # UI更新（Container直接更新）
+        # 縦コンテナUI更新
         try:
-            if hasattr(self, 'left_container') and self.left_container.page:
-                self.left_container.update()
-            if hasattr(self, 'right_container') and self.right_container.page:
-                self.right_container.update()
+            if hasattr(self, 'left_column') and self.left_column.page:
+                self.left_column.update()
+            if hasattr(self, 'right_column') and self.right_column.page:
+                self.right_column.update()
         except:
             pass
     
     def on_left_change(self, e):
-        """左スライダー変更（実動作）"""
+        """左スライダー変更（縦比率のみ）"""
         self.left_split_level = int(float(e.control.value))
-
-        self._update_layout()
+        self._update_vertical_layout()
+        print(f"⚡ tab_d 左縦スライダー変更: レベル{self.left_split_level}")
     
     def on_right_change(self, e):
-        """右スライダー変更（実動作）"""
+        """右スライダー変更（縦比率のみ）"""
         self.right_split_level = int(float(e.control.value))
- 
-        self._update_layout()
+        self._update_vertical_layout()
+        print(f"⚡ tab_d 右縦スライダー変更: レベル{self.right_split_level}")
     
     def on_horizontal_change(self, e):
-        """横スライダー変更（実動作）"""
+        """横スライダー変更時に左右比率を調整（共通メソッド使用）"""
         self.horizontal_level = int(float(e.control.value))
-
-        self._update_layout()
+        
+        # 共通メソッドで比率適用（0対策自動適用）
+        if hasattr(self, 'main_row') and self.main_row:
+            CommonComponents.apply_slider_ratios_to_row(
+                self.main_row, self.ratios, self.horizontal_level
+            )
+        
+        print(f"⚡ tab_d 横スライダー変更: レベル{self.horizontal_level}")
 

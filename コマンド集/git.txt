@@ -47,3 +47,31 @@ Key type: Authentication Key のまま
 Key: 先ほどコピーした公開鍵の内容をペースト
 Add SSH key を押す
 
+
+
+接続テスト（Linux側）
+ssh -T git@github.com
+
+初回は fingerprint 確認が出ます：
+
+The authenticity of host 'github.com (IPアドレス)' can't be established.
+ED25519 key fingerprint is SHA256:xxxxxxxxxxxxxxxx.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+
+→ yes と入力
+
+成功時のメッセージ：
+Hi shibazach! You've successfully authenticated, but GitHub does not provide shell access.
+これが出ればOKです。
+
+
+その後の運用
+
+リポジトリのURLを SSH 用に統一する：
+
+cd /path/to/your/repo
+git remote set-url origin git@github.com:shibazach/<リポジトリ名>.git
+
+
+以降は git push / git pull でパスワード入力不要。
+

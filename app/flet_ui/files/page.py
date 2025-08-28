@@ -6,7 +6,7 @@ Flet RAGシステム - ファイル管理ページ（完全共通コンポーネ
 
 import flet as ft
 from .table import FilesTable
-from app.flet_ui.shared.pdf_preview import PDFPreview
+from app.flet_ui.shared.pdf_large_preview_unified import create_pdf_preview_v5
 from app.flet_ui.shared.panel_components import create_panel, create_files_panel_config
 from app.flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
 
@@ -28,7 +28,7 @@ class FilesPage:
 
     def __init__(self):
         self.files_table = FilesTable(on_file_select_callback=self.on_file_selected)
-        self.pdf_preview = PDFPreview()
+        self.pdf_preview = None  # V5は後でpage参照と共に初期化
         self.page = None
 
         # 共通比率テーブル使用（全ページ統一）
@@ -55,10 +55,13 @@ class FilesPage:
             # FilesTableにpage参照を設定
             self.files_table.page = self.page
             
+            # V5統合PDF プレビュー初期化（page参照必要）
+            self.pdf_preview = create_pdf_preview_v5(self.page)
+            
             # 左ペイン：ファイル一覧（FilesTable内で既にcreate_panel使用済み）
             left_pane = self.files_table.create_table_widget()
             
-            # 右ペイン：PDFプレビュー
+            # 右ペイン：V5統合PDFプレビュー
             right_pane = self.pdf_preview
 
             # 5段階スライダー（共通コンポーネント使用）
@@ -107,9 +110,43 @@ class FilesPage:
         self.files_table.load_files()
 
     def on_file_selected(self, file_id):
-        """ファイル選択時のプレビュー表示"""
-        if file_id:
+        """ファイル選択時のV5統合プレビュー表示"""
+        if file_id and self.pdf_preview:
             file_info = self.files_table.get_selected_file()
-            self.pdf_preview.show_pdf_preview(file_info)
-        else:
-            self.pdf_preview.show_empty_preview()
+            if file_info and file_info.get('file_name', '').lower().endswith('.pdf'):
+                # V5統合PDFプレビューでの表示
+                try:
+                    # file_infoからPDFデータを取得
+                    from app.services.file_service import get_file_service
+                    file_service = get_file_service()
+                    file_data = file_service.get_file_info(file_info['id'])
+                    
+                    if file_data and file_data.get('blob_data'):
+                        # 非同期でPDF読み込み実行
+                        if self.page:
+                            # page.run_taskを使用
+                            async def load_pdf_async():
+                                try:
+                                    await self.pdf_preview.load_pdf_from_bytes(
+                                        file_data['blob_data'], 
+                                        file_info['file_name'],
+                                        file_info['id']  # 実際のfile_idを渡す
+                                    )
+                                    print(f"[INFO] V5 PDF読み込み完了: {file_info['file_name']}")
+                                except Exception as e:
+                                    print(f"[ERROR] V5 PDF読み込みエラー: {e}")
+                                    import traceback
+                                    traceback.print_exc()
+                            
+                            self.page.run_task(load_pdf_async)
+                        else:
+                            print("[WARNING] pageが未設定のため、PDF読み込みをスキップしました")
+                    else:
+                        print(f"[ERROR] PDFデータ取得失敗: {file_info.get('file_name', 'unknown')}")
+                except Exception as e:
+                    print(f"[ERROR] V5 PDFファイル処理エラー: {e}")
+                    import traceback
+                    traceback.print_exc()
+        elif self.pdf_preview:
+            # PDFファイル以外またはfile_idなしの場合はクリア
+            self.pdf_preview.clear_preview()

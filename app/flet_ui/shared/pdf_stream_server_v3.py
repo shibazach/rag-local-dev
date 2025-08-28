@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 """
+🔴 DEPRECATED - V3専用サーバー（非推奨）
+
+⚠️  このファイルは非推奨です。新しい統合サーバーが利用されます：
+    app.flet_ui.shared.pdf_stream_server_unified.py
+
+V5統合サーバーの利点:
+- V3/V4統合管理
+- 自動戦略選択
+- 統一エンドポイント
+
 大容量PDF対応ストリーミングサーバ（V3完全版・HTTP統一）
 - /pdf/{file_id} : PDF本体（Range/HEAD/条件付は FileResponse に委譲）
 - /viewer        : PDF.js ビューアHTMLをHTTPで配信（data:URL不使用）

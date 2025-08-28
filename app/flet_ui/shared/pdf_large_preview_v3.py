@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
 """
+🔴 DEPRECATED - V3専用版（非推奨）
+
+⚠️  このファイルは非推奨です。新しい統合版を使用してください：
+    from app.flet_ui.shared.pdf_large_preview_unified import create_pdf_preview_unified
+
+V5統合版の利点:
+- 自動戦略選択（WebView/画像）
+- フォールバック機能
+- 統一API
+- 完全互換性
+
 大容量PDF対応プレビューコンポーネント（V3専用版）
 右ペイン内表示・完全HTTP統一方式
 

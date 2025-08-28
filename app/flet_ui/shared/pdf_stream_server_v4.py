@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 """
+🔴 DEPRECATED - V4画像専用サーバー（非推奨）
+
+⚠️  このファイルは非推奨です。新しい統合サーバーが利用されます：
+    app.flet_ui.shared.pdf_stream_server_unified.py
+
+V5統合サーバーの利点:
+- V3/V4統合管理
+- 自動戦略選択
+- 統一エンドポイント
+
 V4大容量PDF対応 - 画像変換専用ストリーミングサーバー
 
 技術方式:

@@ -85,16 +85,16 @@ class PDFImagePreviewV4(ft.Container):
         self._file_id: Optional[str] = None
         self._server: Optional[Any] = None  # PDFStreamServerV4
         
-        # PDF情報
+        # PDF情報  
         self._current_page = 0
         self._total_pages = 0
-        self._current_zoom = 1.0
-        self._image_width = 1200
         self._dpr = 1.0
         
-        # フィット制御状態
+        # 表示制御状態
         self._fit_mode = "width"  # "width" (横フィット) or "height" (縦フィット)
-        self._is_rotated_icon = False  # アイコン回転状態
+        
+        # シンプル表示制御
+        # 複雑なサイズ管理を削除し、Fletの自動フィット機能を活用
         
         # 表示制御
         self._current_image_url: Optional[str] = None
@@ -152,8 +152,8 @@ class PDFImagePreviewV4(ft.Container):
             weight=ft.FontWeight.BOLD
         )
         
-        self._zoom_info = ft.Text(
-            "100%", 
+        self._fit_info = ft.Text(
+            "横フィット", 
             size=14, 
             color=ft.Colors.GREY_600
         )
@@ -175,36 +175,15 @@ class PDFImagePreviewV4(ft.Container):
             disabled=True
         )
         
-        # ズームボタン
-        self._zoom_out_button = ft.IconButton(
-            icon=ft.Icons.ZOOM_OUT,
-            icon_size=20,
-            tooltip="縮小 (-)",
-            on_click=self._on_zoom_out,
-            disabled=True
-        )
+        # ズームボタンを削除（シンプル化）
         
-        self._zoom_in_button = ft.IconButton(
-            icon=ft.Icons.ZOOM_IN,
+        # フィットボタン（シンプル化）
+        self._fit_button = ft.IconButton(
+            icon=ft.Icons.FIT_SCREEN,
             icon_size=20,
-            tooltip="拡大 (+)",
-            on_click=self._on_zoom_in,
+            tooltip="縦フィットに切り替え",
+            on_click=self._on_fit_toggle,
             disabled=True
-        )
-        
-        # フィットボタン（アイコン回転対応）
-        self._zoom_fit_button = ft.Container(
-            content=ft.Icon(
-                name=ft.Icons.FIT_SCREEN,
-                size=20,
-                color=ft.Colors.GREY_600
-            ),
-            width=40,
-            height=40,
-            border_radius=8,
-            ink=True,
-            on_click=self._on_zoom_fit,
-            tooltip="縦フィットに切り替え (0)"
         )
         
         # 制御ボタン
@@ -242,11 +221,7 @@ class PDFImagePreviewV4(ft.Container):
             disabled=True
         )
         
-        self._clear_button = ft.ElevatedButton(
-            text="🗑️ クリア",
-            height=32,
-            on_click=self._on_clear
-        )
+        # クリアボタンを削除（シンプル化）
         
         # ステータス表示
         self._status_container = ft.Container(
@@ -270,11 +245,9 @@ class PDFImagePreviewV4(ft.Container):
                 
                 ft.VerticalDivider(width=1, color=ft.Colors.GREY_300),
                 
-                # ズーム制御
-                self._zoom_out_button,
-                self._zoom_info,
-                self._zoom_in_button,
-                self._zoom_fit_button,
+                # フィット制御
+                self._fit_info,
+                self._fit_button,
                 
                 ft.VerticalDivider(width=1, color=ft.Colors.GREY_300),
                 
@@ -288,9 +261,8 @@ class PDFImagePreviewV4(ft.Container):
                 self._reload_button,
                 self._download_button,
                 
-                # 右寄せ
-                ft.Container(expand=True),
-                self._clear_button
+                # 右寄せ（クリアボタン削除）
+                ft.Container(expand=True)
                 
             ], spacing=4, alignment=ft.MainAxisAlignment.START),
             bgcolor=ft.Colors.GREY_50,
@@ -321,20 +293,24 @@ class PDFImagePreviewV4(ft.Container):
         expand=True
         )
         
-        # メイン表示エリア（スタック構造維持）
-        display_area = ft.Stack([
-            # スクロール可能画像表示
-            scrollable_image,
-            
-            # ステータスオーバーレイ
-            self._status_container
-        ], expand=True)
+        # 表示領域コンテナ（expand活用）
+        self._display_container = ft.Container(
+            content=ft.Stack([
+                # スクロール可能画像表示
+                scrollable_image,
+                
+                # ステータスオーバーレイ
+                self._status_container
+            ]),
+            border=ft.border.all(1, ft.Colors.GREY_300),
+            expand=True
+        )
         
         # 全体レイアウト
         self.content = ft.Column([
             toolbar,
             ft.Container(height=4),  # スペーサー
-            display_area
+            self._display_container
         ], spacing=0, expand=True)
 
     def _build_status_content(self) -> ft.Control:
@@ -436,9 +412,8 @@ class PDFImagePreviewV4(ft.Container):
             self._prev_button.disabled = not buttons_enabled or self._current_page <= 0
             self._next_button.disabled = not buttons_enabled or self._current_page >= self._total_pages - 1
             
-            self._zoom_out_button.disabled = not buttons_enabled or self._current_zoom <= 0.5
-            self._zoom_in_button.disabled = not buttons_enabled or self._current_zoom >= 3.0
-            self._zoom_fit_button.disabled = not buttons_enabled
+            # ズームボタンを削除（シンプル化）
+            self._fit_button.disabled = not buttons_enabled
             
             self._reload_button.disabled = not buttons_enabled
             self._download_button.disabled = not buttons_enabled
@@ -453,8 +428,12 @@ class PDFImagePreviewV4(ft.Container):
                 self._page_input.value = "1"
                 self._total_pages_text.value = "/ 0"
                 
-            # ズーム情報表示更新
-            self._update_zoom_info()
+            # フィット情報表示更新（シンプル化版）
+            if hasattr(self, '_fit_info') and self._fit_info:
+                if self._fit_mode == "height":
+                    self._fit_info.value = "縦フィット"
+                else:
+                    self._fit_info.value = "横フィット"
             
             self.update()
             
@@ -524,7 +503,7 @@ class PDFImagePreviewV4(ft.Container):
             
             # 画像URL生成・取得・表示（回転対応）
             image_url = self._server.get_image_url(
-                self._file_id, page_index, width=self._image_width, dpr=self._dpr, fmt="png", rotation=self._rotation
+                self._file_id, page_index, width=1200, dpr=self._dpr, fmt="png", rotation=self._rotation
             )
             
             if not image_url:
@@ -547,11 +526,17 @@ class PDFImagePreviewV4(ft.Container):
                         
                         self._image_display.src = data_url
                         
-                        # 表示方法最適化：フィットモードとズームに応じた制御
-                        self._apply_zoom(self._current_zoom)  # 現在のズームを再適用
+                        # 表示方法最適化：フィットモード適用
+                        if self._fit_mode == "width":
+                            self._image_display.fit = ft.ImageFit.FIT_WIDTH
+                        else:
+                            self._image_display.fit = ft.ImageFit.FIT_HEIGHT
                             
                         self._image_display.visible = True
-                        self._image_display.update()
+                        
+                        # UI更新（page存在時のみ）
+                        if hasattr(self, 'page') and self.page and hasattr(self._image_display, 'page') and self._image_display.page:
+                            self._image_display.update()
                         
             except Exception as url_error:
                 raise RuntimeError(f"Image fetch failed: {url_error}")
@@ -586,7 +571,7 @@ class PDFImagePreviewV4(ft.Container):
                 
                 prefetch_data = {
                     "current_page": self._current_page,
-                    "width": self._image_width,
+                    "width": 1200,  # 固定値を使用（シンプル化）
                     "dpr": self._dpr,
                     "range": 2
                 }
@@ -626,116 +611,40 @@ class PDFImagePreviewV4(ft.Container):
                     await self._render_and_display_page(self._current_page + 1)
                 self.page.run_task(next_page)
 
-    def _on_zoom_out(self, e):
-        """ズームアウト"""
-        new_zoom = max(0.5, self._current_zoom / 1.25)
-        self._apply_zoom(new_zoom)
-
-    def _on_zoom_in(self, e):
-        """ズームイン"""
-        new_zoom = min(3.0, self._current_zoom * 1.25)
-        self._apply_zoom(new_zoom)
-
-    def _on_zoom_fit(self, e):
-        """フィット切替（横フィット ↔ 縦フィット）"""
+    def _on_fit_toggle(self, e):
+        """フィット切替（横フィット ↔ 縦フィット）シンプル版"""
         # フィットモード切替
         if self._fit_mode == "width":
             self._fit_mode = "height"
-            self._is_rotated_icon = True
-            self._zoom_fit_button.tooltip = "横フィットに切り替え (0)"
+            self._image_display.fit = ft.ImageFit.FIT_HEIGHT
+            self._fit_info.value = "縦フィット"
+            self._fit_button.tooltip = "横フィットに切り替え"
         else:
             self._fit_mode = "width"
-            self._is_rotated_icon = False
-            self._zoom_fit_button.tooltip = "縦フィットに切り替え (0)"
+            self._image_display.fit = ft.ImageFit.FIT_WIDTH
+            self._fit_info.value = "横フィット"
+            self._fit_button.tooltip = "縦フィットに切り替え"
         
-        # アイコン回転の適用
-        self._update_fit_button_icon()
-        
-        # フィット適用（100%基準で切り替え）
-        self._apply_zoom(1.0)
-
-    def _update_fit_button_icon(self):
-        """フィットボタンのアイコン回転更新"""
-        if not hasattr(self, '_zoom_fit_button') or not self._zoom_fit_button:
-            return
-            
-        # アイコン回転状態に応じてCSS変換を適用
-        icon_content = self._zoom_fit_button.content
-        if self._is_rotated_icon:
-            # 90度回転（縦フィット状態）
-            icon_content.rotate = ft.Rotate(angle=1.5708)  # 90度 = π/2 ラジアン
-        else:
-            # 通常状態（横フィット状態）
-            icon_content.rotate = ft.Rotate(angle=0)
-        
-        # page存在時のみUI更新
+        # UI更新（安全チェック付き）
         if hasattr(self, 'page') and self.page:
-            self._zoom_fit_button.update()
+            # 画像更新
+            if hasattr(self._image_display, 'page') and self._image_display.page:
+                self._image_display.update()
+            
+            # 情報更新
+            if hasattr(self, '_fit_info') and self._fit_info and hasattr(self._fit_info, 'page') and self._fit_info.page:
+                self._fit_info.update()
+            
+            # ボタン更新  
+            if hasattr(self, '_fit_button') and self._fit_button and hasattr(self._fit_button, 'page') and self._fit_button.page:
+                self._fit_button.update()
 
-    def _update_zoom_info(self):
-        """ズーム情報表示の更新"""
-        if not hasattr(self, '_zoom_info') or not self._zoom_info:
-            return
-            
-        zoom_percent = int(self._current_zoom * 100)
-        if zoom_percent == 100:
-            # 100%時はフィット方向を表示
-            if hasattr(self, '_fit_mode') and self._fit_mode == "height":
-                self._zoom_info.value = f"{zoom_percent}% V"
-            else:
-                self._zoom_info.value = f"{zoom_percent}% H"
-        else:
-            # 100%以外は倍率のみ
-            self._zoom_info.value = f"{zoom_percent}%"
+    # アイコン回転機能を削除（シンプル化）
 
-    def _apply_zoom(self, zoom: float):
-        """ズーム適用（フィット状態考慮・品質改善）"""
-        if self._current_zoom == zoom:
-            return
-            
-        self._current_zoom = zoom
-        self._image_width = int(1200 * zoom)
-        
-        # フィットモードとズームに応じた表示制御
-        if zoom == 1.0:
-            # 100%基準：フィットモードに応じた表示
-            if self._fit_mode == "width":
-                self._image_display.fit = ft.ImageFit.FIT_WIDTH
-                self._image_display.width = None
-                self._image_display.height = None
-            else:  # height
-                self._image_display.fit = ft.ImageFit.FIT_HEIGHT
-                self._image_display.width = None
-                self._image_display.height = None
-            self._image_display.expand = False
-        else:
-            # 拡大・縮小時：品質重視の固定サイズ表示
-            if zoom > 1.0:
-                # 拡大時：スクロール可能な高品質表示
-                self._image_display.fit = ft.ImageFit.NONE
-                self._image_display.width = self._image_width
-                self._image_display.height = None
-            else:
-                # 縮小時：フィット維持で品質保持
-                if self._fit_mode == "width":
-                    self._image_display.fit = ft.ImageFit.FIT_WIDTH
-                    self._image_display.width = None
-                    self._image_display.height = None
-                else:
-                    self._image_display.fit = ft.ImageFit.FIT_HEIGHT
-                    self._image_display.width = None
-                    self._image_display.height = None
-            self._image_display.expand = False
-            
-        # page存在時のみUI更新
-        if hasattr(self, 'page') and self.page:
-            self._image_display.update()
-        
-        # 現在ページ再レンダリング
-        if self._state == PreviewState.DISPLAYED and self.page:
-            async def rerender_current():
-                await self._render_and_display_page(self._current_page)
-            self.page.run_task(rerender_current)
+    # ズーム情報表示を削除（シンプル化）
+
+    # 複雑なスケール計算機能を削除（シンプル化）
+    # Fletの標準FIT_WIDTH/HEIGHT機能を活用
 
     def _on_reload(self, e):
         """再読み込み"""
@@ -851,13 +760,10 @@ class PDFImagePreviewV4(ft.Container):
             self._server = None
             self._current_page = 0
             self._total_pages = 0
-            self._current_zoom = 1.0
-            self._image_width = 1200
             self._dpr = 1.0
             self._current_image_url = None
             self._rotation = 0  # 回転状態リセット
             self._fit_mode = "width"  # 横フィットにリセット
-            self._is_rotated_icon = False  # アイコン回転リセット
             
             # 画像クリア
             self._image_display.src = None
@@ -868,9 +774,9 @@ class PDFImagePreviewV4(ft.Container):
             self._image_display.update()  # 🔥 CRITICAL: クリア時UI更新
             
             # フィットボタン状態リセット
-            if hasattr(self, '_zoom_fit_button'):
-                self._zoom_fit_button.tooltip = "縦フィットに切り替え (0)"
-                self._update_fit_button_icon()
+            if hasattr(self, '_fit_button'):
+                self._fit_button.tooltip = "縦フィットに切り替え"
+                self._fit_info.value = "横フィット"
             
             # 状態変更
             self._set_state(PreviewState.EMPTY)

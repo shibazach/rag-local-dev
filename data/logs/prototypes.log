@@ -552,3 +552,7 @@ LINE 19:             WHERE fb.id = 'unified_preview'
 2025-08-28 01:43:00,599 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-28 01:57:42,898 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-28 01:58:27,028 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 03:41:24,171 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 08:43:09,894 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 10:26:39,539 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 13:20:53,329 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag

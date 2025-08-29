@@ -1,41 +1,53 @@
 {
   // ========== rag-dev : GPU ==========
   "name": "ragdev",
+
+  // docker-compose の参照先
   "dockerComposeFile": [
     "../docker-compose.yml"
   ],
+
+  // 使用するサービス名（composeの ragapp をアタッチ）
   "service": "ragapp",
+
+  // ワークスペース設定
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
-  // ホストの環境変数をコンテナ内に確実に渡す
+
+  // REM: ホストの環境変数をコンテナへ渡す（未定義だと空になる点に注意）
   "containerEnv": {
     "GIT_USERNAME": "${localEnv:GIT_USERNAME}",
     "GIT_USEREMAIL": "${localEnv:GIT_USEREMAIL}"
   },
-  // ランタイム内パス設定などは containerEnv か settings 側で
+
+  // REM: ランタイム内の PYTHONPATH 設定
   "remoteEnv": {
     "PYTHONPATH": "/workspace"
   },
-  "forwardPorts": [
-    8000,
-    8002,
-    8003
-  ],
-  "runArgs": [
-    "--gpus","all",                // 既存の GPU オプションはそのまま
-    "--device","/dev/nvidia0",
-    "--device","/dev/nvidiactl",
-    "--device","/dev/nvidia-uvm",
-    "--device","/dev/nvidia-uvm-tools"
-  ],
+
+  // REM: よく使うポートのフォワード
+  "forwardPorts": [8000, 8002, 8003],
+
+  // REM: GPU 周りは --gpus all のみに統一（nvidia-container-toolkit 導入済み前提）
+  //      以前の --device /dev/nvidia* 羅列は冗長なので削除
+  "runArgs": ["--gpus", "all"],
+
+  // REM: VS Code の推奨キー（旧: terminal.integrated.shell.linux）
   "settings": {
-    "terminal.integrated.shell.linux": "/bin/bash"
+    "terminal.integrated.defaultProfile.linux": "bash"
   },
-  "extensions": [
-    "ms-python.python"
-  ],
-  "postCreateCommand": [
-    // コンテナの環境変数 $GIT_USERNAME / $GIT_USEREMAIL を使う
-    "git config --global user.name \"$GIT_USERNAME\"",
-    "git config --global user.email \"$GIT_USEREMAIL\""
-  ]
+
+  // REM: 必要な拡張のみ
+  "extensions": ["ms-python.python"],
+
+  // REM: postCreateCommand は “1文＋シェル経由” で確実に実行（exit 127 対策）
+  //      ホスト側で GIT_USERNAME / GIT_USEREMAIL を定義していない場合は空で設定される点に注意
+  //      個人利用で固定ならベタ書きにしてもOK（例を下にREMで記載）
+  "postCreateCommand": "sh -lc 'git config --global user.name \"$GIT_USERNAME\" && git config --global user.email \"$GIT_USEREMAIL\"'"
+
+  // REM: 個人用の例（上の1文の代わりにこちらを使う）
+  // "postCreateCommand": [
+  //   "git config --global user.name 'shibazach'",
+  //   "git config --global user.email 'shibazach@gmail.com'"
+  // ]
+}

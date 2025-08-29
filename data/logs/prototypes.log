@@ -644,3 +644,4 @@ Could not find program 'pngquant' on the PATH
 2025-08-29 02:47:09,643 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-29 02:52:04,292 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-29 02:54:22,923 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 03:41:54,945 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag

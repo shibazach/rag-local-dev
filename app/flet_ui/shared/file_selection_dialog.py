@@ -18,8 +18,11 @@ class FileSelectionDialog:
         self.page = page
         self.on_file_selected = on_file_selected
         
-        # コンパクト版FilesTable（ダイアログ用スタイル）
-        self.files_table = FilesTable(on_file_select_callback=self._on_table_file_select)
+        # コンパクト版FilesTable（ダイアログ用スタイル、ダブルクリック対応）
+        self.files_table = FilesTable(
+            on_file_select_callback=self._on_table_file_select,
+            on_file_double_click_callback=self._on_table_file_double_click
+        )
         
         # PDFプレビュー（小さめ）
         self.pdf_preview = PDFPreview()
@@ -45,14 +48,31 @@ class FileSelectionDialog:
         self.selected_file_info = file_info
         
         # PDFプレビューを更新
-        if file_info and file_info.get("filename", "").lower().endswith(".pdf"):
-            self.pdf_preview.load_file(file_info.get("file_path", ""))
+        if file_info and file_info.get("file_name", "").lower().endswith(".pdf"):
+            self.pdf_preview.show_pdf_preview(file_info)
+        else:
+            # PDFファイル以外またはファイル情報なしの場合はクリア
+            self.pdf_preview.show_empty_preview()
+    
+    def _on_table_file_double_click(self, file_id):
+        """テーブルからのファイルダブルクリックイベント（選択確定）"""
+        # まず通常の選択処理を実行
+        self._on_table_file_select(file_id)
+        
+        # 選択確定処理を実行
+        if self.selected_file_info and self.on_file_selected:
+            self.on_file_selected(self.selected_file_info)
+        
+        # ダイアログを閉じる
+        self._close_dialog()
+        
+        print(f"ダブルクリックで選択確定: {self.selected_file_info.get('file_name', 'unknown') if self.selected_file_info else 'None'}")
     
     def _get_file_info_by_id(self, file_id):
         """ファイルIDから実際のファイル情報を取得"""
-        # FilesTableから現在のファイル一覧を取得
-        if hasattr(self.files_table, 'current_files'):
-            for file_info in self.files_table.current_files:
+        # FilesTableのfiles_dataから検索
+        if hasattr(self.files_table, 'files_data') and self.files_table.files_data.get('files'):
+            for file_info in self.files_table.files_data['files']:
                 if str(file_info.get("id", "")) == str(file_id):
                     return file_info
         return None

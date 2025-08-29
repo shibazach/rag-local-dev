@@ -119,6 +119,8 @@ class PDFImagePreviewV4(ft.Container):
             src=None,  # 初期値をNoneに設定
             fit=ft.ImageFit.FIT_WIDTH,  # 🎯 幅方向全体フィット（初期表示最適化）
             width=None,  # fitに任せる
+            height=None,  # fitに任せる  
+            expand=True,  # 🔥 ChatGPT指摘の核心: 親の制約を受けてフィットが効く
             border_radius=ft.border_radius.all(4),
             gapless_playback=True,  # 画像切替時のちらつき抑制
             visible=False,  # 初期は非表示
@@ -271,26 +273,20 @@ class PDFImagePreviewV4(ft.Container):
             height=36  # 40 → 36にさらに削減
         )
         
-        # スクロール可能な画像表示エリア（縦横両方向対応）
-        scrollable_image = ft.Column([
-            # 上部余白完全削除（PDFテキスト見切れ防止）
-            ft.Row([
-                ft.Container(
-                    content=self._image_display,
-                    alignment=ft.alignment.center,
-                    expand=False
-                )
-            ], 
-            alignment=ft.MainAxisAlignment.CENTER,
-            scroll=ft.ScrollMode.AUTO  # 横スクロール
-            ),
-            ft.Container(height=20)   # 下部余白
-        ], 
-        spacing=0,
-        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-        scroll=ft.ScrollMode.AUTO,  # 縦スクロール
-        on_scroll=self._on_scroll,
-        expand=True
+        # ChatGPT方式: シンプルなビューポート構造
+        # ★ 重要: スクロールとフィット機能を分離
+        self._image_viewport = ft.Container(
+            content=self._image_display,
+            expand=True,                           # 親領域をフルに使用
+            alignment=ft.alignment.center,         # 余白時は中央配置
+            bgcolor=ft.Colors.WHITE,
+            clip_behavior=ft.ClipBehavior.HARD_EDGE  # はみ出し防止
+        )
+        
+        # スクロール機能は必要に応じてビューポート外側に配置
+        scrollable_image = ft.Container(
+            content=self._image_viewport,
+            expand=True
         )
         
         # 表示領域コンテナ（expand活用）
@@ -526,11 +522,13 @@ class PDFImagePreviewV4(ft.Container):
                         
                         self._image_display.src = data_url
                         
-                        # 表示方法最適化：フィットモード適用
+                        # 動的サイズ対応：フィットモード適用（ChatGPT方式応用）
                         if self._fit_mode == "width":
-                            self._image_display.fit = ft.ImageFit.FIT_WIDTH
+                            self._image_display.fit = ft.ImageFit.FIT_WIDTH   # 横方向全幅フィット
+                            logger.debug("[V4-UI] 適用フィット: 横方向")
                         else:
-                            self._image_display.fit = ft.ImageFit.FIT_HEIGHT
+                            self._image_display.fit = ft.ImageFit.FIT_HEIGHT  # 縦方向全高フィット  
+                            logger.debug("[V4-UI] 適用フィット: 縦方向")
                             
                         self._image_display.visible = True
                         
@@ -611,33 +609,48 @@ class PDFImagePreviewV4(ft.Container):
                     await self._render_and_display_page(self._current_page + 1)
                 self.page.run_task(next_page)
 
+    # ★ ChatGPT推奨: 外部からフィット制御可能な公開API
+    def set_fit_mode(self, fit: ft.ImageFit):
+        """外部からフィットモード設定（ChatGPT方式API）"""
+        try:
+            # フィットモード更新
+            if fit == ft.ImageFit.FIT_WIDTH:
+                self._fit_mode = "width"
+                self._fit_info.value = "横フィット"
+                self._fit_button.tooltip = "縦フィットに切り替え"
+            elif fit == ft.ImageFit.FIT_HEIGHT:
+                self._fit_mode = "height"
+                self._fit_info.value = "縦フィット"
+                self._fit_button.tooltip = "横フィットに切り替え"
+            
+            # Image設定適用（ChatGPT方式：直接設定）
+            if self._image_display:
+                self._image_display.fit = fit
+                logger.info(f"[V4-UI] 外部フィット設定: {fit}")
+                
+            # UI更新
+            if hasattr(self, 'page') and self.page:
+                self.update()
+                
+        except Exception as e:
+            logger.error(f"[V4-UI] 外部フィット設定エラー: {e}")
+
     def _on_fit_toggle(self, e):
-        """フィット切替（横フィット ↔ 縦フィット）シンプル版"""
-        # フィットモード切替
-        if self._fit_mode == "width":
-            self._fit_mode = "height"
-            self._image_display.fit = ft.ImageFit.FIT_HEIGHT
-            self._fit_info.value = "縦フィット"
-            self._fit_button.tooltip = "横フィットに切り替え"
-        else:
-            self._fit_mode = "width"
-            self._image_display.fit = ft.ImageFit.FIT_WIDTH
-            self._fit_info.value = "横フィット"
-            self._fit_button.tooltip = "縦フィットに切り替え"
-        
-        # UI更新（安全チェック付き）
-        if hasattr(self, 'page') and self.page:
-            # 画像更新
-            if hasattr(self._image_display, 'page') and self._image_display.page:
-                self._image_display.update()
+        """フィット切替ボタンハンドラ（内部でset_fit_modeを使用）"""
+        try:
+            # 現在のモードを切り替え
+            if self._fit_mode == "width":
+                new_fit = ft.ImageFit.FIT_HEIGHT
+                logger.info("[V4-UI] フィット切り替え: 横→縦")
+            else:
+                new_fit = ft.ImageFit.FIT_WIDTH
+                logger.info("[V4-UI] フィット切り替え: 縦→横")
             
-            # 情報更新
-            if hasattr(self, '_fit_info') and self._fit_info and hasattr(self._fit_info, 'page') and self._fit_info.page:
-                self._fit_info.update()
+            # 公開APIを使用
+            self.set_fit_mode(new_fit)
             
-            # ボタン更新  
-            if hasattr(self, '_fit_button') and self._fit_button and hasattr(self._fit_button, 'page') and self._fit_button.page:
-                self._fit_button.update()
+        except Exception as e:
+            logger.error(f"[V4-UI] フィット切り替えエラー: {e}")
 
     # アイコン回転機能を削除（シンプル化）
 

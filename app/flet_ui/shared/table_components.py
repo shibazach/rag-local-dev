@@ -195,10 +195,11 @@ def _create_cell_content(config: TableColumnConfig, row_data: Dict[str, Any], co
 class FlexibleDataTable(ft.Column):
     """柔軟なデータテーブル（ヘッダー固定版）"""
     
-    def __init__(self, column_configs: List[TableColumnConfig], row_click_handler: Optional[Callable] = None):
+    def __init__(self, column_configs: List[TableColumnConfig], row_click_handler: Optional[Callable] = None, row_double_click_handler: Optional[Callable] = None):
         super().__init__()
         self.column_configs = column_configs
         self.row_click_handler = row_click_handler
+        self.row_double_click_handler = row_double_click_handler
         self.rows_data = []
         self.selected_row_id = None
         self.expand = True
@@ -285,8 +286,18 @@ class FlexibleDataTable(ft.Column):
                 )
                 row_cells.append(cell)
             
+            # ダブルクリック対応
+            if self.row_double_click_handler:
+                row_content = ft.GestureDetector(
+                    content=ft.Row(row_cells, spacing=0),
+                    on_tap=lambda e, rid=row_id: self.row_click_handler(rid) if self.row_click_handler else None,
+                    on_double_tap=lambda e, rid=row_id: self.row_double_click_handler(rid) if self.row_double_click_handler else None
+                )
+            else:
+                row_content = ft.Row(row_cells, spacing=0)
+            
             row_container = ft.Container(
-                content=ft.Row(row_cells, spacing=0),
+                content=row_content,
                 bgcolor=ft.Colors.BLUE_50 if is_selected else ft.Colors.WHITE,
                 border=ft.border.only(bottom=ft.BorderSide(1, ft.Colors.GREY_200)),
                 on_click=lambda e, rid=row_id: self.row_click_handler(rid) if self.row_click_handler else None

@@ -556,3 +556,91 @@ LINE 19:             WHERE fb.id = 'unified_preview'
 2025-08-28 08:43:09,894 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-28 10:26:39,539 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
 2025-08-28 13:20:53,329 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 14:45:02,156 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:08:09,569 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:22:29,504 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:23:39,825 - rag_system - ERROR - DB接続エラー: invalid input syntax for type uuid: "test"
+LINE 19:             WHERE fb.id = 'test'
+                                   ^
+
+2025-08-28 15:23:39,826 - rag_system - ERROR - 接続文字列: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:23:39,826 - rag_system - ERROR - ファイル取得エラー（ID: test）: invalid input syntax for type uuid: "test"
+LINE 19:             WHERE fb.id = 'test'
+                                   ^
+
+2025-08-28 15:32:14,471 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:40:45,082 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:42:40,046 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:43:35,745 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:43:48,178 - rag_system - INFO - 誤字修正完了: 3箇所
+2025-08-28 15:43:57,806 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:44:07,827 - rag_system - INFO - 誤字修正完了: 3箇所
+2025-08-28 15:44:42,236 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:44:57,777 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:45:02,893 - rag_system - INFO - OCR実行開始: document.pdf
+2025-08-28 15:45:03,353 - rag_system - ERROR - OCR失敗: usage: OCRmyPDF [-h] [-l LANGUAGES] [--image-dpi DPI]
+                [--output-type {pdfa,pdf,pdfa-1,pdfa-2,pdfa-3,none}]
+                [--sidecar [FILE]] [--version] [-j N] [-q] [-v [VERBOSE]]
+                [--title TITLE] [--author AUTHOR] [--subject SUBJECT]
+                [--keywords KEYWORDS] [-r] [--remove-background] [-d] [-c]
+                [-i] [--unpaper-args UNPAPER_ARGS] [--oversample DPI]
+                [--remove-vectors] [-f] [-s] [--redo-ocr] [--skip-big MPixels]
+                [--invalidate-digital-signatures] [--pages PAGES]
+                [--max-image-mpixels MPixels]
+                [--pdf-renderer {auto,hocr,sandwich,hocrdebug}]
+                [--rotate-pages-threshold CONFIDENCE]
+                [--fast-web-view MEGABYTES] [--continue-on-soft-render-error]
+                [--plugin PLUGINS] [-k] [--tesseract-config CFG]
+                [--tesseract-pagesegmode PSM] [--tesseract-oem MODE]
+                [--tesseract-thresholding METHOD]
+                [--tesseract-timeout SECONDS]
+                [--tesseract-non-ocr-timeout SECONDS]
+                [--tesseract-downsample-large-images | --no-tesseract-downsample-large-images]
+                [--tesseract-downsample-above TESSERACT_DOWNSAMPLE_ABOVE]
+                [--user-words FILE] [--user-patterns FILE] [-O {0,1,2,3}]
+                [--jpeg-quality Q] [--png-quality Q] [--jbig2-lossy]
+                [--jbig2-threshold T] [--color-conversion-strategy STRATEGY]
+                [--pdfa-image-compression {auto,jpeg,lossless}]
+                input_pdf_or_image output_pdf
+OCRmyPDF: error: unrecognized arguments: --dpi /tmp/tmpiv6syi4p.pdf
+
+2025-08-28 15:45:19,966 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:45:25,018 - rag_system - INFO - OCR実行開始: document.pdf
+2025-08-28 15:45:25,486 - rag_system - ERROR - OCR失敗: 
+The program 'pngquant' could not be executed or was not found on your
+system PATH.  This program is required when you use the
+--optimize {2,3} arguments.  You could try omitting these arguments, or install
+the package.
+
+Could not find program 'pngquant' on the PATH
+
+2025-08-28 15:45:41,612 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-28 15:45:46,802 - rag_system - INFO - OCR実行開始: document.pdf
+2025-08-28 15:46:28,466 - rag_system - INFO - OCR完了: document.pdf - 10ページ、3764文字
+2025-08-28 15:46:28,468 - rag_system - INFO - 誤字修正完了: 2箇所
+2025-08-29 00:14:08,270 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:19:46,123 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:24:54,830 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:26:07,478 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:28:05,171 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:29:11,957 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:29:17,049 - rag_system - INFO - OCR実行開始: document.pdf
+2025-08-29 01:29:58,666 - rag_system - INFO - OCR完了: document.pdf - 10ページ、3764文字
+2025-08-29 01:29:58,668 - rag_system - INFO - 誤字修正完了: 2箇所
+2025-08-29 01:30:30,472 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:41:41,546 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:42:38,651 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 01:44:42,664 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:00:11,308 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:09:55,054 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:31:30,116 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:32:29,447 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:32:54,048 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:34:44,018 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:38:59,379 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:39:30,028 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:40:37,051 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:41:52,629 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:47:09,643 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:52:04,292 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag
+2025-08-29 02:54:22,923 - rag_system - INFO - DB接続URL: postgresql://raguser:ragpass@ragdb:5432/rag

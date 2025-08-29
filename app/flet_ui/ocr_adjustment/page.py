@@ -6,42 +6,41 @@ Flet RAGシステム - OCR調整ページメイン
 
 import flet as ft
 import math
-from typing import Dict, Any, Optional
 from app.flet_ui.shared.panel_components import create_panel, PanelHeaderConfig, PanelConfig
 from app.flet_ui.shared.pdf_preview import PDFPreview
 from app.flet_ui.shared.style_constants import CommonComponents, PageStyles, SLIDER_RATIOS
-from app.flet_ui.shared.file_selection_dialog import create_file_selection_dialog
 from .engines.easyocr_params import get_easyocr_parameters, create_easyocr_panel_content
 from .engines.tesseract_params import get_tesseract_parameters, create_tesseract_panel_content
 from .engines.paddleocr_params import get_paddleocr_parameters, create_paddleocr_panel_content
 from .engines.ocrmypdf_params import get_ocrmypdf_parameters, create_ocrmypdf_panel_content
 from .dictionary_manager import create_dictionary_buttons
 from app.flet_ui.shared.common_buttons import create_light_button, create_dark_button, create_action_button
+from app.flet_ui.shared.file_selection_dialog import FileSelectionDialog
+from app.services.ocr.ocr_orchestrator import get_ocr_orchestrator
+from app.services.ocr.ocr_result_manager import create_result_manager
 
 class OCRAdjustmentPage:
     """OCR調整ページ（4分割レイアウト + 3スライダー制御）"""
     
-    def __init__(self, page: ft.Page = None):
+    def __init__(self):
         """初期化"""
-        # ページ参照（アコーディオン用）
-        self.page = page
-        # 縦スライダー削除：2分割構造では横スライダーのみ
+        self.left_split_level = 3
+        self.right_split_level = 3
         self.horizontal_level = 3
-        
-        # tab_bパターン：タブ切り替え状態
-        self.selected_tab = 0  # 0: 設定, 1: PDF
         
         # 共通比率テーブル使用
         self.ratios = SLIDER_RATIOS
         
-        # 縦スライダー関連削除（2分割構造では不要）
-        # self.left_split_level = 3
-        # self.right_split_level = 3
-        
         # 共通コンポーネントインスタンス
         self.pdf_preview = PDFPreview()
         
-        # コンテナ参照（2分割構造）
+        # コンテナ参照（tab_d.py パターン適用）
+        self.top_left_container = None
+        self.bottom_left_container = None
+        self.top_right_container = None
+        self.bottom_right_container = None
+        self.left_column = None
+        self.right_column = None
         self.left_container = None
         self.right_container = None
         self.main_row = None
@@ -53,172 +52,34 @@ class OCRAdjustmentPage:
         self.results_container = None  # 結果表示コンテナ
         self.engine_details_container = None  # エンジン詳細コンテナ
         
-        # ファイル選択関連
-        self.selected_file_info: Optional[Dict[str, Any]] = None
-        self.file_display_field: Optional[ft.TextField] = None  # ファイル表示フィールド
-        self.file_selection_dialog = None  # ダイアログインスタンス
+        # 共用サービス（RAG作成プロセスでも使用）
+        self.ocr_orchestrator = get_ocr_orchestrator()
+        self.result_manager = create_result_manager("ui_ocr_session")
+        
+        # ファイル選択ダイアログ（ページ参照は後で設定）
+        self.file_dialog = None
+        self.selected_file_data = None
 
     def create_main_layout(self):
-        """メインレイアウト作成（tab_b成功パターン適用：2分割構造）"""
+        """メインレイアウト作成（シンプル版）"""
         
-        # 2分割メインコンテンツ作成（OCR機能保護、tab_b構造適用）
-        main_2pane_content = self._create_2pane_layout()
+        # 左右2分割レイアウト
+        left_pane = self._create_ocr_settings_pane()
+        right_pane = self._create_ocr_results_pane()
         
-        # 横スライダー（共通化済み）
+        # 横スライダー
         horizontal_slider = CommonComponents.create_horizontal_slider(
             self.horizontal_level, self.on_horizontal_change
         )
         
-        # 基本レイアウト（横スライダー付き、縦スライダー不要）
-        return PageStyles.create_complete_layout_with_slider(
-            main_2pane_content, horizontal_slider
-        )
+        # 基本レイアウト（横スライダー付き）
+        main_row = CommonComponents.create_main_layout_row(left_pane, right_pane)
+        return PageStyles.create_complete_layout_with_slider(main_row, horizontal_slider)
 
     def _create_ocr_settings_pane(self):
-        """左ペイン: OCR設定（tab_b完全パターン適用：タブ構造）"""
-        
-        # OCR設定基本内容（既存機能保護）
-        ocr_settings_content = self._create_ocr_basic_settings()
-        
-        # 詳細設定アコーディオン（tab_bパターン適用）
-        details_accordion = self._create_details_accordion_like_tab_b()
-        
-        # タブバー（tab_b完全パターン）
-        tab_bar = ft.Container(
-            content=ft.Row([
-                ft.Container(
-                    content=ft.Text("設定", size=12, weight=ft.FontWeight.BOLD,
-                                   color=ft.Colors.BLUE_700 if self.selected_tab == 0 else ft.Colors.GREY_600),
-                    padding=ft.padding.symmetric(horizontal=16, vertical=8),
-                    bgcolor=ft.Colors.BLUE_50 if self.selected_tab == 0 else ft.Colors.GREY_100,
-                    on_click=lambda e: self._switch_tab(0)
-                ),
-                ft.Container(
-                    content=ft.Text("PDF", size=12, weight=ft.FontWeight.BOLD,
-                                   color=ft.Colors.BLUE_700 if self.selected_tab == 1 else ft.Colors.GREY_600),
-                    padding=ft.padding.symmetric(horizontal=16, vertical=8),
-                    bgcolor=ft.Colors.BLUE_50 if self.selected_tab == 1 else ft.Colors.GREY_100,
-                    on_click=lambda e: self._switch_tab(1)
-                )
-            ], spacing=2),
-            padding=ft.padding.symmetric(horizontal=8, vertical=4),
-            bgcolor=ft.Colors.GREY_50
-        )
-        
-        # タブコンテンツ（動的切り替え）
-        if self.selected_tab == 0:
-            # 設定タブ：OCR設定 + 詳細設定アコーディオン
-            tab_content = ft.Container(
-                content=ft.Column([
-                    ocr_settings_content,
-                    details_accordion
-                ], spacing=8, scroll=ft.ScrollMode.AUTO, expand=True),
-                padding=ft.padding.all(4),
-                expand=True
-            )
-        else:
-            # PDFタブ：filesと同じメッセージを直接タブ内センタリング表示
-            tab_content = ft.Container(
-                content=ft.Column([
-                    ft.Icon(ft.Icons.PICTURE_AS_PDF, size=80, color=ft.Colors.GREY_400),
-                    ft.Container(height=16),
-                    ft.Text("ファイルを選択すると\nPDFプレビューが表示されます", 
-                           size=16, color=ft.Colors.GREY_600, text_align=ft.TextAlign.CENTER)
-                ], 
-                alignment=ft.MainAxisAlignment.CENTER, 
-                horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                spacing=0),
-                expand=True,
-                padding=ft.padding.all(0),
-                bgcolor=ft.Colors.WHITE,
-                alignment=ft.alignment.center
-            )
-        
-        # パネル作成（共通パネルコンポーネント使用、OCR実行ボタン付き）
-        header_config = PanelHeaderConfig(
-            title="OCR設定",
-            title_icon=ft.Icons.SETTINGS,
-            bgcolor=ft.Colors.BLUE_GREY_800,
-            text_color=ft.Colors.WHITE
-        )
-        panel_config = PanelConfig(header_config=header_config)
-        
-        # タブ構造をパネルコンテンツとして使用
-        tab_structure = ft.Container(
-            content=ft.Column([
-                tab_bar,
-                tab_content
-            ], spacing=0, expand=True, alignment=ft.MainAxisAlignment.START),
-            expand=True
-        )
-        
-        panel = create_panel(panel_config, tab_structure)
-        
-        # OCR実行ボタンをヘッダーに追加（既存パターン）
-        from app.flet_ui.shared.common_buttons import create_action_button
-        header_container = panel.content.controls[0]  # ヘッダー部分
-        
-        new_header_content = ft.Row([
-            # 左側：タイトル部分
-            ft.Container(
-                content=ft.Row([
-                    ft.Icon(ft.Icons.SETTINGS, size=20, color=ft.Colors.WHITE),
-                    ft.Text("OCR設定", size=16, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE)
-                ], spacing=8),
-                expand=True
-            ),
-            # 右側：実行ボタン（▶アイコン1つだけ）
-            create_action_button("実行", ft.Icons.PLAY_ARROW, self._execute_ocr_test)
-        ], alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
-        
-        header_container.content = new_header_content
-        
-        return panel
-    
-    def _create_details_accordion_like_tab_b(self):
-        """詳細設定アコーディオン（tab_bと完全同一パターン）"""
-        # OCR設定ページの既存詳細設定パネルから内容を取得
-        if hasattr(self, '_create_engine_details_pane'):
-            engine_details_panel = self._create_engine_details_pane()
-            engine_details_content = engine_details_panel.content.controls[1]
-        else:
-            # フォールバック：基本的なプレースホルダー
-            engine_details_content = ft.Container(
-                content=ft.Text("詳細設定を読み込み中...", color=ft.Colors.GREY_600),
-                padding=ft.padding.all(8)
-            )
-        
-        # tab_bと完全同一のアコーディオン実装
-        from app.flet_ui.shared.custom_accordion import make_accordion
-        
-        accordion = make_accordion(
-            page=self.page,
-            items=[
-                ("🔧 詳細設定", engine_details_content, False)
-            ],
-            single_open=True,
-            header_bg=ft.Colors.BLUE_50,
-            body_bg=ft.Colors.WHITE,
-            spacing=2,
-            radius=0  # 角丸なし
-        )
-        
-        return accordion
-    
-    def _switch_tab(self, tab_index: int):
-        """タブ切り替え（正しい実装：パネル構造維持、タブ内容のみ切り替え）"""
-        self.selected_tab = tab_index
-        # 左ペイン内容を再作成して更新（パネル構造維持）
-        if hasattr(self, 'left_container') and self.left_container:
-            new_content = self._create_ocr_settings_pane()
-            self.left_container.content = new_content
-            self.left_container.update()
-            print(f"⚡ OCR設定 タブ切り替え: {tab_index} ({'PDF' if tab_index == 1 else '設定'}タブ内容)")
-    
-    def _create_ocr_basic_settings(self):
-        """OCR基本設定内容（既存機能保護）"""
+        """左上: OCR設定ペイン（共通コンポーネント版）"""
         # パネル内容（実際のOCR設定項目）
-        return ft.Container(
+        panel_content = ft.Container(
             content=ft.Column([
                 # ファイル選択情報（統一レイアウト）
                 ft.Row([
@@ -227,12 +88,12 @@ class OCRAdjustmentPage:
                         width=120,  # 統一幅
                         alignment=ft.alignment.center_left
                     ),
-                    self._create_file_display_field(),
+                    self._create_filename_textfield(),
                     ft.IconButton(
                         icon=ft.Icons.FOLDER_OPEN,
                         icon_size=20,
                         tooltip="ファイル選択",
-                        on_click=self._on_file_select_click
+                        on_click=self._open_file_dialog
                     )
                 ], alignment=ft.MainAxisAlignment.START),
                 
@@ -456,107 +317,100 @@ class OCRAdjustmentPage:
         
         return panel
 
-    # _create_pdf_preview_pane() - 削除：PDFプレビューはPDFタブに統合
+    def _create_pdf_preview_pane(self):
+        """右下: PDFプレビューペイン（共通コンポーネント版）"""
+        # 共通PDFプレビューコンポーネントを使用
+        return ft.Container(
+            content=self.pdf_preview,
+            expand=True
+            # marginは削除（PDFPreviewは全域使用）
+        )
     
-    def _create_2pane_layout(self) -> ft.Container:
-        """2分割レイアウト作成（tab_b成功パターン適用、縦スライダー削除）"""
+    def _create_4quad_layout(self) -> ft.Container:
+        """4分割レイアウトのみ作成（ガイドエリア・スライダーは一体型コンポーネントが担当）"""
         
-        # 左パネル：OCR設定（常にパネル構造、タブ内容で切り替え）
-        self.left_container = ft.Container(
-            content=self._create_ocr_settings_pane(),
-            expand=1
-        )
+        # 4つのペインコンテナ作成
+        self.top_left_container = ft.Container(expand=1)
+        self.bottom_left_container = ft.Container(expand=1)
+        self.top_right_container = ft.Container(expand=1)
+        self.bottom_right_container = ft.Container(expand=1)
         
-        # 右パネル：OCR結果
-        self.right_container = ft.Container(
-            content=self._create_ocr_results_pane(),
-            expand=1
-        )
+        # 左右カラム作成
+        self.left_column = ft.Column([
+            self.top_left_container,
+            ft.Divider(height=1, thickness=1, color=ft.Colors.GREY_400),
+            self.bottom_left_container
+        ], spacing=0, expand=True)
         
-        # 2分割メイン行作成（tab_b成功パターン）
+        self.right_column = ft.Column([
+            self.top_right_container,
+            ft.Divider(height=1, thickness=1, color=ft.Colors.GREY_400),
+            self.bottom_right_container
+        ], spacing=0, expand=True)
+        
+        # Container参照保持（比率更新用）
+        self.left_container = ft.Container(content=self.left_column, expand=1)
+        self.right_container = ft.Container(content=self.right_column, expand=1)
+        
+        # 4分割メイン行作成
         self.main_row = ft.Row([
             self.left_container,
             ft.VerticalDivider(width=1, thickness=1, color=ft.Colors.GREY_400),
             self.right_container
         ], spacing=0, expand=True)
         
-        # 初期比率適用（共通メソッド使用）
-        CommonComponents.apply_slider_ratios_to_row(
-            self.main_row, self.ratios, self.horizontal_level
-        )
+        # 初期レイアウト適用
+        self._update_layout()
         
-        # 2分割部分のみ返す
+        # 4分割部分のみ返す
         return ft.Container(content=self.main_row, expand=True)
     
-    # 縦スライダー関連メソッドは削除（2分割構造では不要）
-    
-    # 縦スライダー関連メソッドは削除（2分割構造では不要）
+    def _update_layout(self):
+        """レイアウトを実際に更新（4分割版）"""
+        # 比率計算
+        left_top_ratio, left_bottom_ratio = self.ratios[self.left_split_level]
+        right_top_ratio, right_bottom_ratio = self.ratios[self.right_split_level]
+        left_ratio, right_ratio = self.ratios[self.horizontal_level]
+        
+        # ペイン内容更新
+        self.top_left_container.content = self._create_ocr_settings_pane()
+        self.bottom_left_container.content = self._create_ocr_results_pane()
+        self.top_right_container.content = self._create_engine_details_pane()
+        self.bottom_right_container.content = self._create_pdf_preview_pane()
+        
+        # 比率適用
+        self.top_left_container.expand = left_top_ratio
+        self.bottom_left_container.expand = left_bottom_ratio
+        self.top_right_container.expand = right_top_ratio
+        self.bottom_right_container.expand = right_bottom_ratio
+        
+        # 左右比率（files/page.pyパターン適用：Container直接更新）
+        self.left_container.expand = left_ratio
+        self.right_container.expand = right_ratio
+        
+        # UI更新（Container直接更新）
+        try:
+            if hasattr(self, 'left_container') and self.left_container.page:
+                self.left_container.update()
+            if hasattr(self, 'right_container') and self.right_container.page:
+                self.right_container.update()
+        except:
+            pass
+
+    def on_left_split_change(self, e):
+        """左ペイン分割スライダー変更"""
+        self.left_split_level = int(float(e.control.value))
+        self._update_layout()
+
+    def on_right_split_change(self, e):
+        """右ペイン分割スライダー変更"""
+        self.right_split_level = int(float(e.control.value))
+        self._update_layout()
 
     def on_horizontal_change(self, e):
-        """左右分割スライダー変更（共通メソッド使用、OCR機能保護）"""
-        try:
-            self.horizontal_level = int(float(e.control.value))
-        except ValueError:
-            return
-        
-        # 共通メソッドで横比率適用（0対策自動適用）
-        if hasattr(self, 'main_row') and self.main_row:
-            CommonComponents.apply_slider_ratios_to_row(
-                self.main_row, self.ratios, self.horizontal_level
-            )
-        
-        print(f"⚡ OCR設定 横スライダー変更: レベル{self.horizontal_level}")
-    
-    # ========= ファイル選択機能 =========
-    
-    def _create_file_display_field(self) -> ft.TextField:
-        """ファイル表示用テキストフィールド作成"""
-        self.file_display_field = ft.TextField(
-            hint_text="選択されたファイル名", 
-            read_only=True,
-            expand=True,
-            height=40
-        )
-        return self.file_display_field
-    
-    def _on_file_select_click(self, e):
-        """ファイル選択ボタンクリック"""
-        print("ファイル選択がクリックされました")
-        if not self.file_selection_dialog:
-            self.file_selection_dialog = create_file_selection_dialog(
-                page=self.page,
-                on_file_selected=self._on_file_selected
-            )
-        
-        self.file_selection_dialog.show_dialog()
-    
-    def _on_file_selected(self, file_info: Dict[str, Any]):
-        """ファイル選択完了時の処理"""
-        self.selected_file_info = file_info
-        
-        # ファイル表示フィールドに選択されたファイル名を表示
-        if self.file_display_field and file_info:
-            filename = file_info.get("filename", "")
-            self.file_display_field.value = filename
-            self.file_display_field.update()
-            
-            # OCR結果をクリア（新しいファイル選択時）
-            self._clear_ocr_results()
-            
-            # ステータス表示等の更新
-            self._update_file_selection_status(file_info)
-    
-    def _update_file_selection_status(self, file_info: Dict[str, Any]):
-        """ファイル選択状態の更新"""
-        # 後で拡張: ファイル情報表示、プレビューエリア更新等
-        pass
-    
-    def _clear_ocr_results(self):
-        """OCR結果をクリア"""
-        if self.results_container:
-            self.results_container.controls.clear()
-            if self.results_container.page:
-                self.results_container.update()
+        """左右分割スライダー変更"""
+        self.horizontal_level = int(float(e.control.value))
+        self._update_layout()
     
     # ========= OCR機能 =========
     def _update_engine_details(self):
@@ -573,8 +427,8 @@ class OCRAdjustmentPage:
         }
         
         if self.selected_engine in engine_layout_functions:
-            # 専用レイアウトを使用（pageパラメータを渡す）
-            content = engine_layout_functions[self.selected_engine](page=self.page)
+            # 専用レイアウトを使用
+            content = engine_layout_functions[self.selected_engine]()
         else:
             # フォールバック表示
             content = ft.Container(
@@ -689,16 +543,63 @@ class OCRAdjustmentPage:
             self.results_container.update()
 
     def _execute_ocr_test(self, e):
-        """OCR実行（プレースホルダー）"""
-        pass
+        """OCR実行（共用サービス使用）"""
+        # TODO: 共用OCRオーケストレーター経由でOCR実行
+        print(f"OCR実行: {self.selected_engine}エンジン使用")
 
     def _clear_results(self, e):
-        """OCR結果をクリア（プレースホルダー）"""
-        pass
+        """OCR結果をクリア（共用サービス使用）"""
+        self.result_manager.clear_results()
+        if self.results_container:
+            self.results_container.controls.clear()
+            if self.results_container.page:
+                self.results_container.update()
+        print("OCR結果をクリアしました")
 
     def _export_results(self, e):
-        """OCR結果を出力（プレースホルダー）"""
-        pass
+        """OCR結果を出力（共用サービス使用）"""
+        results = self.result_manager.get_results()
+        if not results:
+            print("出力する結果がありません")
+            return
+        print(f"CSV出力: {len(results)}件の結果")
+    
+    def _open_file_dialog(self, e):
+        """ファイル選択ダイアログを開く"""
+        if not self.file_dialog and hasattr(self, 'page') and self.page:
+            self.file_dialog = FileSelectionDialog(
+                page=self.page, 
+                on_file_selected=self._on_file_selected
+            )
+        
+        if self.file_dialog:
+            self.file_dialog.show_dialog()
+    
+    def _on_file_selected(self, file_data):
+        """ファイル選択時のコールバック"""
+        if file_data:
+            self.selected_file_data = file_data
+            # ファイル名取得（統一フィールド名対応）
+            filename = file_data.get('file_name', file_data.get('filename', '選択されたファイル'))
+            file_id = file_data.get('id', '')
+            
+            # ファイル名テキストボックスを更新
+            if hasattr(self, '_filename_textfield'):
+                self._filename_textfield.value = filename
+                if self._filename_textfield.page:
+                    self._filename_textfield.update()
+            
+            print(f"ファイル選択完了: {filename} (ID: {file_id})")
+    
+    def _create_filename_textfield(self):
+        """ファイル名テキストフィールド作成"""
+        self._filename_textfield = ft.TextField(
+            hint_text="選択されたファイル名", 
+            read_only=True,
+            expand=True,
+            height=40
+        )
+        return self._filename_textfield
 
 
 def show_ocr_adjustment_page(page: ft.Page = None):
@@ -706,7 +607,8 @@ def show_ocr_adjustment_page(page: ft.Page = None):
     if page:
         PageStyles.set_page_background(page)
     
-    ocr_page = OCRAdjustmentPage(page=page)  # pageインスタンス渡し
+    ocr_page = OCRAdjustmentPage()
+    ocr_page.page = page  # ページ参照設定
     layout = ocr_page.create_main_layout()
     return layout
 

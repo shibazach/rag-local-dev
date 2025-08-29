@@ -18,9 +18,10 @@ from app.flet_ui.shared.table_components import (
 class FilesTable:
     """ファイル一覧テーブル（既存インターフェース保持 + 新共通コンポーネント内部使用）"""
 
-    def __init__(self, on_file_select_callback=None):
+    def __init__(self, on_file_select_callback=None, on_file_double_click_callback=None):
         # 既存インターフェース保持
         self.on_file_select_callback = on_file_select_callback
+        self.on_file_double_click_callback = on_file_double_click_callback
         self.files_data: Dict[str, Any] = {"files": [], "pagination": {}}
         self.current_page = 1
         self.per_page = 20
@@ -39,10 +40,11 @@ class FilesTable:
         # ファイル一覧用カラム設定（標準カラムセット使用）
         self.column_configs = StandardColumns.create_files_table_columns()
         
-        # 新共通コンポーネント使用
+        # 新共通コンポーネント使用（ダブルクリック対応）
         self.data_table = FlexibleDataTable(
             column_configs=self.column_configs,
-            row_click_handler=self._on_row_click
+            row_click_handler=self._on_row_click,
+            row_double_click_handler=self._on_row_double_click
         )
         
         # 初期データでテーブル更新
@@ -201,6 +203,20 @@ class FilesTable:
             self.on_file_select_callback(self.selected_file_id)
         
         print(f"選択されたファイルID: {self.selected_file_id}")
+    
+    def _on_row_double_click(self, row_id: str):
+        """行ダブルクリック処理"""
+        # ファイルIDを設定
+        self.selected_file_id = row_id
+        
+        # テーブル再描画
+        self._update_table_data()
+        
+        # ダブルクリックコールバック呼び出し
+        if self.on_file_double_click_callback:
+            self.on_file_double_click_callback(self.selected_file_id)
+        
+        print(f"ダブルクリックされたファイルID: {self.selected_file_id}")
 
     def _on_page_change(self, page: int):
         """ページ変更処理（新共通コンポーネント対応）"""

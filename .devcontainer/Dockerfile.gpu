@@ -7,8 +7,8 @@ FROM python:3.10-slim
 
 # ---------- 1. Torch バージョンを固定 ARG として宣言 ----------
 #   CUDA 12.1 用の wheel を想定（必要に応じて cu124 等に変更可能）
-ARG TorchVer="2.6.0+cu121"
-ARG TorchVisionVer="0.21.0+cu121"
+ARG TorchVer="2.5.1+cu121"
+ARG TorchVisionVer="0.20.1+cu121"
 
 # ---------- 2. OS パッケージ（trixie対応・ヘッドレス最小） ----------
 ENV DEBIAN_FRONTEND=noninteractive
